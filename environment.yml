@@ -1,0 +1,31 @@
+name: irrimapping-geofm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  # geospatial
+  - gdal
+  - geopandas
+  - rasterio
+  - shapely
+  - pyproj
+  - xarray
+  - dask
+  - zarr>=3
+  - s3fs
+  - odc-geo
+  - odc-stac
+  - pystac-client
+  - planetary-computer
+  # data + ML
+  - numpy
+  - pandas
+  - pyarrow
+  - scipy
+  - scikit-learn>=1.4
+  - joblib
+  - tqdm
+  # plots + notebooks
+  - matplotlib
+  - jupyterlab
+  - ipykernel
