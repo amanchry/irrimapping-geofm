@@ -1,0 +1,26 @@
+# Python >= 3.11 (zarr 3 is needed to read the AlphaEarth Zarr mosaic)
+# Install:  pip install -r requirements.txt   (or the conda-forge equivalents)
+
+# geospatial + cloud-native data access
+geopandas
+rasterio
+shapely
+pyproj
+xarray
+dask
+zarr>=3
+s3fs                 # anonymous S3 access to the AlphaEarth mosaic on Source Cooperative
+odc-geo
+odc-stac
+pystac-client
+planetary-computer   # signs Planetary Computer asset URLs (no account needed)
+
+# modelling + reporting
+numpy
+pandas
+pyarrow
+scikit-learn>=1.4
+joblib
+matplotlib
+tqdm
+jupyter
