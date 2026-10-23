@@ -90,10 +90,3 @@ check before a full run. Scripts 03 and 04 skip parcels already downloaded if th
   only on training folds; 95% confidence intervals from a block bootstrap; inputs compared with
   paired differences on the same parcels (Holm-adjusted).
 - **Classifiers**: logistic regression (linear probe), random forest, histogram gradient boosting, RBF SVM.
-
-## Open points to check
-
-- AgriFM: its config's normalisation means (~4,000 for blue) are much higher than Earth Engine
-  Sentinel-2 L2A values (~1,100); confirm the pixel scale the AgriFM weights expect.
-- Prithvi was pretrained on 30 m HLS; here it receives 10 m Sentinel-2 chips (stated in 05b).
-- The prediction / mapping step (wall-to-wall maps) is not part of the pipeline yet.
