@@ -1,31 +1,48 @@
-name: irrimapping-geofm
+# Conda environment for the whole pipeline (scripts 01-07 and analysis/).
+#
+#   conda env create -f environment.yml          # new environment "condaml"
+#   conda env update -n condaml -f environment.yml   # or update an existing condaml
+#   conda activate condaml
+#   pip install --no-deps git+https://github.com/Clay-foundation/model.git   # Clay (see note)
+#
+# Note on Clay: the Clay package pins einops 0.7, while TerraTorch (Prithvi, TerraMind) needs a
+# newer einops. Clay works with the newer version, so it is installed with --no-deps; its other
+# requirements are listed below.
+name: condaml
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.11
   # geospatial
-  - gdal
   - geopandas
   - rasterio
-  - shapely
+  - shapely>=2
   - pyproj
-  - xarray
-  - dask
-  - zarr>=3
-  - s3fs
-  - odc-geo
-  - odc-stac
-  - pystac-client
-  - planetary-computer
-  # data + ML
+  - pyogrio
+  - earthengine-api
+  # data + machine learning
   - numpy
   - pandas
-  - pyarrow
   - scipy
   - scikit-learn>=1.4
   - joblib
-  - tqdm
-  # plots + notebooks
+  - pyyaml
+  - requests
+  - pillow
+  # deep learning (CPU, CUDA or Apple Silicon)
+  - pytorch
+  - torchvision
+  # figures and interactive work
   - matplotlib
   - jupyterlab
   - ipykernel
+  - pip
+  - pip:
+      - terratorch            # Prithvi-EO-2.0 and TerraMind backbones (and their dependencies)
+      - mmengine              # AgriFM encoder (registry + checkpoint loading)
+      - timm
+      - einops
+      - lightning             # needed by Clay
+      - python-box            # needed by Clay
+      - vit-pytorch           # needed by Clay
+      - wandb                 # imported by Clay

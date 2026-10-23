@@ -1,4 +1,5 @@
 # ---------------------------------------------------------------- secrets (never commit)
+secrets/
 *service-account*.json
 client_secret*.json
 token.json
@@ -7,9 +8,12 @@ credentials*.json
 *.pem
 *.key
 
-# ---------------------------------------------------------------- raw and third-party data
-# Field survey (Ouassanouan et al. 2026), boundaries, WorldCover: download from the original sources
-Morocco_data/
+# ---------------------------------------------------------------- data, checkpoints, outputs (rebuilt or downloaded)
+data/raw/
+checkpoints/
+external/
+outputs/
+archive/
 *.tif
 *.tiff
 *.shp
@@ -18,23 +22,11 @@ Morocco_data/
 *.prj
 *.cpg
 *.zip
-
-# ---------------------------------------------------------------- generated data (rebuilt by the code)
-outputs/*
-outputs/**/*.geojson
-outputs/**/*.parquet
-outputs/**/*.csv
-outputs/features/
-outputs/models/**/*.joblib
-feature_extraction/features/
-feature_extraction/*.geojson
-irrmap/alphaearth/
-irrmap/sentinel/
-**/_parts/
-**/_cache/
-**/logs/
+*.npz
+*.joblib
+*.ckpt
+*.pth
 *.log
-*.parquet.tmp
 
 # ---------------------------------------------------------------- documents
 *.pdf
@@ -48,7 +40,6 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
-.python-version
 
 # ---------------------------------------------------------------- OS / editors
 .DS_Store
@@ -56,3 +47,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+.claude/
