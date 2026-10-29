@@ -1,12 +1,12 @@
 """
-05a_embed_clay.py  —  Clay v1.5 embeddings for every parcel (frozen encoder)
+02a_embed_clay.py  —  Clay v1.5 embeddings for every parcel (frozen encoder)
 ============================================================================
 
 What it does
 ------------
-Turns each parcel's chips (04_download_chips.py) into Clay embeddings: one 1024-number vector
+Turns each parcel's crops (dataset/04_make_views.py) into Clay embeddings: one 1024-number vector
 per month of its agricultural year. The encoder is frozen (no training here); the embeddings are
-classified in 06_train_evaluate.py with the same models and spatial validation as every other input.
+classified in 03_train_evaluate.py with the same models and spatial validation as every other input.
 
 The model
 ---------
@@ -25,7 +25,7 @@ Steps
    (= the band mean after normalisation).
 3. Run the encoder on every monthly chip; put the patch embeddings back on their 8 x 8 grid.
 4. Parcel embedding per month = mean of the patches covering the parcel, weighted by the share of
-   each patch inside the parcel (mask from script 04).
+   each patch inside the parcel (parcel mask stored with the crops).
 5. Save in batches (resume possible) and merge into one file.
 
 Install (once, in the condaml environment)
@@ -37,13 +37,13 @@ Install (once, in the condaml environment)
 
 Output
 ------
-outputs/05_embeddings/clay_<WINDOW>.npz
+outputs/study/02_embeddings/clay_<WINDOW>_tiles.npz
     parcel_id [N], label [N], ag_season [N], steps [12] (month names),
     embeddings [N, 12, 1024] float16, valid [N, 12] (False = month without any clear pixel)
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/05a_embed_clay.py
+    python study/02a_embed_clay.py
 """
 import json
 import time
@@ -56,7 +56,7 @@ import torch
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "clay"
-WINDOW = "agyear"                                          # must match 04_download_chips.py
+WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
 CHECKPOINT = ROOT / "checkpoints" / "clay" / "clay-v1.5.ckpt"
 METADATA = ROOT / "checkpoints" / "clay" / "metadata.yaml"
 BATCH_PARCELS = 16            # parcels per step (x 12 months = chips per step)
@@ -65,16 +65,25 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the chips of 04_download_chips.py, pooling patch embeddings inside the parcel and
+# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
-CHIP_DIR = ROOT / "outputs" / "04_chips" / WINDOW
-OUT_DIR = ROOT / "outputs" / "05_embeddings"
-PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{WINDOW}"
-OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{WINDOW}.npz"
+# Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
+# (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
+CHIP_SOURCE = "tiles"
+CROP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
+if CHIP_SOURCE == "tiles":
+    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+else:
+    CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
+    TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
+OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
+PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
+OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
 
 def read_chip_info():
-    """Band names, months, NODATA value and scales written by 04_download_chips.py, plus the parcel index."""
+    """Band names, months, NODATA value and scales written with the crops (chips_info.json), plus the parcel index."""
     info = json.loads((CHIP_DIR / "chips_info.json").read_text())
     index = pd.read_csv(CHIP_DIR / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id")
     return info, index.set_index("parcel_id")

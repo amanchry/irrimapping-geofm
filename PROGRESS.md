@@ -7,27 +7,28 @@ change log).
 
 ---
 
-## Current status (2026-10-15)
+## Current status (2026-10-29)
 
 | Step | Script | Status |
 | --- | --- | --- |
-| Labels | `pipeline/01_prepare_labels.py` | Run: 8,781 parcels (7,585 irrigated, 1,196 rainfed) |
-| Spatial folds | `pipeline/02_make_spatial_folds.py` | Run: 5 folds, 20 km blocks; identical to the earlier split |
-| S1/S2 features | `pipeline/03_extract_s1s2_features.py` | Written, not yet run (Earth Engine) |
-| Chips for foundation models | `pipeline/04_download_chips.py` | Written, not yet run (Earth Engine) |
-| Clay embeddings | `pipeline/05a_embed_clay.py` | Tested with a random encoder; checkpoint downloaded, not yet run |
-| Prithvi embeddings | `pipeline/05b_embed_prithvi.py` | Tested with random weights, not yet run |
-| TerraMind embeddings | `pipeline/05c_embed_terramind.py` | Tested with random weights, not yet run |
-| AgriFM embeddings | `pipeline/05d_embed_agrifm.py` | Tested with random weights; weights + repo still to download |
-| Train / evaluate | `pipeline/06_train_evaluate.py` | Tested in quick mode on old calendar-year features |
-| Compare inputs | `pipeline/07_compare_models.py` | Tested on test runs |
-| GMIA-NEXT check points | `analysis/a1_gmia_next_points.py` | Converted from notebook; needs `data/raw/gmia_next/` |
+| Labels | `dataset/01_prepare_labels.py` | Run: 8,781 parcels (7,585 irrigated, 1,196 rainfed) |
+| Spatial folds | `dataset/02_make_spatial_folds.py` | Run: 5 folds, 20 km blocks |
+| Tile store | `dataset/03_build_tiles.py` | Plan + labels tested on all parcels; Earth Engine part not yet run |
+| Model views | `dataset/04_make_views.py` | Tested end to end with synthetic imagery |
+| Dataset inspection | `study/01_inspect_dataset.py` | Written 2026-10-29; tested on synthetic data |
+| Clay embeddings | `study/02a_embed_clay.py` | Tested with a random encoder; not yet run |
+| Prithvi embeddings | `study/02b_embed_prithvi.py` | Tested with random weights, not yet run |
+| TerraMind embeddings | `study/02c_embed_terramind.py` | Tested with random weights, not yet run |
+| AgriFM embeddings | `study/02d_embed_agrifm.py` | Tested with random weights; weights + repo still to download |
+| Train / evaluate | `study/03_train_evaluate.py` | Tested on synthetic tile-store features |
+| Compare inputs | `study/04_compare_models.py` | Tested on test runs |
+| GMIA-NEXT check points | `analysis/a1_gmia_next_points.py` | Needs `data/raw/gmia_next/` |
 | Reference maps | `analysis/a2_map_reference_products.py` | Converted from notebook |
-| Chips to GeoTIFF (QGIS) | `analysis/a3_export_chips_geotiff.py` | Tested on stand-in chips |
+| Crops to GeoTIFF (QGIS) | `analysis/a3_export_chips_geotiff.py` | Reads `views/crops_p16` |
 
 Next steps
-1. Run 03 and 04 with `N_TEST_PARCELS = 20`, check the outputs (a3 in QGIS), then full runs.
-2. Run 05a-05d, then 06 for each `INPUT`, then 07.
+1. Run dataset/03 with `N_TEST_TILES = 20`, then dataset/04 and study/01; check the figures (and a3 in QGIS); then full runs.
+2. Run study/02a-02d, then study/03 for each `INPUT`, then study/04.
 3. Decide on the open points below.
 
 ---
@@ -36,6 +37,7 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
+| 2026-10-29 | All inputs (parcel features and foundation-model crops) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the crops | Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot & Landrieu 2021), Sen4AgriNet (Sykas et al. 2022) |
 | 2026-10-15 | Foundation models compared: Clay, Prithvi-EO-2.0, TerraMind, AgriFM (AlphaEarth only a pipeline test, not in the thesis) | Thesis proposal |
 | 2026-10-15 | Main comparison with **frozen** encoders + the same 4 classifiers; fine-tuning only as a secondary experiment | Fair across models; Butsko et al. 2025, Marsocci et al. 2024 |
 | 2026-10-15 | Time window = **agricultural year 1 Sep - 31 Aug**; growing season only (Nov-May) and calendar year as ablations | Ministry reports season rainfall from 1 Sep; sowing ~Nov, harvest May-Jul (FAO GIEWS; USDA FAS 2017); summer is when only irrigated land stays green |
@@ -70,6 +72,65 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-10-29 (documentation)
+- New `dataset/README.md` and `study/README.md`: full methodology of each part, every script (purpose, steps,
+  settings, outputs), Mermaid flow diagrams in the markdown, file formats, limitations and references.
+  The main README links to both. TODO: complete the Ouassanouan et al. (2026) reference (title, DOI).
+- Docstrings corrected: embedding output names `<model>_agyear_tiles.npz` (02a-02d), baseline source in study/03,
+  a3 output folder.
+
+### 2026-10-29 (restructure)
+- **Code split into two parts.** `dataset/` builds the ML-ready dataset (publishable separately);
+  `study/` uses only its outputs. `pipeline/` is no longer used.
+- Renamed scripts: `pipeline/01`, `02` -> `dataset/01`, `02`; `pipeline/04_build_tiles.py` -> `dataset/03_build_tiles.py`;
+  `pipeline/04b_make_views.py` -> `dataset/04_make_views.py`; `pipeline/05a-05d` -> `study/02a-02d`;
+  `pipeline/06_train_evaluate.py` -> `study/03_train_evaluate.py`; `pipeline/07_compare_models.py` -> `study/04_compare_models.py`.
+  `pipeline/03_extract_s1s2_features.py` (Earth Engine features) moved to `archive/legacy_pipeline/`.
+- Outputs moved: `outputs/01_labels`, `02_folds` -> `outputs/dataset/`; tile store in `outputs/dataset/03_tiles/agyear/`;
+  `05_embeddings`, `06_models`, `07_comparison` -> `outputs/study/02_embeddings`, `03_models`, `04_comparison`;
+  old `03_s1s2_features` and `04_chips` -> `outputs/legacy/`. All paths in the scripts updated.
+- **New `study/01_inspect_dataset.py`:** inventory per class / season / fold, label QA (overlaps, tiny parcels),
+  clear observations per month, patch purity aligned vs centred, seasonal NDVI / NDWI / VH profiles,
+  example crops per class, NDVI agreement with the legacy Earth Engine features. Output: `outputs/study/01_inspection/`.
+- a3 now reads `views/crops_p16` and writes to `outputs/study/01_inspection/chips_geotiff/`.
+- README rewritten for the two-part structure. Backups: `archive/scripts_2026-10-29/`.
+
+### 2026-10-29
+- **New data source for all inputs: shared tile store.** `04_build_tiles.py` (non-overlapping 128 x 128-px tiles,
+  label / parcel-ID / edge rasters, S1 per orbit in linear power) and `04b_make_views.py` (parcel features, pixel sets,
+  patch-aligned crops `crops_p8` / `crops_p16`) replace `04_download_chips.py` and the Earth Engine features of
+  script 03. Old scripts and results are kept for reference; old runs keep their names.
+- **05a-05d:** new settings `CHIP_SOURCE = "tiles"` and `CROP_PATCH_PX` (8 for Clay, 16 for Prithvi, TerraMind,
+  AgriFM). Output files are now `<model>_agyear_tiles.npz` (old: `<model>_agyear.npz`).
+- **06:** new settings `S1S2_SOURCE = "tiles"`, `TILE_FEATURES = "inner"`, `S1_ORBIT = "crops"`, `EMB_SOURCE = "tiles"`.
+  The parcel-feature table of 04b is read directly: bookkeeping columns (fold, n_px_used, used_inner) and the
+  observation counts (S2_NCLEAR, S1_N_*) are dropped, the chosen Sentinel-1 orbit is renamed to VV/VH (same orbit
+  as the foundation-model crops by default), months are labelled Sep ... Aug. New run names:
+  `s1s2-all_agyear_tiles-inner-<orbit>` and `<model>_agyear_tiles_concat`.
+- **07:** `BASELINE_RUN` and `RUNS` set to the five tile-store runs (old settings in a comment).
+- Tested 06 end to end on a synthetic table in the 04b format: 192 features (216 with both orbits), all four
+  classifiers, importance by variable and month.
+- Backups of the changed scripts: `archive/scripts_2026-10-29/`.
+
+### 2026-10-27
+- **New chip design (tile store)** replacing `04_download_chips.py` (moved to `archive/scripts_2026-10-27/`):
+  - `04_build_tiles.py`: fixed non-overlapping 128 x 128 px tiles (1.28 km) in EPSG:32629; only tiles needed by the parcels
+    (1,755 home + 302 outline + 930 context = 2,987 tiles); 12 monthly composites x 19 bands: S2 median (Cloud Score+),
+    S2 clear-observation count, S1 ascending / descending separately as linear-power mean -> dB, S1 scene counts;
+    label (0 ignore / 1 irrigated / 2 rainfed), parcel_idx and edge rasters; scene IDs per tile and month; QA per tile;
+    GeoParquet tile index with fold (87 tiles hold parcels of two folds -> `mixed_folds`).
+  - `04b_make_views.py`: parcel median features (all pixels / without edge pixels), pixel sets (PSE-TAE), and 64 x 64
+    crops per patch size (8, 16) shifted so the parcel centroid is at a patch centre; same format as the old chips.
+  - Why: old chips overlapped (median 8 other chips per chip, 6.3% across folds), baseline and foundation models used
+    different pixels / compositing, small parcels were split over 4 patches (purity 0.37 / 0.10 for 8 / 16 px patches;
+    aligned crops: 0.62 / 0.36 in the test sample), S1 was averaged in dB with orbits mixed, no observation counts.
+  - Label QA from the parcel geometry: 79 overlapping parcel pairs (2 with different labels, 25 covering > 50% of the
+    smaller parcel) -> `parcel_overlaps.csv`; 3,684 shared pixels set to ignore; 65 parcels have no pixel after the
+    10 m inner buffer.
+  - Design follows PASTIS, Sen4AgriNet, S2-Agri (PSE-TAE), Fields of The World, ClarkCGA / Prithvi crop chips.
+- Next: run 04 with `N_TEST_TILES = 20`, inspect tiles in QGIS, full run, then 04b; point the 05 scripts to
+  `outputs/04_tiles/agyear/views/crops_p8` (Clay) or `crops_p16` (Prithvi, TerraMind; AgriFM to check).
 
 ### 2026-10-16
 - `05d_embed_agrifm.py`: downloads the weights automatically from https://glass.hku.hk/casual/AgriFM/AgriFM.pth and clones the AgriFM code if missing.

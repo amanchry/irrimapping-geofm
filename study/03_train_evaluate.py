@@ -1,15 +1,15 @@
 """
-06_train_evaluate.py  —  train and evaluate irrigated vs rainfed classifiers for ANY input
+03_train_evaluate.py  —  train and evaluate irrigated vs rainfed classifiers for ANY input
 ==========================================================================================
 
 What it does
 ------------
 One script for every input, so all of them are evaluated in exactly the same way:
-  INPUT = "s1s2"       Sentinel-1/2 features per period (03_extract_s1s2_features.py)  -> the baseline
-  INPUT = "clay"       Clay embeddings              (05a_embed_clay.py)
-  INPUT = "prithvi"    Prithvi-EO-2.0 embeddings    (05b_embed_prithvi.py)
-  INPUT = "terramind"  TerraMind embeddings         (05c_embed_terramind.py)
-  INPUT = "agrifm"     AgriFM embeddings            (05d_embed_agrifm.py)
+  INPUT = "s1s2"       Sentinel-1/2 parcel features per month (dataset/04_make_views.py, view A)  -> the baseline
+  INPUT = "clay"       Clay embeddings              (02a_embed_clay.py)
+  INPUT = "prithvi"    Prithvi-EO-2.0 embeddings    (02b_embed_prithvi.py)
+  INPUT = "terramind"  TerraMind embeddings         (02c_embed_terramind.py)
+  INPUT = "agrifm"     AgriFM embeddings            (02d_embed_agrifm.py)
 For each input, 4 classifiers are trained on top of the (frozen) features:
   logreg  logistic regression (linear; on embeddings this is the standard "linear probe")
   rf      random forest        hgb  histogram gradient boosting        svm  RBF support vector machine
@@ -37,22 +37,22 @@ Steps
 6. Grouped permutation importance with the random forest of each outer fold:
    s1s2 by variable (NDVI, VH, ...) and by period; embeddings by step (month).
 7. Final models refit on all parcels (for mapping later); all tables and figures saved.
-Compare inputs with 07_compare_models.py.
+Compare inputs with 04_compare_models.py.
 
-Output (outputs/06_models/<RUN_NAME>/)
+Output (outputs/study/03_models/<RUN_NAME>/)
 --------------------------------------
 metrics_summary.csv            headline metrics with 95% CI, one column per classifier
 metrics_with_ci.csv            all metrics: estimate, ci_low, ci_high
 metrics_per_fold.csv           metrics of each outer fold
 paired_model_differences.csv   macro-F1 differences between classifiers with CI
 cv_random_vs_spatial.csv/.png  optimism of random CV
-oof_predictions.csv            every parcel's out-of-fold prediction and rainfed score (used by script 07)
+oof_predictions.csv            every parcel's out-of-fold prediction and rainfed score (used by 04_compare_models.py)
 selected_hyperparameters.csv, inner_tuning_scores.csv, importance.csv/.png, confusion_matrices.png,
 seasonal_profiles.png (s1s2), gap_filling.csv (s1s2), final_model_<name>.joblib, run_config.json, run.log
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/06_train_evaluate.py
+    python study/03_train_evaluate.py
 Change INPUT below and run again for each input. QUICK_TEST = True gives a fast check.
 """
 import ast
@@ -83,23 +83,41 @@ from sklearn.svm import SVC
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
-WINDOW = "agyear"                     # time window used in scripts 03 / 04
+WINDOW = "agyear"                     # time window of the dataset (dataset/03_build_tiles.py)
 
 # S1/S2 baseline only
-INTERVAL_DAYS = 30                    # which feature table from script 03 (30 or 15)
+INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOURCE = 'gee'): 30 or 15
 START_MONTH = 9                       # first month of the window (labels of the periods)
 S1S2_VARIABLES = "all"                # "all" | "s2" (optical only) | "s1" (radar only)
+S1S2_SOURCE = "tiles"                 # "tiles" = parcel features cut from the tile store (04_make_views.py, view A;
+                                      #           same pixels as the foundation-model crops) | "gee" = old script-03 table
+TILE_FEATURES = "inner"               # tiles only: "inner" (edge pixels removed) | "all" (all parcel pixels)
+S1_ORBIT = "crops"                    # tiles only: "crops" = same Sentinel-1 orbit as the foundation-model crops
+                                      # (views_info.json) | "ASC" | "DSC" | "both" (both orbits as separate variables)
 
 # Foundation-model embeddings only
+EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the dataset/04_make_views.py crops (<model>_agyear_tiles.npz) | "chips" = old
 FEATURE_MODE = "concat"               # "concat" (all months + PCA) | "mean" (average over months)
 PCA_DIM = 128                         # PCA components in concat mode (fitted on training folds only)
 
-SPLIT_FILE = ROOT / "outputs" / "02_folds" / "parcels_folds.geojson"
-S1S2_FILE = ROOT / "outputs" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
-EMB_FILE = ROOT / "outputs" / "05_embeddings" / f"{INPUT}_{WINDOW}.npz"
-RUN_NAME = (f"s1s2-{S1S2_VARIABLES}_{WINDOW}_{INTERVAL_DAYS}d" if INPUT == "s1s2"
-            else f"{INPUT}_{WINDOW}_{FEATURE_MODE}")
-OUT_DIR = ROOT / "outputs" / "06_models" / RUN_NAME
+SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
+VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views"
+if S1S2_SOURCE == "tiles":
+    S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
+    if S1_ORBIT == "crops" and INPUT == "s1s2":                   # orbit chosen by dataset/04_make_views.py for the crops
+        if not (VIEWS_DIR / "views_info.json").exists():
+            raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run 03_build_tiles.py and 04_make_views.py "
+                             f"first, or set S1S2_SOURCE = 'gee'")
+        S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_crops_and_pixelsets"]
+    S1S2_TAG = f"tiles-{TILE_FEATURES}-{S1_ORBIT.lower()}"
+else:
+    S1S2_FILE = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
+    S1S2_TAG = f"{INTERVAL_DAYS}d"
+EMB_TAG = f"{WINDOW}_tiles" if EMB_SOURCE == "tiles" else WINDOW
+EMB_FILE = ROOT / "outputs" / "study" / "02_embeddings" / f"{INPUT}_{EMB_TAG}.npz"
+RUN_NAME = (f"s1s2-{S1S2_VARIABLES}_{WINDOW}_{S1S2_TAG}" if INPUT == "s1s2"
+            else f"{INPUT}_{EMB_TAG}_{FEATURE_MODE}")
+OUT_DIR = ROOT / "outputs" / "study" / "03_models" / RUN_NAME
 
 SEED = 42
 RF_TREES = 500
@@ -468,7 +486,9 @@ def run_protocol(data, features, out_dir, run_name, log):
     cv.to_csv(out_dir / "cv_random_vs_spatial.csv", index=False)
     (out_dir / "run_config.json").write_text(json.dumps({
         "run": run_name, "input": INPUT, "window": WINDOW,
-        "settings": ({"interval_days": INTERVAL_DAYS, "variables": S1S2_VARIABLES} if INPUT == "s1s2"
+        "settings": ({"source": S1S2_SOURCE, "feature_file": S1S2_FILE.name, "variables": S1S2_VARIABLES,
+                      **({"tile_features": TILE_FEATURES, "s1_orbit": S1_ORBIT} if S1S2_SOURCE == "tiles"
+                         else {"interval_days": INTERVAL_DAYS})} if INPUT == "s1s2"
                      else {"feature_mode": FEATURE_MODE, "pca_dim": PCA_DIM, "embedding_file": EMB_FILE.name}),
         "n_parcels": int(len(data)), "n_features": len(features),
         "validation": "nested spatial CV (outer 5 folds, inner spatial CV on the training folds)",
@@ -479,7 +499,9 @@ def run_protocol(data, features, out_dir, run_name, log):
 
 
 # ============================ INPUT-SPECIFIC CODE ===========================
-S1_VARIABLES = {"VV", "VH"}
+S1_VARIABLES = {"VV", "VH", "VV_ASC", "VH_ASC", "VV_DSC", "VH_DSC"}
+TILE_META = ["n_px_used", "used_inner", "fold", "label", "ag_season"]      # not features
+TILE_COUNTS = ("S2_NCLEAR", "S1_N_ASC", "S1_N_DSC")                          # observation counts: QA only, not features
 
 
 def split_name(col):
@@ -492,12 +514,29 @@ def split_name(col):
 def load_s1s2(split):
     """S1/S2 feature table joined to the folds; keeps the variables chosen in S1S2_VARIABLES."""
     feats = pd.read_csv(S1S2_FILE, dtype={"parcel_id": str}).drop_duplicates("parcel_id").set_index("parcel_id")
+    if S1S2_SOURCE == "tiles":
+        feats = tile_feature_table(feats)
     features = [c for c in feats.columns if c not in ("label", "ag_season")]
     if S1S2_VARIABLES == "s2":
         features = [c for c in features if split_name(c)[0] not in S1_VARIABLES]
     elif S1S2_VARIABLES == "s1":
         features = [c for c in features if split_name(c)[0] in S1_VARIABLES]
     return split.join(feats[features], how="inner"), features
+
+
+def tile_feature_table(feats):
+    """Parcel features of 04_make_views.py -> the same layout as the script-03 table.
+    Drops bookkeeping and observation-count columns, keeps the chosen Sentinel-1 orbit and renames it
+    to VV_mXX / VH_mXX (with S1_ORBIT = "both", VV_ASC_mXX ... are kept as four radar variables)."""
+    def var(c):                                                   # 'VV_ASC_m03' -> 'VV_ASC'; 'label' -> 'label'
+        return c.rsplit("_", 1)[0] if "_" in c else c
+    feats = feats.drop(columns=[c for c in feats.columns if c in TILE_META[:3] or var(c) in TILE_COUNTS])
+    if S1_ORBIT in ("ASC", "DSC"):
+        other = "DSC" if S1_ORBIT == "ASC" else "ASC"
+        feats = feats.drop(columns=[c for c in feats.columns if var(c) in (f"VV_{other}", f"VH_{other}")])
+        feats = feats.rename(columns={c: c.replace(f"_{S1_ORBIT}_", "_") for c in feats.columns
+                                      if var(c) in (f"VV_{S1_ORBIT}", f"VH_{S1_ORBIT}")})
+    return feats
 
 
 def fill_gaps(data, features):
@@ -512,9 +551,11 @@ def fill_gaps(data, features):
 
 
 def period_label(period):
-    """'p03' -> start date of that period, e.g. 'Nov 01'."""
-    start = pd.Timestamp(year=2023, month=START_MONTH, day=1) + pd.Timedelta(days=(int(period[1:]) - 1) * INTERVAL_DAYS)
-    return start.strftime("%b %d")
+    """'p03' -> start date of that 30-day period, e.g. 'Nov 01'; 'm03' (tile features, calendar months) -> 'Nov'."""
+    first = pd.Timestamp(year=2023, month=START_MONTH, day=1)
+    if period.startswith("m"):
+        return (first + pd.DateOffset(months=int(period[1:]) - 1)).strftime("%b")
+    return (first + pd.Timedelta(days=(int(period[1:]) - 1) * INTERVAL_DAYS)).strftime("%b %d")
 
 
 def plot_profiles(data, features, path):

@@ -25,7 +25,7 @@ Steps
                  and its main WorldCover class (optional, CHECK_WORLDCOVER = True)
 6. Save the parcels, a summary table and figures (map, class balance, parcel size, survey timing).
 
-Output (outputs/01_labels/)
+Output (outputs/dataset/01_labels/)
 ---------------------------
 parcels_labelled.geojson   one polygon per parcel: parcel_id, date, ag_season, label, class_name,
                            crop, zone, area_ha, nn_dist_m, wc_cropland_frac, wc_major
@@ -34,7 +34,7 @@ summary.csv                parcels and area per class and per agricultural year
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/01_prepare_labels.py
+    python dataset/01_prepare_labels.py
 """
 from pathlib import Path
 
@@ -53,7 +53,7 @@ ROOT = Path(__file__).resolve().parents[1]                 # project folder
 FIELDS_FILE = ROOT / "data" / "raw" / "field_survey" / "lulc_fielddata.shp"
 COUNTRY_FILE = ROOT / "data" / "raw" / "admin" / "gadm41_MAR_0.json"
 WORLDCOVER_FILE = ROOT / "data" / "raw" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
-OUT_DIR = ROOT / "outputs" / "01_labels"
+OUT_DIR = ROOT / "outputs" / "dataset" / "01_labels"
 
 UTM = 32629                                # metric CRS (UTM 29N) for areas and distances
 SEASON_START_MONTH = 9                     # agricultural year starts on 1 September

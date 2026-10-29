@@ -4,11 +4,11 @@ a3_export_chips_geotiff.py  —  write some parcels' chips as GeoTIFFs to look a
 
 What it does
 ------------
-The chips of 04_download_chips.py are stored as compressed NumPy arrays (fast for the models, not
+The crops of dataset/04_make_views.py are stored as compressed NumPy arrays (fast for the models, not
 viewable in GIS). This script turns the chips of a few parcels back into georeferenced GeoTIFFs,
 using the UTM zone and chip corner saved in index.csv, so they overlay exactly on the parcels.
 
-For each selected parcel it writes a folder outputs/analysis/chips_geotiff/<class>_<parcel_id>/ with:
+For each selected parcel it writes a folder outputs/study/01_inspection/chips_geotiff/<class>_<parcel_id>/ with:
   m01_Sep.tif ... m12_Aug.tif   one file per month, 14 bands: B1 ... B12 (Sentinel-2 reflectance x 10000)
                                 and VV, VH (Sentinel-1 dB x 100); no-data = -32768 (cloudy month/pixel)
   ndvi_12months.tif             NDVI for the 12 months (float, one band per month) - quick seasonal view
@@ -45,10 +45,10 @@ from rasterio.transform import Affine
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-WINDOW = "agyear"                                          # as in 04_download_chips.py
-CHIP_DIR = ROOT / "outputs" / "04_chips" / WINDOW
-PARCELS_FILE = ROOT / "outputs" / "01_labels" / "parcels_labelled.geojson"
-OUT_DIR = ROOT / "outputs" / "04_chips" / "chips_geotiff"
+WINDOW = "agyear"                                          # as in dataset/03_build_tiles.py
+CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / "crops_p16"   # crops of dataset/04_make_views.py
+PARCELS_FILE = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"
+OUT_DIR = ROOT / "outputs" / "study" / "01_inspection" / "chips_geotiff"
 
 PARCEL_IDS = None             # e.g. ["1234", "5678"] for specific parcels; None = random selection
 N_PER_CLASS = 5               # random parcels per class when PARCEL_IDS is None

@@ -1,12 +1,12 @@
 """
-05c_embed_terramind.py  —  TerraMind embeddings for every parcel (frozen encoder, Sentinel-1 + Sentinel-2)
+02c_embed_terramind.py  —  TerraMind embeddings for every parcel (frozen encoder, Sentinel-1 + Sentinel-2)
 ===========================================================================================================
 
 What it does
 ------------
-Turns each parcel's chips (04_download_chips.py) into TerraMind embeddings: one 768-number vector
+Turns each parcel's crops (dataset/04_make_views.py) into TerraMind embeddings: one 768-number vector
 per month, computed from Sentinel-2 AND Sentinel-1 together. The encoder is frozen; the embeddings
-are classified in 06_train_evaluate.py like every other input.
+are classified in 03_train_evaluate.py like every other input.
 
 The model
 ---------
@@ -25,19 +25,19 @@ Steps
 1. Load the frozen TerraMind backbone (downloads the weights from Hugging Face once).
 2. For each batch of parcels and each month: standardise S2 and S1, cloudy/missing pixels -> 0.
 3. Run the encoder; take the last layer's tokens on their 4 x 4 grid.
-4. Weighted mean of the patches covering the parcel (mask from script 04).
+4. Weighted mean of the patches covering the parcel (parcel mask stored with the crops).
 5. Save in batches (resume possible) and merge into one file.
 
 Install: terratorch (already in environment.yml).
 
 Output
 ------
-outputs/05_embeddings/terramind_<WINDOW>.npz   (same layout as the other models)
+outputs/study/02_embeddings/terramind_<WINDOW>_tiles.npz  (same layout as the other models)
     embeddings [N, 12, 768] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/05c_embed_terramind.py
+    python study/02c_embed_terramind.py
 """
 import json
 import time
@@ -50,7 +50,7 @@ import torch
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "terramind"
-WINDOW = "agyear"                                          # must match 04_download_chips.py
+WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
 BACKBONE = "terramind_v1_base"
 MODALITIES = ["S2L2A", "S1GRD"]                            # ["S2L2A"] = optical only (ablation)
 BATCH_PARCELS = 16
@@ -59,16 +59,25 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the chips of 04_download_chips.py, pooling patch embeddings inside the parcel and
+# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
-CHIP_DIR = ROOT / "outputs" / "04_chips" / WINDOW
-OUT_DIR = ROOT / "outputs" / "05_embeddings"
-PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{WINDOW}"
-OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{WINDOW}.npz"
+# Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
+# (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
+CHIP_SOURCE = "tiles"
+CROP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+if CHIP_SOURCE == "tiles":
+    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+else:
+    CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
+    TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
+OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
+PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
+OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
 
 def read_chip_info():
-    """Band names, months, NODATA value and scales written by 04_download_chips.py, plus the parcel index."""
+    """Band names, months, NODATA value and scales written with the crops (chips_info.json), plus the parcel index."""
     info = json.loads((CHIP_DIR / "chips_info.json").read_text())
     index = pd.read_csv(CHIP_DIR / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id")
     return info, index.set_index("parcel_id")

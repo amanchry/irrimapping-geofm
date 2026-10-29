@@ -1,12 +1,12 @@
 """
-05d_embed_agrifm.py  —  AgriFM embeddings for every parcel (frozen encoder)
+02d_embed_agrifm.py  —  AgriFM embeddings for every parcel (frozen encoder)
 ===========================================================================
 
 What it does
 ------------
-Turns each parcel's 12 monthly Sentinel-2 chips (04_download_chips.py) into ONE AgriFM embedding
+Turns each parcel's 12 monthly Sentinel-2 crops (dataset/04_make_views.py) into ONE AgriFM embedding
 for the whole agricultural year. The encoder is frozen; the embeddings are classified in
-06_train_evaluate.py like every other input.
+03_train_evaluate.py like every other input.
 
 The model
 ---------
@@ -28,7 +28,7 @@ Steps
 1. Build the AgriFM Sentinel-2 encoder from the cloned repository's code and load the pretrained weights.
 2. For each batch of parcels: take the 10 bands for all 12 months, normalise; cloudy pixels -> 0.
 3. Run the encoder on the [batch, 12 months, 10 bands, 64, 64] stack.
-4. Weighted mean of the final feature-map cells covering the parcel (mask from script 04).
+4. Weighted mean of the final feature-map cells covering the parcel (parcel mask stored with the crops).
 5. Save in batches (resume possible) and merge into one file.
 
 Install (once, in the condaml environment)
@@ -40,12 +40,12 @@ Install (once, in the condaml environment)
 
 Output
 ------
-outputs/05_embeddings/agrifm_<WINDOW>.npz   (same layout as the other models)
+outputs/study/02_embeddings/agrifm_<WINDOW>_tiles.npz  (same layout as the other models)
     embeddings [N, 1, D] float16 (one step: the whole year), valid [N, 1], steps = ["year"]
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/05d_embed_agrifm.py
+    python study/02d_embed_agrifm.py
 """
 import json
 import sys
@@ -59,7 +59,7 @@ import torch
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "agrifm"
-WINDOW = "agyear"                                          # must match 04_download_chips.py
+WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
 AGRIFM_REPO = ROOT / "external" / "AgriFM"                 # git clone of github.com/flyakon/AgriFM
 WEIGHTS = ROOT / "checkpoints" / "agrifm" / "AgriFM.pth"
 WEIGHTS_URL = "https://glass.hku.hk/casual/AgriFM/AgriFM.pth"   # downloaded automatically if WEIGHTS is missing
@@ -69,16 +69,25 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the chips of 04_download_chips.py, pooling patch embeddings inside the parcel and
+# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
-CHIP_DIR = ROOT / "outputs" / "04_chips" / WINDOW
-OUT_DIR = ROOT / "outputs" / "05_embeddings"
-PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{WINDOW}"
-OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{WINDOW}.npz"
+# Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
+# (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
+CHIP_SOURCE = "tiles"
+CROP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+if CHIP_SOURCE == "tiles":
+    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+else:
+    CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
+    TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
+OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
+PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
+OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
 
 def read_chip_info():
-    """Band names, months, NODATA value and scales written by 04_download_chips.py, plus the parcel index."""
+    """Band names, months, NODATA value and scales written with the crops (chips_info.json), plus the parcel index."""
     info = json.loads((CHIP_DIR / "chips_info.json").read_text())
     index = pd.read_csv(CHIP_DIR / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id")
     return info, index.set_index("parcel_id")

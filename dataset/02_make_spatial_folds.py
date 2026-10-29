@@ -32,11 +32,11 @@ Steps
 
 How the folds are used
 ----------------------
-06_train_evaluate.py runs NESTED spatial cross-validation for every input (S1/S2 features and
+03_train_evaluate.py runs NESTED spatial cross-validation for every input (S1/S2 features and
 each foundation model): each fold is the test fold once; hyperparameters are tuned by spatial CV
 on the other 4 folds only. The `split` column (fold 0 test, fold 1 validation) is kept for quick checks.
 
-Output (outputs/02_folds/)
+Output (outputs/dataset/02_folds/)
 --------------------------
 parcels_folds.geojson          all parcels + block_id, fold, random_fold, split
 fold_counts.csv                parcels per class and fold
@@ -48,7 +48,7 @@ train_test_distance.png        distance from test parcels to the nearest trainin
 
 Run (from the project folder)
 -----------------------------
-    python pipeline/02_make_spatial_folds.py
+    python dataset/02_make_spatial_folds.py
 """
 from pathlib import Path
 
@@ -63,9 +63,9 @@ from scipy.spatial import cKDTree
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-INPUT = ROOT / "outputs" / "01_labels" / "parcels_labelled.geojson"   # from 01_prepare_labels.py
+INPUT = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"   # from 01_prepare_labels.py
 COUNTRY_FILE = ROOT / "data" / "raw" / "admin" / "gadm41_MAR_0.json"
-OUT_DIR = ROOT / "outputs" / "02_folds"
+OUT_DIR = ROOT / "outputs" / "dataset" / "02_folds"
 
 UTM = 32629                  # metric CRS (UTM zone 29N) for distances and blocks
 N_FOLDS = 5

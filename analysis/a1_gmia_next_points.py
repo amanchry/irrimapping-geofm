@@ -30,7 +30,7 @@ Input
 -----
 data/raw/gmia_next/GMIA-NEXT_GTPs_2024_v0_1/GMIA-NEXT_GTPs_2024_v0_1.shp   (move your GMIA-NEXT_GT folder here)
 data/raw/gmia_next/WB_world_countries.geojson
-outputs/02_folds/parcels_folds.geojson (for B3)  and  data/raw/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
+outputs/dataset/02_folds/parcels_folds.geojson (for B3)  and  data/raw/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
 
 Output (outputs/analysis/gmia_next/)
 ------------------------------------
@@ -58,7 +58,7 @@ ROOT = Path(__file__).resolve().parents[1]                 # project folder
 GMIA_DIR = ROOT / "data" / "raw" / "gmia_next"
 POINTS_FILE = GMIA_DIR / "GMIA-NEXT_GTPs_2024_v0_1" / "GMIA-NEXT_GTPs_2024_v0_1.shp"
 COUNTRIES_FILE = GMIA_DIR / "WB_world_countries.geojson"
-SURVEY_FILE = ROOT / "outputs" / "02_folds" / "parcels_folds.geojson"
+SURVEY_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
 WORLDCOVER_FILE = ROOT / "data" / "raw" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
 OUT_DIR = ROOT / "outputs" / "analysis" / "gmia_next"
 

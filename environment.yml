@@ -19,6 +19,7 @@ dependencies:
   - shapely>=2
   - pyproj
   - pyogrio
+  - pyarrow                 # GeoParquet tile index (04_build_tiles.py)
   - earthengine-api
   # data + machine learning
   - numpy
