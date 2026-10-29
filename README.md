@@ -8,10 +8,9 @@ Sentinel-1/2 baseline under the same spatial cross-validation.
 
 The code is split into two independent parts:
 
-1. **`dataset/` – the ML-ready dataset** (can be published on its own as a dataset paper).
-   Labelled parcels, spatial folds and one shared store of Sentinel-1/2 tiles, plus ready-to-use
+1. **`dataset/` – the ML-ready dataset**: Labelled parcels, spatial folds and one shared store of Sentinel-1/2 tiles, plus ready-to-use
    views for any model (parcel features, pixel sets, patch-aligned crops, full tiles).
-2. **`study/` – the irrigated-area study.** Uses only the outputs of `dataset/`: checks the data,
+2. **`study/` – the irrigated-area study.** Uses the outputs of `dataset/`: checks the data,
    extracts foundation-model embeddings, trains and evaluates the classifiers and compares the inputs.
 
 Detailed documentation of each part (methodology, every script, flow diagrams, file formats):
