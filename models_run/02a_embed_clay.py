@@ -4,7 +4,7 @@
 
 What it does
 ------------
-Turns each parcel's crops (ml_dataset_prep/04_make_views.py) into Clay embeddings: one 1024-number vector
+Turns each parcel's chips (ml_dataset_prep/04_make_views.py) into Clay embeddings: one 1024-number vector
 per month of its agricultural year. The encoder is frozen (no training here); the embeddings are
 classified in 03_train_evaluate.py with the same models and spatial validation as every other input.
 
@@ -25,7 +25,7 @@ Steps
    (= the band mean after normalisation).
 3. Run the encoder on every monthly chip; put the patch embeddings back on their 8 x 8 grid.
 4. Parcel embedding per month = mean of the patches covering the parcel, weighted by the share of
-   each patch inside the parcel (parcel mask stored with the crops).
+   each patch inside the parcel (parcel mask stored with the chips).
 5. Save in batches (resume possible) and merge into one file.
 
 Install (once, in the condaml environment)
@@ -65,25 +65,23 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the crops of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
-# saving. This block is identical in the four 05*_embed_*.py scripts.
-# Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
-# (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
+# Reading the chips of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
+# saving. This block is identical in the four 02*_embed_*.py scripts.
+# Input chips. "tiles" = patch-aligned chips cut by 04_make_views.py from the shared tile store
+# (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
-CROP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
-if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
-    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
-else:
-    CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
-    TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
+CHIP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
+
+CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
+TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+                                         # output name: <model>_agyear.npz (old results)
 OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
 
 def read_chip_info():
-    """Band names, months, NODATA value and scales written with the crops (chips_info.json), plus the parcel index."""
+    """Band names, months, NODATA value and scales written with the chips (chips_info.json), plus the parcel index."""
     info = json.loads((CHIP_DIR / "chips_info.json").read_text())
     index = pd.read_csv(CHIP_DIR / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id")
     return info, index.set_index("parcel_id")

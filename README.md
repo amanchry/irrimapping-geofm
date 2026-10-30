@@ -26,7 +26,7 @@ flowchart TD
         L["01 Labels<br/>8,781 parcels: 7,585 irrigated · 1,196 rainfed"]
         F["02 Spatial folds<br/>20 km blocks → 5 folds"]
         T["03 Tile store<br/>128 × 128 px tiles · 12 months × 19 bands<br/>+ label / parcel-ID / edge rasters"]
-        V["04 Model views<br/>parcel features · pixel sets · patch-aligned crops"]
+        V["04 Model views<br/>parcel features · pixel sets · patch-aligned chips"]
         L --> F --> T --> V
     end
 
@@ -41,7 +41,7 @@ flowchart TD
     FS --> L
     EE --> T
     V -->|"checked"| I
-    V -->|"crops"| E
+    V -->|"chips"| E
     V -->|"parcel features (baseline)"| C
     F -->|"folds"| C
     W --> E
@@ -55,7 +55,7 @@ flowchart TD
 
 **Method in one paragraph.** Each surveyed parcel gets the 12 monthly Sentinel-1/2 composites of its agricultural year (1 Sep – 31 Aug), cut from a shared, non-overlapping tile store.
 - **Baseline:** a parcel's monthly medians of the Sentinel-2 bands, NDVI, NDWI, EVI and Sentinel-1 VV/VH.
-- **Foundation models:** each embeds a 64 × 64 px crop, shifted so that the parcel centroid sits at the centre of a model patch. The patch embeddings over the parcel are then averaged.
+- **Foundation models:** each embeds a 64 × 64 px chip, shifted so that the parcel centroid sits at the centre of a model patch. The patch embeddings over the parcel are then averaged.
 - **Classifiers:** logistic regression, random forest, gradient boosting and an SVM, tuned and tested with nested spatial cross-validation on 20 km blocks.
 - **Comparison:** inputs are compared on the same parcels with block-bootstrap confidence intervals, Holm-adjusted.
 
@@ -149,19 +149,6 @@ python models_run/04_compare_models.py
 
 For a quick check before a full run, set `N_TEST_TILES = 20` in `03_build_tiles.py` and `QUICK_TEST = True` in `03_train_evaluate.py`.
 
----
-
-## Tools (`tools/`)
-
-These scripts support the work but are not part of the pipeline. Run them whenever needed.
-
-| Script | What it gives you |
-| --- | --- |
-| `a1_gmia_next_points.py` | GMIA-NEXT ground-truth points: quality check and possible independent test points |
-| `a2_map_reference_products.py` | maps of ESA WorldCover and LGRIP30 over Morocco (Earth Engine) |
-| `a3_export_chips_geotiff.py` | selected model crops as GeoTIFFs for QGIS |
-| `a4_build_vrt.py` | the whole tile store as one virtual raster per agricultural year, for QGIS or testing |
-| `a5_parcel_explorer.py` | interactive HTML map of all parcels; click one to see its monthly NDVI / NDWI / VH profile |
 
 ---
 

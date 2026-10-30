@@ -82,7 +82,7 @@ from sklearn.svm import SVC
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
+INPUT = "terramind"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
 WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
 # S1/S2 baseline only
@@ -90,13 +90,13 @@ INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOU
 START_MONTH = 9                       # first month of the window (labels of the periods)
 S1S2_VARIABLES = "all"                # "all" | "s2" (optical only) | "s1" (radar only)
 S1S2_SOURCE = "tiles"                 # "tiles" = parcel features cut from the tile store (04_make_views.py, view A;
-                                      #           same pixels as the foundation-model crops) | "gee" = old script-03 table
+                                      #           same pixels as the foundation-model chips) | "gee" = old script-03 table
 TILE_FEATURES = "inner"               # tiles only: "inner" (edge pixels removed) | "all" (all parcel pixels)
-S1_ORBIT = "crops"                    # tiles only: "crops" = same Sentinel-1 orbit as the foundation-model crops
+S1_ORBIT = "chips"                    # tiles only: "chips" = same Sentinel-1 orbit as the foundation-model chips
                                       # (views_info.json) | "ASC" | "DSC" | "both" (both orbits as separate variables)
 
 # Foundation-model embeddings only
-EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the ml_dataset_prep/04_make_views.py crops (<model>_agyear_tiles.npz) | "chips" = old
+EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the ml_dataset_prep/04_make_views.py chips (<model>_agyear_tiles.npz) | "legacy" = older separately downloaded chips
 FEATURE_MODE = "concat"               # "concat" (all months + PCA) | "mean" (average over months)
 PCA_DIM = 128                         # PCA components in concat mode (fitted on training folds only)
 
@@ -104,11 +104,11 @@ SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
 VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views"
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
-    if S1_ORBIT == "crops" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the crops
+    if S1_ORBIT == "chips" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the chips
         if not (VIEWS_DIR / "views_info.json").exists():
             raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run 03_build_tiles.py and 04_make_views.py "
                              f"first, or set S1S2_SOURCE = 'gee'")
-        S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_crops_and_pixelsets"]
+        S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_chips_and_pixelsets"]
     S1S2_TAG = f"tiles-{TILE_FEATURES}-{S1_ORBIT.lower()}"
 else:
     S1S2_FILE = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"

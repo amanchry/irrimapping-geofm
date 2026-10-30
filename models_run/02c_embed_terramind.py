@@ -4,7 +4,7 @@
 
 What it does
 ------------
-Turns each parcel's crops (ml_dataset_prep/04_make_views.py) into TerraMind embeddings: one 768-number vector
+Turns each parcel's chips (ml_dataset_prep/04_make_views.py) into TerraMind embeddings: one 768-number vector
 per month, computed from Sentinel-2 AND Sentinel-1 together. The encoder is frozen; the embeddings
 are classified in 03_train_evaluate.py like every other input.
 
@@ -25,7 +25,7 @@ Steps
 1. Load the frozen TerraMind backbone (downloads the weights from Hugging Face once).
 2. For each batch of parcels and each month: standardise S2 and S1, cloudy/missing pixels -> 0.
 3. Run the encoder; take the last layer's tokens on their 4 x 4 grid.
-4. Weighted mean of the patches covering the parcel (parcel mask stored with the crops).
+4. Weighted mean of the patches covering the parcel (parcel mask stored with the chips).
 5. Save in batches (resume possible) and merge into one file.
 
 Install: terratorch (already in environment.yml).
@@ -59,14 +59,14 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the crops of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
-# saving. This block is identical in the four 05*_embed_*.py scripts.
-# Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
-# (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
+# Reading the chips of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
+# saving. This block is identical in the four 02*_embed_*.py scripts.
+# Input chips. "tiles" = patch-aligned chips cut by 04_make_views.py from the shared tile store
+# (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
-CROP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
+    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
 else:
     CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
@@ -77,7 +77,7 @@ OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
 
 def read_chip_info():
-    """Band names, months, NODATA value and scales written with the crops (chips_info.json), plus the parcel index."""
+    """Band names, months, NODATA value and scales written with the chips (chips_info.json), plus the parcel index."""
     info = json.loads((CHIP_DIR / "chips_info.json").read_text())
     index = pd.read_csv(CHIP_DIR / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id")
     return info, index.set_index("parcel_id")

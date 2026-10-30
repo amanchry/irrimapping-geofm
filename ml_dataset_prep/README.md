@@ -43,7 +43,7 @@ flowchart TD
 
     S04 --> VA["A · parcel feature tables<br/>(RF / boosting)"]
     S04 --> VB["B · pixel sets<br/>(PSE-TAE)"]
-    S04 --> VC["C · patch-aligned crops<br/>crops_p8 · crops_p16<br/>(foundation models)"]
+    S04 --> VC["C · patch-aligned chips<br/>chips_p8 · chips_p16<br/>(foundation models)"]
     S03 --> VD["D · full tiles<br/>(segmentation, U-TAE)"]
 
     classDef script fill:#1F5F8B,color:#fff,stroke:#1F5F8B
@@ -75,7 +75,7 @@ Steps 1–2 take minutes. Step 3 takes a few hours, and it picks up where it sto
 | **Honest validation** | Folds are made of whole 20 km blocks, so a test parcel never has its next-door neighbour in training (section 5). |
 | **Uncertain pixels kept, not dropped** | Label 0 = ignore (unlabelled or overlapping parcels), plus a separate edge flag for mixed boundary pixels. Users decide how to treat them. |
 | **Documented quality** | Clear-observation counts per pixel and month, scene IDs per tile and month, QA per tile, overlap list, patch-purity scores. |
-| **Patch-aware crops** | Crops for patch-based models are shifted so the parcel centroid sits at the centre of one model patch (section 7). |
+| **Patch-aware chips** | Chips for patch-based models are shifted so the parcel centroid sits at the centre of one model patch (section 7). |
 
 The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 2021) and Sen4AgriNet (Sykas et al. 2022) use fixed tiles with dense label and parcel-ID rasters. Fields of The World (Kerner et al. 2025) keeps an "unlabelled" ignore class. The ClarkCGA / Prithvi crop chips report QA counts per chip.
 
@@ -85,7 +85,7 @@ The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 20
 
 | Data | Use | Details |
 | --- | --- | --- |
-| Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, crop and irrigation method |
+| Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, chip and irrigation method |
 | GADM 4.1 Morocco | maps | country outline |
 | ESA WorldCover 2021 (10 m) | label check | share of each parcel mapped as cropland |
 | Sentinel-2 L2A harmonised (`COPERNICUS/S2_SR_HARMONIZED`) | imagery | 12 bands, surface reflectance |
@@ -258,7 +258,7 @@ For quick experiments, the column `split` gives one fixed split: fold 0 = test, 
 - Only the tiles the parcels need are built:
   - **home** tile: holds the parcel centroid;
   - **outline** tiles: touched by the parcel polygon;
-  - **context** tiles: reached by the largest model crop around the centroid. That is 64 px plus up to 8 px of alignment shift, i.e. 40 px (400 m) in every direction.
+  - **context** tiles: reached by the largest model chip around the centroid. That is 64 px plus up to 8 px of alignment shift, i.e. 40 px (400 m) in every direction.
 
 ```mermaid
 flowchart LR
@@ -413,12 +413,12 @@ flowchart TD
     TS["Tile store<br/>(tiles read through a cache of 48 tiles)"] --> L["For each parcel:<br/>read its window and its pixels<br/>(label raster: parcel_idx = this parcel)"]
     L --> A["<b>View A</b> · parcel features<br/>median per band and month<br/>+ NDVI, NDWI, EVI"]
     L --> B["<b>View B</b> · pixel sets<br/>all parcel pixels, all months"]
-    L --> C["<b>View C</b> · 64 × 64 crops<br/>patch-aligned, per patch size"]
+    L --> C["<b>View C</b> · 64 × 64 chips<br/>patch-aligned, per patch size"]
     A --> A1["parcel_features_all.csv"]
     A --> A2["parcel_features_inner.csv<br/>(edge pixels removed)"]
     B --> B1["pixelsets.npz"]
-    C --> C1["crops_p8/  (Clay)"]
-    C --> C2["crops_p16/ (Prithvi, TerraMind, AgriFM)"]
+    C --> C1["chips_p8/  (Clay)"]
+    C --> C2["chips_p16/ (Prithvi, TerraMind, AgriFM)"]
     TS --> D["<b>View D</b> · full tiles as they are<br/>(segmentation models)"]
 ```
 
@@ -444,19 +444,19 @@ All pixels of each parcel, unaggregated, for set-based temporal models such as P
 - `offsets [parcels + 1]`: parcel *i* = `pixels[offsets[i]:offsets[i+1]]`
 - `edge [N_pixels]`, `parcel_id`, `label`, `bands`
 
-### 7.3 View C — patch-aligned crops for the foundation models
+### 7.3 View C — patch-aligned chips for the foundation models
 
 Vision-transformer foundation models split an image into square patches: 8 × 8 px for Clay, and 16 × 16 px (160 m) for Prithvi-EO-2.0, TerraMind and AgriFM's output grid. Each patch gets one embedding.
 
-If the crop is simply centred on the parcel, and its size is a multiple of the patch size, the centroid falls on the **corner** of four patches. A small parcel is then split across four patches that are mostly neighbouring fields. Shifting the crop by half a patch puts the centroid at the **centre** of one patch:
+If the chip is simply centred on the parcel, and its size is a multiple of the patch size, the centroid falls on the **corner** of four patches. A small parcel is then split across four patches that are mostly neighbouring fields. Shifting the chip by half a patch puts the centroid at the **centre** of one patch:
 
 ```mermaid
 flowchart LR
-    subgraph OLD["Centred crop (old)"]
+    subgraph OLD["Centred chip (old)"]
         O1["Centroid on the corner<br/>of 4 patches"] --> O2["Parcel split over 4 patches,<br/>each mostly neighbouring fields"]
     end
-    subgraph NEW["Patch-aligned crop (now)"]
-        N1["Crop shifted by half a patch<br/>(4 px for p8, 8 px for p16)"] --> N2["Centroid at the centre<br/>of one patch"]
+    subgraph NEW["Patch-aligned chip (now)"]
+        N1["Chip shifted by half a patch<br/>(4 px for p8, 8 px for p16)"] --> N2["Centroid at the centre<br/>of one patch"]
         N2 --> N3["Higher share of the pooled<br/>patches inside the parcel"]
     end
     OLD -.->|"replaced by"| NEW
@@ -464,14 +464,14 @@ flowchart LR
 
 **Purity** measures this. A patch's weight is the share of its pixels inside the parcel, and those weights are also what the study uses to pool patch embeddings. Purity is the weighted share of parcel pixels in the pooled patches: Σ w² / Σ w, from 0 to 1. `index.csv` stores both `purity` (aligned) and `purity_centred` (old rule), so the gain is measurable.
 
-Each crop folder holds:
+Each chip folder holds:
 - `part_*.npz`: `chips [n, 12, 15, 64, 64]` int16, `mask [n, 64, 64]` (parcel pixels), `parcel_id`.
-- `index.csv`: one row per parcel. Columns: `part`, `label`, `ag_season`, `fold`, `zone`, `lat`, `lon`, `epsg`, `x0`, `y0` (crop top-left corner, for georeferencing), `area_ha`, `n_px`, `n_px_in_crop`, `purity`, `purity_centred`.
+- `index.csv`: one row per parcel. Columns: `part`, `label`, `ag_season`, `fold`, `zone`, `lat`, `lon`, `epsg`, `x0`, `y0` (chip top-left corner, for georeferencing), `area_ha`, `n_px`, `n_px_in_chip`, `purity`, `purity_centred`.
 - `chips_info.json`: band order and scales. The 15 bands are B1 … B12, VV, VH, S2_NCLEAR.
 
 ### 7.4 Sentinel-1 orbit for views B and C
 
-`S1_ORBIT = "auto"` picks the orbit direction with more valid tile-months over the whole study area and writes it to `views_info.json` (`s1_orbit_for_crops_and_pixelsets`). That orbit's bands are named simply `VV` and `VH` in the crops. `"ASC"` or `"DSC"` force one orbit. View A keeps both orbits as separate columns.
+`S1_ORBIT = "auto"` picks the orbit direction with more valid tile-months over the whole study area and writes it to `views_info.json` (`s1_orbit_for_chips_and_pixelsets`). That orbit's bands are named simply `VV` and `VH` in the chips. `"ASC"` or `"DSC"` force one orbit. View A keeps both orbits as separate columns.
 
 ### 7.5 QA files
 
@@ -504,7 +504,7 @@ outputs/dataset/
         ├── parcel_features_all.csv      view A
         ├── parcel_features_inner.csv    view A, edge pixels removed
         ├── pixelsets.npz                view B
-        ├── crops_p8/  crops_p16/        view C: part_*.npz, index.csv, chips_info.json
+        ├── chips_p8/  chips_p16/        view C: part_*.npz, index.csv, chips_info.json
         ├── qa_purity.csv, qa_clear_obs.csv
         └── views_info.json
 ```
@@ -523,14 +523,14 @@ outputs/dataset/
 | --- | --- | --- |
 | Random forest, gradient boosting, SVM | View A | `fold` (nested CV) or `split` |
 | Pixel-set temporal models (PSE-TAE, L-TAE) | View B | same |
-| Foundation models / any CNN or ViT on chips | View C (`crops_p8` or `crops_p16`) with `mask` | same, from `index.csv` |
+| Foundation models / any CNN or ViT on chips | View C (`chips_p8` or `chips_p16`) with `mask` | same, from `index.csv` |
 | Segmentation (U-Net, U-TAE) | View D: `_img.tif` + `_lab.tif`, loss masked where `label = 0` | split by **tile**, using `tiles.parquet` (`fold`, `mixed_folds`) |
 
-Minimal example: read the crops.
+Minimal example: read the chips.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/dataset/03_tiles/agyear/views/crops_p16"
+folder = "outputs/dataset/03_tiles/agyear/views/chips_p16"
 index = pd.read_csv(f"{folder}/index.csv", dtype={"parcel_id": str})
 info = json.load(open(f"{folder}/chips_info.json"))
 d = np.load(f"{folder}/{index.part.iloc[0]}")
@@ -560,8 +560,8 @@ The settings sit at the top of each script:
 | --- | --- |
 | 01 | `SEASON_START_MONTH = 9`, `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT`, `CHECK_WORLDCOVER` |
 | 02 | `N_FOLDS = 5`, `BLOCK_KM = 20`, `CANDIDATE_KM`, `SEED = 42` |
-| 03 | `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG = 32629`, `CROP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
-| 04 | `CROP_PATCH_SIZES = [8, 16]`, `CROP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
+| 03 | `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG = 32629`, `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
+| 04 | `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
 
 Earth Engine access uses a service-account key in `secrets/`, which is never committed.
 

@@ -1,0 +1,70 @@
+flowchart TD
+    %% ---------- Part 1 outputs (8,781 parcels · 12 months Sep–Aug · 5 spatial folds)
+    FO["<b>Spatial folds</b><br/>parcels_folds.geojson<br/>fold · 20 km block"]
+    PS["<b>Pixel sets</b><br/>pixelsets.npz<br/>all pixels per parcel"]
+    C16["<b>Chips p16</b><br/>chips_p16 · 64×64 px<br/>aligned to 16-px patches"]
+    C8["<b>Chips p8</b><br/>chips_p8 · 64×64 px<br/>aligned to 8-px patches"]
+    FA["<b>Parcel features</b><br/>parcel_features_inner.csv<br/>median of inner pixels"]
+
+    FA --> QA["<b>01 · Inspect dataset</b><br/>inventory · label QA · clear observations · patch purity · seasonal profiles · example chips"]
+    C8 --> QA
+    C16 --> QA
+    PS --> QA
+    FO --> QA
+
+    %% ---------- the six inputs
+    QA --> B5["<b>⑥ PSE-TAE</b> (no pretraining)<br/>pixel sets<br/>10 S2 bands + S1 VV, VH<br/>64 random pixels per parcel<br/>pixel-set encoder +<br/>temporal attention<br/><i>03b</i>"]
+    QA --> B4["<b>⑤ AgriFM</b><br/>chips p16<br/>10 S2 bands<br/>all 12 months in one pass<br/>output stride 16 px (160 m)<br/>→ 1 × D (whole year)<br/><i>02d</i>"]
+    QA --> B3["<b>④ TerraMind-1.0-base</b><br/>chips p16<br/>S2 12 bands + S1 VV, VH (dB)<br/>modality tokens averaged<br/>16×16-px patches (160 m)<br/>1 month per pass → 12 × 768<br/><i>02c</i>"]
+    QA --> B2["<b>③ Prithvi-EO-2.0-300M-TL</b><br/>chips p16<br/>6 bands B2 B3 B4 B8A B11 B12<br/>+ date, lat/lon<br/>16×16-px patches (160 m)<br/>4 months per pass → 12 × 1024<br/><i>02b</i>"]
+    QA --> B1["<b>② Clay v1.5</b><br/>chips p8<br/>10 S2 bands (B2–B8A, B11, B12)<br/>+ wavelengths, 10 m, date, lat/lon<br/>8×8-px patches (80 m)<br/>1 month per pass → 12 × 1024<br/><i>02a</i>"]
+    QA --> B0["<b>① S1/S2 baseline</b><br/>parcel features<br/>12 S2 bands + NDVI, NDWI, EVI<br/>+ S1 VV, VH (ascending)<br/>× 12 months = 204 features<br/>cloudy months interpolated<br/><i>03 · INPUT = s1s2</i>"]
+
+    %% ---------- embeddings -> features
+    B1 --> POOL["<b>Frozen encoder → parcel embedding</b><br/>weighted mean of the patches covering the parcel (weight = share inside the parcel)<br/>then: months side by side → fill empty months → standardise → PCA 128 (fitted on training folds only)"]
+    B2 --> POOL
+    B3 --> POOL
+    B4 --> POOL
+
+    %% ---------- classifiers (03)
+    B0 --> HUB["<b>03 · train_evaluate</b> · same four classifiers on every input"]
+    POOL --> HUB
+    HUB --> K4["<b>SVM (RBF)</b><br/>C ∈ {1, 10}<br/>γ ∈ {scale, 0.01}<br/>balanced classes"]
+    HUB --> K3["<b>Gradient boosting</b><br/>(HGB)<br/>learning_rate ∈ {0.05, 0.1}<br/>max_leaf_nodes ∈ {15, 31}<br/>class_weight ∈ {–, balanced}"]
+    HUB --> K2["<b>Random forest</b><br/>500 trees<br/>max_features ∈ {√p, 0.3}<br/>min_samples_leaf ∈ {1, 5}<br/>class_weight ∈ {–, balanced}"]
+    HUB --> K1["<b>Logistic regression</b><br/>(linear probe)<br/>C ∈ {0.01, 0.1, 1, 10}<br/>balanced classes"]
+    B5 --> DL["<b>03b · PSE-TAE training</b><br/>paper defaults, no grid<br/>Adam · lr 0.001 · wd 0.0001<br/>batch 128 · ≤ 100 epochs<br/>class-weighted loss<br/>predict: mean of 5 pixel draws"]
+
+    %% ---------- validation
+    K1 --> CV1["<b>Nested spatial CV</b> (5 outer folds = test once each)<br/>inner spatial CV on the other 4 folds → best grid setting (macro-F1) → refit on 4 folds"]
+    K2 --> CV1
+    K3 --> CV1
+    K4 --> CV1
+    DL ----> CV2["<b>Spatial CV</b> (same 5 outer folds)<br/>3 folds train · next fold early stopping (macro-F1)"]
+
+    CV1 & CV2 --> OOF["<b>Out-of-fold predictions</b> · every parcel predicted once by a model that never saw its 20 km block<br/>5 inputs × 4 classifiers + PSE-TAE = <b>21 model runs</b>"]
+    OOF --> M["<b>Metrics per run</b> · macro-F1 (headline) · F1 / precision / recall per class · balanced & overall accuracy · PR-AUC · Brier · ECE<br/>95% CI from a block bootstrap (1,000 × whole blocks) · random vs spatial CV · importance by month"]
+    M --> CMP["<b>04 · compare_models</b> · same 8,775 parcels and same bootstrap samples for all runs<br/>Δ macro-F1 vs S1/S2 baseline (same classifier; PSE-TAE vs baseline RF) · 95% CI · Holm-adjusted p"]
+    CMP --> ANS["<b>Result:</b> does a foundation model beat the Sentinel-1/2 baseline and a deep model trained from scratch?<br/>headline = random forest for all inputs + logistic regression (linear probe) for the foundation models"]
+
+    %% ---------- optional sensitivity runs
+    SENS["<i>Optional sensitivity runs</i><br/>S2-only baseline · TerraMind S2 only<br/>PSE-TAE S2 only · embeddings averaged (mean)"]
+    SENS -.-> B0
+    SENS -.-> B3
+
+    classDef data fill:#FFF4E6,stroke:#B4541A,color:#1C2733
+    classDef base fill:#EDE7DA,stroke:#6B7480,color:#1C2733
+    classDef fm fill:#1F5F8B,color:#fff,stroke:#1F5F8B
+    classDef dl fill:#5B4B8A,color:#fff,stroke:#5B4B8A
+    classDef step fill:#FFFFFF,stroke:#1C2733,color:#1C2733
+    classDef clf fill:#EAF2F8,stroke:#1F5F8B,color:#1C2733
+    classDef out fill:#B4541A,color:#fff,stroke:#B4541A
+    classDef opt fill:#FFFFFF,stroke:#8A919A,color:#6B7480,stroke-dasharray:4 3
+    class FA,C8,C16,PS,FO data
+    class B0 base
+    class B1,B2,B3,B4 fm
+    class B5,DL dl
+    class QA,POOL,HUB,CV1,CV2,OOF,M step
+    class K1,K2,K3,K4 clf
+    class CMP,ANS out
+    class SENS opt

@@ -35,7 +35,7 @@ fold is never used for any decision. Every parcel is predicted once, by a model 
 Inputs
 ------
 outputs/dataset/03_tiles/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
-outputs/dataset/03_tiles/agyear/views/views_info.json Sentinel-1 orbit used for the crops (same orbit here)
+outputs/dataset/03_tiles/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
 outputs/dataset/02_folds/parcels_folds.geojson        fold and block of every parcel
 
 Steps
@@ -118,7 +118,7 @@ def load_data(log):
     bands = [str(b) for b in d["bands"]]
     channels = list(S2_BANDS)
     if BANDS == "s2s1":
-        orbit = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_crops_and_pixelsets"]
+        orbit = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_chips_and_pixelsets"]
         channels += [f"VV_{orbit}", f"VH_{orbit}"]
     pixels = d["pixels"][:, :, [bands.index(c) for c in channels]]   # keep the chosen bands only
     edge, offsets = d["edge"].astype(bool), d["offsets"]

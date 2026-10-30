@@ -24,7 +24,7 @@ change log).
 | Compare inputs | `models_run/04_compare_models.py` | Tested on test runs |
 | GMIA-NEXT check points | `tools/a1_gmia_next_points.py` | Needs `data/raw/gmia_next/` |
 | Reference maps | `tools/a2_map_reference_products.py` | Converted from notebook |
-| Crops to GeoTIFF (QGIS) | `tools/a3_export_chips_geotiff.py` | Reads `views/crops_p16` |
+| Chips to GeoTIFF (QGIS) | `tools/a3_export_chips_geotiff.py` | Reads `views/chips_p16` |
 
 Next steps
 1. Run dataset/03 with `N_TEST_TILES = 20`, then dataset/04 and models_run/01; check the figures (and a3 in QGIS); then full runs.
@@ -37,7 +37,7 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
-| 2026-10-29 | All inputs (parcel features and foundation-model crops) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the crops | Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot & Landrieu 2021), Sen4AgriNet (Sykas et al. 2022) |
+| 2026-10-29 | All inputs (parcel features and foundation-model chips) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the chips | Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot & Landrieu 2021), Sen4AgriNet (Sykas et al. 2022) |
 | 2026-10-15 | Foundation models compared: Clay, Prithvi-EO-2.0, TerraMind, AgriFM (AlphaEarth only a pipeline test, not in the thesis) | Thesis proposal |
 | 2026-10-15 | Main comparison with **frozen** encoders + the same 4 classifiers; fine-tuning only as a secondary experiment | Fair across models; Butsko et al. 2025, Marsocci et al. 2024 |
 | 2026-10-15 | Time window = **agricultural year 1 Sep - 31 Aug**; growing season only (Nov-May) and calendar year as ablations | Ministry reports season rainfall from 1 Sep; sowing ~Nov, harvest May-Jul (FAO GIEWS; USDA FAS 2017); summer is when only irrigated land stays green |
@@ -73,11 +73,24 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-10-30 (models_run workflow diagram)
+- `models_run/README.md` section 1: new single Mermaid workflow diagram, from the Part 1 outputs to the comparison:
+  six inputs with their data, bands, patch size and time handling; embedding pooling + PCA; the four classifiers
+  with their grids; PSE-TAE training; nested spatial CV; metrics; comparison; optional sensitivity runs.
+
+### 2026-10-30 (terminology: chips)
+- One term for the 64 x 64-px windows cut from the tiles around each parcel: **chips** (was "crops").
+  Code: `crops_p8/16` -> `chips_p8/16`, `CROP_PX` -> `CHIP_PX`, `CROP_PATCH_SIZES/PX` -> `CHIP_PATCH_SIZES/PX`,
+  index column `n_px_in_crop` -> `n_px_in_chip`, views_info key `s1_orbit_for_crops_and_pixelsets` ->
+  `s1_orbit_for_chips_and_pixelsets`, study/03 option `S1_ORBIT = "crops"` -> `"chips"`; the old separately
+  downloaded store is now called "legacy". Agricultural uses (cropland, crop type, Seasonal Crop) unchanged.
+- Existing outputs renamed in place (folders, CSV headers, JSON keys): no re-run needed. Tested study/01 and 03b.
+
 ### 2026-10-30 (deep-learning baseline)
 - Classifier choice: keep the 4 classifiers of study/03 (logistic regression, RF, HGB, SVM); headline = RF for all
   inputs + logistic regression (linear probe) for the foundation models; HGB / SVM as robustness checks.
 - New `models_run/03b_train_psetae.py`: PSE-TAE (Garnot et al. 2020) trained from scratch on the pixel sets
-  (10 S2 bands + S1 VV/VH of the crops' orbit, inner pixels), paper-default architecture, class-weighted
+  (10 S2 bands + S1 VV/VH of the chips' orbit, inner pixels), paper-default architecture, class-weighted
   cross-entropy, early stopping on the next fold, same 5 outer spatial folds, same output format as 03.
   Tested on synthetic pixel sets (learns the signal: macro-F1 0.998; early stop after 16-22 epochs).
 - `04_compare_models.py`: run `psetae_agyear_s2s1` added to RUNS; runs with their own model are compared with the
@@ -94,7 +107,7 @@ Next steps
   setup (environment, Earth Engine, input data, model weights), run order, tools, links to the folder READMEs.
 
 ### 2026-10-30 (dataset check + parcel explorer)
-- Checked the full dataset run (dataset/01-04) and models_run/01: 2,987 tiles, 8,781 parcels in both crop views, 8,775 in the
+- Checked the full dataset run (dataset/01-04) and models_run/01: 2,987 tiles, 8,781 parcels in both chip views, 8,775 in the
   feature tables (6 parcels fully covered by overlapping polygons have no own pixel; excluded automatically by
   models_run/04), no missing values, every parcel-month has a clear S2 view, NDVI r = 0.97-0.99 vs the legacy EE table,
   S1 orbit ASC. Purity (median) p8 0.36 -> 0.59, p16 0.09 -> 0.30 with patch alignment. Ready for models_run/02-04.
@@ -135,21 +148,21 @@ Next steps
   old `03_s1s2_features` and `04_chips` -> `outputs/legacy/`. All paths in the scripts updated.
 - **New `models_run/01_inspect_dataset.py`:** inventory per class / season / fold, label QA (overlaps, tiny parcels),
   clear observations per month, patch purity aligned vs centred, seasonal NDVI / NDWI / VH profiles,
-  example crops per class, NDVI agreement with the legacy Earth Engine features. Output: `outputs/study/01_inspection/`.
-- a3 now reads `views/crops_p16` and writes to `outputs/study/01_inspection/chips_geotiff/`.
+  example chips per class, NDVI agreement with the legacy Earth Engine features. Output: `outputs/study/01_inspection/`.
+- a3 now reads `views/chips_p16` and writes to `outputs/study/01_inspection/chips_geotiff/`.
 - README rewritten for the two-part structure. Backups: `archive/scripts_2026-10-29/`.
 
 ### 2026-10-29
 - **New data source for all inputs: shared tile store.** `04_build_tiles.py` (non-overlapping 128 x 128-px tiles,
   label / parcel-ID / edge rasters, S1 per orbit in linear power) and `04b_make_views.py` (parcel features, pixel sets,
-  patch-aligned crops `crops_p8` / `crops_p16`) replace `04_download_chips.py` and the Earth Engine features of
+  patch-aligned chips `chips_p8` / `chips_p16`) replace `04_download_chips.py` and the Earth Engine features of
   script 03. Old scripts and results are kept for reference; old runs keep their names.
-- **05a-05d:** new settings `CHIP_SOURCE = "tiles"` and `CROP_PATCH_PX` (8 for Clay, 16 for Prithvi, TerraMind,
+- **05a-05d:** new settings `CHIP_SOURCE = "tiles"` and `CHIP_PATCH_PX` (8 for Clay, 16 for Prithvi, TerraMind,
   AgriFM). Output files are now `<model>_agyear_tiles.npz` (old: `<model>_agyear.npz`).
-- **06:** new settings `S1S2_SOURCE = "tiles"`, `TILE_FEATURES = "inner"`, `S1_ORBIT = "crops"`, `EMB_SOURCE = "tiles"`.
+- **06:** new settings `S1S2_SOURCE = "tiles"`, `TILE_FEATURES = "inner"`, `S1_ORBIT = "chips"`, `EMB_SOURCE = "tiles"`.
   The parcel-feature table of 04b is read directly: bookkeeping columns (fold, n_px_used, used_inner) and the
   observation counts (S2_NCLEAR, S1_N_*) are dropped, the chosen Sentinel-1 orbit is renamed to VV/VH (same orbit
-  as the foundation-model crops by default), months are labelled Sep ... Aug. New run names:
+  as the foundation-model chips by default), months are labelled Sep ... Aug. New run names:
   `s1s2-all_agyear_tiles-inner-<orbit>` and `<model>_agyear_tiles_concat`.
 - **07:** `BASELINE_RUN` and `RUNS` set to the five tile-store runs (old settings in a comment).
 - Tested 06 end to end on a synthetic table in the 04b format: 192 features (216 with both orbits), all four
@@ -164,16 +177,16 @@ Next steps
     label (0 ignore / 1 irrigated / 2 rainfed), parcel_idx and edge rasters; scene IDs per tile and month; QA per tile;
     GeoParquet tile index with fold (87 tiles hold parcels of two folds -> `mixed_folds`).
   - `04b_make_views.py`: parcel median features (all pixels / without edge pixels), pixel sets (PSE-TAE), and 64 x 64
-    crops per patch size (8, 16) shifted so the parcel centroid is at a patch centre; same format as the old chips.
+    chips per patch size (8, 16) shifted so the parcel centroid is at a patch centre; same format as the old chips.
   - Why: old chips overlapped (median 8 other chips per chip, 6.3% across folds), baseline and foundation models used
     different pixels / compositing, small parcels were split over 4 patches (purity 0.37 / 0.10 for 8 / 16 px patches;
-    aligned crops: 0.62 / 0.36 in the test sample), S1 was averaged in dB with orbits mixed, no observation counts.
+    aligned chips: 0.62 / 0.36 in the test sample), S1 was averaged in dB with orbits mixed, no observation counts.
   - Label QA from the parcel geometry: 79 overlapping parcel pairs (2 with different labels, 25 covering > 50% of the
     smaller parcel) -> `parcel_overlaps.csv`; 3,684 shared pixels set to ignore; 65 parcels have no pixel after the
     10 m inner buffer.
   - Design follows PASTIS, Sen4AgriNet, S2-Agri (PSE-TAE), Fields of The World, ClarkCGA / Prithvi crop chips.
 - Next: run 04 with `N_TEST_TILES = 20`, inspect tiles in QGIS, full run, then 04b; point the 05 scripts to
-  `outputs/04_tiles/agyear/views/crops_p8` (Clay) or `crops_p16` (Prithvi, TerraMind; AgriFM to check).
+  `outputs/04_tiles/agyear/views/chips_p8` (Clay) or `chips_p16` (Prithvi, TerraMind; AgriFM to check).
 
 ### 2026-10-16
 - `05d_embed_agrifm.py`: downloads the weights automatically from https://glass.hku.hk/casual/AgriFM/AgriFM.pth and clones the AgriFM code if missing.

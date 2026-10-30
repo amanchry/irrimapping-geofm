@@ -10,15 +10,15 @@ are found before they show up as strange model results. Nothing is changed in th
 
 Steps
 -----
-1. Inventory: parcels, tiles, and how many parcels reach each view (feature table, crops), by class,
+1. Inventory: parcels, tiles, and how many parcels reach each view (feature table, chips), by class,
    season and fold.
 2. Label QA: overlapping parcels, parcels smaller than one pixel, parcels without inner (non-edge) pixels.
 3. Observation QA: clear Sentinel-2 observations and Sentinel-1 scenes per month, per class; share of
    parcel-months without any clear Sentinel-2 view.
-4. Patch purity of the foundation-model crops: share of the pooled patches that lies inside the parcel,
-   for the patch-aligned crops and for the old centred crops (shows what the alignment gains).
+4. Patch purity of the foundation-model chips: share of the pooled patches that lies inside the parcel,
+   for the patch-aligned chips and for the old centred chips (shows what the alignment gains).
 5. Seasonal profiles per class from the parcel features (NDVI, NDWI, Sentinel-1 VH).
-6. Example crops: true colour and NDVI for all 12 months, for a few random parcels per class.
+6. Example chips: true colour and NDVI for all 12 months, for a few random parcels per class.
 7. Agreement with the legacy Earth Engine features (if outputs/legacy/03_s1s2_features exists):
    correlation of the parcel NDVI per month between the two pipelines.
 
@@ -26,7 +26,7 @@ Output (outputs/study/01_inspection/)
 -------------------------------------
 inventory.csv, label_qa.csv, observations_per_month.csv, purity_summary.csv, legacy_agreement.csv,
 observations_per_month.png, purity.png, seasonal_profiles.png, examples_irrigated.png, examples_rainfed.png
-For a closer look in QGIS: tools/a3_export_chips_geotiff.py writes single crops as GeoTIFFs.
+For a closer look in QGIS: tools/a3_export_chips_geotiff.py writes single chips as GeoTIFFs.
 
 Run (from the project folder, after ml_dataset_prep/04_make_views.py)
 -------------------------------------------------------------
@@ -50,7 +50,7 @@ VIEWS = TILE_ROOT / "views"                                         # ml_dataset
 LEGACY_FEATURES = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"
 OUT_DIR = ROOT / "outputs" / "study" / "01_inspection"
 
-EXAMPLE_PATCH = 16             # which crops to draw (8 or 16)
+EXAMPLE_PATCH = 16             # which chips to draw (8 or 16)
 N_EXAMPLES = 3                 # random parcels per class in the example figures
 SEED = 42
 # ==========================================================================
@@ -73,7 +73,7 @@ def save_fig(fig, name):
 
 
 # ------------------------------------------------------------ 1. inventory
-def inventory(parcels, tiles, feats, crop_index):
+def inventory(parcels, tiles, feats, chip_index):
     rows = []
     groups = [("all", parcels)] + [(f"{k}={v}", g) for k in ("class_name", "ag_season", "fold")
                                    for v, g in parcels.groupby(k)]
@@ -81,8 +81,8 @@ def inventory(parcels, tiles, feats, crop_index):
         ids = set(g["parcel_id"])
         row = {"group": name, "parcels": len(g)}
         row["in_features_inner"] = int(feats["parcel_id"].isin(ids).sum()) if feats is not None else None
-        for ps, idx in crop_index.items():
-            row[f"in_crops_p{ps}"] = int(idx["parcel_id"].isin(ids).sum())
+        for ps, idx in chip_index.items():
+            row[f"in_chips_p{ps}"] = int(idx["parcel_id"].isin(ids).sum())
         rows.append(row)
     table = pd.DataFrame(rows)
     table.to_csv(OUT_DIR / "inventory.csv", index=False)
@@ -141,15 +141,15 @@ def observation_qa(feats, months):
 
 
 # ------------------------------------------------------------ 4. purity
-def purity_qa(crop_index):
+def purity_qa(chip_index):
     rows, fig = [], None
-    if not crop_index:
+    if not chip_index:
         return
-    fig, axes = plt.subplots(1, len(crop_index), figsize=(6 * len(crop_index), 3.8), squeeze=False)
-    for ax, (ps, idx) in zip(axes[0], sorted(crop_index.items())):
-        for col, name, c in (("purity_centred", "centred crop (old)", "#8A919A"), ("purity", "patch-aligned crop", "#1F5F8B")):
+    fig, axes = plt.subplots(1, len(chip_index), figsize=(6 * len(chip_index), 3.8), squeeze=False)
+    for ax, (ps, idx) in zip(axes[0], sorted(chip_index.items())):
+        for col, name, c in (("purity_centred", "centred chip (old)", "#8A919A"), ("purity", "patch-aligned chip", "#1F5F8B")):
             ax.hist(idx[col], bins=40, range=(0, 1), alpha=0.6, color=c, label=name)
-            rows.append({"patch_px": ps, "crop": name, "median": idx[col].median(),
+            rows.append({"patch_px": ps, "chip": name, "median": idx[col].median(),
                          "pct_below_0.5": 100 * (idx[col] < 0.5).mean()})
         ax.set_title(f"Patch purity, {ps} x {ps}-pixel patches ({ps * 10} m)", fontweight="bold")
         ax.set_xlabel("share of pooled patches inside the parcel"); ax.legend(frameon=False)
@@ -180,8 +180,8 @@ def seasonal_profiles(feats, months, orbit):
     save_fig(fig, "seasonal_profiles.png")
 
 
-# ------------------------------------------------------------ 6. example crops
-def load_crops(folder, ids):
+# ------------------------------------------------------------ 6. example chips
+def load_chips(folder, ids):
     """chips [n, months, bands, H, W] and masks for the requested parcel IDs (read part by part)."""
     index = pd.read_csv(folder / "index.csv", dtype={"parcel_id": str}).drop_duplicates("parcel_id").set_index("parcel_id")
     out = {}
@@ -193,25 +193,25 @@ def load_crops(folder, ids):
     return out
 
 
-def example_crops(crop_index, months):
-    if EXAMPLE_PATCH not in crop_index:
+def example_chips(chip_index, months):
+    if EXAMPLE_PATCH not in chip_index:
         return
-    folder = VIEWS / f"crops_p{EXAMPLE_PATCH}"
+    folder = VIEWS / f"chips_p{EXAMPLE_PATCH}"
     info = json.loads((folder / "chips_info.json").read_text())
     bands, nodata = info["bands"], info["nodata"]
     b = {x: bands.index(x) for x in ("B2", "B3", "B4", "B8")}
-    idx = crop_index[EXAMPLE_PATCH]
+    idx = chip_index[EXAMPLE_PATCH]
     rng = np.random.default_rng(SEED)
     for lab, name in CLASS_NAMES.items():
-        pool = idx.loc[(idx["label"] == lab) & (idx["n_px_in_crop"] >= 50), "parcel_id"].to_numpy()
+        pool = idx.loc[(idx["label"] == lab) & (idx["n_px_in_chip"] >= 50), "parcel_id"].to_numpy()
         if len(pool) == 0:
             continue
         ids = list(rng.choice(pool, size=min(N_EXAMPLES, len(pool)), replace=False))
-        crops = load_crops(folder, ids)
+        chips = load_chips(folder, ids)
         fig, axes = plt.subplots(2 * len(ids), len(months), figsize=(1.5 * len(months), 3.1 * len(ids)),
                                  gridspec_kw=dict(hspace=0.06, wspace=0.03), squeeze=False)
         for r, pid in enumerate(ids):
-            chip, mask = crops[pid]
+            chip, mask = chips[pid]
             for k in range(len(months)):
                 raw = chip[k].astype(np.float32)
                 raw[chip[k] == nodata] = np.nan
@@ -227,7 +227,7 @@ def example_crops(crop_index, months):
                         ax.set_title(months[k], fontsize=10, fontweight="bold")
             axes[2 * r, 0].set_ylabel(f"{pid[-12:]}\ntrue colour", fontsize=8)
             axes[2 * r + 1, 0].set_ylabel("NDVI", fontsize=8)
-        fig.suptitle(f"Example {name} parcels: {EXAMPLE_PATCH}-px-aligned crops, 12 months (outline = parcel)",
+        fig.suptitle(f"Example {name} parcels: {EXAMPLE_PATCH}-px-aligned chips, 12 months (outline = parcel)",
                      fontweight="bold", y=1.0)
         save_fig(fig, f"examples_{name}.png")
 
@@ -263,22 +263,22 @@ def main():
         if (VIEWS / "parcel_features_inner.csv").exists() else None
     feats_all = pd.read_csv(VIEWS / "parcel_features_all.csv", dtype={"parcel_id": str}) \
         if (VIEWS / "parcel_features_all.csv").exists() else feats
-    crop_index = {}
-    for folder in sorted(VIEWS.glob("crops_p*")):
+    chip_index = {}
+    for folder in sorted(VIEWS.glob("chips_p*")):
         if (folder / "index.csv").exists():
-            crop_index[int(folder.name[len("crops_p"):])] = pd.read_csv(folder / "index.csv", dtype={"parcel_id": str})
+            chip_index[int(folder.name[len("chips_p"):])] = pd.read_csv(folder / "index.csv", dtype={"parcel_id": str})
     views_info = json.loads((VIEWS / "views_info.json").read_text()) if (VIEWS / "views_info.json").exists() else {}
-    orbit = views_info.get("s1_orbit_for_crops_and_pixelsets", "ASC")
+    orbit = views_info.get("s1_orbit_for_chips_and_pixelsets", "ASC")
 
-    inventory(parcels, tiles, feats, crop_index)
+    inventory(parcels, tiles, feats, chip_index)
     label_qa(parcels)
     if feats_all is not None:
         observation_qa(feats_all, months)
-    purity_qa(crop_index)
+    purity_qa(chip_index)
     if feats is not None:
         seasonal_profiles(feats, months, orbit)
         legacy_agreement(feats, months)
-    example_crops(crop_index, months)
+    example_chips(chip_index, months)
     print(f"\nSaved in {OUT_DIR}")
 
 

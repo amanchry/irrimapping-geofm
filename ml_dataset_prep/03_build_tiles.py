@@ -7,10 +7,10 @@ What it does
 Builds the single, non-overlapping image store that every model reads from. The study area is cut
 into a fixed grid of 128 x 128-pixel tiles (1.28 km at 10 m) in one projection (UTM 29N). Only
 tiles needed by the labelled parcels are built: each parcel's own tiles plus the neighbouring
-"context" tiles a 64-pixel model crop around the parcel can reach. Each tile is downloaded ONCE,
+"context" tiles a 64-pixel model chip around the parcel can reach. Each tile is downloaded ONCE,
 so neighbouring parcels no longer get overlapping, duplicated chips.
 
-Every derived input (parcel features for the random forest, pixel sets, patch-aligned crops for
+Every derived input (parcel features for the random forest, pixel sets, patch-aligned chips for
 the foundation models, full tiles for segmentation models) is cut from this store locally by
 04_make_views.py, so all models see exactly the same pixels.
 
@@ -44,7 +44,7 @@ Steps
 -----
 1. Read the parcels with their folds (02_make_spatial_folds.py); project to UTM 29N.
 2. Parcel table: index, centroid, area, perimeter, pixel counts, home tile.
-3. Tile plan: home tiles + tiles touched by the parcel outline + context for model crops.
+3. Tile plan: home tiles + tiles touched by the parcel outline + context for model chips.
 4. Label rasters for all planned tiles (local, fast).
 5. Earth Engine: one monthly image per agricultural year; each tile downloaded with
    computePixels (in parallel), written as a compressed GeoTIFF together with the IDs of the
@@ -93,7 +93,7 @@ OUT_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW
 CRS_EPSG = 32629               # one projection for the whole study area (UTM 29N; 30N parcels are resampled)
 GSD_M = 10                     # pixel size (m)
 TILE_PX = 128                  # tile width/height in pixels (1.28 km)
-CROP_PX = 64                   # largest model crop cut later by 04_make_views.py (pixels)
+CHIP_PX = 64                   # largest model chip cut later by 04_make_views.py (pixels)
 MAX_SHIFT_PX = 8               # largest patch-alignment shift used by 04_make_views.py (half of a 16-px patch)
 INNER_BUFFER_M = 10            # edge band: parcel pixels within this distance of the outline
 
@@ -197,8 +197,8 @@ def overlapping_parcels(parcels):
 
 # ------------------------------------------------------------ step 3: tile plan
 def parcel_tiles(row):
-    """Tiles one parcel needs: its outline plus a (CROP_PX/2 + MAX_SHIFT_PX) pixel margin around its centroid."""
-    reach = (CROP_PX // 2 + MAX_SHIFT_PX) * GSD_M
+    """Tiles one parcel needs: its outline plus a (CHIP_PX/2 + MAX_SHIFT_PX) pixel margin around its centroid."""
+    reach = (CHIP_PX // 2 + MAX_SHIFT_PX) * GSD_M
     minx, miny = min(row.minx, row.cx - reach), min(row.miny, row.cy - reach)
     maxx, maxy = max(row.maxx, row.cx + reach), max(row.maxy, row.cy + reach)
     return [(ix, iy) for ix in range(int(np.floor(minx / TILE_M)), int(np.floor((maxx - 1e-6) / TILE_M)) + 1)
@@ -413,7 +413,7 @@ def main():
         "s1": "Sentinel-1 GRD IW, mean in linear power per orbit direction, stored as dB x 100",
         "s1_scale": S1_SCALE, "nodata": NODATA, "band_order": "month-major: <band>_m01 ... <band>_m12",
         "label_bands": ["label (0 ignore, 1 irrigated, 2 rainfed)", "parcel_idx (parcels.csv)", "edge"],
-        "inner_buffer_m": INNER_BUFFER_M, "crop_px": CROP_PX, "max_shift_px": MAX_SHIFT_PX,
+        "inner_buffer_m": INNER_BUFFER_M, "chip_px": CHIP_PX, "max_shift_px": MAX_SHIFT_PX,
         "cloud_mask": f"Cloud Score+ cs_cdf >= {CS_THRESHOLD}; scenes with CLOUDY_PIXEL_PERCENTAGE < {CLOUD_COVER_PERCENTAGE}",
     }, indent=2))
 
