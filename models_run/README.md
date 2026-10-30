@@ -32,17 +32,12 @@ flowchart TD
     C8["<b>Chips p8</b><br/>chips_p8 · 64×64 px<br/>aligned to 8-px patches"]
     FA["<b>Parcel features</b><br/>parcel_features_inner.csv<br/>median of inner pixels"]
 
-    FA --> QA["<b>01 · Inspect dataset</b><br/>inventory · label QA · clear observations · patch purity · seasonal profiles · example chips"]
-    C8 --> QA
-    C16 --> QA
-    FO --> QA
-
-    %% ---------- the six inputs
-    QA --> B4["<b>AgriFM</b><br/>chips p16<br/>10 S2 bands<br/>all 12 months in one pass<br/>output stride 16 px (160 m)<br/>→ 1 × D (whole year)<br/><i>02d</i>"]
-    QA --> B3["<b>TerraMind-1.0-base</b><br/>chips p16<br/>S2 12 bands + S1 VV, VH (dB)<br/>modality tokens averaged<br/>16×16-px patches (160 m)<br/>1 month per pass → 12 × 768<br/><i>02c</i>"]
-    QA --> B2["<b>Prithvi-EO-2.0-300M-TL</b><br/>chips p16<br/>6 bands B2 B3 B4 B8A B11 B12<br/>+ date, lat/lon<br/>16×16-px patches (160 m)<br/>4 months per pass → 12 × 1024<br/><i>02b</i>"]
-    QA --> B1["<b>Clay v1.5</b><br/>chips p8<br/>10 S2 bands (B2–B8A, B11, B12)<br/>+ wavelengths, 10 m, date, lat/lon<br/>8×8-px patches (80 m)<br/>1 month per pass → 12 × 1024<br/><i>02a</i>"]
-    QA --> B0["<b>S1/S2 baseline</b><br/>parcel features<br/>12 S2 bands + NDVI, NDWI, EVI<br/>+ S1 VV, VH (ascending)<br/>× 12 months = 204 features<br/>cloudy months interpolated<br/><i>03 · INPUT = s1s2</i>"]
+    %% ---------- the five inputs
+    C16 --> B4["<b>AgriFM</b><br/>chips p16<br/>10 S2 bands<br/>all 12 months in one pass<br/>output stride 16 px (160 m)<br/>→ 1 × D (whole year)<br/><i>02d</i>"]
+    C16 --> B3["<b>TerraMind-1.0-base</b><br/>chips p16<br/>S2 12 bands + S1 VV, VH (dB)<br/>modality tokens averaged<br/>16×16-px patches (160 m)<br/>1 month per pass → 12 × 768<br/><i>02c</i>"]
+    C16 --> B2["<b>Prithvi-EO-2.0-300M-TL</b><br/>chips p16<br/>6 bands B2 B3 B4 B8A B11 B12<br/>+ date, lat/lon<br/>16×16-px patches (160 m)<br/>4 months per pass → 12 × 1024<br/><i>02b</i>"]
+    C8 --> B1["<b>Clay v1.5</b><br/>chips p8<br/>10 S2 bands (B2–B8A, B11, B12)<br/>+ wavelengths, 10 m, date, lat/lon<br/>8×8-px patches (80 m)<br/>1 month per pass → 12 × 1024<br/><i>02a</i>"]
+    FA --> B0["<b>S1/S2 baseline</b><br/>parcel features<br/>12 S2 bands + NDVI, NDWI, EVI<br/>+ S1 VV, VH (ascending)<br/>× 12 months = 204 features<br/>cloudy months interpolated<br/><i>03 · INPUT = s1s2</i>"]
 
     %% ---------- embeddings -> features
     B1 --> POOL["<b>Frozen encoder → parcel embedding</b><br/>weighted mean of the patches covering the parcel (weight = share inside the parcel)<br/>then: months side by side → fill empty months → standardise → PCA 128 (fitted on training folds only)"]
@@ -63,6 +58,7 @@ flowchart TD
     K2 --> CV1
     K3 --> CV1
     K4 --> CV1
+    FO -. "folds" .-> CV1
 
     CV1 --> OOF["<b>Out-of-fold predictions</b> · every parcel predicted once by a model that never saw its 20 km block<br/>5 inputs × 4 classifiers = <b>20 model runs</b>"]
     OOF --> M["<b>Metrics per run</b> · macro-F1 (headline) · F1 / precision / recall per class · balanced & overall accuracy · PR-AUC · Brier · ECE<br/>95% CI from a block bootstrap (1,000 × whole blocks) · random vs spatial CV · importance by month"]
@@ -84,7 +80,7 @@ flowchart TD
     class FA,C8,C16,PS,FO data
     class B0 base
     class B1,B2,B3,B4 fm
-    class QA,POOL,HUB,CV1,OOF,M step
+    class POOL,HUB,CV1,OOF,M step
     class K1,K2,K3,K4 clf
     class CMP,ANS out
     class SENS opt

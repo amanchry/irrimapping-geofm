@@ -16,41 +16,47 @@ The two parts are independent: part 1 builds a ready-to-use dataset that any mod
 
 ```mermaid
 flowchart TD
-    subgraph INPUTS["Inputs"]
-        FS["Field survey<br/>~10,000 parcels, Dec 2023 – Jan 2025"]
-        EE["Google Earth Engine<br/>Sentinel-2 L2A · Cloud Score+ · Sentinel-1 GRD"]
-        W["Pretrained weights<br/>Clay · Prithvi · TerraMind · AgriFM"]
+    subgraph P1["Part 1 · ml_dataset_prep"]
+        GT["<b>Ground data</b><br/>field-surveyed parcels (~10,000)<br/>Dec 2023 – Jan 2025"]
+        CL["<b>Data cleaning & labels</b><br/>fix geometry · cropland only<br/>irrigated / rainfed · agricultural year<br/>→ 8,781 labelled parcels"]
+        SF["<b>Spatial folds</b><br/>20 km blocks → 5 balanced folds"]
+        TS["<b>ML-ready tile store</b><br/>128 × 128 px tiles · 12 months × 19 bands<br/>+ label / parcel-ID / edge rasters"]
+        FE["<b>Parcel features</b><br/>monthly medians: S2 bands,<br/>NDVI, NDWI, EVI, S1 VV, VH"]
+        C8["<b>Chips p8</b><br/>64 × 64 px around each parcel<br/>aligned to 8-px patches"]
+        C16["<b>Chips p16</b><br/>64 × 64 px around each parcel<br/>aligned to 16-px patches"]
+        GT --> CL --> SF --> TS
+        TS --> FE
+        TS --> C8
+        TS --> C16
     end
 
-    subgraph P1["Part 1 · ml_dataset_prep/"]
-        L["01 Labels<br/>8,781 parcels: 7,585 irrigated · 1,196 rainfed"]
-        F["02 Spatial folds<br/>20 km blocks → 5 folds"]
-        T["03 Tile store<br/>128 × 128 px tiles · 12 months × 19 bands<br/>+ label / parcel-ID / edge rasters"]
-        V["04 Model views<br/>parcel features · pixel sets · patch-aligned chips"]
-        L --> F --> T --> V
+    EE["<b>Google Earth Engine</b><br/>Sentinel-2 L2A · Cloud Score+<br/>Sentinel-1 GRD"] --> TS
+
+    subgraph P2["Part 2 · models_run"]
+        BL["<b>S1/S2 baseline</b><br/>204 features per parcel<br/>(17 variables × 12 months)"]
+        FM["<b>Foundation models (frozen)</b><br/>Clay v1.5 (p8) · Prithvi-EO-2.0 (p16)<br/>TerraMind (p16) · AgriFM (p16)<br/>→ one embedding per parcel"]
+        CF["<b>Classifiers</b><br/>logistic regression · random forest<br/>gradient boosting · SVM<br/>nested spatial CV · block-bootstrap 95% CI"]
+        CM["<b>Compare inputs</b><br/>same parcels · paired differences vs baseline"]
+        BL --> CF
+        FM --> CF
+        CF --> CM
     end
 
-    subgraph P2["Part 2 · models_run/"]
-        I["01 Inspect dataset<br/>QA · purity · seasonal profiles"]
-        E["02a–02d Embeddings<br/>frozen foundation models"]
-        C["03 Train & evaluate<br/>4 classifiers · nested spatial CV<br/>block-bootstrap 95% CI"]
-        K["04 Compare inputs<br/>paired differences vs baseline"]
-        I --> E --> C --> K
-    end
-
-    FS --> L
-    EE --> T
-    V -->|"checked"| I
-    V -->|"chips"| E
-    V -->|"parcel features (baseline)"| C
-    F -->|"folds"| C
-    W --> E
-    K --> R(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
+    FE --> BL
+    C8 --> FM
+    C16 --> FM
+    W["<b>Pretrained weights</b><br/>Clay · Prithvi · TerraMind · AgriFM"] --> FM
+    SF -. "folds" .-> CF
+    CM --> R(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
 
     classDef part1 fill:#1F5F8B,color:#fff,stroke:#1F5F8B
+    classDef data fill:#FFF4E6,stroke:#B4541A,color:#1C2733
     classDef part2 fill:#B4541A,color:#fff,stroke:#B4541A
-    class L,F,T,V part1
-    class I,E,C,K part2
+    classDef ext fill:#F4F1EA,stroke:#8A919A,color:#1C2733
+    class GT,CL,SF,TS part1
+    class FE,C8,C16 data
+    class BL,FM,CF,CM part2
+    class EE,W ext
 ```
 
 **Method in one paragraph.** Each surveyed parcel gets the 12 monthly Sentinel-1/2 composites of its agricultural year (1 Sep – 31 Aug), cut from a shared, non-overlapping tile store.
