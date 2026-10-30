@@ -73,6 +73,11 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-10-30 (PSE-TAE moved to next phase)
+- PSE-TAE removed from the READMEs (main + models_run: workflow diagram, tables, section 6b, run order, settings,
+  reference); it will be presented in the next phase. Code kept unchanged: `models_run/03b_train_psetae.py` and the
+  PSE-TAE entry in `04_compare_models.py` (RUNS skips it until the run exists). Previous README versions in `tmp_trash/`.
+
 ### 2026-10-30 (models_run workflow diagram)
 - `models_run/README.md` section 1: new single Mermaid workflow diagram, from the Part 1 outputs to the comparison:
   six inputs with their data, bands, patch size and time handling; embedding pooling + PCA; the four classifiers

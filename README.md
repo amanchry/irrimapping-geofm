@@ -33,7 +33,7 @@ flowchart TD
     subgraph P2["Part 2 · models_run/"]
         I["01 Inspect dataset<br/>QA · purity · seasonal profiles"]
         E["02a–02d Embeddings<br/>frozen foundation models"]
-        C["03 Train & evaluate<br/>4 classifiers · nested spatial CV<br/>block-bootstrap 95% CI<br/>03b PSE-TAE (deep-learning baseline)"]
+        C["03 Train & evaluate<br/>4 classifiers · nested spatial CV<br/>block-bootstrap 95% CI"]
         K["04 Compare inputs<br/>paired differences vs baseline"]
         I --> E --> C --> K
     end
@@ -143,7 +143,6 @@ python models_run/02b_embed_prithvi.py
 python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
 python models_run/03_train_evaluate.py           # once per INPUT: s1s2, clay, prithvi, terramind, agrifm
-python models_run/03b_train_psetae.py            # deep-learning baseline (GPU recommended)
 python models_run/04_compare_models.py
 ```
 
