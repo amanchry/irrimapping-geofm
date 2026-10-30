@@ -27,6 +27,7 @@ flowchart TD
     subgraph DS["dataset/ (Part 1, read only)"]
         F["parcels_folds.geojson<br/>fold · block_id"]
         VA["View A<br/>parcel_features_inner.csv"]
+        VB["View B<br/>pixelsets.npz"]
         VC8["View C<br/>crops_p8"]
         VC16["View C<br/>crops_p16"]
         TS["tile store<br/>tiles.parquet · parcels.csv"]
@@ -45,13 +46,16 @@ flowchart TD
     VA -->|"INPUT = s1s2<br/>(baseline)"| S03["<b>03_train_evaluate.py</b><br/>4 classifiers · nested spatial CV<br/>block-bootstrap CIs"]
     EMB -->|"INPUT = clay / prithvi /<br/>terramind / agrifm"| S03
     F --> S03
-    S03 -->|"oof_predictions.csv<br/>per run"| S04["<b>04_compare_models.py</b><br/>same parcels · paired differences<br/>Holm-adjusted"]
+    VB --> S03b["<b>03b_train_psetae.py</b><br/>PSE-TAE from scratch<br/>(deep-learning baseline)"]
+    F --> S03b
+    S03 -->|"oof_predictions.csv<br/>per run"| S04
+    S03b -->|"oof_predictions.csv"| S04["<b>04_compare_models.py</b><br/>same parcels · paired differences<br/>Holm-adjusted"]
     S04 --> R["Answer: does any GeoFM<br/>beat the baseline?"]
 
     classDef script fill:#1F5F8B,color:#fff,stroke:#1F5F8B
     classDef data fill:#FFF4E6,stroke:#B4541A,color:#1C2733
-    class S01,E1,E2,E3,E4,S03,S04 script
-    class F,VA,VC8,VC16,TS,EMB data
+    class S01,E1,E2,E3,E4,S03,S03b,S04 script
+    class F,VA,VB,VC8,VC16,TS,EMB data
 ```
 
 | Step | Script | GPU | What it does |
@@ -59,6 +63,7 @@ flowchart TD
 | 1 | `01_inspect_dataset.py` | no | checks the dataset before any model is trained |
 | 2 | `02a_embed_clay.py` … `02d_embed_agrifm.py` | recommended | frozen GeoFM embeddings per parcel |
 | 3 | `03_train_evaluate.py` | no | trains and evaluates the classifiers for one input (run once per input) |
+| 3b | `03b_train_psetae.py` | recommended | deep-learning baseline: PSE-TAE trained from scratch on the parcels' pixels |
 | 4 | `04_compare_models.py` | no | compares all inputs on the same parcels |
 
 ---
@@ -98,6 +103,7 @@ The foundation models are used **frozen**, as feature extractors (linear-probe-s
 | **Prithvi-EO-2.0-300M-TL** | `crops_p16` | S2 (6 HLS bands) | 16 × 16 px (160 m) | 4 months per pass, 3 passes | 12 × 1024 |
 | **TerraMind-1.0-base** | `crops_p16` | S2 (12 bands) + S1 VV, VH | 16 × 16 px (160 m) | each month separately | 12 × 768 |
 | **AgriFM** | `crops_p16` | S2 (10 bands) | output stride 16 px (160 m) | whole year in one pass | 1 × D |
+| **PSE-TAE** (trained from scratch, no pretraining) | View B, pixel sets | S2 (10 bands) + S1 VV, VH | random set of 64 parcel pixels | temporal self-attention over 12 months | learned end to end |
 
 **Only TerraMind uses Sentinel-1**, because it is the only one of the four models pretrained on radar. Clay, Prithvi and AgriFM receive optical bands only. To separate a "radar effect" from a "foundation-model effect", two sensitivity runs are possible:
 - an **S2-only baseline** (`S1S2_VARIABLES = "s2"` in script 03);
@@ -336,6 +342,51 @@ flowchart LR
 
 ---
 
+## 6b. Script 03b — `train_psetae` (deep-learning baseline)
+
+**Purpose:** a deep model trained **from scratch** on the same parcels and pixels. It answers the question reviewers usually ask: is a pretrained foundation model better than a deep network trained directly on our own labels? Together with the feature baseline (script 03, `INPUT = "s1s2"`), it gives two reference points: a classic one and a deep-learning one.
+
+**Model:** PSE-TAE ([Garnot et al. 2020, CVPR](https://arxiv.org/abs/1911.07757); [official code](https://github.com/VSainteuf/pytorch-psetae)), designed for parcel classification from satellite image time series.
+
+```mermaid
+flowchart LR
+    A["Parcel pixels<br/>(view B, inner pixels)<br/>12 months × 12 channels"] --> B["Random set of 64 pixels<br/>(new set every epoch)"]
+    B --> C["<b>Pixel-Set Encoder</b><br/>MLP per pixel → mean + std<br/>over the set → MLP<br/>= 1 vector per month"]
+    C --> D["<b>Temporal Attention Encoder</b><br/>month position encoding<br/>4 attention heads<br/>= 1 vector per parcel"]
+    D --> E["Decoder MLP<br/>→ irrigated / rainfed"]
+```
+
+| | |
+| --- | --- |
+| Channels | Sentinel-2 B2 B3 B4 B5 B6 B7 B8 B8A B11 B12 (the paper's 10 bands) + Sentinel-1 VV, VH of the crops' orbit (`BANDS = "s2"` for optical only) |
+| Pixels | inner pixels only (edge pixels left out, as in the baseline features); parcels with fewer than 4 inner pixels keep all pixels |
+| Architecture | paper defaults: MLP1 32-64, mean + std pooling, MLP2 128; 4 heads, d_k = 32, MLP3 512-128-128; decoder 64-32-2. The paper's extra geometric features are not used, so the model sees only pixels. |
+| Training | Adam (lr 0.001, weight decay 0.0001), batch 128, up to 100 epochs, class-weighted cross-entropy for the 86 / 14 imbalance; band normalisation computed on the training pixels of each fold |
+| Prediction | rainfed probability averaged over 5 random pixel sets |
+
+**Validation:** the same 5 spatial folds as every other input.
+
+```mermaid
+flowchart LR
+    O["Outer fold k = test<br/>(never used for any decision)"] --- R["Remaining 4 folds"]
+    R --> T["3 folds: train the network"]
+    R --> V["fold k+1: validation<br/>→ stop at the best epoch<br/>(early stopping on macro-F1)"]
+    T --> P["Predict fold k"]
+    V --> P
+```
+
+There is no hyperparameter grid: the architecture and optimiser settings are fixed in advance (paper defaults). The inner validation fold is used only for early stopping. Unlike the classifiers of script 03, the network is not refit on all four training folds, because it needs the validation fold to know when to stop.
+
+**Outputs** (`outputs/study/03_models/psetae_agyear_s2s1/`), in the same format as script 03, so script 04 picks the run up automatically:
+- `oof_predictions.csv`
+- `metrics_with_ci.csv`, `metrics_summary.csv`, `metrics_per_fold.csv`
+- `training_history.csv` (loss and validation macro-F1 per epoch)
+- `model_fold<k>.pt`, `run_config.json`, `run.log`
+
+In script 04, PSE-TAE is compared with the baseline's random forest (`BASELINE_CLASSIFIER = "rf"`).
+
+---
+
 ## 7. Script 04 — `compare_models`
 
 **Purpose:** answer the main research question by comparing every input with the baseline, on the same parcels.
@@ -393,6 +444,7 @@ python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
 # models_run/03: set INPUT at the top, run once for each of: s1s2, clay, prithvi, terramind, agrifm
 python models_run/03_train_evaluate.py
+python models_run/03b_train_psetae.py        # deep-learning baseline; GPU recommended
 python models_run/04_compare_models.py
 ```
 
@@ -403,7 +455,8 @@ python models_run/04_compare_models.py
 | 01 | `EXAMPLE_PATCH = 16`, `N_EXAMPLES = 3`, `SEED = 42` |
 | 02a–02d | `CHIP_SOURCE = "tiles"`, `CROP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
 | 03 | `INPUT`, `S1S2_VARIABLES` (all / s2 / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (crops / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
-| 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42` |
+| 03b | `BANDS` (s2s1 / s2), `USE_EDGE_PIXELS`, `N_PIXELS = 64`, `BATCH_SIZE = 128`, `MAX_EPOCHS = 100`, `PATIENCE = 15`, `LEARNING_RATE`, `EVAL_DRAWS = 5`, `QUICK_TEST` |
+| 04 | `BASELINE_RUN`, `RUNS`, `BASELINE_CLASSIFIER = "rf"`, `N_BOOT = 1000`, `SEED = 42` |
 
 ---
 
@@ -419,17 +472,19 @@ python models_run/04_compare_models.py
 | Baseline features | inner-pixel medians, one S1 orbit | same orbit as the TerraMind crops |
 | Validation | nested spatial CV, 20 km blocks | estimates mapping of unseen areas |
 | Uncertainty | block bootstrap, Holm | blocks are the independent units |
+| Deep-learning baseline | PSE-TAE from scratch, paper defaults, early stopping on the next fold | tests pretraining against learning from our own labels |
 
 **Open points:**
 - AgriFM normalisation scale (§5.4).
 - Prithvi on 10 m instead of 30 m data.
-- A from-scratch deep-learning baseline on views B or C (e.g. TempCNN or PSE-TAE).
 - Late fusion of GeoFM embeddings with S1 features for the optical-only models.
 - Results per zone, since rainfed parcels are concentrated in Doukkala.
 
 ---
 
 ## 11. References
+
+- Garnot, V. S. F., Landrieu, L., Giordano, S., & Chehata, N. (2020). Satellite image time series classification with pixel-set encoders and temporal self-attention. *CVPR*, 12325–12334. https://arxiv.org/abs/1911.07757
 
 - Clay Foundation (2024). Clay foundation model v1.5. https://huggingface.co/made-with-clay/Clay, doi:10.57967/hf/1537.
 - Foody, G. M. (2009). Classification accuracy comparison: hypothesis tests and the use of confidence intervals in evaluations of difference, equivalence and non-inferiority. *Remote Sensing of Environment*, 113, 1658–1663.

@@ -1,6 +1,6 @@
 # Irrigated Cropland Mapping using Geospatial Foundation Models
 
-MSc thesis code. Parcels in Morocco are classified as **irrigated** or **rainfed**. Frozen embeddings of four geospatial foundation models (**Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM**) are compared with a classic **Sentinel-1/2 feature baseline**. All inputs come from the same pixels and are scored on the same parcels, under the same nested spatial cross-validation.
+Maps **irrigated** and **rainfed** cropland at parcel level in Morocco from Sentinel-1 and Sentinel-2 time series. It compares two ways of describing each parcel: classic satellite features (monthly band values and indices) and embeddings from four geospatial foundation models (**Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM**). Every approach uses the same imagery and the same parcels, and is tested on areas it has never seen.
 
 | Part | Folder | What it does | Details |
 | --- | --- | --- | --- |
@@ -8,7 +8,7 @@ MSc thesis code. Parcels in Morocco are classified as **irrigated** or **rainfed
 | 2 · Study | [`models_run/`](models_run/) | dataset checks, embeddings, training and evaluation, comparison | [models_run/README.md](models_run/README.md) |
 | Tools | [`tools/`](tools/) | extra scripts for viewing and side checks (not needed for the results) | top of each script |
 
-The two parts are independent. Part 1 produces the dataset, which can be used downstream ML tasks.
+The two parts are independent: part 1 builds a ready-to-use dataset that any model can train on, and part 2 uses it to compare the models.
 
 ---
 
@@ -33,7 +33,7 @@ flowchart TD
     subgraph P2["Part 2 · models_run/"]
         I["01 Inspect dataset<br/>QA · purity · seasonal profiles"]
         E["02a–02d Embeddings<br/>frozen foundation models"]
-        C["03 Train & evaluate<br/>4 classifiers · nested spatial CV<br/>block-bootstrap 95% CI"]
+        C["03 Train & evaluate<br/>4 classifiers · nested spatial CV<br/>block-bootstrap 95% CI<br/>03b PSE-TAE (deep-learning baseline)"]
         K["04 Compare inputs<br/>paired differences vs baseline"]
         I --> E --> C --> K
     end
@@ -47,15 +47,10 @@ flowchart TD
     W --> E
     K --> R(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
 
-    T -.-> TOOLS["tools/<br/>virtual rasters · parcel explorer · GeoTIFF export"]
-    V -.-> TOOLS
-
     classDef part1 fill:#1F5F8B,color:#fff,stroke:#1F5F8B
     classDef part2 fill:#B4541A,color:#fff,stroke:#B4541A
-    classDef tool fill:#F4F1EA,stroke:#8A919A,color:#1C2733
     class L,F,T,V part1
     class I,E,C,K part2
-    class TOOLS tool
 ```
 
 **Method in one paragraph.** Each surveyed parcel gets the 12 monthly Sentinel-1/2 composites of its agricultural year (1 Sep – 31 Aug), cut from a shared, non-overlapping tile store.
@@ -148,6 +143,7 @@ python models_run/02b_embed_prithvi.py
 python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
 python models_run/03_train_evaluate.py           # once per INPUT: s1s2, clay, prithvi, terramind, agrifm
+python models_run/03b_train_psetae.py            # deep-learning baseline (GPU recommended)
 python models_run/04_compare_models.py
 ```
 

@@ -15,7 +15,7 @@ Steps
 3. For every run x classifier: macro-F1, rainfed F1, balanced accuracy and overall accuracy with a
    95% block-bootstrap interval. The SAME bootstrap samples (whole 20 km blocks) are used for every
    run, which makes the differences paired.
-4. Difference in macro-F1 against the baseline run (same classifier), with its 95% interval and a
+4. Difference in macro-F1 against the baseline run (same classifier; runs with their own model, such as PSE-TAE, against the baseline's BASELINE_CLASSIFIER), with its 95% interval and a
    bootstrap p-value; p-values are adjusted for the number of comparisons (Holm). An interval that
    excludes 0 means a real difference (Foody 2009, Remote Sensing of Environment).
 5. Save the tables and a figure.
@@ -45,7 +45,9 @@ OUT_DIR = ROOT / "outputs" / "study" / "04_comparison"
 # to the one written in outputs/dataset/03_tiles/agyear/views/views_info.json. Older runs (EE features, old chips):
 # BASELINE_RUN = "s1s2-all_agyear_30d" and RUNS = None.
 BASELINE_RUN = "s1s2-all_agyear_tiles-inner-asc"           # run folder of the Sentinel-1/2 baseline
-RUNS = [BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi", "terramind", "agrifm")]
+RUNS = ([BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi", "terramind", "agrifm")]
+        + ["psetae_agyear_s2s1"])                         # deep-learning baseline (03b_train_psetae.py)
+BASELINE_CLASSIFIER = "rf"     # runs with their own model (e.g. psetae) are compared with this baseline classifier
 N_BOOT = 1000
 SEED = 42
 # ==========================================================================
@@ -179,12 +181,15 @@ def main():
     if BASELINE_RUN in per_run.index:
         diffs = []
         for (run, clf), draws in boot_f1.items():
-            if run == BASELINE_RUN or (BASELINE_RUN, clf) not in boot_f1:
+            if run == BASELINE_RUN:
                 continue
-            d = draws - boot_f1[(BASELINE_RUN, clf)]
-            point = METRICS["macro_f1"](y, preds[(run, clf)]) - METRICS["macro_f1"](y, preds[(BASELINE_RUN, clf)])
+            ref_clf = clf if (BASELINE_RUN, clf) in boot_f1 else BASELINE_CLASSIFIER   # e.g. psetae vs baseline rf
+            if (BASELINE_RUN, ref_clf) not in boot_f1:
+                continue
+            d = draws - boot_f1[(BASELINE_RUN, ref_clf)]
+            point = METRICS["macro_f1"](y, preds[(run, clf)]) - METRICS["macro_f1"](y, preds[(BASELINE_RUN, ref_clf)])
             p = min(1.0, 2 * min((d <= 0).mean(), (d >= 0).mean()))
-            diffs.append({"run": run, "classifier": clf, "delta_macro_f1": point,
+            diffs.append({"run": run, "classifier": clf, "baseline_classifier": ref_clf, "delta_macro_f1": point,
                           "ci_low": np.quantile(d, 0.025), "ci_high": np.quantile(d, 0.975), "p": p})
         if diffs:
             diffs = pd.DataFrame(diffs)

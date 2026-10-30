@@ -73,6 +73,17 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-10-30 (deep-learning baseline)
+- Classifier choice: keep the 4 classifiers of study/03 (logistic regression, RF, HGB, SVM); headline = RF for all
+  inputs + logistic regression (linear probe) for the foundation models; HGB / SVM as robustness checks.
+- New `models_run/03b_train_psetae.py`: PSE-TAE (Garnot et al. 2020) trained from scratch on the pixel sets
+  (10 S2 bands + S1 VV/VH of the crops' orbit, inner pixels), paper-default architecture, class-weighted
+  cross-entropy, early stopping on the next fold, same 5 outer spatial folds, same output format as 03.
+  Tested on synthetic pixel sets (learns the signal: macro-F1 0.998; early stop after 16-22 epochs).
+- `04_compare_models.py`: run `psetae_agyear_s2s1` added to RUNS; runs with their own model are compared with the
+  baseline's `BASELINE_CLASSIFIER = "rf"` (new column `baseline_classifier`). Tested.
+- READMEs updated (models_run section 6b with diagrams, run order, settings; main README).
+
 ### 2026-10-30 (folders renamed, main README)
 - Folders renamed by the user: `dataset/` -> `ml_dataset_prep/`, `study/` -> `models_run/`, `analysis/` -> `tools/`;
   raw data moved from `data/raw/<x>` to `data/<x>`; `archive/` removed. Output folders unchanged (`outputs/dataset`,
