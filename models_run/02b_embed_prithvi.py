@@ -1,49 +1,53 @@
 """
-02a_embed_clay.py  —  Clay v1.5 embeddings for every parcel (frozen encoder)
-============================================================================
+02b_embed_prithvi.py  —  Prithvi-EO-2.0 embeddings for every parcel (frozen encoder)
+====================================================================================
 
 What it does
 ------------
-Turns each parcel's crops (dataset/04_make_views.py) into Clay embeddings: one 1024-number vector
-per month of its agricultural year. The encoder is frozen (no training here); the embeddings are
-classified in 03_train_evaluate.py with the same models and spatial validation as every other input.
+Turns each parcel's crops (ml_dataset_prep/04_make_views.py) into Prithvi-EO-2.0 embeddings: one
+1024-number vector per month of its agricultural year. The encoder is frozen; the embeddings are
+classified in 03_train_evaluate.py like every other input.
 
 The model
 ---------
-Clay v1.5 (Clay Foundation; https://huggingface.co/made-with-clay/Clay, doi:10.57967/hf/1537):
-a vision transformer trained as a masked autoencoder on Sentinel-2, Landsat, Sentinel-1, NAIP and
-other imagery. It cuts an image into 8 x 8-pixel patches (80 m at 10 m) and returns one embedding
-per patch plus a class token. Clay takes ONE date per image, so the 12 monthly chips are embedded
-one by one. Besides the pixels it receives each band's wavelength, the pixel size, the date (week
-of year) and the location (lat/lon), encoded as in the Clay tutorials.
+Prithvi-EO-2.0-300M-TL (IBM & NASA; Szwarcman et al. 2024, arXiv:2412.02732;
+https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL): a multi-temporal vision
+transformer pretrained on Harmonized Landsat Sentinel-2 (HLS) time series. From its model card:
+6 bands (Blue, Green, Red, Narrow NIR, SWIR 1, SWIR 2 = Sentinel-2 B2 B3 B4 B8A B11 B12),
+4 frames per sample, 16 x 16-pixel patches, 1024-dimensional tokens, reflectance x 10000
+normalised with its own band mean/std, plus optional time (year, day of year) and location
+(lat, lon) inputs.
+
+Choices made here (state them in the thesis)
+---------------------------------------------
+* Frames: the 12 months are fed in FRAMES_PER_PASS consecutive months at a time (default 4, as in
+  pretraining): Sep-Dec, Jan-Apr, May-Aug. Each frame keeps its own tokens, so the output is still
+  one embedding per month.
+* Pixel size: Prithvi was pretrained on 30 m HLS. The chips are 10 m Sentinel-2, used as they are
+  (patch = 160 m, closer to parcel size than 480 m). Prithvi's position encoding is rescaled to the
+  64 x 64 input automatically.
 
 Steps
 -----
-1. Load the frozen Clay encoder (checkpoints/clay/clay-v1.5.ckpt + metadata.yaml).
-2. For each batch of parcels: take the 10 Sentinel-2 bands Clay knows (blue ... swir22 =
-   B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), normalise with Clay's band mean/std; cloudy pixels -> 0
-   (= the band mean after normalisation).
-3. Run the encoder on every monthly chip; put the patch embeddings back on their 8 x 8 grid.
-4. Parcel embedding per month = mean of the patches covering the parcel, weighted by the share of
-   each patch inside the parcel (parcel mask stored with the crops).
+1. Load the frozen encoder through TerraTorch (downloads the weights from Hugging Face once).
+2. For each batch of parcels: take bands B2 B3 B4 B8A B11 B12, normalise with Prithvi's mean/std,
+   cloudy pixels -> 0 (= band mean).
+3. Run the encoder on each group of FRAMES_PER_PASS months with their dates and the parcel location.
+4. Per month: weighted mean of the 16 x 16-pixel patches covering the parcel (parcel mask stored with the crops).
 5. Save in batches (resume possible) and merge into one file.
 
 Install (once, in the condaml environment)
 ------------------------------------------
-    pip install git+https://github.com/Clay-foundation/model.git
-    mkdir -p checkpoints/clay
-    curl -L -o checkpoints/clay/clay-v1.5.ckpt https://huggingface.co/made-with-clay/Clay/resolve/main/v1.5/clay-v1.5.ckpt
-    curl -L -o checkpoints/clay/metadata.yaml https://raw.githubusercontent.com/Clay-foundation/model/main/configs/metadata.yaml
+    pip install terratorch          (already in environment.yml)
 
 Output
 ------
-outputs/study/02_embeddings/clay_<WINDOW>_tiles.npz
-    parcel_id [N], label [N], ag_season [N], steps [12] (month names),
-    embeddings [N, 12, 1024] float16, valid [N, 12] (False = month without any clear pixel)
+outputs/study/02_embeddings/prithvi_<WINDOW>_tiles.npz  (same layout as the other models)
+    embeddings [N, 12, 1024] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
 -----------------------------
-    python study/02a_embed_clay.py
+    python models_run/02b_embed_prithvi.py
 """
 import json
 import time
@@ -55,22 +59,22 @@ import torch
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-MODEL_NAME = "clay"
+MODEL_NAME = "prithvi"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
-CHECKPOINT = ROOT / "checkpoints" / "clay" / "clay-v1.5.ckpt"
-METADATA = ROOT / "checkpoints" / "clay" / "metadata.yaml"
-BATCH_PARCELS = 16            # parcels per step (x 12 months = chips per step)
-EMBED_BATCH = 64              # chips per forward pass (lower it if memory runs out)
+BACKBONE = "prithvi_eo_v2_300_tl"                          # TerraTorch name of Prithvi-EO-2.0-300M-TL
+FRAMES_PER_PASS = 4                                        # months per forward pass (pretraining used 4)
+USE_COORDS = True                                          # give date and location to the model
+BATCH_PARCELS = 16
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
+# Reading the crops of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
 # Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
 # (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
 CHIP_SOURCE = "tiles"
-CROP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
+CROP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
 if CHIP_SOURCE == "tiles":
     CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"crops_p{CROP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
@@ -191,85 +195,59 @@ def run(embed_batch_fn, steps_fn):
 # ========================== END SHARED CHIP CODE ==========================
 
 
-# ============================ CLAY-SPECIFIC CODE ===========================
-# Clay's Sentinel-2 L2A description (configs/metadata.yaml, sentinel-2-l2a):
-# (Clay band name, Sentinel-2 band, mean, std, central wavelength in micrometres)
-CLAY_BANDS = [
-    ("blue", "B2", 1105.0, 1809.0, 0.493), ("green", "B3", 1355.0, 1757.0, 0.560),
-    ("red", "B4", 1552.0, 1888.0, 0.665), ("rededge1", "B5", 1887.0, 1870.0, 0.704),
-    ("rededge2", "B6", 2422.0, 1732.0, 0.740), ("rededge3", "B7", 2630.0, 1697.0, 0.783),
-    ("nir", "B8", 2743.0, 1742.0, 0.842), ("nir08", "B8A", 2785.0, 1648.0, 0.865),
-    ("swir16", "B11", 2388.0, 1470.0, 1.610), ("swir22", "B12", 1835.0, 1379.0, 2.190),
-]
-S2_NAMES = [b[1] for b in CLAY_BANDS]
-MEAN = np.array([b[2] for b in CLAY_BANDS], dtype=np.float32)[None, None, :, None, None]
-STD = np.array([b[3] for b in CLAY_BANDS], dtype=np.float32)[None, None, :, None, None]
-WAVES = [b[4] for b in CLAY_BANDS]
-GSD_M = 10.0
-PATCH_PX = 8                  # Clay v1.5 patch size
+# ========================== PRITHVI-SPECIFIC CODE ==========================
+# Prithvi-EO-2.0 bands and normalisation (model card config.json):
+# HLS B02 B03 B04 B05(narrow NIR) B06(SWIR1) B07(SWIR2) = Sentinel-2 B2 B3 B4 B8A B11 B12
+S2_NAMES = ["B2", "B3", "B4", "B8A", "B11", "B12"]
+MEAN = np.array([1087.0, 1342.0, 1433.0, 2734.0, 1958.0, 1363.0], dtype=np.float32)[None, None, :, None, None]
+STD = np.array([2248.0, 2179.0, 2178.0, 1850.0, 1242.0, 1049.0], dtype=np.float32)[None, None, :, None, None]
+PATCH_PX = 16
 
 
 def load_encoder():
-    """Frozen Clay encoder; mask_ratio=0 and shuffle=False keep every patch, in grid order."""
-    from claymodel.module import ClayMAEModule
-    module = ClayMAEModule.load_from_checkpoint(str(CHECKPOINT), metadata_path=str(METADATA),
-                                                mask_ratio=0.0, shuffle=False)
-    module.eval()
-    return module.model.encoder.to(DEVICE)
+    """Frozen Prithvi-EO-2.0 encoder built for FRAMES_PER_PASS frames (weights from Hugging Face)."""
+    from terratorch.registry import BACKBONE_REGISTRY
+    model = BACKBONE_REGISTRY.build(BACKBONE, pretrained=True, num_frames=FRAMES_PER_PASS)
+    return model.eval().to(DEVICE)
 
 
 ENCODER = None
 
 
-def time_code(date):
-    """Week of year and hour as sine/cosine (Clay / stacchip convention); composites -> 11:00 UTC."""
-    week = date.isocalendar().week * 2 * np.pi / 52
-    hour = 11 * 2 * np.pi / 24
-    return [np.sin(week), np.cos(week), np.sin(hour), np.cos(hour)]
-
-
-def latlon_code(lat, lon):
-    """Latitude and longitude as sine/cosine (Clay convention)."""
-    lat, lon = np.radians(lat), np.radians(lon)
-    return [np.sin(lat), np.cos(lat), np.sin(lon), np.cos(lon)]
-
-
 @torch.no_grad()
-def encode(chips, times, latlons):
-    """chips [N, 10, H, W] -> patch grid [N, n, n, 1024]."""
-    n = chips.shape[-1] // PATCH_PX
-    out = []
-    for s in range(0, len(chips), EMBED_BATCH):
-        sl = slice(s, s + EMBED_BATCH)
-        datacube = {
-            "pixels": torch.from_numpy(chips[sl]).to(DEVICE),
-            "time": torch.tensor(np.array(times[sl]), dtype=torch.float32, device=DEVICE),
-            "latlon": torch.tensor(np.array(latlons[sl]), dtype=torch.float32, device=DEVICE),
-            "gsd": torch.tensor(GSD_M, device=DEVICE),
-            "waves": torch.tensor(WAVES, device=DEVICE),
-        }
-        tokens, kept_idx, _, _ = ENCODER(datacube)               # tokens[:, 0] = class token
-        patches = tokens[:, 1:, :]
-        grid = torch.zeros(patches.shape[0], n * n, patches.shape[2], device=DEVICE)
-        grid.scatter_(1, kept_idx.long().unsqueeze(-1).expand_as(patches), patches)   # back to grid order
-        out.append(grid.view(-1, n, n, patches.shape[2]).float().cpu().numpy())
-    return np.concatenate(out)
+def encode(x, temporal, location):
+    """x [B, 6, T, H, W], temporal [B, T, 2] (year, day of year), location [B, 2] (lat, lon)
+    -> patch grid per frame [B, T, n, n, 1024]. Tokens come in (frame, row, column) order after the class token."""
+    b, _, t, h, w = x.shape
+    n = h // PATCH_PX
+    kwargs = {}
+    if USE_COORDS:
+        kwargs = {"temporal_coords": torch.tensor(temporal, dtype=torch.float32, device=DEVICE),
+                  "location_coords": torch.tensor(location, dtype=torch.float32, device=DEVICE)}
+    features = ENCODER.forward_features(torch.from_numpy(x).to(DEVICE), **kwargs)
+    tokens = features[-1][:, 1:, :]                          # last (normalised) layer, without class token
+    return tokens.reshape(b, t, n, n, -1).float().cpu().numpy()
 
 
 def embed_batch(ids, chips, masks, info, index):
     """Chips of a batch of parcels -> embeddings [B, months, 1024] and valid [B, months]."""
-    x = select_bands(chips, info, S2_NAMES)                     # [B, M, 10, H, W] reflectance x 10000
+    x = select_bands(chips, info, S2_NAMES)                     # [B, M, 6, H, W]
     valid = month_is_valid(x)
-    x = np.nan_to_num((x - MEAN) / STD, nan=0.0)                # Clay normalisation; cloud -> band mean
+    x = np.nan_to_num((x - MEAN) / STD, nan=0.0)
     b, m = x.shape[:2]
-    times, latlons = [], []
-    for pid in ids:
-        row = index.loc[pid]
-        times += [time_code(d) for d in month_dates(row["ag_season"], info)]
-        latlons += [latlon_code(row["lat"], row["lon"])] * m
-    grid = encode(x.reshape(b * m, *x.shape[2:]), times, latlons)          # [B*M, n, n, D]
-    weights = np.repeat(patch_weights(masks, PATCH_PX), m, axis=0)          # same mask every month
-    emb = pool_patches(grid, weights).reshape(b, m, -1)
+    dates = [month_dates(index.loc[pid, "ag_season"], info) for pid in ids]          # per parcel, per month
+    location = np.array([[index.loc[pid, "lat"], index.loc[pid, "lon"]] for pid in ids])
+    weights = patch_weights(masks, PATCH_PX)
+    parts = []
+    for f0 in range(0, m, FRAMES_PER_PASS):
+        frames = slice(f0, f0 + FRAMES_PER_PASS)
+        clip = np.ascontiguousarray(x[:, frames].transpose(0, 2, 1, 3, 4))        # [B, 6, T, H, W]
+        temporal = np.array([[[d.year, d.dayofyear] for d in dd[frames]] for dd in dates])
+        grid = encode(clip, temporal, location)                                     # [B, T, n, n, D]
+        t = grid.shape[1]
+        pooled = pool_patches(grid.reshape(b * t, *grid.shape[2:]), np.repeat(weights, t, axis=0))
+        parts.append(pooled.reshape(b, t, -1))
+    emb = np.concatenate(parts, axis=1)
     return emb, valid
 
 

@@ -9,7 +9,7 @@ credentials*.json
 *.key
 
 # ---------------------------------------------------------------- data, checkpoints, outputs (rebuilt or downloaded)
-data/raw/
+data/
 checkpoints/
 external/
 outputs/

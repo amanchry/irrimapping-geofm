@@ -27,7 +27,7 @@ differences_vs_baseline.csv   run, classifier, delta macro-F1, ci_low, ci_high, 
 comparison_macro_f1.png       macro-F1 with 95% CI per input and classifier
 Run (from the project folder, after 03_train_evaluate.py has run for each input)
 ---------------------------------------------------------------------
-    python study/04_compare_models.py
+    python models_run/04_compare_models.py
 """
 from pathlib import Path
 

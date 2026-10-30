@@ -34,7 +34,7 @@ summary.csv                parcels and area per class and per agricultural year
 
 Run (from the project folder)
 -----------------------------
-    python dataset/01_prepare_labels.py
+    python ml_dataset_prep/01_prepare_labels.py
 """
 from pathlib import Path
 
@@ -50,9 +50,9 @@ from shapely.ops import unary_union
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-FIELDS_FILE = ROOT / "data" / "raw" / "field_survey" / "lulc_fielddata.shp"
-COUNTRY_FILE = ROOT / "data" / "raw" / "admin" / "gadm41_MAR_0.json"
-WORLDCOVER_FILE = ROOT / "data" / "raw" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
+FIELDS_FILE = ROOT / "data" / "field_survey" / "lulc_fielddata.shp"
+COUNTRY_FILE = ROOT / "data"  / "admin" / "gadm41_MAR_0.json"
+WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
 OUT_DIR = ROOT / "outputs" / "dataset" / "01_labels"
 
 UTM = 32629                                # metric CRS (UTM 29N) for areas and distances

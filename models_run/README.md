@@ -1,8 +1,8 @@
-# Part 2 — Irrigated cropland mapping with geospatial foundation models
+# Irrigated cropland mapping with geospatial foundation models
 
-This folder holds the **study**. It answers one question: on Moroccan parcels, does the frozen embedding of a geospatial foundation model (GeoFM) separate **irrigated** from **rainfed** cropland better than a classic Sentinel-1/2 feature baseline, under the same spatial validation?
+This folder holds the scripts that answers one question: on Moroccan parcels, does the frozen embedding of a geospatial foundation model (GeoFM) separate **irrigated** from **rainfed** cropland better than a classic Sentinel-1/2 feature baseline, under the same spatial validation?
 
-It only reads the ML-ready dataset built in [`dataset/`](../dataset/README.md). Nothing here downloads imagery or changes the dataset.
+It only reads the ML-ready dataset built in [`ml_dataset_prep/`](../ml_dataset_prep/README.md).
 
 **Contents**
 
@@ -137,7 +137,7 @@ What to look for:
 - `examples_irrigated.png`, `examples_rainfed.png`
 - `legacy_agreement.csv`
 
-For a closer look in QGIS, `analysis/a3_export_chips_geotiff.py` writes single crops as georeferenced GeoTIFFs to `01_inspection/chips_geotiff/`.
+For a closer look in QGIS, `tools/a3_export_chips_geotiff.py` writes single crops as georeferenced GeoTIFFs to `01_inspection/chips_geotiff/`.
 
 ---
 
@@ -160,7 +160,7 @@ flowchart TD
     H --> O
 ```
 
-**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m crop. The patch-aligned crops ([dataset §7.3](../dataset/README.md#73-view-c--patch-aligned-crops-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
+**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m crop. The patch-aligned crops ([dataset §7.3](../ml_dataset_prep/README.md#73-view-c--patch-aligned-crops-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
 
 **Cloudy pixels.** NODATA pixels are set to 0 after normalisation, which equals the band mean. A month with no clear pixel at all is flagged `valid = False`, and script 03 fills it with the training median.
 
@@ -363,7 +363,7 @@ flowchart TD
 
 ```
 outputs/study/
-├── 01_inspection/                    script 01 (+ chips_geotiff/ from analysis/a3)
+├── 01_inspection/                    script 01 (+ chips_geotiff/ from tools/a3)
 ├── 02_embeddings/
 │   ├── clay_agyear_tiles.npz
 │   ├── prithvi_agyear_tiles.npz
@@ -386,14 +386,14 @@ outputs/study/
 
 ```bash
 conda activate condaml
-python study/01_inspect_dataset.py
-python study/02a_embed_clay.py          # GPU recommended; resumable
-python study/02b_embed_prithvi.py
-python study/02c_embed_terramind.py
-python study/02d_embed_agrifm.py
-# study/03: set INPUT at the top, run once for each of: s1s2, clay, prithvi, terramind, agrifm
-python study/03_train_evaluate.py
-python study/04_compare_models.py
+python models_run/01_inspect_dataset.py
+python models_run/02a_embed_clay.py          # GPU recommended; resumable
+python models_run/02b_embed_prithvi.py
+python models_run/02c_embed_terramind.py
+python models_run/02d_embed_agrifm.py
+# models_run/03: set INPUT at the top, run once for each of: s1s2, clay, prithvi, terramind, agrifm
+python models_run/03_train_evaluate.py
+python models_run/04_compare_models.py
 ```
 
 `QUICK_TEST = True` in script 03 gives a fast check: 100 trees, 100 bootstrap draws, one setting per classifier.

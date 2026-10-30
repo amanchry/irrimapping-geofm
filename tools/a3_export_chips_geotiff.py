@@ -4,7 +4,7 @@ a3_export_chips_geotiff.py  —  write some parcels' chips as GeoTIFFs to look a
 
 What it does
 ------------
-The crops of dataset/04_make_views.py are stored as compressed NumPy arrays (fast for the models, not
+The crops of ml_dataset_prep/04_make_views.py are stored as compressed NumPy arrays (fast for the models, not
 viewable in GIS). This script turns the chips of a few parcels back into georeferenced GeoTIFFs,
 using the UTM zone and chip corner saved in index.csv, so they overlay exactly on the parcels.
 
@@ -32,7 +32,7 @@ Steps
 
 Run (from the project folder, after 04_download_chips.py)
 ---------------------------------------------------------
-    python analysis/a3_export_chips_geotiff.py
+    python tools/a3_export_chips_geotiff.py
 """
 import json
 from pathlib import Path
@@ -45,8 +45,8 @@ from rasterio.transform import Affine
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-WINDOW = "agyear"                                          # as in dataset/03_build_tiles.py
-CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / "crops_p16"   # crops of dataset/04_make_views.py
+WINDOW = "agyear"                                          # as in ml_dataset_prep/03_build_tiles.py
+CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / "crops_p16"   # crops of ml_dataset_prep/04_make_views.py
 PARCELS_FILE = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"
 OUT_DIR = ROOT / "outputs" / "study" / "01_inspection" / "chips_geotiff"
 

@@ -11,24 +11,24 @@ change log).
 
 | Step | Script | Status |
 | --- | --- | --- |
-| Labels | `dataset/01_prepare_labels.py` | Run: 8,781 parcels (7,585 irrigated, 1,196 rainfed) |
-| Spatial folds | `dataset/02_make_spatial_folds.py` | Run: 5 folds, 20 km blocks |
-| Tile store | `dataset/03_build_tiles.py` | Plan + labels tested on all parcels; Earth Engine part not yet run |
-| Model views | `dataset/04_make_views.py` | Tested end to end with synthetic imagery |
-| Dataset inspection | `study/01_inspect_dataset.py` | Written 2026-10-29; tested on synthetic data |
-| Clay embeddings | `study/02a_embed_clay.py` | Tested with a random encoder; not yet run |
-| Prithvi embeddings | `study/02b_embed_prithvi.py` | Tested with random weights, not yet run |
-| TerraMind embeddings | `study/02c_embed_terramind.py` | Tested with random weights, not yet run |
-| AgriFM embeddings | `study/02d_embed_agrifm.py` | Tested with random weights; weights + repo still to download |
-| Train / evaluate | `study/03_train_evaluate.py` | Tested on synthetic tile-store features |
-| Compare inputs | `study/04_compare_models.py` | Tested on test runs |
-| GMIA-NEXT check points | `analysis/a1_gmia_next_points.py` | Needs `data/raw/gmia_next/` |
-| Reference maps | `analysis/a2_map_reference_products.py` | Converted from notebook |
-| Crops to GeoTIFF (QGIS) | `analysis/a3_export_chips_geotiff.py` | Reads `views/crops_p16` |
+| Labels | `ml_dataset_prep/01_prepare_labels.py` | Run: 8,781 parcels (7,585 irrigated, 1,196 rainfed) |
+| Spatial folds | `ml_dataset_prep/02_make_spatial_folds.py` | Run: 5 folds, 20 km blocks |
+| Tile store | `ml_dataset_prep/03_build_tiles.py` | Plan + labels tested on all parcels; Earth Engine part not yet run |
+| Model views | `ml_dataset_prep/04_make_views.py` | Tested end to end with synthetic imagery |
+| Dataset inspection | `models_run/01_inspect_dataset.py` | Written 2026-10-29; tested on synthetic data |
+| Clay embeddings | `models_run/02a_embed_clay.py` | Tested with a random encoder; not yet run |
+| Prithvi embeddings | `models_run/02b_embed_prithvi.py` | Tested with random weights, not yet run |
+| TerraMind embeddings | `models_run/02c_embed_terramind.py` | Tested with random weights, not yet run |
+| AgriFM embeddings | `models_run/02d_embed_agrifm.py` | Tested with random weights; weights + repo still to download |
+| Train / evaluate | `models_run/03_train_evaluate.py` | Tested on synthetic tile-store features |
+| Compare inputs | `models_run/04_compare_models.py` | Tested on test runs |
+| GMIA-NEXT check points | `tools/a1_gmia_next_points.py` | Needs `data/raw/gmia_next/` |
+| Reference maps | `tools/a2_map_reference_products.py` | Converted from notebook |
+| Crops to GeoTIFF (QGIS) | `tools/a3_export_chips_geotiff.py` | Reads `views/crops_p16` |
 
 Next steps
-1. Run dataset/03 with `N_TEST_TILES = 20`, then dataset/04 and study/01; check the figures (and a3 in QGIS); then full runs.
-2. Run study/02a-02d, then study/03 for each `INPUT`, then study/04.
+1. Run dataset/03 with `N_TEST_TILES = 20`, then dataset/04 and models_run/01; check the figures (and a3 in QGIS); then full runs.
+2. Run models_run/02a-02d, then models_run/03 for each `INPUT`, then models_run/04.
 3. Decide on the open points below.
 
 ---
@@ -73,24 +73,56 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-10-30 (folders renamed, main README)
+- Folders renamed by the user: `dataset/` -> `ml_dataset_prep/`, `study/` -> `models_run/`, `analysis/` -> `tools/`;
+  raw data moved from `data/raw/<x>` to `data/<x>`; `archive/` removed. Output folders unchanged (`outputs/dataset`,
+  `outputs/study`, `outputs/analysis`).
+- Fixed the remaining `data/raw` paths (ml_dataset_prep/01, tools/a1, tools/a2) and `.gitignore` (`data/`).
+  Script descriptions, folder READMEs and this file updated to the new folder names (text only).
+- Main README rewritten as an overview: the two parts, overall workflow diagram (Mermaid), project structure,
+  setup (environment, Earth Engine, input data, model weights), run order, tools, links to the folder READMEs.
+
+### 2026-10-30 (dataset check + parcel explorer)
+- Checked the full dataset run (dataset/01-04) and models_run/01: 2,987 tiles, 8,781 parcels in both crop views, 8,775 in the
+  feature tables (6 parcels fully covered by overlapping polygons have no own pixel; excluded automatically by
+  models_run/04), no missing values, every parcel-month has a clear S2 view, NDVI r = 0.97-0.99 vs the legacy EE table,
+  S1 orbit ASC. Purity (median) p8 0.36 -> 0.59, p16 0.09 -> 0.30 with patch alignment. Ready for models_run/02-04.
+- New `tools/a5_parcel_explorer.py` -> `outputs/analysis/parcel_explorer.html`: parcels on a satellite / street
+  basemap, filters (class, year, zone, fold), colour by class or fold, search; click -> monthly NDVI / NDWI / VH / VV /
+  clear-observation profile against class median + IQR of the same agricultural year; pin parcels to compare.
+  Standard library only; tested in a headless browser (no errors).
+
+### 2026-10-30 (README: two agricultural years)
+- `ml_dataset_prep/README.md`: new section 6.2 explaining how the two agricultural years are handled (season from the
+  survey date, tiles keyed by season + grid position, season-only label burning, one Earth Engine image per year,
+  same band layout, folds by location so a place in both years stays in one fold, 47 tile positions in both years),
+  with a flow diagram; the season split added to the overview diagram. Section 6 renumbered (6.3-6.6).
+
+### 2026-10-30
+- New `tools/a4_build_vrt.py`: all tiles combined into GDAL virtual rasters, one per agricultural year (the years
+  overlap in space): labels, true colour, false colour and Sentinel-1 ascending for each month; optional 228-band
+  full stack (`FULL_STACK`, ~230 MB XML for 2023/24, off by default). Standard library only; relative paths.
+  Tested: VRT pixels and band names identical to the source tiles. Built for the current store: 2,183 tiles
+  (2023/24) and 804 tiles (2024/25) -> 74 VRTs in `outputs/dataset/03_tiles/agyear/vrt/`.
+
 ### 2026-10-29 (documentation)
-- New `dataset/README.md` and `study/README.md`: full methodology of each part, every script (purpose, steps,
+- New `ml_dataset_prep/README.md` and `models_run/README.md`: full methodology of each part, every script (purpose, steps,
   settings, outputs), Mermaid flow diagrams in the markdown, file formats, limitations and references.
   The main README links to both. TODO: complete the Ouassanouan et al. (2026) reference (title, DOI).
-- Docstrings corrected: embedding output names `<model>_agyear_tiles.npz` (02a-02d), baseline source in study/03,
+- Docstrings corrected: embedding output names `<model>_agyear_tiles.npz` (02a-02d), baseline source in models_run/03,
   a3 output folder.
 
 ### 2026-10-29 (restructure)
-- **Code split into two parts.** `dataset/` builds the ML-ready dataset (publishable separately);
-  `study/` uses only its outputs. `pipeline/` is no longer used.
-- Renamed scripts: `pipeline/01`, `02` -> `dataset/01`, `02`; `pipeline/04_build_tiles.py` -> `dataset/03_build_tiles.py`;
-  `pipeline/04b_make_views.py` -> `dataset/04_make_views.py`; `pipeline/05a-05d` -> `study/02a-02d`;
-  `pipeline/06_train_evaluate.py` -> `study/03_train_evaluate.py`; `pipeline/07_compare_models.py` -> `study/04_compare_models.py`.
+- **Code split into two parts.** `ml_dataset_prep/` builds the ML-ready dataset (publishable separately);
+  `models_run/` uses only its outputs. `pipeline/` is no longer used.
+- Renamed scripts: `pipeline/01`, `02` -> `dataset/01`, `02`; `pipeline/04_build_tiles.py` -> `ml_dataset_prep/03_build_tiles.py`;
+  `pipeline/04b_make_views.py` -> `ml_dataset_prep/04_make_views.py`; `pipeline/05a-05d` -> `models_run/02a-02d`;
+  `pipeline/06_train_evaluate.py` -> `models_run/03_train_evaluate.py`; `pipeline/07_compare_models.py` -> `models_run/04_compare_models.py`.
   `pipeline/03_extract_s1s2_features.py` (Earth Engine features) moved to `archive/legacy_pipeline/`.
 - Outputs moved: `outputs/01_labels`, `02_folds` -> `outputs/dataset/`; tile store in `outputs/dataset/03_tiles/agyear/`;
   `05_embeddings`, `06_models`, `07_comparison` -> `outputs/study/02_embeddings`, `03_models`, `04_comparison`;
   old `03_s1s2_features` and `04_chips` -> `outputs/legacy/`. All paths in the scripts updated.
-- **New `study/01_inspect_dataset.py`:** inventory per class / season / fold, label QA (overlaps, tiny parcels),
+- **New `models_run/01_inspect_dataset.py`:** inventory per class / season / fold, label QA (overlaps, tiny parcels),
   clear observations per month, patch purity aligned vs centred, seasonal NDVI / NDWI / VH profiles,
   example crops per class, NDVI agreement with the legacy Earth Engine features. Output: `outputs/study/01_inspection/`.
 - a3 now reads `views/crops_p16` and writes to `outputs/study/01_inspection/chips_geotiff/`.
@@ -140,9 +172,9 @@ Next steps
 - Note (macOS): if a script stops with `OMP: Error #15` (two OpenMP copies), install PyTorch from conda-forge instead of pip, or set `KMP_DUPLICATE_LIB_OK=TRUE` as a workaround.
 
 ### 2026-10-15
-- **Added** `analysis/a3_export_chips_geotiff.py`: writes chips of selected parcels as GeoTIFFs (14 bands per month, 12-month NDVI, parcel mask and outline) for QGIS.
+- **Added** `tools/a3_export_chips_geotiff.py`: writes chips of selected parcels as GeoTIFFs (14 bands per month, 12-month NDVI, parcel mask and outline) for QGIS.
 - **Restructured the project** into `pipeline/`, `analysis/`, `data/raw/`, `checkpoints/`, `external/`, `secrets/`, `outputs/<step>/`, `docs/`, `archive/`. Old scripts, notebooks and outputs moved to `archive/`.
-- **Converted all notebooks to scripts**: `1_training_data_inspect` -> `01_prepare_labels.py`; `3_split_train_test` -> `02_make_spatial_folds.py`; `1b_gmia_next_inspect` -> `analysis/a1_gmia_next_points.py`; `map_esa_lgrip_morocco` -> `analysis/a2_map_reference_products.py`.
+- **Converted all notebooks to scripts**: `1_training_data_inspect` -> `01_prepare_labels.py`; `3_split_train_test` -> `02_make_spatial_folds.py`; `1b_gmia_next_inspect` -> `tools/a1_gmia_next_points.py`; `map_esa_lgrip_morocco` -> `tools/a2_map_reference_products.py`.
 - **New** `04_download_chips.py` (shared chip store) and `05a-05d` embedding scripts (Clay, Prithvi, TerraMind, AgriFM) with a common output format `outputs/05_embeddings/<model>_<window>.npz`.
 - **New** `06_train_evaluate.py`: one script for every input (`INPUT` setting), nested spatial CV, 4 classifiers, block-bootstrap CI, paired classifier differences, spatial vs random CV, grouped importance, final models.
 - **New** `07_compare_models.py`: all inputs on the same parcels, differences vs the S1/S2 baseline with bootstrap p-values (Holm-adjusted).

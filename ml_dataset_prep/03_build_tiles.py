@@ -65,7 +65,7 @@ tiles_info.json             grid, bands, months, NODATA, cloud settings
 
 Run (from the project folder)
 -----------------------------
-    python dataset/03_build_tiles.py
+    python ml_dataset_prep/03_build_tiles.py
 Set N_TEST_TILES = 20 for a quick check first.
 """
 import json
@@ -85,7 +85,7 @@ from shapely.geometry import box
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"      # Earth Engine key (never commit)
-PARCELS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"   # parcels + folds (dataset/02_make_spatial_folds.py)
+PARCELS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"   # parcels + folds (ml_dataset_prep/02_make_spatial_folds.py)
 
 START_MONTH, N_MONTHS, WINDOW = 9, 12, "agyear"    # agricultural year 1 Sep - 31 Aug
 OUT_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW

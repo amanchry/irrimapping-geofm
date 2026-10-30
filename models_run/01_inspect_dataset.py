@@ -4,8 +4,8 @@
 
 What it does
 ------------
-First step of the irrigated-area study. Reads the dataset built by dataset/03_build_tiles.py and
-dataset/04_make_views.py and checks that it is complete and sensible, so that problems in the data
+First step of the irrigated-area study. Reads the dataset built by ml_dataset_prep/03_build_tiles.py and
+ml_dataset_prep/04_make_views.py and checks that it is complete and sensible, so that problems in the data
 are found before they show up as strange model results. Nothing is changed in the dataset.
 
 Steps
@@ -26,11 +26,11 @@ Output (outputs/study/01_inspection/)
 -------------------------------------
 inventory.csv, label_qa.csv, observations_per_month.csv, purity_summary.csv, legacy_agreement.csv,
 observations_per_month.png, purity.png, seasonal_profiles.png, examples_irrigated.png, examples_rainfed.png
-For a closer look in QGIS: analysis/a3_export_chips_geotiff.py writes single crops as GeoTIFFs.
+For a closer look in QGIS: tools/a3_export_chips_geotiff.py writes single crops as GeoTIFFs.
 
-Run (from the project folder, after dataset/04_make_views.py)
+Run (from the project folder, after ml_dataset_prep/04_make_views.py)
 -------------------------------------------------------------
-    python study/01_inspect_dataset.py
+    python models_run/01_inspect_dataset.py
 """
 import json
 from pathlib import Path
@@ -45,8 +45,8 @@ from matplotlib.colors import LinearSegmentedColormap
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW       # dataset/03_build_tiles.py
-VIEWS = TILE_ROOT / "views"                                         # dataset/04_make_views.py
+TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW       # ml_dataset_prep/03_build_tiles.py
+VIEWS = TILE_ROOT / "views"                                         # ml_dataset_prep/04_make_views.py
 LEGACY_FEATURES = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"
 OUT_DIR = ROOT / "outputs" / "study" / "01_inspection"
 

@@ -1,53 +1,43 @@
 """
-02b_embed_prithvi.py  —  Prithvi-EO-2.0 embeddings for every parcel (frozen encoder)
-====================================================================================
+02c_embed_terramind.py  —  TerraMind embeddings for every parcel (frozen encoder, Sentinel-1 + Sentinel-2)
+===========================================================================================================
 
 What it does
 ------------
-Turns each parcel's crops (dataset/04_make_views.py) into Prithvi-EO-2.0 embeddings: one
-1024-number vector per month of its agricultural year. The encoder is frozen; the embeddings are
-classified in 03_train_evaluate.py like every other input.
+Turns each parcel's crops (ml_dataset_prep/04_make_views.py) into TerraMind embeddings: one 768-number vector
+per month, computed from Sentinel-2 AND Sentinel-1 together. The encoder is frozen; the embeddings
+are classified in 03_train_evaluate.py like every other input.
 
 The model
 ---------
-Prithvi-EO-2.0-300M-TL (IBM & NASA; Szwarcman et al. 2024, arXiv:2412.02732;
-https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL): a multi-temporal vision
-transformer pretrained on Harmonized Landsat Sentinel-2 (HLS) time series. From its model card:
-6 bands (Blue, Green, Red, Narrow NIR, SWIR 1, SWIR 2 = Sentinel-2 B2 B3 B4 B8A B11 B12),
-4 frames per sample, 16 x 16-pixel patches, 1024-dimensional tokens, reflectance x 10000
-normalised with its own band mean/std, plus optional time (year, day of year) and location
-(lat, lon) inputs.
-
-Choices made here (state them in the thesis)
----------------------------------------------
-* Frames: the 12 months are fed in FRAMES_PER_PASS consecutive months at a time (default 4, as in
-  pretraining): Sep-Dec, Jan-Apr, May-Aug. Each frame keeps its own tokens, so the output is still
-  one embedding per month.
-* Pixel size: Prithvi was pretrained on 30 m HLS. The chips are 10 m Sentinel-2, used as they are
-  (patch = 160 m, closer to parcel size than 480 m). Prithvi's position encoding is rescaled to the
-  64 x 64 input automatically.
+TerraMind-1.0-base (IBM & ESA; Jakubik et al. 2025, arXiv:2504.11171;
+https://huggingface.co/ibm-esa-geospatial/TerraMind-1.0-base): a multimodal transformer pretrained
+on nine Earth-observation modalities. Used here as a backbone through TerraTorch with two inputs:
+  S2L2A  12 Sentinel-2 bands B1 B2 B3 B4 B5 B6 B7 B8 B8A B9 B11 B12 (reflectance x 10000)
+  S1GRD  Sentinel-1 VV, VH in dB
+Each input is standardised with TerraMind's pretraining mean/std (TerraTorch terramind_register.py);
+the backbone does not do this itself. Patches are 16 x 16 pixels (160 m); the position encoding is
+interpolated to the 64 x 64 chips. Tokens of the two modalities are averaged (merge_method "mean").
+TerraMind takes one date per input, so the 12 months are embedded one by one.
 
 Steps
 -----
-1. Load the frozen encoder through TerraTorch (downloads the weights from Hugging Face once).
-2. For each batch of parcels: take bands B2 B3 B4 B8A B11 B12, normalise with Prithvi's mean/std,
-   cloudy pixels -> 0 (= band mean).
-3. Run the encoder on each group of FRAMES_PER_PASS months with their dates and the parcel location.
-4. Per month: weighted mean of the 16 x 16-pixel patches covering the parcel (parcel mask stored with the crops).
+1. Load the frozen TerraMind backbone (downloads the weights from Hugging Face once).
+2. For each batch of parcels and each month: standardise S2 and S1, cloudy/missing pixels -> 0.
+3. Run the encoder; take the last layer's tokens on their 4 x 4 grid.
+4. Weighted mean of the patches covering the parcel (parcel mask stored with the crops).
 5. Save in batches (resume possible) and merge into one file.
 
-Install (once, in the condaml environment)
-------------------------------------------
-    pip install terratorch          (already in environment.yml)
+Install: terratorch (already in environment.yml).
 
 Output
 ------
-outputs/study/02_embeddings/prithvi_<WINDOW>_tiles.npz  (same layout as the other models)
-    embeddings [N, 12, 1024] float16, valid [N, 12], steps = month names
+outputs/study/02_embeddings/terramind_<WINDOW>_tiles.npz  (same layout as the other models)
+    embeddings [N, 12, 768] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
 -----------------------------
-    python study/02b_embed_prithvi.py
+    python models_run/02c_embed_terramind.py
 """
 import json
 import time
@@ -59,17 +49,17 @@ import torch
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-MODEL_NAME = "prithvi"
+MODEL_NAME = "terramind"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
-BACKBONE = "prithvi_eo_v2_300_tl"                          # TerraTorch name of Prithvi-EO-2.0-300M-TL
-FRAMES_PER_PASS = 4                                        # months per forward pass (pretraining used 4)
-USE_COORDS = True                                          # give date and location to the model
+BACKBONE = "terramind_v1_base"
+MODALITIES = ["S2L2A", "S1GRD"]                            # ["S2L2A"] = optical only (ablation)
 BATCH_PARCELS = 16
+EMBED_BATCH = 64
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
+# Reading the crops of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
 # Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
 # (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.
@@ -195,19 +185,27 @@ def run(embed_batch_fn, steps_fn):
 # ========================== END SHARED CHIP CODE ==========================
 
 
-# ========================== PRITHVI-SPECIFIC CODE ==========================
-# Prithvi-EO-2.0 bands and normalisation (model card config.json):
-# HLS B02 B03 B04 B05(narrow NIR) B06(SWIR1) B07(SWIR2) = Sentinel-2 B2 B3 B4 B8A B11 B12
-S2_NAMES = ["B2", "B3", "B4", "B8A", "B11", "B12"]
-MEAN = np.array([1087.0, 1342.0, 1433.0, 2734.0, 1958.0, 1363.0], dtype=np.float32)[None, None, :, None, None]
-STD = np.array([2248.0, 2179.0, 2178.0, 1850.0, 1242.0, 1049.0], dtype=np.float32)[None, None, :, None, None]
+# ========================= TERRAMIND-SPECIFIC CODE =========================
+# TerraMind v1 pretraining statistics (TerraTorch terramind_register.py, untok_sen2l2a@224 and untok_sen1grd@224)
+S2_NAMES = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12"]
+S2_MEAN = [1390.458, 1503.317, 1718.197, 1853.91, 2199.1, 2779.975, 2987.011, 3083.234, 3132.22, 3162.988, 2424.884, 1857.648]
+S2_STD = [2106.761, 2141.107, 2038.973, 2134.138, 2085.321, 1889.926, 1820.257, 1871.918, 1753.829, 1797.379, 1434.261, 1334.311]
+S1_NAMES = ["VV", "VH"]
+S1_MEAN = [-12.599, -20.293]
+S1_STD = [5.195, 5.890]
 PATCH_PX = 16
 
 
+def standardise(x, mean, std):
+    """(x - mean) / std per band; missing pixels -> 0 (= the pretraining mean)."""
+    mean = np.array(mean, dtype=np.float32)[None, None, :, None, None]
+    std = np.array(std, dtype=np.float32)[None, None, :, None, None]
+    return np.nan_to_num((x - mean) / std, nan=0.0)
+
+
 def load_encoder():
-    """Frozen Prithvi-EO-2.0 encoder built for FRAMES_PER_PASS frames (weights from Hugging Face)."""
     from terratorch.registry import BACKBONE_REGISTRY
-    model = BACKBONE_REGISTRY.build(BACKBONE, pretrained=True, num_frames=FRAMES_PER_PASS)
+    model = BACKBONE_REGISTRY.build(BACKBONE, pretrained=True, modalities=MODALITIES, merge_method="mean")
     return model.eval().to(DEVICE)
 
 
@@ -215,39 +213,32 @@ ENCODER = None
 
 
 @torch.no_grad()
-def encode(x, temporal, location):
-    """x [B, 6, T, H, W], temporal [B, T, 2] (year, day of year), location [B, 2] (lat, lon)
-    -> patch grid per frame [B, T, n, n, 1024]. Tokens come in (frame, row, column) order after the class token."""
-    b, _, t, h, w = x.shape
+def encode(inputs):
+    """inputs: modality -> [N, C, H, W] -> patch grid [N, n, n, 768] (last layer, modalities averaged)."""
+    n_chips, _, h, _ = next(iter(inputs.values())).shape
     n = h // PATCH_PX
-    kwargs = {}
-    if USE_COORDS:
-        kwargs = {"temporal_coords": torch.tensor(temporal, dtype=torch.float32, device=DEVICE),
-                  "location_coords": torch.tensor(location, dtype=torch.float32, device=DEVICE)}
-    features = ENCODER.forward_features(torch.from_numpy(x).to(DEVICE), **kwargs)
-    tokens = features[-1][:, 1:, :]                          # last (normalised) layer, without class token
-    return tokens.reshape(b, t, n, n, -1).float().cpu().numpy()
+    out = []
+    for s in range(0, n_chips, EMBED_BATCH):
+        batch = {k: torch.from_numpy(v[s:s + EMBED_BATCH]).to(DEVICE) for k, v in inputs.items()}
+        tokens = ENCODER(batch)[-1]                               # [b, n*n, 768], row-major patch order
+        out.append(tokens.reshape(tokens.shape[0], n, n, -1).float().cpu().numpy())
+    return np.concatenate(out)
 
 
 def embed_batch(ids, chips, masks, info, index):
-    """Chips of a batch of parcels -> embeddings [B, months, 1024] and valid [B, months]."""
-    x = select_bands(chips, info, S2_NAMES)                     # [B, M, 6, H, W]
-    valid = month_is_valid(x)
-    x = np.nan_to_num((x - MEAN) / STD, nan=0.0)
-    b, m = x.shape[:2]
-    dates = [month_dates(index.loc[pid, "ag_season"], info) for pid in ids]          # per parcel, per month
-    location = np.array([[index.loc[pid, "lat"], index.loc[pid, "lon"]] for pid in ids])
-    weights = patch_weights(masks, PATCH_PX)
-    parts = []
-    for f0 in range(0, m, FRAMES_PER_PASS):
-        frames = slice(f0, f0 + FRAMES_PER_PASS)
-        clip = np.ascontiguousarray(x[:, frames].transpose(0, 2, 1, 3, 4))        # [B, 6, T, H, W]
-        temporal = np.array([[[d.year, d.dayofyear] for d in dd[frames]] for dd in dates])
-        grid = encode(clip, temporal, location)                                     # [B, T, n, n, D]
-        t = grid.shape[1]
-        pooled = pool_patches(grid.reshape(b * t, *grid.shape[2:]), np.repeat(weights, t, axis=0))
-        parts.append(pooled.reshape(b, t, -1))
-    emb = np.concatenate(parts, axis=1)
+    """Chips of a batch of parcels -> embeddings [B, months, 768] and valid [B, months]."""
+    s2 = select_bands(chips, info, S2_NAMES)                                    # reflectance x 10000
+    s1 = select_bands(chips, info, S1_NAMES, scale=info["s1_scale"])           # dB
+    valid = month_is_valid(s2) | month_is_valid(s1)
+    b, m = s2.shape[:2]
+    inputs = {}
+    if "S2L2A" in MODALITIES:
+        inputs["S2L2A"] = standardise(s2, S2_MEAN, S2_STD).reshape(b * m, len(S2_NAMES), *s2.shape[3:])
+    if "S1GRD" in MODALITIES:
+        inputs["S1GRD"] = standardise(s1, S1_MEAN, S1_STD).reshape(b * m, len(S1_NAMES), *s1.shape[3:])
+    grid = encode(inputs)                                                       # [B*M, n, n, D]
+    weights = np.repeat(patch_weights(masks, PATCH_PX), m, axis=0)
+    emb = pool_patches(grid, weights).reshape(b, m, -1)
     return emb, valid
 
 

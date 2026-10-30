@@ -5,7 +5,7 @@
 What it does
 ------------
 One script for every input, so all of them are evaluated in exactly the same way:
-  INPUT = "s1s2"       Sentinel-1/2 parcel features per month (dataset/04_make_views.py, view A)  -> the baseline
+  INPUT = "s1s2"       Sentinel-1/2 parcel features per month (ml_dataset_prep/04_make_views.py, view A)  -> the baseline
   INPUT = "clay"       Clay embeddings              (02a_embed_clay.py)
   INPUT = "prithvi"    Prithvi-EO-2.0 embeddings    (02b_embed_prithvi.py)
   INPUT = "terramind"  TerraMind embeddings         (02c_embed_terramind.py)
@@ -52,7 +52,7 @@ seasonal_profiles.png (s1s2), gap_filling.csv (s1s2), final_model_<name>.joblib,
 
 Run (from the project folder)
 -----------------------------
-    python study/03_train_evaluate.py
+    python models_run/03_train_evaluate.py
 Change INPUT below and run again for each input. QUICK_TEST = True gives a fast check.
 """
 import ast
@@ -83,7 +83,7 @@ from sklearn.svm import SVC
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
-WINDOW = "agyear"                     # time window of the dataset (dataset/03_build_tiles.py)
+WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
 # S1/S2 baseline only
 INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOURCE = 'gee'): 30 or 15
@@ -96,7 +96,7 @@ S1_ORBIT = "crops"                    # tiles only: "crops" = same Sentinel-1 or
                                       # (views_info.json) | "ASC" | "DSC" | "both" (both orbits as separate variables)
 
 # Foundation-model embeddings only
-EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the dataset/04_make_views.py crops (<model>_agyear_tiles.npz) | "chips" = old
+EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the ml_dataset_prep/04_make_views.py crops (<model>_agyear_tiles.npz) | "chips" = old
 FEATURE_MODE = "concat"               # "concat" (all months + PCA) | "mean" (average over months)
 PCA_DIM = 128                         # PCA components in concat mode (fitted on training folds only)
 
@@ -104,7 +104,7 @@ SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
 VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views"
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
-    if S1_ORBIT == "crops" and INPUT == "s1s2":                   # orbit chosen by dataset/04_make_views.py for the crops
+    if S1_ORBIT == "crops" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the crops
         if not (VIEWS_DIR / "views_info.json").exists():
             raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run 03_build_tiles.py and 04_make_views.py "
                              f"first, or set S1S2_SOURCE = 'gee'")

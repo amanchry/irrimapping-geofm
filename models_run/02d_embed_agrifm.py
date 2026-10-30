@@ -4,7 +4,7 @@
 
 What it does
 ------------
-Turns each parcel's 12 monthly Sentinel-2 crops (dataset/04_make_views.py) into ONE AgriFM embedding
+Turns each parcel's 12 monthly Sentinel-2 crops (ml_dataset_prep/04_make_views.py) into ONE AgriFM embedding
 for the whole agricultural year. The encoder is frozen; the embeddings are classified in
 03_train_evaluate.py like every other input.
 
@@ -45,7 +45,7 @@ outputs/study/02_embeddings/agrifm_<WINDOW>_tiles.npz  (same layout as the other
 
 Run (from the project folder)
 -----------------------------
-    python study/02d_embed_agrifm.py
+    python models_run/02d_embed_agrifm.py
 """
 import json
 import sys
@@ -69,7 +69,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # ==========================================================================
 
 # ============================ SHARED CHIP CODE ============================
-# Reading the crops of dataset/04_make_views.py, pooling patch embeddings inside the parcel and
+# Reading the crops of ml_dataset_prep/04_make_views.py, pooling patch embeddings inside the parcel and
 # saving. This block is identical in the four 05*_embed_*.py scripts.
 # Input chips. "tiles" = patch-aligned crops cut by 04_make_views.py from the shared tile store
 # (same pixels as the parcel-feature baseline); "chips" = the older 04_download_chips.py store.

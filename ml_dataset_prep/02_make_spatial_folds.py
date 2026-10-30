@@ -48,7 +48,7 @@ train_test_distance.png        distance from test parcels to the nearest trainin
 
 Run (from the project folder)
 -----------------------------
-    python dataset/02_make_spatial_folds.py
+    python ml_dataset_prep/02_make_spatial_folds.py
 """
 from pathlib import Path
 
@@ -64,7 +64,7 @@ from scipy.spatial import cKDTree
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 INPUT = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"   # from 01_prepare_labels.py
-COUNTRY_FILE = ROOT / "data" / "raw" / "admin" / "gadm41_MAR_0.json"
+COUNTRY_FILE = ROOT / "data"  / "admin" / "gadm41_MAR_0.json"
 OUT_DIR = ROOT / "outputs" / "dataset" / "02_folds"
 
 UTM = 32629                  # metric CRS (UTM zone 29N) for distances and blocks

@@ -13,7 +13,6 @@ Views
 A. Parcel feature tables (random forest / gradient boosting baseline, simple baselines)
    Per parcel and month: MEDIAN over the parcel's pixels of the 12 Sentinel-2 bands, NDVI, NDWI,
    EVI, Sentinel-1 VV/VH (ascending and descending, dB), and the clear-observation counts.
-   Median, not mean, as in Sen4AgriNet / EuroCropsML (robust to residual cloud and edge pixels).
      parcel_features_all.csv     all parcel pixels
      parcel_features_inner.csv   without edge pixels (INNER_BUFFER_M of 03_build_tiles.py); parcels with no
                                  inner pixel fall back to all pixels (column used_inner = False)
@@ -27,7 +26,7 @@ C. Patch-aligned crops for the foundation models, one folder per patch size (CRO
    of one model patch instead of on the corner of four patches (centred crops with a crop size
    that is a multiple of the patch size split small parcels over 4 mostly-neighbour patches).
    index.csv adds `purity` (share of the pooled patches inside the parcel, the weighting used by
-   the study/02 embedding scripts), `purity_centred` (same for the old centred crop), n_px, area_ha, fold, zone.
+   the models_run/02 embedding scripts), `purity_centred` (same for the old centred crop), n_px, area_ha, fold, zone.
 D. Full tiles (segmentation models such as U-TAE): use outputs/dataset/03_tiles/<WINDOW>/tiles/ directly;
    the label band has 0 = ignore for unlabelled pixels.
 
@@ -42,7 +41,7 @@ qa_purity.csv, qa_clear_obs.csv, views_info.json
 
 Run (from the project folder, after 03_build_tiles.py)
 ------------------------------------------------------
-    python dataset/04_make_views.py
+    python ml_dataset_prep/04_make_views.py
 """
 import json
 import warnings
@@ -182,7 +181,7 @@ def feature_row(px):
 
 # ------------------------------------------------------------ view C: crops
 def purity(mask, patch_px):
-    """Weighted share of the pooled patches inside the parcel (study/02 scripts: weights = parcel share per patch)."""
+    """Weighted share of the pooled patches inside the parcel (models_run/02 scripts: weights = parcel share per patch)."""
     n = mask.shape[0] // patch_px
     w = mask[: n * patch_px, : n * patch_px].astype(np.float32).reshape(n, patch_px, n, patch_px).mean(axis=(1, 3))
     w = w[w > 0]
@@ -284,7 +283,7 @@ def main():
                 "n_months": N_MONTHS, "window": WINDOW, "crs_epsg": INFO["crs_epsg"],
                 "alignment": f"crop shifted by {ps // 2} px: parcel centroid at the centre of a {ps}-px patch",
                 "source": "03_build_tiles.py tile store"}
-        # The study/02 embedding scripts read Sentinel-1 as "VV" / "VH": name the chosen orbit's bands that way.
+        # The models_run/02 embedding scripts read Sentinel-1 as "VV" / "VH": name the chosen orbit's bands that way.
         info["bands"] = S2_BANDS + ["VV", "VH", "S2_NCLEAR"]
         info["s1_bands"], info["s1_orbit"] = ["VV", "VH"], orbit
         (OUT_DIR / f"crops_p{ps}" / "chips_info.json").write_text(json.dumps(info, indent=2))

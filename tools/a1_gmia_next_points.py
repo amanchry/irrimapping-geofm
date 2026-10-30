@@ -28,9 +28,9 @@ Part B, one country (COUNTRY_ISO, default Morocco)
 
 Input
 -----
-data/raw/gmia_next/GMIA-NEXT_GTPs_2024_v0_1/GMIA-NEXT_GTPs_2024_v0_1.shp   (move your GMIA-NEXT_GT folder here)
-data/raw/gmia_next/WB_world_countries.geojson
-outputs/dataset/02_folds/parcels_folds.geojson (for B3)  and  data/raw/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
+data/gmia_next/GMIA-NEXT_GTPs_2024_v0_1/GMIA-NEXT_GTPs_2024_v0_1.shp   (move your GMIA-NEXT_GT folder here)
+data/gmia_next/WB_world_countries.geojson
+outputs/dataset/02_folds/parcels_folds.geojson (for B3)  and  data/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
 
 Output (outputs/analysis/gmia_next/)
 ------------------------------------
@@ -39,7 +39,7 @@ quality_checks.csv, <ISO>_*.csv and figures
 
 Run (from the project folder)
 -----------------------------
-    python analysis/a1_gmia_next_points.py
+    python tools/a1_gmia_next_points.py
 """
 from pathlib import Path
 
@@ -55,11 +55,11 @@ from scipy.spatial import cKDTree
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-GMIA_DIR = ROOT / "data" / "raw" / "gmia_next"
+GMIA_DIR = ROOT / "data" / "gmia_next"
 POINTS_FILE = GMIA_DIR / "GMIA-NEXT_GTPs_2024_v0_1" / "GMIA-NEXT_GTPs_2024_v0_1.shp"
 COUNTRIES_FILE = GMIA_DIR / "WB_world_countries.geojson"
 SURVEY_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
-WORLDCOVER_FILE = ROOT / "data" / "raw" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
+WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
 OUT_DIR = ROOT / "outputs" / "analysis" / "gmia_next"
 
 COUNTRY_ISO = "MAR"           # Part B country (ISO 3166 alpha-3, e.g. "MAR", "TUN")

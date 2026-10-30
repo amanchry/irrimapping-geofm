@@ -2,7 +2,7 @@
 
 This folder builds the **training dataset**: labelled parcels, spatial train / validation / test
 folds, and one shared store of monthly Sentinel-1/2 imagery with label rasters, plus ready-made
-views for any kind of model. The dataset is independent of the study in `study/` and can be
+views for any kind of model. The dataset is independent of the study in `models_run/` and can be
 published on its own.
 
 **Contents**
@@ -35,7 +35,9 @@ flowchart TD
     FS --> S01["<b>01_prepare_labels.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
     WC --> S01
     S01 -->|"parcels_labelled.geojson<br/>8,781 parcels"| S02["<b>02_make_spatial_folds.py</b><br/>20 km blocks → 5 balanced folds"]
-    S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| S03["<b>03_build_tiles.py</b><br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
+    S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| SPLIT[["Split by agricultural year<br/>(ag_season from survey date)"]]
+    SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>03_build_tiles.py</b><br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
+    SPLIT -->|"2024/25 · 1,894 parcels<br/>imagery Sep 2024 – Aug 2025"| S03
     GEE --> S03
     S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_views.py</b><br/>cut every model input from the same pixels"]
 
@@ -46,8 +48,10 @@ flowchart TD
 
     classDef script fill:#1F5F8B,color:#fff,stroke:#1F5F8B
     classDef view fill:#FFF4E6,stroke:#B4541A,color:#1C2733
+    classDef season fill:#EAF2F8,stroke:#1F5F8B,color:#1C2733
     class S01,S02,S03,S04 script
     class VA,VB,VC,VD view
+    class SPLIT season
 ```
 
 | Step | Script | Earth Engine | What comes out |
@@ -267,7 +271,50 @@ flowchart LR
     U --> T["Tile plan:<br/>each tile built once"]
 ```
 
-### 6.2 Monthly composites (per tile, per month)
+### 6.2 Two agricultural years
+
+The survey ran from December 2023 to January 2025, so the parcels belong to two agricultural years. Each parcel must be described by the imagery of the season in which its label was observed. A field that was irrigated in 2023/24 may be rainfed or fallow in 2024/25. The two years are therefore handled as two separate, parallel tile stores that share one grid:
+
+```mermaid
+flowchart TD
+    A["Survey date of each parcel"] --> B["ag_season = agricultural year<br/>(1 Sep – 31 Aug)<br/>Sep–Dec of Y → Y/Y+1 · Jan–Aug of Y → Y−1/Y"]
+    B --> E["2023/24 · 6,887 parcels"]
+    B --> F["2024/25 · 1,894 parcels"]
+
+    E --> P1["Tile plan 2023/24<br/>tile_id = 2023-24_ix_iy"]
+    F --> P2["Tile plan 2024/25<br/>tile_id = 2024-25_ix_iy"]
+
+    P1 --> L1["Label rasters: burn ONLY<br/>2023/24 parcels"]
+    P2 --> L2["Label rasters: burn ONLY<br/>2024/25 parcels"]
+
+    P1 --> G1["Earth Engine image 2023/24<br/>m01 = Sep 2023 … m12 = Aug 2024<br/>region = 2023/24 tiles + 2 km"]
+    P2 --> G2["Earth Engine image 2024/25<br/>m01 = Sep 2024 … m12 = Aug 2025<br/>region = 2024/25 tiles + 2 km"]
+
+    L1 & G1 --> T1["2,183 tiles (2023/24)"]
+    L2 & G2 --> T2["804 tiles (2024/25)"]
+    T1 & T2 --> S["One folder tiles/, one grid (same ix, iy),<br/>season in every tile name"]
+    S --> V["04_make_views.py reads each parcel<br/>from the tiles of ITS season"]
+```
+
+How each part of the pipeline handles the season:
+
+| Where | How the season is handled |
+| --- | --- |
+| `01_prepare_labels.py` | `ag_season` from the survey date: 1 Sep – 31 Aug (a parcel surveyed in Jan 2024 → `2023/24`; Dec 2024 → `2024/25`) |
+| Tile plan | a tile is the triple (season, ix, iy). The same 1.28 km square can exist once for each year, with the same grid position. |
+| Tile name | the season comes first: `2023-24_374_2793`, `2024-25_374_2793` |
+| Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
+| Imagery | one 12-month Earth Engine image per year, built over that year's tiles only. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
+| QA, `tiles.parquet` | one row per (season, tile), with an `ag_season` column |
+| Views (`04_make_views.py`) | every parcel is cut from the tiles of its own season; `ag_season` is kept in every output table |
+| Folds (`02`) | blocks are defined by location only, so a place surveyed in both years falls in the **same** block and fold. No information leaks between years from training to test. |
+| Viewing (`tools/a4_build_vrt.py`) | one virtual raster per year, because the two years overlap in space |
+
+Currently 47 tile positions exist in both years: places with parcels surveyed in 2023/24 and in 2024/25.
+
+Why calendar months are aligned to the agricultural year, not to a calendar year: the rainfed cycle (sowing in Nov–Dec, peak in Feb–Mar, harvest in May) and summer irrigation (Jun–Aug) both fall inside one Sep–Aug window. A Jan–Dec window would cut the rainfed season in two.
+
+### 6.3 Monthly composites (per tile, per month)
 
 ```mermaid
 flowchart TD
@@ -299,7 +346,7 @@ flowchart TD
 - **Why the orbits are kept apart:** ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored, and the view script picks one.
 - Each tile's `_scenes.json` lists the Sentinel-1/2 scene IDs used in each month, so every pixel can be traced to its source.
 
-### 6.3 Label rasters (local, no Earth Engine)
+### 6.4 Label rasters (local, no Earth Engine)
 
 Each tile has a 3-band `int32` label raster on exactly the same grid:
 
@@ -325,7 +372,7 @@ flowchart TD
 
 Only parcels of the tile's own agricultural year are burnt in.
 
-### 6.4 Steps
+### 6.5 Steps
 
 1. Read the parcels with folds and project them to UTM 29N.
 2. Parcel table: index, centroid, bounds, area, perimeter, pixel counts (all and inner), home tile, tiles needed.
@@ -336,7 +383,7 @@ Only parcels of the tile's own agricultural year are burnt in.
 
 `DOWNLOAD = False` stops after step 4, so the plan and labels can be checked without Earth Engine. `N_TEST_TILES = 20` builds only 20 tiles per season, for a test run.
 
-### 6.5 Quality numbers per tile
+### 6.6 Quality numbers per tile
 
 | Column | Meaning |
 | --- | --- |
@@ -497,13 +544,15 @@ red_june = chips[0, 9, info["bands"].index("B4")] / 10000
 
 ```bash
 conda activate condaml
-python dataset/01_prepare_labels.py          # minutes
-python dataset/02_make_spatial_folds.py      # minutes
-python dataset/03_build_tiles.py             # Earth Engine; a few hours; resumable
-python dataset/04_make_views.py              # local
+python ml_dataset_prep/01_prepare_labels.py          # minutes
+python ml_dataset_prep/02_make_spatial_folds.py      # minutes
+python ml_dataset_prep/03_build_tiles.py             # Earth Engine; a few hours; resumable
+python ml_dataset_prep/04_make_views.py              # local
 ```
 
-Run 03 first with `N_TEST_TILES = 20`, then check the result with `study/01_inspect_dataset.py` and `analysis/a3_export_chips_geotiff.py` (QGIS) before the full run.
+Run 03 first with `N_TEST_TILES = 20`, then check the result with `models_run/01_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
+
+To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/dataset/03_tiles/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 
 The settings sit at the top of each script:
 

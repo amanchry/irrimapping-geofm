@@ -23,7 +23,7 @@ morocco_esa_cropland.png, morocco_lgrip_irrigated_rainfed.png
 
 Run (from the project folder)
 -----------------------------
-    python analysis/a2_map_reference_products.py
+    python tools/a2_map_reference_products.py
 """
 import io
 import json
@@ -42,7 +42,7 @@ from PIL import Image
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"
-BOUNDARY = ROOT / "data" / "raw" / "admin" / "gadm41_MAR_0.json"
+BOUNDARY = ROOT / "data" / "admin" / "gadm41_MAR_0.json"
 OUT_DIR = ROOT / "outputs" / "analysis" / "reference_maps"
 PNG_WIDTH = 1400                                           # pixels of the downloaded rendering
 
