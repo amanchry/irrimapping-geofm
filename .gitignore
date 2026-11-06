@@ -7,6 +7,7 @@ credentials*.json
 .env
 *.pem
 *.key
+readme-local.md
 
 # ---------------------------------------------------------------- data, checkpoints, outputs (rebuilt or downloaded)
 data/
