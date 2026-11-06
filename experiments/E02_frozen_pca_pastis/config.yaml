@@ -1,0 +1,33 @@
+# E02: main comparison of RQ1 with the final validation design (PASTIS rotation).
+id: E02
+title: Frozen GeoFMs + PCA vs the S1/S2 baseline (PASTIS validation)
+short_title: PCA pipeline · PASTIS   # name in the site's sidebar
+status: ready
+listed: true
+research_question: RQ1
+question: Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?
+changes_from: "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)"
+answer: ""                 # filled in from REPORT.md
+
+inputs: [s1s2, clay, prithvi, terramind, agrifm]
+steps: [train_evaluate, compare, report]
+
+train_evaluate:            # models_run/03_train_evaluate.py
+  VALIDATION: pastis       # 3 folds train, next fold chooses the hyperparameters, 1 fold tests
+  WINDOW: agyear
+  S1S2_SOURCE: tiles
+  TILE_FEATURES: inner
+  S1_ORBIT: chips
+  S1S2_VARIABLES: all
+  EMB_SOURCE: tiles
+  FEATURE_MODE: concat
+  PCA_DIM: 128
+  RF_TREES: 500
+  N_BOOT: 1000
+  SEED: 42
+
+compare:                   # models_run/04_compare_models.py
+  BASELINE_CLASSIFIER: rf
+
+report:
+  HEADLINE_CLASSIFIERS: [rf, logreg]

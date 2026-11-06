@@ -66,7 +66,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
+    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
 else:
     CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW

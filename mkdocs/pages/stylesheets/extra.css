@@ -1,0 +1,15 @@
+/* Project documentation: small adjustments to the Material theme */
+:root { --md-primary-fg-color: #1F5F8B; --md-primary-fg-color--light: #2E78A8; --md-primary-fg-color--dark: #174A6C;
+        --md-accent-fg-color: #B4541A; }
+.md-grid { max-width: 1320px; }
+/* the breadcrumb line at the top of each page (kept for GitHub) is redundant on the site */
+.md-content__inner > p:first-child { font-size: .72rem; color: var(--md-default-fg-color--light); }
+.md-typeset table:not([class]) { font-size: .74rem; }
+.md-typeset table:not([class]) th { background: var(--md-default-fg-color--lightest); }
+.md-typeset .mermaid { text-align: center; }
+.md-typeset img { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 4px; background: #fff; }
+.md-typeset blockquote { border-left-color: var(--md-primary-fg-color); background: var(--md-code-bg-color);
+                         padding: .4rem .9rem; border-radius: 0 4px 4px 0; color: var(--md-default-fg-color); }
+/* Mermaid diagrams: always on a white card, so their own colours read well in dark mode too */
+.md-typeset div.mermaid-diagram { background: #fff; border-radius: 6px; padding: .6rem; margin: 1em 0;
+                                  text-align: center; overflow-x: auto; }

@@ -1,8 +1,10 @@
-# Irrigated cropland mapping with geospatial foundation models
+[Home](../README.md) › [Documentation](../docs/README.md) › Part 2 · Models
+
+# Part 2 — Irrigated cropland mapping with geospatial foundation models
 
 This folder holds the scripts that answers one question: on Moroccan parcels, does the frozen embedding of a geospatial foundation model (GeoFM) separate **irrigated** from **rainfed** cropland better than a classic Sentinel-1/2 feature baseline, under the same spatial validation?
 
-It only reads the ML-ready dataset built in [`ml_dataset_prep/`](../ml_dataset_prep/README.md).
+It only reads the ML-ready dataset built in [`ml_dataset_prep/`](../ml_dataset_prep/README.md). The rules of the comparison are summarised in the [evaluation protocol](../docs/03_protocol.md); results that go into the thesis are produced as [experiments](../experiments/README.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -54,7 +56,7 @@ flowchart TD
     HUB --> K1["<b>Logistic regression</b><br/>(linear probe)<br/>C ∈ {0.01, 0.1, 1, 10}<br/>balanced classes"]
 
     %% ---------- validation
-    K1 --> CV1["<b>Nested spatial CV</b> (5 outer folds = test once each)<br/>inner spatial CV on the other 4 folds → best grid setting (macro-F1) → refit on 4 folds"]
+    K1 --> CV1["<b>Spatial CV, 5 rounds</b> (PASTIS scheme)<br/>3 folds train · next fold validation → best grid setting (macro-F1) · 1 fold test"]
     K2 --> CV1
     K3 --> CV1
     K4 --> CV1
@@ -289,7 +291,7 @@ flowchart TD
 
 ### 6.2 Classifiers and hyperparameter grids
 
-| Name | Classifier | Grid (inner CV) | Notes |
+| Name | Classifier | Grid (chosen on the validation fold) | Notes |
 | --- | --- | --- | --- |
 | `logreg` | Logistic regression | C ∈ {0.01, 0.1, 1, 10} | `class_weight = "balanced"`, standardised. On embeddings this is the standard **linear probe**. |
 | `rf` | Random forest | max_features ∈ {√p, 0.3}; min_samples_leaf ∈ {1, 5}; class_weight ∈ {none, balanced_subsample} | 500 trees |
@@ -298,25 +300,35 @@ flowchart TD
 
 The selection score is macro-F1, the mean of the irrigated F1 and rainfed F1. It treats the 14% rainfed class as equally important.
 
-### 6.3 Nested spatial cross-validation
+### 6.3 Spatial cross-validation: train / validation / test
+
+Each round uses the 5 spatial folds in the same way as the PASTIS benchmark (Garnot & Landrieu 2021): 3 folds train, the next fold is the validation fold, and one fold is the test fold. Rotating through 5 rounds tests every fold once.
+
+| Round | Train | Validation | Test |
+| --- | --- | --- | --- |
+| 1 | folds 2, 3, 4 | fold 1 | fold 0 |
+| 2 | folds 3, 4, 0 | fold 2 | fold 1 |
+| 3 | folds 4, 0, 1 | fold 3 | fold 2 |
+| 4 | folds 0, 1, 2 | fold 4 | fold 3 |
+| 5 | folds 1, 2, 3 | fold 0 | fold 4 |
 
 ```mermaid
 flowchart TD
-    START["5 spatial folds<br/>(20 km blocks)"] --> O{"Outer fold k = 0 … 4"}
-    O --> TEST["Test = fold k<br/>held out completely"]
-    O --> TRAIN["Train = other 4 folds"]
-    TRAIN --> G["For every setting in the grid"]
-    G --> IN["Inner spatial CV over the 4 training folds:<br/>train on 3, predict the 4th, rotate"]
-    IN --> SC["Pool inner predictions → macro-F1"]
-    SC --> BEST["Best setting"]
-    BEST --> REFIT["Refit on all 4 training folds"]
-    REFIT --> PRED["Predict test fold k<br/>(class + rainfed score)"]
-    TEST --> PRED
-    PRED --> NEXT{"k < 4?"}
-    NEXT -->|yes| O
-    NEXT -->|no| OOF["Out-of-fold predictions:<br/>every parcel once, by a model<br/>that never saw its block"]
+    START["5 spatial folds<br/>(20 km blocks)"] --> R{"Round k = 1 … 5"}
+    R --> TE["Test = fold k<br/>held out completely"]
+    R --> VA["Validation = next fold<br/>chooses the hyperparameters"]
+    R --> TR["Train = the other 3 folds"]
+    TR --> G["Train every setting of the grid"]
+    G --> VA2["Score each setting on the validation fold (macro-F1)"]
+    VA --> VA2
+    VA2 --> BEST["Best setting, trained on the 3 training folds"]
+    BEST --> PRED["Predict test fold k<br/>(class + rainfed score)"]
+    TE --> PRED
+    PRED --> OOF["After 5 rounds: every parcel predicted once,<br/>by a model that never saw its block"]
     OOF --> MET["Metrics + 95% block-bootstrap CI"]
 ```
+
+The validation fold is used only to choose the classifier's hyperparameters; the test fold is never used for any choice. The same scheme is used for every input, so the classifiers and a later neural-network baseline are trained, tuned and tested identically. `VALIDATION = "nested"` in `03_train_evaluate.py` gives the alternative design (tuning by spatial CV on the 4 training folds, refit on all 4), for a sensitivity check; its runs get the suffix `_nested`.
 
 Every parcel is predicted once, by a model that saw neither its block in training nor any information from it during tuning. That makes the score an estimate of how well the model maps **new areas**.
 
@@ -350,7 +362,7 @@ flowchart LR
 4. **Seasonal profiles** (baseline): class medians per variable and month.
 5. **Final models:** refit on all parcels (`final_model_<name>.joblib`), for mapping later.
 
-**Outputs** (`outputs/study/03_models/<RUN_NAME>/`):
+**Outputs** (`experiments/<EXPERIMENT>/results/<RUN_NAME>/` in experiment mode; `outputs/study/03_models/<RUN_NAME>/` for development runs with `EXPERIMENT = None`):
 - `metrics_summary.csv`, `metrics_with_ci.csv`, `metrics_per_fold.csv`
 - `paired_model_differences.csv`
 - `cv_random_vs_spatial.csv` / `.png`
@@ -402,15 +414,18 @@ outputs/study/
 │   ├── terramind_agyear_tiles.npz
 │   ├── agrifm_agyear_tiles.npz
 │   └── _parts_<model>_agyear_tiles/  batch files (resume)
-├── 03_models/
-│   ├── s1s2-all_agyear_tiles-inner-asc/
-│   ├── clay_agyear_tiles_concat/
-│   └── …                             one folder per run
-└── 04_comparison/
-    ├── metrics_all_runs.csv
-    ├── differences_vs_baseline.csv
-    └── comparison_macro_f1.png
+├── 03_models/                        development runs only (EXPERIMENT = None)
+└── 04_comparison/                    development runs only
+
+experiments/<EXPERIMENT>/results/     runs that go into the thesis (see experiments/README.md)
+├── s1s2-all_agyear_tiles-inner-asc/
+├── clay_agyear_tiles_concat/
+├── …                                 one folder per run
+├── comparison/                       metrics_all_runs.csv · differences_vs_baseline.csv · comparison_macro_f1.png
+└── figures/                          figures of REPORT.md
 ```
+
+The embeddings (`02_embeddings/`) depend only on the dataset and the model, so every experiment shares them.
 
 ---
 
@@ -423,7 +438,9 @@ python models_run/02a_embed_clay.py          # GPU recommended; resumable
 python models_run/02b_embed_prithvi.py
 python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
-# models_run/03: set INPUT at the top, run once for each of: s1s2, clay, prithvi, terramind, agrifm
+# steps 03 + 04 + report as an experiment (set EXPERIMENT at the top of run_experiment.py):
+python experiments/run_experiment.py
+# or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/study/):
 python models_run/03_train_evaluate.py
 python models_run/04_compare_models.py
 ```
@@ -435,7 +452,8 @@ python models_run/04_compare_models.py
 | 01 | `EXAMPLE_PATCH = 16`, `N_EXAMPLES = 3`, `SEED = 42` |
 | 02a–02d | `CHIP_SOURCE = "tiles"`, `CHIP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
 | 03 | `INPUT`, `S1S2_VARIABLES` (all / s2 / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
-| 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42` |
+| 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`; in experiment mode `EXTRA_RUNS` |
+| 03, 03b, 04 | `EXPERIMENT`: name of a folder in `experiments/`; its `config.yaml` replaces the settings above (same names) and the results go to that folder |
 
 ---
 
@@ -449,7 +467,7 @@ python models_run/04_compare_models.py
 | Time | 12 monthly composites, Sep–Aug | covers the winter rainfed cycle and summer irrigation |
 | Embedding reduction | concat + PCA 128, fitted on training folds | keeps the timing information; same dimension for every model |
 | Baseline features | inner-pixel medians, one S1 orbit | same orbit as the TerraMind chips |
-| Validation | nested spatial CV, 20 km blocks | estimates mapping of unseen areas |
+| Validation | 5 spatial folds (20 km blocks), per round 3 train / 1 validation / 1 test, as PASTIS | estimates mapping of unseen areas; identical for classifiers and neural networks |
 | Uncertainty | block bootstrap, Holm | blocks are the independent units |
 
 **Open points:**
@@ -462,6 +480,7 @@ python models_run/04_compare_models.py
 
 ## 11. References
 
+- Garnot, V. S. F., & Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional temporal attention networks. *ICCV*. https://arxiv.org/abs/2107.07933
 - Clay Foundation (2024). Clay foundation model v1.5. https://huggingface.co/made-with-clay/Clay, doi:10.57967/hf/1537.
 - Foody, G. M. (2009). Classification accuracy comparison: hypothesis tests and the use of confidence intervals in evaluations of difference, equivalence and non-inferiority. *Remote Sensing of Environment*, 113, 1658–1663.
 - Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6, 65–70.
@@ -470,3 +489,6 @@ python models_run/04_compare_models.py
 - Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography*, 40, 913–929.
 - Szwarcman, D., et al. (2024). Prithvi-EO-2.0: a versatile multi-temporal foundation model for Earth observation applications. arXiv:2412.02732.
 - Varma, S., & Simon, R. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*, 7, 91. (nested cross-validation)
+
+---
+← [Part 1 · Dataset](../ml_dataset_prep/README.md) · Next: [Experiments →](../experiments/README.md)

@@ -47,3 +47,8 @@ dependencies:
       - python-box            # needed by Clay
       - vit-pytorch           # needed by Clay
       - wandb                 # imported by Clay
+      # documentation website (mkdocs.yml)
+      - mkdocs>=1.6,<2        # MkDocs 2 drops plugins and themes
+      - mkdocs-material
+      - mkdocs-gen-files
+      - mkdocs-literate-nav

@@ -31,7 +31,7 @@ Overlay outputs/dataset/02_folds/parcels_folds.geojson to check alignment.
 Testing in Python
 -----------------
     import rasterio
-    with rasterio.open("outputs/dataset/03_tiles/agyear/vrt/2023-24_labels.vrt") as src:
+    with rasterio.open("outputs/dataset/03_tiles_128px/agyear/vrt/2023-24_labels.vrt") as src:
         lab = src.read(1, window=rasterio.windows.from_bounds(x0, y0, x1, y1, src.transform))
 
 Notes
@@ -55,7 +55,7 @@ from xml.sax.saxutils import escape
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"                                                   # as in ml_dataset_prep/03_build_tiles.py
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW
+TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW
 TILE_DIR = TILE_ROOT / "tiles"
 OUT_DIR = TILE_ROOT / "vrt"
 

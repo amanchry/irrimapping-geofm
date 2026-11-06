@@ -1,0 +1,22 @@
+# Builds the documentation website with MkDocs and publishes it to GitHub Pages (branch gh-pages)
+# on every push to main that changes a page, a figure or the site configuration.
+name: docs
+on:
+  push:
+    branches: [main]
+    paths: ["**.md", "**.png", "mkdocs.yml", "mkdocs/**", "experiments/*/config.yaml", ".github/workflows/docs.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-gen-files mkdocs-literate-nav
+      - run: mkdocs gh-deploy --force --clean
+        env:
+          DISABLE_MKDOCS_2_WARNING: "true"

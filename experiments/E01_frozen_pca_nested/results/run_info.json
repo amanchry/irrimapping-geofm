@@ -1,0 +1,71 @@
+{
+  "runs": [
+    {
+      "started": "2026-10-30",
+      "finished": "2026-10-30",
+      "steps": [
+        "train_evaluate"
+      ],
+      "git_commit": "before experiments/ existed (October 2026 code; settings in each run_config.json)",
+      "note": "Runs made with models_run/03_train_evaluate.py in development mode (VALIDATION = nested) and moved here from outputs/study/03_models/ on 2026-11-05."
+    },
+    {
+      "started": "2026-11-05 17:39",
+      "steps": [
+        "train_evaluate",
+        "compare",
+        "report"
+      ],
+      "git_commit": "858cb3d (with uncommitted changes)",
+      "python": "3.10.12",
+      "machine": "claude",
+      "config": {
+        "id": "E01",
+        "title": "Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV)",
+        "short_title": "PCA pipeline \u00b7 nested CV",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "question": "Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?",
+        "changes_from": "first experiment on the shared 128 px tile store with patch-aligned chips",
+        "answer": "No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.906, difference within the noise); Clay and Prithvi hold up better in the hardest fold.",
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "steps": [
+          "train_evaluate",
+          "compare",
+          "report"
+        ],
+        "train_evaluate": {
+          "VALIDATION": "nested",
+          "WINDOW": "agyear",
+          "S1S2_SOURCE": "tiles",
+          "TILE_FEATURES": "inner",
+          "S1_ORBIT": "chips",
+          "S1S2_VARIABLES": "all",
+          "EMB_SOURCE": "tiles",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "RF_TREES": 500,
+          "N_BOOT": 1000,
+          "SEED": 42
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf"
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-05 17:40"
+    }
+  ]
+}

@@ -32,9 +32,10 @@ Steps
 
 How the folds are used
 ----------------------
-03_train_evaluate.py runs NESTED spatial cross-validation for every input (S1/S2 features and
-each foundation model): each fold is the test fold once; hyperparameters are tuned by spatial CV
-on the other 4 folds only. The `split` column (fold 0 test, fold 1 validation) is kept for quick checks.
+models_run/03_train_evaluate.py rotates the 5 folds as in PASTIS (Garnot & Landrieu 2021): in each of
+5 rounds one fold is the test fold, the next fold is the validation fold (chooses the hyperparameters)
+and the other 3 folds train. Every parcel is tested once. The `split` column (fold 0 test, fold 1
+validation, folds 2-4 train) is round 1 of that rotation, kept for quick checks.
 
 Output (outputs/dataset/02_folds/)
 --------------------------

@@ -52,7 +52,7 @@ Steps
 6. Tile index (GeoParquet) with folds and QA numbers.
 Re-running skips finished tiles (resumable). DOWNLOAD = False stops after step 4 (no Earth Engine).
 
-Output (outputs/dataset/03_tiles/<WINDOW>/)
+Output (outputs/dataset/03_tiles_128px/<WINDOW>/)
 -----------------------------------
 tiles/<tile_id>_img.tif     int16, 12 months x 19 bands = 228 bands (descriptions "B4_m03", ...)
 tiles/<tile_id>_lab.tif     int32, 3 bands (label, parcel_idx, edge)
@@ -88,7 +88,7 @@ KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"      # Earth Eng
 PARCELS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"   # parcels + folds (ml_dataset_prep/02_make_spatial_folds.py)
 
 START_MONTH, N_MONTHS, WINDOW = 9, 12, "agyear"    # agricultural year 1 Sep - 31 Aug
-OUT_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW
+OUT_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW
 
 CRS_EPSG = 32629               # one projection for the whole study area (UTM 29N; 30N parcels are resampled)
 GSD_M = 10                     # pixel size (m)

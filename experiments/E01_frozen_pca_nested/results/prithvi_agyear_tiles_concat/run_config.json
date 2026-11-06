@@ -1,0 +1,84 @@
+{
+  "run": "prithvi_agyear_tiles_concat",
+  "input": "prithvi",
+  "window": "agyear",
+  "settings": {
+    "feature_mode": "concat",
+    "pca_dim": 128,
+    "embedding_file": "prithvi_agyear_tiles.npz"
+  },
+  "n_parcels": 8781,
+  "n_features": 12288,
+  "validation": "nested spatial CV (outer 5 folds, inner spatial CV on the training folds)",
+  "seed": 42,
+  "rf_trees": 500,
+  "n_boot": 1000,
+  "quick_test": false,
+  "grids": {
+    "logreg": {
+      "C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "rf": {
+      "max_features": [
+        "sqrt",
+        0.3
+      ],
+      "min_samples_leaf": [
+        1,
+        5
+      ],
+      "class_weight": [
+        null,
+        "balanced_subsample"
+      ]
+    },
+    "hgb": {
+      "learning_rate": [
+        0.05,
+        0.1
+      ],
+      "max_leaf_nodes": [
+        15,
+        31
+      ],
+      "class_weight": [
+        null,
+        "balanced"
+      ]
+    },
+    "svm": {
+      "C": [
+        1.0,
+        10.0
+      ],
+      "gamma": [
+        "scale",
+        0.01
+      ]
+    }
+  },
+  "final_params": {
+    "logreg": {
+      "C": 0.01
+    },
+    "rf": {
+      "class_weight": "balanced_subsample",
+      "max_features": 0.3,
+      "min_samples_leaf": 5
+    },
+    "hgb": {
+      "class_weight": "balanced",
+      "learning_rate": 0.1,
+      "max_leaf_nodes": 15
+    },
+    "svm": {
+      "C": 1.0,
+      "gamma": "scale"
+    }
+  }
+}

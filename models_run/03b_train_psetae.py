@@ -34,8 +34,8 @@ fold is never used for any decision. Every parcel is predicted once, by a model 
 
 Inputs
 ------
-outputs/dataset/03_tiles/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
-outputs/dataset/03_tiles/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
+outputs/dataset/03_tiles_128px/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
+outputs/dataset/03_tiles_128px/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
 outputs/dataset/02_folds/parcels_folds.geojson        fold and block of every parcel
 
 Steps
@@ -66,6 +66,7 @@ QUICK_TEST = True gives a fast check (few epochs, small bootstrap).
 import json
 import logging
 import math
+import os
 import time
 from pathlib import Path
 
@@ -79,8 +80,9 @@ from sklearn.metrics import (accuracy_score, average_precision_score, balanced_a
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
+EXPERIMENT = None              # e.g. "E04_psetae_scratch": settings from experiments/<name>/config.yaml | None = below
 WINDOW = "agyear"
-VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views"
+VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views"
 PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
 SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
 
@@ -100,8 +102,19 @@ N_BOOT = 1000                  # block-bootstrap draws for the confidence interv
 SEED = 42
 QUICK_TEST = False             # True = 3 epochs, 100 bootstrap draws (only to check that everything runs)
 
+# experiment mode: experiments/run_experiment.py sets EXPERIMENT; section "psetae" of its config.yaml replaces the values above
+EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
+if EXPERIMENT:
+    import yaml
+    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
+    for _key, _value in (_cfg.get("psetae") or {}).items():
+        if _key not in globals():
+            raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03b_train_psetae.py")
+        globals()[_key] = _value
+
 RUN_NAME = f"psetae_{WINDOW}_{BANDS}"
-OUT_DIR = ROOT / "outputs" / "study" / "03_models" / RUN_NAME
+OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "study" / "03_models")
+           / RUN_NAME)
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 # ==========================================================================
 
@@ -331,6 +344,9 @@ def block_bootstrap(oof):
 
 # ------------------------------------------------------------ main
 def main():
+    if os.environ.get("EXPERIMENT_SKIP_DONE") and (OUT_DIR / "oof_predictions.csv").exists():
+        print(f"{RUN_NAME}: already done in {OUT_DIR} (skipped; delete the folder to run it again)")
+        return
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S",
                         handlers=[logging.FileHandler(OUT_DIR / "run.log", mode="w"), logging.StreamHandler()])

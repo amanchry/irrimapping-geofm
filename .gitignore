@@ -26,6 +26,7 @@ archive/
 *.joblib
 *.ckpt
 *.pth
+*.pt
 *.log
 
 # ---------------------------------------------------------------- documents
@@ -48,3 +49,13 @@ Thumbs.db
 .idea/
 *.swp
 .claude/
+
+# ---------------------------------------------------------------- experiments: keep config, README, REPORT, tables, figures
+experiments/*/results/**/final_model_*
+experiments/*/results/**/*.pt
+
+# ---------------------------------------------------------------- documentation website (built by mkdocs)
+site/
+
+# ---------------------------------------------------------------- scratch (safe to delete)
+tmp_trash/

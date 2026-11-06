@@ -1,0 +1,34 @@
+# E03: same as E02, but the 12 monthly embeddings are combined by a trained L-TAE instead of concat + PCA.
+id: E03
+title: Frozen GeoFMs + L-TAE temporal aggregation (PASTIS validation)
+short_title: L-TAE pipeline · PASTIS   # name in the site's sidebar
+status: planned
+listed: true
+research_question: RQ1
+question: Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly S1/S2 features?
+changes_from: "E02: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA"
+answer: ""
+
+inputs: [s1s2, clay, prithvi, terramind]   # AgriFM gives one vector per year (no months to aggregate)
+steps: [ltae, compare, report]
+
+ltae:                      # models_run/03c_train_ltae.py (to be written; same output format as 03)
+  VALIDATION: pastis
+  N_HEADS: 16
+  D_K: 8
+  D_MODEL: 256
+  MLP: [256, 128]
+  EPOCHS: 100
+  PATIENCE: 15
+  N_SEEDS: 3
+
+compare:
+  BASELINE_CLASSIFIER: rf
+  EXTRA_RUNS:              # the PCA runs of E02, so both aggregations are compared on the same parcels
+    - E02_frozen_pca_pastis/s1s2-all_agyear_tiles-inner-asc
+    - E02_frozen_pca_pastis/clay_agyear_tiles_concat
+    - E02_frozen_pca_pastis/prithvi_agyear_tiles_concat
+    - E02_frozen_pca_pastis/terramind_agyear_tiles_concat
+
+report:
+  HEADLINE_CLASSIFIERS: [ltae, rf, logreg]

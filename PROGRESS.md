@@ -7,29 +7,25 @@ change log).
 
 ---
 
-## Current status (2026-10-29)
+## Current status (2026-11-05)
 
-| Step | Script | Status |
+| Step | Where | Status |
 | --- | --- | --- |
-| Labels | `ml_dataset_prep/01_prepare_labels.py` | Run: 8,781 parcels (7,585 irrigated, 1,196 rainfed) |
-| Spatial folds | `ml_dataset_prep/02_make_spatial_folds.py` | Run: 5 folds, 20 km blocks |
-| Tile store | `ml_dataset_prep/03_build_tiles.py` | Plan + labels tested on all parcels; Earth Engine part not yet run |
-| Model views | `ml_dataset_prep/04_make_views.py` | Tested end to end with synthetic imagery |
-| Dataset inspection | `models_run/01_inspect_dataset.py` | Written 2026-10-29; tested on synthetic data |
-| Clay embeddings | `models_run/02a_embed_clay.py` | Tested with a random encoder; not yet run |
-| Prithvi embeddings | `models_run/02b_embed_prithvi.py` | Tested with random weights, not yet run |
-| TerraMind embeddings | `models_run/02c_embed_terramind.py` | Tested with random weights, not yet run |
-| AgriFM embeddings | `models_run/02d_embed_agrifm.py` | Tested with random weights; weights + repo still to download |
-| Train / evaluate | `models_run/03_train_evaluate.py` | Tested on synthetic tile-store features |
-| Compare inputs | `models_run/04_compare_models.py` | Tested on test runs |
-| GMIA-NEXT check points | `tools/a1_gmia_next_points.py` | Needs `data/raw/gmia_next/` |
-| Reference maps | `tools/a2_map_reference_products.py` | Converted from notebook |
-| Chips to GeoTIFF (QGIS) | `tools/a3_export_chips_geotiff.py` | Reads `views/chips_p16` |
+| Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: 8,781 parcels (7,585 irrigated, 1,196 rainfed), 5 folds of 20 km blocks |
+| Tile store, model views | `ml_dataset_prep/03`, `04` | Done: 2,987 tiles; parcel features, pixel sets, chips p8 / p16 |
+| Dataset inspection | `models_run/01` | Done (`outputs/study/01_inspection/`) |
+| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind, AgriFM (`outputs/study/02_embeddings/`); AgriFM scaling still to confirm |
+| E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
+| E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca_pastis` | Ready to run (main RQ1 result) |
+| E03 · frozen + L-TAE, PASTIS | `experiments/E03_frozen_ltae_pastis` | Planned: needs `models_run/03c_train_ltae.py` |
+| E04 · PSE-TAE from scratch | `experiments/E04_psetae_scratch` | Run exists; parked for the next phase |
+| Documentation | `docs/`, `mkdocs.yml` | Thesis design, overview, protocol, decisions, results, weekly notes, literature notes; website (MkDocs, GitHub Pages) |
 
 Next steps
-1. Run dataset/03 with `N_TEST_TILES = 20`, then dataset/04 and models_run/01; check the figures (and a3 in QGIS); then full runs.
-2. Run models_run/02a-02d, then models_run/03 for each `INPUT`, then models_run/04.
-3. Decide on the open points below.
+1. Run E02 (`python experiments/run_experiment.py`, `EXPERIMENT = "E02_frozen_pca_pastis"`).
+2. Confirm the AgriFM normalisation; re-embed if needed.
+3. Write `models_run/03c_train_ltae.py`, run E03.
+4. Then RQ2 (LoRA fine-tuning).
 
 ---
 
@@ -37,6 +33,8 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
+| 2026-11-05 | Results that go into the thesis are produced as **experiments** (config per experiment, `experiments/`); two temporal-aggregation pipelines: concat + PCA 128 (E01, E02) and L-TAE (E03) | Reproducibility; PANGAEA (Marsocci et al. 2024) |
+| 2026-11-04 | Validation = **PASTIS rotation** (3 folds train / next fold validation / 1 fold test); nested CV kept as sensitivity check (E01) | Garnot & Landrieu 2021; one design for classifiers and neural networks |
 | 2026-10-29 | All inputs (parcel features and foundation-model chips) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the chips | Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot & Landrieu 2021), Sen4AgriNet (Sykas et al. 2022) |
 | 2026-10-15 | Foundation models compared: Clay, Prithvi-EO-2.0, TerraMind, AgriFM (AlphaEarth only a pipeline test, not in the thesis) | Thesis proposal |
 | 2026-10-15 | Main comparison with **frozen** encoders + the same 4 classifiers; fine-tuning only as a secondary experiment | Fair across models; Butsko et al. 2025, Marsocci et al. 2024 |
@@ -62,16 +60,138 @@ Next steps
 
 - [ ] AgriFM normalisation: config mean ~4,180 (blue) vs ~1,100 in Earth Engine S2 L2A -> confirm the pixel scale its weights expect.
 - [ ] AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.
+- [x] ~~Complete the Ouassanouan et al. (2026) reference~~ (done 2026-11-05).
 - [ ] Prithvi on 10 m input (pretrained on 30 m HLS): state in thesis; optional 30 m ablation.
 - [ ] Neighbouring fields inside a chip (mixed 160 m patches, transformer context): add parcel "purity" + accuracy by parcel size; optional masked-chip ablation (`MASK_OUTSIDE`).
 - [ ] Per-year results (2023/24 vs 2024/25) from the out-of-fold predictions; year-transfer test within Doukkala / El Haouz.
 - [ ] Tunisia: label source and transfer experiment (zero-shot and few-shot).
 - [ ] Prediction / wall-to-wall mapping step (later).
 - [ ] Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.
+- [ ] **Phase 2 (after Morocco is complete): US transfer study** - see the change-log entry of 2026-11-04 (future phase). First step: one-day data check of the original state label sources.
 
 ---
 
 ## Change log (newest first)
+
+### 2026-11-06 (documentation website with MkDocs; D11 heads and mapping)
+- **MkDocs Material website** replaces the hand-built HTML (`docs/build_site.py`, `docs/site/` moved to
+  `tmp_trash/old_html_site/`). `mkdocs.yml` (root) + `mkdocs/gen_pages.py` (mkdocs-gen-files): the markdown files stay
+  where they are; at build time they are mirrored into the site at the same paths, so links work the same on GitHub
+  and on the site; images copied; links to scripts / tables / folders point to GitHub; navigation (tabs: Home,
+  Research, Results, Meetings, Code reference) written from the experiment configs (mkdocs-literate-nav).
+  Anchors use GitHub's slugs (pymdownx.slugs). Mermaid rendered by `mkdocs/pages/javascripts/mermaid.js` (keeps the
+  diagram colours). `.github/workflows/docs.yml` rebuilds and publishes to GitHub Pages on every push to main.
+  `environment.yml`: mkdocs<2, mkdocs-material, mkdocs-gen-files, mkdocs-literate-nav. `.gitignore`: `site/`.
+  `make_report.py`: `<details markdown="1">` so the collapsed table renders on both.
+  Checked: build without warnings; 19 pages, 26 Mermaid diagrams, no broken internal links or anchors.
+- **D11** (docs/04_decisions.md): parcel benchmark with classical heads for RQ1; for the maps (RQ2–RQ4) frozen GeoFM +
+  UPerNet on the tile label pixels, RF on per-pixel S1/S2 features, and neural baselines TempCNN (pixel) and U-TAE
+  (tile); pixel predictions aggregated per parcel for the same scoring. Literature table added to
+  docs/research/README.md (references checked against the papers).
+
+### 2026-11-05 (project organised: experiments, documentation hierarchy, HTML site)
+- **Experiments.** New `experiments/`: one folder per experiment with `config.yaml` (all settings, same names as the
+  scripts), `README.md` (question, why, what changes, how to run), `REPORT.md` (answer first; tables and figures
+  generated) and `results/`. `run_experiment.py` runs the steps of a config (train_evaluate per input, compare,
+  report), skips finished runs and saves config + git commit + dates in `results/run_info.json`.
+  `make_report.py` writes the tables (macro-F1 per input × classifier, differences vs baseline with Holm verdict,
+  per-class metrics with CI, macro-F1 per fold) and two figures into REPORT.md, and refreshes
+  `experiments/README.md` and `docs/05_results.md`. Template in `experiments/_template/`.
+- **Experiment mode in the scripts.** `models_run/03_train_evaluate.py`, `03b_train_psetae.py`, `04_compare_models.py`:
+  new setting `EXPERIMENT` (None = as before, results in `outputs/study/`). When set (or by `run_experiment.py`), the
+  config's section replaces the settings, unknown names stop the run, results go to
+  `experiments/<name>/results/`; finished runs are skipped. 03: derived paths moved below the override; no
+  `_nested` suffix inside an experiment. 04: compares all runs of the experiment, baseline found automatically,
+  `EXTRA_RUNS` adds runs of other experiments (PCA vs L-TAE); figure title names the experiment.
+- **Runs moved:** the five runs of 30 Oct (nested CV) from `outputs/study/03_models/` to
+  `experiments/E01_frozen_pca_nested/results/`, compared and reported (8,775 common parcels); the PSE-TAE run to
+  `experiments/E04_psetae_scratch/results/` (parked, `listed: false`).
+- **E01 result:** no GeoFM differs from the baseline after Holm for Clay, Prithvi, TerraMind; AgriFM worse (RF, SVM).
+  Best: Clay + SVM 0.910, baseline SVM 0.906. Fold 0 (rainfed in Doukkala + Souss): baseline 0.80, Clay and Prithvi
+  higher with every classifier.
+- **Planned:** E02 (PASTIS validation, ready) and E03 (L-TAE pipeline; design in its README and in the protocol §5).
+- **Documentation hierarchy:** `docs/README.md` (index with map), `01_thesis_design.md`, `02_overview.md`,
+  `03_protocol.md`, `04_decisions.md` (D1–D10: departures from the proposal), `05_results.md`, `weekly/` (one page
+  per meeting; first: 2026-W45), `research/README.md` (literature notes). Breadcrumbs and next / previous links on
+  every page; main README, `ml_dataset_prep/README.md` and `models_run/README.md` linked into the hierarchy.
+- **HTML site:** `docs/build_site.py` (standard library) writes `docs/site/*.html` from the markdown: sidebar by
+  hierarchy, page contents, Mermaid diagrams, working links between pages.
+- Fixed: Ouassanouan et al. (2026) reference completed (title, DOI, from the proposal); leftover of the chips rename
+  in `ml_dataset_prep/README.md` ("land use, chip and irrigation method" -> "crop").
+- `.gitignore`: `*.pt` and the final models in experiment results.
+- **Fixed tile-store path:** `ml_dataset_prep/03`/`04` write to `outputs/dataset/03_tiles_128px/`, but the readers still
+  used `03_tiles/` -> updated in `models_run/01, 02a-02d, 03, 03b`, `tools/a3, a4, a5`, docstrings and READMEs
+  (24 places). Without it every models_run script stopped with "views_info.json not found".
+- Checked: config override and typo stop (03); `run_experiment.py` on E01 (finished runs skipped, compare + report
+  rerun, same numbers); a QUICK_TEST run of the baseline in experiment mode with the PASTIS rotation on the real data
+  (5 rounds, 1.4 min); site: 19 pages, 26 Mermaid diagrams, no console errors, no broken page or section links;
+  all markdown links and anchors resolve.
+
+### 2026-11-05 (US parcel data: geodatabases converted to shapefiles; IrrMap code checked)
+- Data in `IrrMap/US_Parcel_Data` (outside this repo). New script there: `gdb_to_shp.py` (settings at top,
+  resumable in chunks). Output next to each source in `<gdb name>_shp/`, original CRS, checked against the source
+  (same feature count and total area for every layer).
+  - Arizona folder = USGS *Verified irrigated agricultural lands 2002-17*: 14 state layers (AZ, CA, CO, FL, GA, ID, IL,
+    MS, MT, NM, TX, UT, WA, WY), **irrigated only** (IRG_STATUS, IRG_SYS, CROP_TYPE, DATA_DATE, DATA_YEAR).
+  - Washington = WSDA crop distribution 2025, 222,520 fields; crop names joined from the WSDACrop table.
+    **137,185 fields have Irrigation = "None"** -> candidate rainfed/dryland class (to verify: fallow, pasture, CRP).
+  - Colorado CRDSS Div 5 (2000-2023) and Utah WRLU (2017-2024) were already shapefiles.
+  - Field names shortened to 10 characters (e.g. InitialSurveyDate -> InitSurvey); dates stored as text YYYY-MM-DD.
+- IrrMap code check: random 80/20 split of single-date patches; ~100% of test patch locations also appear in train on
+  other dates (WA 2018: 31,056 of 31,064) -> their scores are not spatially independent. Test set also used for
+  per-epoch evaluation. Minor bugs (missing argparse import, undefined src_path, constant LAND_TYPE band).
+  Reusable for phase 2: the label sources only, not their patches.
+
+- Usefulness check (both classes needed):
+  - **Washington WSDA 2025 - most useful.** Field crops (cereal, oilseed, vegetable, hay, seed): 53,723 rainfed
+    (Irrigation = None) vs 33,172 irrigated; rainfed mainly in the dry east (Whitman, Spokane, Lincoln, Adams).
+    Use eastern WA only (semi-arid, winter rain, dryland wheat next to irrigated fields = closest US match to Morocco).
+  - **Utah WRLU 2017-2025 - useful, adds years.** 2023: 15,611 "Dry Crop" vs 110,907 irrigated (fallow/pasture removed).
+    Yearly maps -> temporal transfer test.
+  - USGS verified irrigated lands 2002-17 (Arizona folder) and Colorado CRDSS Div 5: irrigated only -> no rainfed class;
+    at most extra irrigated examples.
+  - Label definitions: Utah metadata defines "Dry Crop" = no irrigation method applied, crop watered by natural
+    processes (rain); "None" there = non-agricultural land. WSDA has no public definition of Irrigation = "None"
+    (WSDA's own "Dryland Crops" layer = crops grown without irrigation water). 34,235 of the 53,723 WA "None" crop
+    fields come from NASS (CDL), not WSDA ground survey -> irrigation probably not observed. **Use DataSource = WSDA
+    only: 19,390 rainfed vs 23,705 irrigated.**
+
+### 2026-11-04 (future phase: US data for spatial and temporal transfer — decision deferred)
+Discussed after reading IrrMap (Mandal et al. 2025, arXiv:2505.08273). **Decision: complete Morocco first; come back to this later.**
+- **IrrMap itself is not usable as the study area.** It labels irrigation *method* (flood / sprinkler / drip, all else
+  "other"); there is **no rainfed class**, so irrigated vs rainfed cannot be studied with it. Its labels come from
+  state agency maps (not field survey); inputs are single-season 224 px patches; validation is a random 80/20 split
+  per state, with no validation split and no spatial test; only a U-Net (ResNet-34) is benchmarked, no GeoFMs.
+  -> Keep Morocco as the AOI (field-surveyed labels, data-scarce region, 12-month time series, spatial folds).
+  Cite IrrMap as related work and as a model for the dataset paper (Part 1).
+- **Idea for a second phase:** use the **original field boundaries and labels** behind IrrMap (state datasets), build
+  chips from scratch with the same pipeline (labels -> 20 km block folds -> tile store -> chips -> embeddings ->
+  same classifiers and validation), to test **spatial and temporal transferability**.
+  - Why it is valuable: state data often covers many years over the same fields -> clean temporal transfer
+    (train earlier years, test later years), which Morocco cannot offer (year and region overlap); a second
+    continent tests whether GeoFMs transfer better than S1/S2 features (Morocco <-> US).
+  - Conditions: (1) the source data must contain **non-irrigated / dryland parcels** (deal-breaker; e.g. Washington
+    agricultural land-use data includes dryland wheat — to be checked state by state); (2) small scope: 1-2 states,
+    3-4 years, ~10-20k parcels; (3) only after Morocco is finished.
+  - Pipeline changes needed: new label reader in `ml_dataset_prep/01_prepare_labels.py`; **support other UTM zones** in
+    `03_build_tiles.py` (now fixed to UTM 29N; western US spans zones 10-13); US season window via `START_MONTH`;
+    optional fold by year in 02; a new transfer evaluation (train region/year A, test B). `models_run/` unchanged.
+  - Risks: administrative (noisier) labels; different crop systems (Morocco <-> US transfer may be poor for all models);
+    ~4-8 extra weeks.
+  - First step when resuming: one-day check of which state sources IrrMap used, whether they include
+    dryland / non-irrigated fields, which years, and whether field boundaries are downloadable.
+  - Fallback if the check fails: keep as future work; use GMIA-NEXT ground-truth points (`tools/a1`) or Tunisia as
+    the external test.
+
+### 2026-11-04 (validation design: PASTIS scheme)
+- `models_run/03_train_evaluate.py`: new setting `VALIDATION = "pastis"` (default). Per round: 3 folds train,
+  the next fold (k + 1) is the validation fold that chooses the hyperparameters, fold k is the test fold; the
+  model is trained on the 3 training folds. Same scheme as PASTIS (Garnot & Landrieu 2021) and
+  `03b_train_psetae.py`, so classifiers and the neural-network baseline are trained, tuned and tested identically.
+  `VALIDATION = "nested"` keeps the earlier design (inner spatial CV on 4 folds, refit on 4) for a sensitivity
+  check; its runs get the suffix `_nested`, so run names of the default stay the ones `04_compare_models.py` expects.
+- READMEs (main, ml_dataset_prep §5.4, models_run §6.3 + workflow diagram) updated with the rotation table.
+- Results produced before this change used the nested design.
 
 ### 2026-10-30 (PSE-TAE moved to next phase)
 - PSE-TAE removed from the READMEs (main + models_run: workflow diagram, tables, section 6b, run order, settings,

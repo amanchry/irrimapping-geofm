@@ -10,7 +10,8 @@ the Sentinel-1/2 baseline, under the same spatial validation?
 
 Steps
 -----
-1. Find every run in outputs/study/03_models/ (each has oof_predictions.csv).
+1. Find every run of the experiment (each has oof_predictions.csv), plus EXTRA_RUNS from other experiments
+   (e.g. to compare PCA and L-TAE runs of the same input).
 2. Keep the parcels predicted in ALL runs, so every input is scored on exactly the same parcels.
 3. For every run x classifier: macro-F1, rainfed F1, balanced accuracy and overall accuracy with a
    95% block-bootstrap interval. The SAME bootstrap samples (whole 20 km blocks) are used for every
@@ -20,15 +21,18 @@ Steps
    excludes 0 means a real difference (Foody 2009, Remote Sensing of Environment).
 5. Save the tables and a figure.
 
-Output (outputs/study/04_comparison/)
+Output: experiments/<EXPERIMENT>/results/comparison/ (experiment mode)
+        or outputs/study/04_comparison/ (EXPERIMENT = None)
 -------------------------------
 metrics_all_runs.csv          run, classifier, metric, estimate, ci_low, ci_high
 differences_vs_baseline.csv   run, classifier, delta macro-F1, ci_low, ci_high, p, p_holm, differs
 comparison_macro_f1.png       macro-F1 with 95% CI per input and classifier
 Run (from the project folder, after 03_train_evaluate.py has run for each input)
 ---------------------------------------------------------------------
-    python models_run/04_compare_models.py
+    python experiments/run_experiment.py      # experiment mode: runs this script as the "compare" step
+    python models_run/04_compare_models.py      # development mode (EXPERIMENT = None)
 """
+import os
 from pathlib import Path
 
 import matplotlib
@@ -39,10 +43,12 @@ import pandas as pd
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
+EXPERIMENT = None              # e.g. "E02_frozen_pca_pastis": runs of experiments/<name>/results/ | None = settings below
+EXTRA_RUNS = []                # runs of other experiments, as "<experiment>/<run>" (experiment mode)
 RUNS_DIR = ROOT / "outputs" / "study" / "03_models"
 OUT_DIR = ROOT / "outputs" / "study" / "04_comparison"
 # Runs from the shared tile store (03_build_tiles.py + 04_make_views.py). Set the orbit tag ("asc"/"dsc")
-# to the one written in outputs/dataset/03_tiles/agyear/views/views_info.json. Older runs (EE features, old chips):
+# to the one written in outputs/dataset/03_tiles_128px/agyear/views/views_info.json. Older runs (EE features, old chips):
 # BASELINE_RUN = "s1s2-all_agyear_30d" and RUNS = None.
 BASELINE_RUN = "s1s2-all_agyear_tiles-inner-asc"           # run folder of the Sentinel-1/2 baseline
 RUNS = ([BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi", "terramind", "agrifm")]
@@ -50,6 +56,23 @@ RUNS = ([BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi"
 BASELINE_CLASSIFIER = "rf"     # runs with their own model (e.g. psetae) are compared with this baseline classifier
 N_BOOT = 1000
 SEED = 42
+
+# ------------------------------------------------------------ experiment mode
+# experiments/run_experiment.py sets EXPERIMENT; all runs in its results/ folder are compared, the
+# Sentinel-1/2 run (s1s2-...) is the baseline, and the section "compare" of config.yaml can change the settings.
+EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
+if EXPERIMENT:
+    import yaml
+    RUNS_DIR = ROOT / "experiments" / EXPERIMENT / "results"
+    OUT_DIR = RUNS_DIR / "comparison"
+    RUNS = None
+    _found = sorted(f.parent.name for f in RUNS_DIR.glob("*/oof_predictions.csv"))
+    BASELINE_RUN = next((r for r in _found if r.startswith("s1s2-all")), BASELINE_RUN)
+    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
+    for _key, _value in (_cfg.get("compare") or {}).items():
+        if _key not in globals():
+            raise SystemExit(f"config.yaml: unknown setting '{_key}' for 04_compare_models.py")
+        globals()[_key] = _value
 # ==========================================================================
 
 def _counts(y, p):
@@ -89,10 +112,14 @@ METRICS = {"macro_f1": macro_f1, "f1_rainfed": f1_rainfed,
 def load_runs():
     """All out-of-fold predictions: one table with run, classifier, parcel_id, y_true, y_pred, block_id."""
     tables = []
-    for f in sorted(RUNS_DIR.glob("*/oof_predictions.csv")):
-        run = f.parent.name
+    files = [(f.parent.name, f) for f in sorted(RUNS_DIR.glob("*/oof_predictions.csv"))]
+    files += [(r, ROOT / "experiments" / r.split("/")[0] / "results" / r.split("/", 1)[1] / "oof_predictions.csv")
+              for r in EXTRA_RUNS]                                     # "<experiment>/<run>" from another experiment
+    for run, f in files:
         if RUNS is not None and run not in RUNS:
             continue
+        if not f.exists():
+            raise SystemExit(f"{f} not found (EXTRA_RUNS)")
         t = pd.read_csv(f, dtype={"parcel_id": str})
         tables.append(t.rename(columns={"model": "classifier"}).assign(run=run))
         print(f"  found {run}: {t['parcel_id'].nunique():,} parcels, classifiers {sorted(t['model'].unique())}")
@@ -124,7 +151,8 @@ def plot_comparison(table, path):
                     fmt="o", color=colors[j], capsize=3, label=clf)
     ax.set_xticks(range(len(runs)), runs, rotation=20, ha="right")
     ax.set_ylabel("Macro-F1 (95% block-bootstrap CI)")
-    ax.set_title("Irrigated vs rainfed: all inputs on the same parcels (nested spatial CV)", fontweight="bold")
+    ax.set_title(f"Irrigated vs rainfed: all inputs on the same parcels{' (' + EXPERIMENT + ')' if EXPERIMENT else ''}",
+                 fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.5)
     ax.legend(frameon=False, title="classifier")
     ax.spines[["top", "right"]].set_visible(False)

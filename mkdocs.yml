@@ -1,0 +1,94 @@
+# MkDocs configuration of the project documentation (Material theme).
+#   pip install mkdocs-material mkdocs-gen-files mkdocs-literate-nav     (or: conda env update -f environment.yml)
+#   mkdocs serve          preview at http://127.0.0.1:8000 (reloads on every change)
+#   mkdocs build          static site in site/
+#   mkdocs gh-deploy      publish to GitHub Pages (branch gh-pages)
+# The markdown files stay where they are (README.md, docs/, ml_dataset_prep/, models_run/, experiments/):
+# mkdocs/gen_pages.py mirrors them into the site at build time, so links work the same on GitHub and on the site.
+
+site_name: Irrigated Cropland Mapping with GeoFMs
+site_description: Evaluating geospatial foundation models for irrigated cropland mapping in North Africa
+site_author: Aman Chaudhary
+site_url: https://amanchry.github.io/irrimapping-geofm/
+repo_url: https://github.com/amanchry/irrimapping-geofm
+repo_name: amanchry/irrimapping-geofm
+edit_uri: ""
+copyright: Aman Chaudhary · MSc Geo-Information Science and Earth Observation · ITC, University of Twente
+
+docs_dir: mkdocs/pages              # nearly empty: the pages come from mkdocs/gen_pages.py
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  icon:
+    logo: material/sprout
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: deep orange
+      toggle: {icon: material/weather-night, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: deep orange
+      toggle: {icon: material/weather-sunny, name: Light mode}
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js
+  - javascripts/mermaid.js
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - mkdocs/gen_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+
+markdown_extensions:
+  - tables
+  - attr_list
+  - md_in_html
+  - admonition
+  - footnotes
+  - def_list
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}   # same anchors as GitHub
+  - pymdownx.details
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid                        # rendered by mkdocs/pages/javascripts/mermaid.js (keeps the
+          class: mermaid-diagram               # colours of each diagram; Material's own Mermaid recolours them)
+          format: !!python/name:pymdownx.superfences.fence_div_format
+
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: info

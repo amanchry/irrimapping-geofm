@@ -1,0 +1,22 @@
+# E04: deep model trained from scratch on the pixel sets (no pretraining). Parked: presented in the next phase.
+id: E04
+title: PSE-TAE trained from scratch on the pixel sets
+short_title: PSE-TAE from scratch   # name in the site's sidebar
+status: parked
+listed: false              # not on the overview pages yet (next phase)
+research_question: RQ1 (extra baseline)
+question: Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?
+changes_from: "E01/E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel"
+answer: ""
+
+inputs: []
+steps: [psetae, report]
+
+psetae:                    # models_run/03b_train_psetae.py
+  BANDS: s2s1
+  N_PIXELS: 64
+  MAX_EPOCHS: 100
+  PATIENCE: 15
+
+report:
+  HEADLINE_CLASSIFIERS: [psetae]

@@ -45,7 +45,7 @@ from matplotlib.colors import LinearSegmentedColormap
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW       # ml_dataset_prep/03_build_tiles.py
+TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW       # ml_dataset_prep/03_build_tiles.py
 VIEWS = TILE_ROOT / "views"                                         # ml_dataset_prep/04_make_views.py
 LEGACY_FEATURES = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"
 OUT_DIR = ROOT / "outputs" / "study" / "01_inspection"

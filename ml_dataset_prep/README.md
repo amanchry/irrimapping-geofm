@@ -1,3 +1,5 @@
+[Home](../README.md) › [Documentation](../docs/README.md) › Part 1 · Dataset
+
 # Part 1 — ML-ready dataset of irrigated and rainfed parcels in Morocco
 
 This folder builds the **training dataset**: labelled parcels, spatial train / validation / test
@@ -85,7 +87,7 @@ The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 20
 
 | Data | Use | Details |
 | --- | --- | --- |
-| Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, chip and irrigation method |
+| Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, crop and irrigation method |
 | GADM 4.1 Morocco | maps | country outline |
 | ESA WorldCover 2021 (10 m) | label check | share of each parcel mapped as cropland |
 | Sentinel-2 L2A harmonised (`COPERNICUS/S2_SR_HARMONIZED`) | imagery | 12 bands, surface reflectance |
@@ -213,26 +215,17 @@ Leakage, all folds averaged:
 
 ### 5.4 How the folds give train, validation and test
 
-There is no single fixed train / validation / test split. The folds take turns, in a **nested spatial cross-validation**:
+There is no single fixed train / validation / test split. The folds take turns, as in the PASTIS benchmark (Garnot & Landrieu 2021): in each of 5 rounds, 3 folds train, the next fold validates (chooses the hyperparameters) and one fold is the test fold.
 
-```mermaid
-flowchart LR
-    subgraph OUTER["Outer loop: each fold is the TEST fold once"]
-        direction TB
-        T["Test fold k<br/>(never seen during training or tuning)"]
-        R["Other 4 folds"]
-    end
-    R --> INNER
-    subgraph INNER["Inner loop on the 4 remaining folds"]
-        direction TB
-        I1["3 folds train → 1 fold validation<br/>rotated 4 times"]
-        I2["best hyperparameters<br/>(macro-F1)"]
-        I1 --> I2
-    end
-    I2 --> FIT["Refit on all 4 folds"]
-    FIT --> P["Predict test fold k"]
-    P --> OOF["After 5 rounds: every parcel predicted once<br/>by a model that never saw its block"]
-```
+| Round | Train | Validation | Test |
+| --- | --- | --- | --- |
+| 1 | folds 2, 3, 4 | fold 1 | fold 0 |
+| 2 | folds 3, 4, 0 | fold 2 | fold 1 |
+| 3 | folds 4, 0, 1 | fold 3 | fold 2 |
+| 4 | folds 0, 1, 2 | fold 4 | fold 3 |
+| 5 | folds 1, 2, 3 | fold 0 | fold 4 |
+
+After 5 rounds every parcel has been tested once, by a model that never saw its block. Unlike PASTIS, the folds are made of whole 20 km blocks, so the test fold is always a set of regions the model has never seen.
 
 For quick experiments, the column `split` gives one fixed split: fold 0 = test, fold 1 = validation, folds 2–4 = train. `random_fold` gives a stratified random split, so the optimism of random validation can be measured.
 
@@ -394,7 +387,7 @@ Only parcels of the tile's own agricultural year are burnt in.
 | `role` | home, outline or context |
 | `mixed_folds` | the tile holds parcels from more than one fold (relevant for segmentation, section 11) |
 
-**Outputs** (`outputs/dataset/03_tiles/agyear/`):
+**Outputs** (`outputs/dataset/03_tiles_128px/agyear/`):
 - `tiles/<id>_img.tif`, `tiles/<id>_lab.tif`, `tiles/<id>_scenes.json`
 - `parcels.csv`
 - `parcel_overlaps.csv`
@@ -491,7 +484,7 @@ outputs/dataset/
 ├── 02_folds/
 │   ├── parcels_folds.geojson            + block_id, fold, random_fold, split
 │   └── fold_counts.csv, block_size_comparison.csv, leakage_check.csv, class_similarity_by_distance.csv, *.png
-└── 03_tiles/agyear/
+└── 03_tiles_128px/agyear/
     ├── tiles/
     │   ├── <tile_id>_img.tif            int16, 228 bands (12 months × 19), NODATA −32768, EPSG:32629, 10 m
     │   ├── <tile_id>_lab.tif            int32, 3 bands: label, parcel_idx, edge
@@ -521,7 +514,7 @@ outputs/dataset/
 
 | Model family | Use | Train / validation / test |
 | --- | --- | --- |
-| Random forest, gradient boosting, SVM | View A | `fold` (nested CV) or `split` |
+| Random forest, gradient boosting, SVM | View A | `fold` (5 rounds: 3 train / 1 validation / 1 test) or `split` |
 | Pixel-set temporal models (PSE-TAE, L-TAE) | View B | same |
 | Foundation models / any CNN or ViT on chips | View C (`chips_p8` or `chips_p16`) with `mask` | same, from `index.csv` |
 | Segmentation (U-Net, U-TAE) | View D: `_img.tif` + `_lab.tif`, loss masked where `label = 0` | split by **tile**, using `tiles.parquet` (`fold`, `mixed_folds`) |
@@ -530,7 +523,7 @@ Minimal example: read the chips.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/dataset/03_tiles/agyear/views/chips_p16"
+folder = "outputs/dataset/03_tiles_128px/agyear/views/chips_p16"
 index = pd.read_csv(f"{folder}/index.csv", dtype={"parcel_id": str})
 info = json.load(open(f"{folder}/chips_info.json"))
 d = np.load(f"{folder}/{index.part.iloc[0]}")
@@ -552,7 +545,7 @@ python ml_dataset_prep/04_make_views.py              # local
 
 Run 03 first with `N_TEST_TILES = 20`, then check the result with `models_run/01_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
 
-To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/dataset/03_tiles/agyear/vrt/`. They only point to the tiles, so nothing is copied.
+To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 
 The settings sit at the top of each script:
 
@@ -583,8 +576,11 @@ Earth Engine access uses a service-account key in `secrets/`, which is never com
 - Garnot, V. S. F., & Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional temporal attention networks (PASTIS). *ICCV*.
 - Kattenborn, T., Schiefer, F., Frey, J., Feilhauer, H., Mahecha, M. D., & Dormann, C. F. (2022). Spatially autocorrelated training and validation samples inflate performance assessment of convolutional neural networks. *ISPRS Open Journal of Photogrammetry and Remote Sensing*, 5, 100018.
 - Kerner, H., et al. (2025). Fields of The World: a machine learning benchmark dataset for global agricultural field boundary segmentation. *AAAI*.
-- Ouassanouan et al. (2026). *Scientific Data* — field survey of the five irrigation districts (source of the labels). **TODO: add full author list, title and DOI from the published paper.**
+- Ouassanouan, Y., Elfarkh, J., Grich, S., Liblab, A., & Chehbouni, A. (2026). Crop and irrigation types ground-truth dataset for Moroccan agricultural regions. *Scientific Data*, 13, 746. https://doi.org/10.1038/s41597-026-06993-y (source of the labels)
 - Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological mapping models. *Nature Communications*, 11, 4540.
 - Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography*, 40, 913–929.
 - Sykas, D., Sdraka, M., Zografakis, D., & Papoutsis, I. (2022). A Sentinel-2 multiyear, multicountry benchmark dataset for crop classification and segmentation with deep learning (Sen4AgriNet). *IEEE JSTARS*, 15, 3323–3339.
 - Pasquarella, V. J., Brown, C. F., Czerwinski, W., & Rucklidge, W. J. (2023). Comprehensive quality assessment of optical satellite imagery using weakly supervised video learning (Cloud Score+). *CVPR Workshops*.
+
+---
+← [Documentation](../docs/README.md) · Next: [Part 2 · Models →](../models_run/README.md)

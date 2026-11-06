@@ -27,14 +27,14 @@ C. Patch-aligned chips for the foundation models, one folder per patch size (CHI
    that is a multiple of the patch size split small parcels over 4 mostly-neighbour patches).
    index.csv adds `purity` (share of the pooled patches inside the parcel, the weighting used by
    the models_run/02 embedding scripts), `purity_centred` (same for the old centred chip), n_px, area_ha, fold, zone.
-D. Full tiles (segmentation models such as U-TAE): use outputs/dataset/03_tiles/<WINDOW>/tiles/ directly;
+D. Full tiles (segmentation models such as U-TAE): use outputs/dataset/03_tiles_128px/<WINDOW>/tiles/ directly;
    the label band has 0 = ignore for unlabelled pixels.
 
 Sentinel-1 orbit for B and C: S1_ORBIT = "auto" picks, over the whole study area, the orbit
 direction with more valid parcel-months (written to views_info.json); "ASC" / "DSC" force one.
 Feature tables (A) keep both orbits as separate columns.
 
-Output (outputs/dataset/03_tiles/<WINDOW>/views/)
+Output (outputs/dataset/03_tiles_128px/<WINDOW>/views/)
 -----------------------------------------
 parcel_features_all.csv, parcel_features_inner.csv, pixelsets.npz, chips_p8/, chips_p16/,
 qa_purity.csv, qa_clear_obs.csv, views_info.json
@@ -55,7 +55,7 @@ import rasterio
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW                  # from 03_build_tiles.py
+TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW                  # from 03_build_tiles.py
 OUT_DIR = TILE_ROOT / "views"
 
 MAKE_FEATURES = True           # view A

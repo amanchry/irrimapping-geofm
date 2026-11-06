@@ -24,11 +24,13 @@ Steps
                FEATURE_MODE "concat": all steps side by side, then standardised and reduced to
                PCA_DIM components INSIDE each model (PCA fitted on training folds only);
                "mean": the average over steps.
-2. Nested spatial cross-validation (main result):
-     outer loop  each of the 5 spatial folds (20 km blocks) is the test fold once;
-     inner loop  hyperparameters tuned by spatial CV on the other 4 folds only;
-     the model is refit on those 4 folds and predicts the test fold.
-   Every parcel is predicted once, by a model that never saw its block.
+2. Spatial cross-validation over the 5 folds (20 km blocks); each fold is the test fold once.
+   VALIDATION = "pastis" (default; as PASTIS, Garnot & Landrieu 2021, and 03b_train_psetae.py):
+     per round 3 folds train, the next fold (k + 1) is the validation fold used to choose the
+     hyperparameters, fold k is the test fold. The model is trained on the 3 training folds.
+   VALIDATION = "nested": hyperparameters tuned by spatial CV on the 4 other folds, model refit on all 4.
+   Either way the test fold is never used for any choice, and every parcel is predicted once,
+   by a model that never saw its block.
 3. Metrics on all out-of-fold predictions with 95% CI from a block bootstrap (whole blocks
    resampled): macro-F1 (main), F1 / precision / recall per class, balanced and overall accuracy,
    PR-AUC for rainfed, Brier score and expected calibration error.
@@ -39,7 +41,8 @@ Steps
 7. Final models refit on all parcels (for mapping later); all tables and figures saved.
 Compare inputs with 04_compare_models.py.
 
-Output (outputs/study/03_models/<RUN_NAME>/)
+Output: experiments/<EXPERIMENT>/results/<RUN_NAME>/ (experiment mode, see below)
+        or outputs/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
 --------------------------------------
 metrics_summary.csv            headline metrics with 95% CI, one column per classifier
 metrics_with_ci.csv            all metrics: estimate, ci_low, ci_high
@@ -52,12 +55,18 @@ seasonal_profiles.png (s1s2), gap_filling.csv (s1s2), final_model_<name>.joblib,
 
 Run (from the project folder)
 -----------------------------
+Experiment mode (results that go into the thesis): set EXPERIMENT to a folder in experiments/ and
+run experiments/run_experiment.py, which calls this script once for every input of the experiment.
+The settings in that experiment's config.yaml (section "train_evaluate") replace the values below.
+    python experiments/run_experiment.py
+Development mode (EXPERIMENT = None): the values below are used as they are.
     python models_run/03_train_evaluate.py
-Change INPUT below and run again for each input. QUICK_TEST = True gives a fast check.
+QUICK_TEST = True gives a fast check.
 """
 import ast
 import json
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -82,6 +91,8 @@ from sklearn.svm import SVC
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
+EXPERIMENT = None                     # e.g. "E02_frozen_pca_pastis": settings from experiments/<name>/config.yaml,
+                                      # results to experiments/<name>/results/ | None = the settings below
 INPUT = "terramind"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
 WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
@@ -100,8 +111,32 @@ EMB_SOURCE = "tiles"                  # "tiles" = embeddings of the ml_dataset_p
 FEATURE_MODE = "concat"               # "concat" (all months + PCA) | "mean" (average over months)
 PCA_DIM = 128                         # PCA components in concat mode (fitted on training folds only)
 
+# Validation design
+VALIDATION = "pastis"                 # "pastis" = 3 folds train / next fold validation / 1 fold test per round
+                                      # (same as PASTIS and 03b_train_psetae.py) | "nested" = inner spatial CV on 4 folds
+
+SEED = 42
+RF_TREES = 500
+N_BOOT = 1000                         # block-bootstrap draws for the confidence intervals
+N_JOBS = -1                           # CPU cores for the random forest (-1 = all)
+QUICK_TEST = False                    # True = fast check (100 trees, 100 bootstraps, one setting per model)
+
+# ------------------------------------------------------------ experiment mode
+# experiments/run_experiment.py sets EXPERIMENT and EXPERIMENT_INPUT; the settings in the experiment's
+# config.yaml (section "train_evaluate") then replace the values above.
+EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
+if EXPERIMENT:
+    import yaml
+    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
+    INPUT = os.environ.get("EXPERIMENT_INPUT", INPUT)
+    for _key, _value in (_cfg.get("train_evaluate") or {}).items():
+        if _key not in globals():
+            raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03_train_evaluate.py")
+        globals()[_key] = _value
+
+# ------------------------------------------------------------ paths (from the settings)
 SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
-VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles" / WINDOW / "views"
+VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views"
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
     if S1_ORBIT == "chips" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the chips
@@ -117,13 +152,11 @@ EMB_TAG = f"{WINDOW}_tiles" if EMB_SOURCE == "tiles" else WINDOW
 EMB_FILE = ROOT / "outputs" / "study" / "02_embeddings" / f"{INPUT}_{EMB_TAG}.npz"
 RUN_NAME = (f"s1s2-{S1S2_VARIABLES}_{WINDOW}_{S1S2_TAG}" if INPUT == "s1s2"
             else f"{INPUT}_{EMB_TAG}_{FEATURE_MODE}")
-OUT_DIR = ROOT / "outputs" / "study" / "03_models" / RUN_NAME
+if VALIDATION == "nested" and not EXPERIMENT:
+    RUN_NAME += "_nested"                                       # keeps both designs apart (an experiment has one design)
+OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "study" / "03_models")
+           / RUN_NAME)
 
-SEED = 42
-RF_TREES = 500
-N_BOOT = 1000                         # block-bootstrap draws for the confidence intervals
-N_JOBS = -1                           # CPU cores for the random forest (-1 = all)
-QUICK_TEST = False                    # True = fast check (100 trees, 100 bootstraps, one setting per model)
 # ==========================================================================
 
 N_FEATURES = 0                        # set in main(); used by preprocess() to size the PCA
@@ -333,6 +366,18 @@ def tune_inner(build, grid, X, y, folds):
     return best, best_score, scores
 
 
+def tune_on_validation(build, grid, X_train, y_train, X_val, y_val):
+    """PASTIS-style tuning: train on the training folds, score each setting on the validation fold (macro-F1)."""
+    best, best_score, scores = None, -1.0, []
+    for params in ParameterGrid(grid):
+        y_hat = build(**params).fit(X_train, y_train).predict(X_val)
+        score = f1_score(y_val, y_hat, average="macro", labels=CLASSES, zero_division=0)
+        scores.append({"params": str(params), "inner_macro_f1": score})
+        if score > best_score:
+            best, best_score = params, score
+    return best, best_score, scores
+
+
 def nested_spatial_cv(data, features, log):
     """Outer loop: each spatial fold is the test fold once. Hyperparameters are tuned on the other
     folds only (inner loop), the model is refit on all of them and predicts the held-out fold.
@@ -341,13 +386,24 @@ def nested_spatial_cv(data, features, log):
     folds = data["fold"].to_numpy()
     oof = {name: [] for name in MODELS}          # out-of-fold predictions per model
     selected, inner_log, fold_scores = [], [], []
-    for outer in sorted(np.unique(folds)):
+    fold_ids = sorted(np.unique(folds))
+    for k, outer in enumerate(fold_ids):
         test = folds == outer
-        train = ~test
-        log.info(f"Outer fold {outer}: train {train.sum():,} parcels, test {test.sum():,} parcels")
+        if VALIDATION == "pastis":
+            val_fold = fold_ids[(k + 1) % len(fold_ids)]                 # next fold = validation fold
+            val = folds == val_fold
+            train = ~test & ~val
+            log.info(f"Round {k + 1}: train {train.sum():,} | validation (fold {val_fold}) {val.sum():,} | "
+                     f"test (fold {outer}) {test.sum():,} parcels")
+        else:
+            train = ~test
+            log.info(f"Outer fold {outer}: train {train.sum():,} parcels, test {test.sum():,} parcels")
         for name, (build, grid) in MODELS.items():
             t0 = time.time()
-            params, inner_score, scores = tune_inner(build, grid, X[train], y[train], folds[train])
+            if VALIDATION == "pastis":
+                params, inner_score, scores = tune_on_validation(build, grid, X[train], y[train], X[val], y[val])
+            else:
+                params, inner_score, scores = tune_inner(build, grid, X[train], y[train], folds[train])
             model = build(**params).fit(X[train], y[train])
             y_hat, score, is_prob = predict(model, X[test])
             oof[name].append(pd.DataFrame({
@@ -442,7 +498,7 @@ def run_protocol(data, features, out_dir, run_name, log):
     log.info(f"{len(data):,} parcels, {len(features)} features, folds "
              f"{data['fold'].value_counts().sort_index().to_dict()}")
 
-    log.info("1/5 Nested spatial cross-validation")
+    log.info(f"1/5 Spatial cross-validation (VALIDATION = {VALIDATION})")
     oof, selected, inner_log, fold_scores = nested_spatial_cv(data, features, log)
 
     log.info("2/5 Out-of-fold metrics with block-bootstrap 95% CI")
@@ -452,7 +508,7 @@ def run_protocol(data, features, out_dir, run_name, log):
     per_fold = fold_scores.groupby("model")[["macro_f1", "f1_rainfed"]].agg(["mean", "std"]).round(3)
     log.info("Per outer fold (mean, SD):\n" + per_fold.to_string())
     plot_confusions(oof, summary, out_dir / "confusion_matrices.png",
-                    f"{run_name}: all parcels, out-of-fold (nested spatial CV)")
+                    f"{run_name}: all parcels, out-of-fold (spatial CV, {VALIDATION})")
 
     log.info("3/5 Paired model differences (macro-F1, same parcels)")
     pairs = paired_differences(oof, N_BOOT, SEED)
@@ -485,13 +541,15 @@ def run_protocol(data, features, out_dir, run_name, log):
     pairs.to_csv(out_dir / "paired_model_differences.csv", index=False)
     cv.to_csv(out_dir / "cv_random_vs_spatial.csv", index=False)
     (out_dir / "run_config.json").write_text(json.dumps({
-        "run": run_name, "input": INPUT, "window": WINDOW,
+        "run": run_name, "experiment": EXPERIMENT, "input": INPUT, "window": WINDOW,
         "settings": ({"source": S1S2_SOURCE, "feature_file": S1S2_FILE.name, "variables": S1S2_VARIABLES,
                       **({"tile_features": TILE_FEATURES, "s1_orbit": S1_ORBIT} if S1S2_SOURCE == "tiles"
                          else {"interval_days": INTERVAL_DAYS})} if INPUT == "s1s2"
                      else {"feature_mode": FEATURE_MODE, "pca_dim": PCA_DIM, "embedding_file": EMB_FILE.name}),
         "n_parcels": int(len(data)), "n_features": len(features),
-        "validation": "nested spatial CV (outer 5 folds, inner spatial CV on the training folds)",
+        "validation": ("5 spatial folds; per round 3 train / next fold validation / 1 test (PASTIS)"
+                       if VALIDATION == "pastis" else
+                       "nested spatial CV (outer 5 folds, inner spatial CV on the 4 training folds)"),
         "seed": SEED, "rf_trees": RF_TREES, "n_boot": N_BOOT, "quick_test": QUICK_TEST,
         "grids": {k: v[1] for k, v in MODELS.items()}, "final_params": final_params}, indent=2, default=str))
     return oof, summary
@@ -660,6 +718,9 @@ def plot_importance(table, path):
 
 def main():
     global FOLD_HOOK, N_FEATURES, STEP_NAMES
+    if os.environ.get("EXPERIMENT_SKIP_DONE") and (OUT_DIR / "oof_predictions.csv").exists():
+        print(f"{RUN_NAME}: already done in {OUT_DIR} (skipped; delete the folder to run it again)")
+        return
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     log = setup_logging(OUT_DIR / "run.log")
     t0 = time.time()
