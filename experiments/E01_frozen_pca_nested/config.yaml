@@ -5,6 +5,7 @@ short_title: PCA pipeline · nested CV   # name in the site's sidebar
 status: done
 listed: true
 research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?
 changes_from: first experiment on the shared 128 px tile store with patch-aligned chips
 answer: "No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.906, difference within the noise); Clay and Prithvi hold up better in the hardest fold."

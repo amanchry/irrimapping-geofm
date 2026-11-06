@@ -1,6 +1,6 @@
-# Progress log
+# Change log
 
-Running record of decisions, code changes and open points for the thesis
+Chronological record of decisions, code changes and open points of the study
 *Irrigated vs rainfed cropland mapping in Morocco with geospatial foundation models*.
 Update this file with every change to the code or the method (newest entry on top in the
 change log).
@@ -72,6 +72,101 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-06 (content from the results presentation of week 45)
+
+Only content that is still valid for the current pipeline was taken over; numbers from the earlier 30-day pipeline
+were not.
+- E01 report: new section *Additional analyses* from the E01 result files — random vs spatial CV (all inputs),
+  grouped permutation importance of the baseline (variables and months) with figure, settings selected per round.
+- RQ1 page §6.2: principle and fixed settings of each classifier (L2/lbfgs, 500 trees, HGB early stopping off and
+  why, SVM without probability calibration).
+- Evaluation protocol: why a fold rotation instead of one fixed split; no kappa (Pontius & Millones 2011); block
+  bootstrap (Künsch 1989).
+- ML-ready dataset §6.2: crop calendar and the reasons for the September–August agricultural year.
+- References: Valavi 2019, Schratz 2019, Karasiak 2022, Orynbaikyzy 2022, Künsch 1989, Gao 2018, Elwan 2022.
+- `tools/a6_copy_doc_figures.py` also copies the two E01 figures.
+
+### 2026-11-06 (reference summary: Moroccan field survey)
+
+- New summary page [Moroccan field survey · Ouassanouan et al. (2026)](references/ouassanouan-2026-morocco-survey.md)
+  (from the paper PDF): protocol, attributes, data records (figshare doi:10.6084/m9.figshare.28486022.v2), quality
+  control, use in this research, limitations (rainfed concentrated in Doukkala, region–season confounding,
+  route-based sampling, single-season labels). Linked from the reference table, the menu and Data sources.
+
+### 2026-11-06 (documentation organised by research phase)
+
+- New [Research plan](research_plan.md): five phases mapped to the objectives and RQs (1 Data preparation;
+  2 Model evaluation, RQ1–RQ2; 3 Transferability, RQ3–RQ4; 4 Multi-model fusion, RQ5; 5 Annual maps) plus
+  6 Synthesis and dissemination; components added to the proposal structure (mapping model, transfer-region dataset,
+  year-transfer test, map accuracy assessment).
+- Phase folders: `phase1_data/` (overview, ML-ready dataset), `phase2_models/` (overview, RQ1 frozen encoders,
+  RQ2 fine-tuning starter, evaluation protocol); starter pages `phase3_transfer/`, `phase4_fusion/`, `phase5_maps/`.
+  Decisions moved to `decisions.md`; the `method/` folder is gone (old copies in `tmp_trash/pre_phase_move/`).
+- Dataset figures renumbered 1.1–1.12; `tools/a6_copy_doc_figures.py` writes to `docs/phase1_data/figures/`.
+- Experiment configs: new field `phase`. Results table and progress-report timeline grouped by phase; `CLAUDE.md`
+  rules for phase pages.
+
+### 2026-11-06 (Method section reordered; dataset figures in the documentation)
+
+- Method pages moved into `docs/method/` in reading order: 1 Overview (`method/overview.md`), 2 Dataset preparation
+  (`method/dataset.md`), 3 Model training and inference (`method/models.md`), 4 Evaluation protocol
+  (`method/evaluation.md`), 5 Decisions (`method/decisions.md`); the Introduction moved to `docs/introduction.md`.
+  All links rewritten; old copies in `tmp_trash/pre_method_move/`. Site URLs change accordingly (e.g. `/method/dataset/`).
+- Dataset preparation now shows the 12 figures produced by the pipeline (Figures 2.1–2.12: parcels, class balance,
+  survey timing, class similarity by distance, folds and blocks, train–test distance, patch purity, clear
+  observations, seasonal profiles, example chips), with captions; new §7.6 *Dataset inspection*.
+- New `tools/a6_copy_doc_figures.py`: copies the figures from `outputs/` to `docs/method/figures/` (downscaled; example
+  chips as JPEG). Run it after re-running a pipeline step.
+
+### 2026-11-06 (diagram labels no longer cut off)
+
+- Diagram text was clipped in some browsers (e.g. "Dec 2023 – Jan 202"): labels were measured with a fallback
+  font and drawn with the site font. `docs/assets/javascripts/mermaid.js` now waits for the web font and uses the
+  site font (Roboto); `extra.css` fixes the label font and shows any overflow. Checked: all 25 diagrams, no clipped
+  label.
+
+### 2026-11-06 (Foundation models page; academic register)
+
+- New page [Foundation models](foundation_models.md) after *Environment Setup*: selection criteria, overview table
+  (developer, architecture, pretraining, paper, weights), configuration in this study, notes per model, weights
+  folders and references. It is now the only place with per-model tables.
+- Removed the duplicated model tables from the Introduction, Data sources, Environment setup, Evaluation protocol §3
+  and Models pipeline (table under the workflow, §3, §5.1–5.4); these pages now link to the new page.
+  Models pipeline §5.5 renumbered to §5.2.
+- Narrative text rewritten in an academic, impersonal register (Method in brief, page introductions of the dataset,
+  models, protocol, decisions, results, experiments and setup pages). `CLAUDE.md` style rule updated accordingly.
+
+### 2026-11-06 (model weights in checkpoints/, downloaded on the first run)
+- `models_run/02a_embed_clay.py`: downloads `clay-v1.5.ckpt` and `metadata.yaml` into `checkpoints/clay/` if missing
+  (new settings CHECKPOINT_URL, METADATA_URL; `.part` file until complete).
+- `models_run/02b_embed_prithvi.py`, `02c_embed_terramind.py`: new setting WEIGHTS_DIR; the Hugging Face download folder
+  is set to `checkpoints/prithvi/` and `checkpoints/terramind/` before TerraTorch loads the model (was the hidden
+  `~/.cache/huggingface`). AgriFM already used `checkpoints/agrifm/`. Copies of the old scripts in `tmp_trash/`.
+- Docs: *Getting started* model-weights table (folder, script, source); Introduction models table with paper and
+  weights links.
+
+### 2026-11-06 (diagrams: one neutral academic style, readable size)
+- All Mermaid diagrams restyled by one theme in `docs/assets/javascripts/mermaid.js` (white boxes, dark grey text and
+  lines, light grey groups, 15 px text); the 64 colour lines (`classDef` / `class`) removed from the pages.
+- Diagrams render at natural size; slightly wider ones are fitted (text ≥ 12 px), long left-to-right chains are
+  redrawn top-down. Restructured the too-wide ones: main workflow (Method in brief), Earth Engine compositing and
+  model views (dataset), models workflow (details moved to a table), fairness and inspection diagrams (models).
+  Result: all 26 diagrams fit the page, none scrolls. Gantt timeline sized to the column.
+- `mkdocs.yml`: empty `extra:` (left after removing the social links) removed — it stopped the build.
+
+### 2026-11-06 (introduction from the proposal; data sources; reference papers; progress report)
+- `docs/research/introduction.md` (new, replaces thesis_design.md): background, state of the art, research gap, objectives
+  and RQs, study area and data, models, approach, expected outcomes, from the research proposal; the proposal is
+  published as `docs/assets/research_proposal.pdf` (exception in `.gitignore`). Home page: no names, no workflow
+  (moved to *Method in brief*), generic research wording across the site.
+- `docs/data_source/index.md`: tables of ground truth, satellite collections (Earth Engine IDs), auxiliary and reference
+  maps, pretrained weights, with provider, use, access link and status; survey details.
+- `docs/references/`: index of all papers from the proposal and the method (by topic, with links), summary pages for
+  AlphaEarth Foundations, Yang et al. 2026, PANGAEA, PASTIS / U-TAE, L-TAE, IrrMap, Tong & Wang 2025, the heads-and-
+  mapping review (from the old literature page), and `_template.md` for new summaries.
+- `docs/progress_report.md`: summary, timeline (Gantt), milestones vs the proposal plan, done so far, key results,
+  next steps, open points and risks. Menu: Data sources; Progress (report, change log, meetings); References.
 
 ### 2026-11-06 (website style as the FOSS4G course site)
 - `mkdocs.yml` and `docs/SUMMARY.md` follow the style of the *Scalable Raster Analytics* course site: Material with teal / deep

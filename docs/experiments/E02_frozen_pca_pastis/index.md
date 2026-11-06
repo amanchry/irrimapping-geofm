@@ -13,9 +13,9 @@ Do frozen foundation-model embeddings separate irrigated from rainfed parcels be
 with the same parcels, folds and classifiers, under the **final validation design**?
 
 ## Why
-E01 used nested spatial CV. The thesis now uses the PASTIS rotation for every model (classifiers and, later,
+E01 used nested spatial CV. The study now uses the PASTIS rotation for every model (classifiers and, later,
 neural networks), so they are trained, tuned and tested in exactly the same way
-([decision D3](../../research/decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv)). E02 is the
+([decision D3](../../decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv)). E02 is the
 **main result of RQ1**; E01 becomes a sensitivity check of the validation design.
 
 ## What changes
@@ -25,7 +25,7 @@ neural networks), so they are trained, tuned and tested in exactly the same way
 | Model trained on | 4 folds | 3 folds |
 
 Inputs, embeddings, temporal aggregation (concat + PCA 128), classifiers, grids and metrics are unchanged; see the
-[evaluation protocol](../../research/protocol.md).
+[evaluation protocol](../../phase2_models/evaluation.md).
 
 ## How to run
 ```bash

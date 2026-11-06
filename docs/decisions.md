@@ -1,8 +1,8 @@
-# 4 · Decisions and departures from the proposal
+# Decisions and departures from the proposal
 
-Every point where the implementation differs from the [thesis proposal](https://github.com/amanchry/irrimapping-geofm/blob/main/thesis_proposal/MScProposal_s3677133_AmanChaudhary.pdf),
-with what the proposal said, what is done now, and why. Smaller method choices are in the
-[progress log](../progress.md#method-decisions).
+This page records every departure of the implementation from the [research proposal](assets/research_proposal.pdf),
+stating the original plan, the current approach and the rationale. Smaller method choices are in the
+[progress log](progress.md#method-decisions).
 
 | # | Topic | Proposal | Now | Since |
 | --- | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ with what the proposal said, what is done now, and why. Smaller method choices a
   once by a model that never saw its block.
 - **Why:** with a random split, 79% of test parcels lie within 250 m of a training parcel (about 2% with 20 km
   blocks). Random splits overstate accuracy for mapping new areas (Roberts et al. 2017; Ploton et al. 2020).
-- **Where:** [dataset §5](../dataset/index.md#5-script-02--make_spatial_folds), [protocol §2](protocol.md#2-spatial-splits).
+- **Where:** [dataset §5](phase1_data/dataset.md#5-script-02--make_spatial_folds), [protocol §2](phase2_models/evaluation.md#2-spatial-splits).
 
 ## D2. Two agricultural years (per-parcel season)
 - **Proposal (§4.1):** the 2024 annual image stack.
@@ -37,7 +37,7 @@ with what the proposal said, what is done now, and why. Smaller method choices a
   of the rainfed parcels. The agricultural year covers the winter rainfed cycle and the summer, when only irrigated
   fields stay green.
 - **Consequence:** region and year are partly confounded (Gharb and Tadla only 2023/24, Souss only 2024/25).
-- **Where:** [dataset §6.2](../dataset/index.md#62-two-agricultural-years).
+- **Where:** [dataset §6.2](phase1_data/dataset.md#62-two-agricultural-years).
 
 ## D3. Validation: PASTIS rotation instead of nested CV
 - **Before (E01):** nested spatial CV, settings by inner CV on the 4 training folds, refit on 4.
@@ -45,7 +45,7 @@ with what the proposal said, what is done now, and why. Smaller method choices a
   PASTIS (Garnot & Landrieu 2021).
 - **Why:** one design for classical classifiers and neural networks (L-TAE, fine-tuning), which need a separate
   validation fold for early stopping. It is the standard design of the PASTIS crop-mapping benchmark.
-- **Where:** [protocol §2](protocol.md#2-spatial-splits); E01 is kept as the sensitivity check.
+- **Where:** [protocol §2](phase2_models/evaluation.md#2-spatial-splits); E01 is kept as the sensitivity check.
 
 ## D4. One shared tile store for every input
 - **Proposal:** annual Sentinel-1/2 composites via STAC and xarray.
@@ -53,7 +53,7 @@ with what the proposal said, what is done now, and why. Smaller method choices a
   bands; the baseline features and the foundation-model chips are all cut from these tiles.
 - **Why:** STAC processing was too slow for the full set; with one store every input sees identical pixels,
   compositing and masks, and chips no longer overlap across folds.
-- **Where:** [dataset §6–7](../dataset/index.md#6-script-03--build_tiles).
+- **Where:** [dataset §6–7](phase1_data/dataset.md#6-script-03--build_tiles).
 
 ## D5. Frozen encoder + classical classifiers
 - **Proposal (§4.2.1):** frozen encoder, train a decoder and classification head.
@@ -80,7 +80,7 @@ with what the proposal said, what is done now, and why. Smaller method choices a
 - **Now:** PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E03.
 - **Why:** PANGAEA (Marsocci et al. 2024) found L-TAE better than linear mapping for single-date encoders; testing
   both shows whether the conclusion depends on how the months are combined.
-- **Where:** [protocol §5](protocol.md#5-temporal-aggregation-two-pipelines).
+- **Where:** [protocol §5](phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
 
 ## D9. Cloud Score+ instead of QA60
 - **Now:** Sentinel-2 pixels kept when Cloud Score+ cs_cdf ≥ 0.60; scenes with up to 60% cloud admitted.
@@ -92,8 +92,8 @@ with what the proposal said, what is done now, and why. Smaller method choices a
 - **Now:** Morocco first. As an alternative, US state datasets with both irrigated and dryland fields (eastern
   Washington WSDA, Utah WRLU 2017–2025) would allow a spatial and a multi-year test with the same pipeline.
 - **Why:** 10 rainfed points are too few to measure a rainfed F1; the US data needs a check of its labels
-  (see the [progress log, 4–5 Nov 2026](../progress.md#change-log-newest-first)).
-- **Decision due:** after RQ1 and RQ2, with the supervisors.
+  (see the [progress log, 4–5 Nov 2026](progress.md#change-log-newest-first)).
+- **Decision due:** after RQ1 and RQ2.
 
 ## D11. Two kinds of head: parcel benchmark and mapping model
 - **Proposal (§4.2.1, §4.3):** frozen encoder with a decoder / head; annual irrigated maps 2021–2025 for Morocco.
@@ -112,8 +112,8 @@ with what the proposal said, what is done now, and why. Smaller method choices a
      extra (E04).
   4. **Same scoring:** pixel predictions are aggregated per parcel (mean probability) and scored with the same
      folds, parcels and bootstrap as RQ1, so every number stays comparable.
-- **Why:** the thesis must end in wall-to-wall annual maps; a 1D-CNN beat RF for irrigated mapping
+- **Why:** the research must end in wall-to-wall annual maps; a 1D-CNN beat RF for irrigated mapping
   (Bazzi et al. 2019) and TempCNN-type models transferred better across regions than GeoFM embeddings
   (Tong & Wang 2025), so a neural baseline is needed next to the classical one.
-- **Where:** [literature notes](literature.md#heads-and-mapping-what-geofm-crop-studies-use).
+- **Where:** [literature notes](references/heads-and-mapping.md).
 

@@ -65,19 +65,4 @@ flowchart TD
     TRF --> OUT
 
     %% ── STYLES ───────────────────────────────────────────────────────
-    classDef teal    fill:#E1F5EE,stroke:#0F6E56,color:#085041
-    classDef purple  fill:#EEEDFE,stroke:#534AB7,color:#26215C
-    classDef coral   fill:#FAECE7,stroke:#993C1D,color:#712B13
-    classDef amber   fill:#FAEEDA,stroke:#854F0B,color:#633806
-    classDef blue    fill:#E6F1FB,stroke:#185FA5,color:#042C53
-    classDef gray    fill:#F1EFE8,stroke:#5F5E5A,color:#2C2C2A
-    classDef diamond fill:#FAEEDA,stroke:#854F0B,color:#633806
-
-    class S1,S2,GT,RF teal
-    class AEF,PRF,AGF,TRM,CLY purple
-    class CMP,VAL coral
-    class BST diamond
-    class MAP,TMP,STAT amber
-    class TRFAPP,SPAT,TEMP,TREF blue
-    class O1,O2,O3 gray
 ```

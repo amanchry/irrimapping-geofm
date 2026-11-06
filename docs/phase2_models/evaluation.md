@@ -1,7 +1,7 @@
-# 3 · Evaluation protocol
+# Evaluation protocol
 
-The rules every experiment follows, so that results can be compared across inputs, classifiers and experiments.
-An experiment may change one of these rules only if its README says so (its *What changes* table).
+This protocol defines the rules common to all experiments and ensures that results are comparable across inputs,
+classifiers and experiments. Any deviation must be declared in the experiment's *What changes* table.
 
 **Contents:** [1 Task](#1-task-and-unit) · [2 Splits](#2-spatial-splits) · [3 Inputs](#3-inputs) ·
 [4 Classifiers](#4-classifiers) · [5 Temporal aggregation](#5-temporal-aggregation-two-pipelines) ·
@@ -12,15 +12,15 @@ An experiment may change one of these rules only if its README says so (its *Wha
 
 ## 1. Task and unit
 
-Binary classification of **parcels**: irrigated (class 1) or rainfed (class 2). One label per surveyed parcel, one
-prediction per parcel, all metrics per parcel. 8,781 parcels (7,585 irrigated, 1,196 rainfed); inputs are scored on
+The task is binary classification of **parcels** into irrigated (class 1) and rainfed (class 2), with one label
+and one prediction per surveyed parcel; all metrics are computed at parcel level. 8,781 parcels (7,585 irrigated, 1,196 rainfed); inputs are scored on
 the parcels present in every run (8,775: six parcels fully covered by overlapping polygons have no own pixel).
 
 ## 2. Spatial splits
 
 Parcels are grouped into **20 km blocks**, and the blocks into **5 folds** with the same class balance (about
 1,530 irrigated and 240 rainfed parcels each). A block is never split. A place surveyed in both seasons stays in one
-fold. Block size and fold assignment: [dataset §5](../dataset/index.md#5-script-02--make_spatial_folds).
+fold. Block size and fold assignment: [dataset §5](../phase1_data/dataset.md#5-script-02--make_spatial_folds).
 
 **Main design: PASTIS rotation** (Garnot & Landrieu 2021). Five rounds; in each, 3 folds train, the next fold is
 the validation fold, one fold is the test fold:
@@ -37,6 +37,14 @@ The model is trained on the 3 training folds with the setting that scored best o
 fold is never used for any choice. After 5 rounds every parcel has one **out-of-fold prediction** from a model that
 never saw its block. Classifiers and neural networks use the same rotation.
 
+**Why a rotation rather than one fixed split.** (i) Every parcel is tested once, so the rainfed scores rest on all
+1,196 rainfed parcels instead of the ~240 of a single test fold. (ii) Five different test areas reveal how strongly
+accuracy depends on the region, which a single test area would show only by chance. (iii) Hyperparameters are never
+chosen on the test fold, so the reported accuracy is not inflated by tuning (Varma & Simon, 2006). The same
+principle of spatially separated folds is implemented in blockCV (Valavi et al., 2019) and used for crop-type
+classification with Sentinel-1/2 by Orynbaikyzy et al. (2022); Schratz et al. (2019) recommend spatial folds for
+tuning as well as for testing.
+
 **Sensitivity design: nested spatial CV** (`VALIDATION: nested`, experiment [E01](../experiments/E01_frozen_pca_nested/index.md)):
 settings chosen by spatial CV on the 4 non-test folds, model refit on all 4.
 
@@ -44,17 +52,11 @@ settings chosen by spatial CV on the 4 non-test folds, model refit on all 4.
 
 ## 3. Inputs
 
-| Input | From | Sensors | Unit | Time | Vector |
-| --- | --- | --- | --- | --- | --- |
-| **S1/S2 baseline** | parcel features (inner pixels) | 12 S2 bands, NDVI, NDWI, EVI, S1 VV, VH (one orbit) | parcel median | 12 months | 204 |
-| **Clay v1.5** | chips p8 | 10 S2 bands | 8 px (80 m) patch | 1 month per pass | 12 × 1024 |
-| **Prithvi-EO-2.0-300M-TL** | chips p16 | 6 S2 bands (HLS set) | 16 px (160 m) | 4 months per pass | 12 × 1024 |
-| **TerraMind-1.0-base** | chips p16 | 12 S2 bands + S1 VV, VH | 16 px (160 m) | 1 month per pass | 12 × 768 |
-| **AgriFM** | chips p16 | 10 S2 bands | stride 16 px (160 m) | whole year in one pass | 1 × D |
-
-All encoders are **frozen**. A parcel's embedding is the mean of the patch embeddings that cover it, weighted by the
-share of each patch inside the parcel. Chips are 64 × 64 px, shifted so the parcel centroid sits at a patch centre.
-Details: [Part 2 · Models §3–5](../models/index.md#3-inputs-compared).
+Five inputs are compared: a Sentinel-1/2 parcel-feature baseline (12 Sentinel-2 bands, NDVI, NDWI, EVI and
+Sentinel-1 VV, VH over 12 months; 204 features) and the embeddings of four frozen foundation models (Clay v1.5,
+Prithvi-EO-2.0, TerraMind, AgriFM). A parcel's embedding is the mean of the patch embeddings that cover it, weighted
+by the share of each patch inside the parcel; chips are 64 × 64 px and shifted so that the parcel centroid lies at a
+patch centre. Bands, patch size and temporal handling per model: [Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
 
 ## 4. Classifiers
 
@@ -82,13 +84,6 @@ flowchart LR
     C --> O["<b>oof_predictions.csv</b><br/>same format"]
     D --> O
     O --> CMP["compare: same parcels,<br/>same bootstrap draws"]
-
-    classDef a fill:#1F5F8B,color:#fff,stroke:#1F5F8B
-    classDef b fill:#B4541A,color:#fff,stroke:#B4541A
-    classDef n fill:#F4F1EA,stroke:#8A919A,color:#1C2733
-    class A,C a
-    class B,D b
-    class E,O,CMP n
 ```
 
 | | PCA pipeline | L-TAE pipeline |
@@ -101,8 +96,8 @@ flowchart LR
 | Applies to AgriFM | yes | no (one vector per year) |
 | Reference | linear probing of frozen features | PANGAEA: single-date encoders + L-TAE (Marsocci et al. 2024); L-TAE (Garnot & Landrieu 2020) |
 
-The L-TAE pipeline is trained on the monthly S1/S2 features as well, so the baseline gets the same temporal model
-and the comparison stays fair. Because both pipelines write the same out-of-fold predictions, E03 compares them
+The L-TAE pipeline is also trained on the monthly S1/S2 features, so that the baseline benefits from the same
+temporal model and the comparison remains balanced. Because both pipelines write the same out-of-fold predictions, E03 compares them
 directly with the E02 runs on the same parcels.
 
 ## 6. Fairness rules
@@ -138,7 +133,10 @@ flowchart LR
 | PR-AUC (rainfed), Brier score, ECE | ranking quality and calibration of the predicted probabilities |
 | Macro-F1 per fold, mean ± SD | stability across regions (the proposal's selection criterion) |
 
-**95% confidence intervals: block bootstrap.** The 91 blocks, not the parcels, are the independent units. Each of
+The kappa coefficient is not reported, as it is uninformative for accuracy assessment (Pontius & Millones, 2011).
+
+**95% confidence intervals: block bootstrap** (Künsch, 1989). The 91 blocks, not the parcels, are the independent
+units. Each of
 1,000 draws resamples whole blocks with replacement and recomputes the metric; the 2.5% and 97.5% quantiles give the
 interval. The same 1,000 draws are used for every run, so a difference between two inputs is measured on identical
 resamples (**paired**).

@@ -20,7 +20,7 @@ What we expect to learn, and which decision depends on it.
 | --- | --- | --- |
 | setting | value | value |
 
-Everything else (parcels, folds, classifiers, metrics) follows the [evaluation protocol](../../research/protocol.md).
+Everything else (parcels, folds, classifiers, metrics) follows the [evaluation protocol](../../phase2_models/evaluation.md).
 
 ## How to run
 ```bash

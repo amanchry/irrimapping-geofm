@@ -4,4 +4,4 @@ Part 2 · study: dataset inspection, embeddings, training and evaluation, compar
 
 Each script has its settings at the top and a description of what it does and writes.
 
-**Documentation:** [https://amanchry.github.io/irrimapping-geofm/models/](https://amanchry.github.io/irrimapping-geofm/models/) (source: [`docs/models/index.md`](../docs/models/index.md))
+**Documentation:** [https://amanchry.github.io/irrimapping-geofm/phase2_models/frozen_encoders/](https://amanchry.github.io/irrimapping-geofm/phase2_models/frozen_encoders/) (source: [`docs/phase2_models/frozen_encoders.md`](../docs/phase2_models/frozen_encoders.md))

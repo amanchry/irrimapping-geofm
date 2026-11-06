@@ -22,7 +22,8 @@ TerraMind takes one date per input, so the 12 months are embedded one by one.
 
 Steps
 -----
-1. Load the frozen TerraMind backbone (downloads the weights from Hugging Face once).
+1. Load the frozen TerraMind backbone (weights downloaded from Hugging Face
+   into checkpoints/terramind/ on the first run, then reused).
 2. For each batch of parcels and each month: standardise S2 and S1, cloudy/missing pixels -> 0.
 3. Run the encoder; take the last layer's tokens on their 4 x 4 grid.
 4. Weighted mean of the patches covering the parcel (parcel mask stored with the chips).
@@ -51,6 +52,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "terramind"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+WEIGHTS_DIR = ROOT / "checkpoints" / "terramind"               # Hugging Face download folder (ibm-esa-geospatial/TerraMind-1.0-base)
 BACKBONE = "terramind_v1_base"
 MODALITIES = ["S2L2A", "S1GRD"]                            # ["S2L2A"] = optical only (ablation)
 BATCH_PARCELS = 16
@@ -204,6 +206,11 @@ def standardise(x, mean, std):
 
 
 def load_encoder():
+    # weights go to checkpoints/<model>/ instead of the hidden Hugging Face cache (set before TerraTorch loads)
+    import os
+    WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    os.environ["HF_HUB_CACHE"] = str(WEIGHTS_DIR)
+    os.environ["HUGGINGFACE_HUB_CACHE"] = str(WEIGHTS_DIR)
     from terratorch.registry import BACKBONE_REGISTRY
     model = BACKBONE_REGISTRY.build(BACKBONE, pretrained=True, modalities=MODALITIES, merge_method="mean")
     return model.eval().to(DEVICE)

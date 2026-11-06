@@ -8,20 +8,24 @@ TerraMind, AgriFM) against a Sentinel-1/2 baseline. Code in `ml_dataset_prep/`, 
 
 Whenever code is changed, something is run, a result comes in, or the method changes, update the matching page(s)
 **before finishing**, then add an entry to the progress log. Never write documentation outside `docs/` (the root
-`README.md` stays a short summary with links to the site; the code folders keep a 5-line pointer README).
+`README.md` stays a short summary with links to the site; the code folders keep a short README).
 
 | What happened | Update |
 | --- | --- |
 | Any change (code, settings, data, docs) | `docs/progress.md`: new entry at the top of *Change log* (`### YYYY-MM-DD (short title)` + bullets: what, why, where); update *Current status* and *Open points* if they change |
-| Dataset scripts (`ml_dataset_prep/`) changed | `docs/dataset/index.md` (script section, settings, outputs, diagrams) |
-| Model scripts (`models_run/`) changed | `docs/models/index.md` |
-| Method or comparison rules changed | `docs/research/decisions.md` (new `D<n>` row + section: before / now / why / where) and `docs/research/protocol.md` if a rule changes; `docs/research/overview.md` if the plain-language story changes |
+| Dataset scripts (`ml_dataset_prep/`) changed | `docs/phase1_data/dataset.md` (script section, settings, outputs, diagrams); after a re-run, `python tools/a6_copy_doc_figures.py` refreshes the figures in `docs/<phase>/figures/` (new figure → add it to that script's list and to the page, numbered, with a caption) |
+| Model scripts (`models_run/`) changed | `docs/phase2_models/frozen_encoders.md`; model inputs, weights or sources → `docs/foundation_models.md` (the only place with per-model tables) |
+| Method or comparison rules changed | `docs/decisions.md` (new `D<n>` row + section: before / now / why / where) and `docs/phase2_models/evaluation.md` if a rule changes; `docs/phase2_models/overview.md` if the plain-language story changes |
 | New experiment | see §2 |
 | Experiment finished | §2 step 5; then `docs/results.md` (status table per RQ) and the current weekly page |
-| Supervisor meeting | `docs/weekly/YYYY-Www.md` from `docs/weekly/_template.md`; add it to `docs/weekly/index.md` and `docs/SUMMARY.md` |
-| Paper read / reference used | `docs/research/literature.md` (what it did, what we take from it); only references checked against the paper |
-| Research question or plan changed | `docs/research/thesis_design.md` (RQ status table, phases) |
+| Review meeting | `docs/weekly/YYYY-Www.md` from `docs/weekly/_template.md`; add it to `docs/weekly/index.md` and `docs/SUMMARY.md` |
+| Paper read / reference used | a row in `docs/references/index.md` (topic table); for an important paper also a summary page from `docs/references/_template.md`, linked in the table and in `docs/SUMMARY.md`; only references checked against the paper |
+| New data source | a row in `docs/data_source/index.md` (provider, content, resolution, use, access link, status) |
+| Milestone reached / plan changes / before a meeting | `docs/progress_report.md` (summary, timeline, milestones, next steps, open points) |
+| Research question or plan changed | `docs/introduction.md` (objectives, RQs, study area) and `docs/results.md` (RQ status) |
 | New page | add it to `docs/SUMMARY.md` (the navigation) |
+| Work on a phase starts or a phase changes | the phase folder `docs/phase<N>_<name>/`: `overview.md` (aim, RQs, components, status) + one page per component; a starter page becomes an overview when work begins; `docs/research_plan.md` (phase table) and `docs/progress_report.md` |
+| New experiment config | set `research_question` and `phase` (see `docs/research_plan.md`) |
 
 ## 2. Experiments
 
@@ -46,8 +50,14 @@ PSE-TAE on overview pages or workflow diagrams until asked).
 
 ## 3. Writing and code style (the author's preferences)
 
-- Concise, plain English; answer first. Tables for comparisons, Mermaid diagrams **in the markdown** for flows (no
+- **Academic, professional register** on every page: impersonal and precise (no "we", "I", chatty phrasing or
+  colloquialisms), full sentences in narrative text, defined terms and units, results stated with their uncertainty.
+  Concise; one fact in one place — link to it instead of repeating a table. Tables for comparisons, Mermaid diagrams **in the markdown** for flows (no
   images of diagrams). Workflow diagrams start at the labelled ground data; no inspection step in them.
+- **Diagram style:** no `classDef` / `class` / `style` lines — one neutral theme for all diagrams comes from
+  `docs/assets/javascripts/mermaid.js`. Keep diagrams compact (short box labels, ≤ 4–5 boxes side by side); put
+  details in a table next to the diagram instead of in the boxes. Text must stay ≥ 12 px: wide left-to-right chains
+  are redrawn top-down automatically, anything wider must be restructured.
 - Only real, verified references (author, year, title, venue, link). Mark anything unverified as TODO.
 - Scripts: independent, **settings at the top, no command-line arguments**, a description at the top (what it does,
   outputs, how to run), short comments. Experiment mode via the `EXPERIMENT` setting + `config.yaml`.

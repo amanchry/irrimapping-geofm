@@ -8,6 +8,7 @@ short_title: Short name   # name in the site's sidebar
 status: planned            # planned | ready | running | done | parked
 listed: true               # false = left out of the overview pages (docs/experiments/index.md, docs/results.md, site menu)
 research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: The one question this experiment answers.
 changes_from: E00 (what is different from the experiment it builds on)
 answer: ""                 # one sentence once the results are in (shown on docs/results.md)

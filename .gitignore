@@ -32,6 +32,7 @@ archive/
 
 # ---------------------------------------------------------------- documents
 *.pdf
+!docs/assets/research_proposal.pdf
 *.pptx
 *.docx
 

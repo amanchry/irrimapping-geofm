@@ -19,7 +19,8 @@ of year) and the location (lat/lon), encoded as in the Clay tutorials.
 
 Steps
 -----
-1. Load the frozen Clay encoder (checkpoints/clay/clay-v1.5.ckpt + metadata.yaml).
+1. Load the frozen Clay encoder (checkpoints/clay/clay-v1.5.ckpt + metadata.yaml; both downloaded
+   automatically on the first run).
 2. For each batch of parcels: take the 10 Sentinel-2 bands Clay knows (blue ... swir22 =
    B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), normalise with Clay's band mean/std; cloudy pixels -> 0
    (= the band mean after normalisation).
@@ -30,10 +31,9 @@ Steps
 
 Install (once, in the condaml environment)
 ------------------------------------------
-    pip install git+https://github.com/Clay-foundation/model.git
-    mkdir -p checkpoints/clay
-    curl -L -o checkpoints/clay/clay-v1.5.ckpt https://huggingface.co/made-with-clay/Clay/resolve/main/v1.5/clay-v1.5.ckpt
-    curl -L -o checkpoints/clay/metadata.yaml https://raw.githubusercontent.com/Clay-foundation/model/main/configs/metadata.yaml
+    pip install --no-deps git+https://github.com/Clay-foundation/model.git
+The weights (CHECKPOINT_URL) and metadata.yaml (METADATA_URL) are downloaded into
+checkpoints/clay/ on the first run.
 
 Output
 ------
@@ -59,6 +59,8 @@ MODEL_NAME = "clay"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
 CHECKPOINT = ROOT / "checkpoints" / "clay" / "clay-v1.5.ckpt"
 METADATA = ROOT / "checkpoints" / "clay" / "metadata.yaml"
+CHECKPOINT_URL = "https://huggingface.co/made-with-clay/Clay/resolve/main/v1.5/clay-v1.5.ckpt"          # if missing
+METADATA_URL = "https://raw.githubusercontent.com/Clay-foundation/model/main/configs/metadata.yaml"     # if missing
 BATCH_PARCELS = 16            # parcels per step (x 12 months = chips per step)
 EMBED_BATCH = 64              # chips per forward pass (lower it if memory runs out)
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -207,8 +209,29 @@ GSD_M = 10.0
 PATCH_PX = 8                  # Clay v1.5 patch size
 
 
+def download(url, path):
+    """Download url to path with a progress line (written to a .part file first, so a broken download is redone)."""
+    import urllib.request
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".part")
+    print(f"Downloading {url}")
+
+    def progress(blocks, block_size, total):
+        if total > 0:
+            print(f"\r  {min(blocks * block_size, total) / 1e6:.0f} / {total / 1e6:.0f} MB", end="", flush=True)
+
+    urllib.request.urlretrieve(url, tmp, reporthook=progress)
+    tmp.rename(path)
+    print(f"\n  saved {path}")
+
+
 def load_encoder():
     """Frozen Clay encoder; mask_ratio=0 and shuffle=False keep every patch, in grid order."""
+    if not CHECKPOINT.exists():
+        download(CHECKPOINT_URL, CHECKPOINT)
+    if not METADATA.exists():
+        download(METADATA_URL, METADATA)
     from claymodel.module import ClayMAEModule
     module = ClayMAEModule.load_from_checkpoint(str(CHECKPOINT), metadata_path=str(METADATA),
                                                 mask_ratio=0.0, shuffle=False)

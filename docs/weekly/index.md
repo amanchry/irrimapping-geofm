@@ -1,6 +1,6 @@
 # Weekly notes
 
-One page per supervisor meeting: what was done, what came out, what needs a decision, and the plan for the next
+One page per review meeting: what was done, what came out, what needs a decision, and the plan for the next
 week. Present the page of the week directly; the links lead to the full reports.
 
 | Week | Meeting | Main topics |

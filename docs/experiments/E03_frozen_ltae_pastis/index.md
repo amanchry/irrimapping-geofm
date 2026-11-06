@@ -16,7 +16,7 @@ Clay, Prithvi and TerraMind give one embedding per month. E01/E02 put the 12 mon
 with PCA (a fixed, unsupervised step). PANGAEA (Marsocci et al. 2024) combines the monthly encodings of
 single-date models with a trained L-TAE and found it better than a linear mapping. E03 tests whether that holds
 for irrigated vs rainfed mapping. The same L-TAE is trained on the monthly S1/S2 features, so the baseline gets
-the same temporal model ([protocol §5](../../research/protocol.md#5-temporal-aggregation-two-pipelines)).
+the same temporal model ([protocol §5](../../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines)).
 
 ## What changes
 | | E02 (PCA pipeline) | E03 (L-TAE pipeline) |

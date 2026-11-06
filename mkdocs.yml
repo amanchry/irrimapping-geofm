@@ -6,21 +6,21 @@
 # Navigation: docs/SUMMARY.md. Rules for keeping the documentation up to date: CLAUDE.md.
 
 site_name: Irrigated Cropland Mapping with GeoFMs
-site_description: Evaluating geospatial foundation models for irrigated cropland mapping in North Africa
+site_description: Evaluating geospatial foundation models for irrigated cropland mapping 
 site_author: Aman Chaudhary
 site_url: https://amanchry.github.io/irrimapping-geofm/
 repo_url: https://github.com/amanchry/irrimapping-geofm
 repo_name: amanchry/irrimapping-geofm
 edit_uri: edit/main/docs/
-copyright: Aman Chaudhary · MSc Geo-Information Science and Earth Observation · ITC, University of Twente
+copyright: Aman Chaudhary
 
 docs_dir: docs
 site_dir: site
 exclude_docs: |
-  *.pdf
   .DS_Store
 not_in_nav: |
   weekly/_template.md
+  references/_template.md
   data_source/flowchat.md
 
 theme:
@@ -51,13 +51,6 @@ theme:
     - content.code.copy
   icon:
     repo: fontawesome/brands/github
-
-extra:
-  social:
-    - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/amanchry/
-    - icon: fontawesome/brands/github
-      link: https://github.com/amanchry
 
 extra_css:
   - assets/stylesheets/extra.css

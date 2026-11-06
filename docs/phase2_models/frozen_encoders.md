@@ -1,8 +1,8 @@
-# Part 2 — Irrigated cropland mapping with geospatial foundation models
+# RQ1 · Frozen encoders: embeddings and classifiers
 
-This folder holds the scripts that answers one question: on Moroccan parcels, does the frozen embedding of a geospatial foundation model (GeoFM) separate **irrigated** from **rainfed** cropland better than a classic Sentinel-1/2 feature baseline, under the same spatial validation?
+This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-1/2 feature baseline under an identical spatial validation design.
 
-It only reads the ML-ready dataset built in [`ml_dataset_prep/`](../dataset/index.md). The rules of the comparison are summarised in the [evaluation protocol](../research/protocol.md); results that go into the thesis are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
+It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/dataset.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -22,69 +22,41 @@ It only reads the ML-ready dataset built in [`ml_dataset_prep/`](../dataset/inde
 
 ## 1. Overview
 
-The complete workflow of this part, from the ML-ready dataset of part 1 to the final comparison. It shows each input that is compared: the feature baseline and four frozen foundation models. For each one it gives the bands, chips, patch size and time handling, then the classifiers with their tuning grids, the validation and the comparison.
+The workflow below leads from the ML-ready dataset of Phase 1 to the final comparison: the five inputs (feature baseline and four frozen foundation models), the classifiers and their tuning grids, the spatial validation and the paired comparison.
 
 ```mermaid
 flowchart TD
-    %% ---------- Part 1 outputs (8,781 parcels · 12 months Sep–Aug · 5 spatial folds)
-    FO["<b>Spatial folds</b><br/>parcels_folds.geojson<br/>fold · 20 km block"]
-    C16["<b>Chips p16</b><br/>chips_p16 · 64×64 px<br/>aligned to 16-px patches"]
-    C8["<b>Chips p8</b><br/>chips_p8 · 64×64 px<br/>aligned to 8-px patches"]
-    FA["<b>Parcel features</b><br/>parcel_features_inner.csv<br/>median of inner pixels"]
+    FA["<b>Parcel features</b><br/>median of inner pixels"]
+    C8["<b>Chips p8</b><br/>64 × 64 px, 8-px patches"]
+    C16["<b>Chips p16</b><br/>64 × 64 px, 16-px patches"]
+    FO["<b>Spatial folds</b><br/>20 km blocks"]
 
-    %% ---------- the five inputs
-    C16 --> B4["<b>AgriFM</b><br/>chips p16<br/>10 S2 bands<br/>all 12 months in one pass<br/>output stride 16 px (160 m)<br/>→ 1 × D (whole year)<br/><i>02d</i>"]
-    C16 --> B3["<b>TerraMind-1.0-base</b><br/>chips p16<br/>S2 12 bands + S1 VV, VH (dB)<br/>modality tokens averaged<br/>16×16-px patches (160 m)<br/>1 month per pass → 12 × 768<br/><i>02c</i>"]
-    C16 --> B2["<b>Prithvi-EO-2.0-300M-TL</b><br/>chips p16<br/>6 bands B2 B3 B4 B8A B11 B12<br/>+ date, lat/lon<br/>16×16-px patches (160 m)<br/>4 months per pass → 12 × 1024<br/><i>02b</i>"]
-    C8 --> B1["<b>Clay v1.5</b><br/>chips p8<br/>10 S2 bands (B2–B8A, B11, B12)<br/>+ wavelengths, 10 m, date, lat/lon<br/>8×8-px patches (80 m)<br/>1 month per pass → 12 × 1024<br/><i>02a</i>"]
-    FA --> B0["<b>S1/S2 baseline</b><br/>parcel features<br/>12 S2 bands + NDVI, NDWI, EVI<br/>+ S1 VV, VH (ascending)<br/>× 12 months = 204 features<br/>cloudy months interpolated<br/><i>03 · INPUT = s1s2</i>"]
+    FA --> B0["<b>S1/S2 baseline</b><br/>204 features"]
+    C8 --> B1["<b>Clay v1.5</b><br/>12 × 1024"]
+    C16 --> B2["<b>Prithvi-EO-2.0</b><br/>12 × 1024"]
+    C16 --> B3["<b>TerraMind</b><br/>12 × 768"]
+    C16 --> B4["<b>AgriFM</b><br/>1 × D"]
 
-    %% ---------- embeddings -> features
-    B1 --> POOL["<b>Frozen encoder → parcel embedding</b><br/>weighted mean of the patches covering the parcel (weight = share inside the parcel)<br/>then: months side by side → fill empty months → standardise → PCA 128 (fitted on training folds only)"]
+    B1 --> POOL["<b>Frozen encoder → parcel embedding</b><br/>patch-share-weighted mean over the parcel<br/>months side by side → standardise → PCA 128<br/>(fitted on the training folds only)"]
     B2 --> POOL
     B3 --> POOL
     B4 --> POOL
 
-    %% ---------- classifiers (03)
-    B0 --> HUB["<b>03 · train_evaluate</b> · same four classifiers on every input"]
+    B0 --> HUB["<b>03 · train and evaluate</b><br/>LogReg (linear probe) · RF · HGB · SVM<br/>same grids for every input"]
     POOL --> HUB
-    HUB --> K4["<b>SVM (RBF)</b><br/>C ∈ {1, 10}<br/>γ ∈ {scale, 0.01}<br/>balanced classes"]
-    HUB --> K3["<b>Gradient boosting</b><br/>(HGB)<br/>learning_rate ∈ {0.05, 0.1}<br/>max_leaf_nodes ∈ {15, 31}<br/>class_weight ∈ {–, balanced}"]
-    HUB --> K2["<b>Random forest</b><br/>500 trees<br/>max_features ∈ {√p, 0.3}<br/>min_samples_leaf ∈ {1, 5}<br/>class_weight ∈ {–, balanced}"]
-    HUB --> K1["<b>Logistic regression</b><br/>(linear probe)<br/>C ∈ {0.01, 0.1, 1, 10}<br/>balanced classes"]
-
-    %% ---------- validation
-    K1 --> CV1["<b>Spatial CV, 5 rounds</b> (PASTIS scheme)<br/>3 folds train · next fold validation → best grid setting (macro-F1) · 1 fold test"]
-    K2 --> CV1
-    K3 --> CV1
-    K4 --> CV1
-    FO -. "folds" .-> CV1
-
-    CV1 --> OOF["<b>Out-of-fold predictions</b> · every parcel predicted once by a model that never saw its 20 km block<br/>5 inputs × 4 classifiers = <b>20 model runs</b>"]
-    OOF --> M["<b>Metrics per run</b> · macro-F1 (headline) · F1 / precision / recall per class · balanced & overall accuracy · PR-AUC · Brier · ECE<br/>95% CI from a block bootstrap (1,000 × whole blocks) · random vs spatial CV · importance by month"]
-    M --> CMP["<b>04 · compare_models</b> · same 8,775 parcels and same bootstrap samples for all runs<br/>Δ macro-F1 vs S1/S2 baseline (same classifier) · 95% CI · Holm-adjusted p"]
-    CMP --> ANS["<b>Result:</b> does a foundation model beat the Sentinel-1/2 baseline?<br/>headline = random forest for all inputs + logistic regression (linear probe) for the foundation models"]
-
-    %% ---------- optional sensitivity runs
-    SENS["<i>Optional sensitivity runs</i><br/>S2-only baseline · TerraMind S2 only<br/>embeddings averaged (mean)"]
-    SENS -.-> B0
-    SENS -.-> B3
-
-    classDef data fill:#FFF4E6,stroke:#B4541A,color:#1C2733
-    classDef base fill:#EDE7DA,stroke:#6B7480,color:#1C2733
-    classDef fm fill:#1F5F8B,color:#fff,stroke:#1F5F8B
-    classDef step fill:#FFFFFF,stroke:#1C2733,color:#1C2733
-    classDef clf fill:#EAF2F8,stroke:#1F5F8B,color:#1C2733
-    classDef out fill:#B4541A,color:#fff,stroke:#B4541A
-    classDef opt fill:#FFFFFF,stroke:#8A919A,color:#6B7480,stroke-dasharray:4 3
-    class FA,C8,C16,PS,FO data
-    class B0 base
-    class B1,B2,B3,B4 fm
-    class POOL,HUB,CV1,OOF,M step
-    class K1,K2,K3,K4 clf
-    class CMP,ANS out
-    class SENS opt
+    HUB --> CV["<b>Spatial CV, 5 rounds</b> (PASTIS scheme)<br/>3 folds train · next fold validation · 1 fold test"]
+    FO -. "folds" .-> CV
+    CV --> OOF["<b>Out-of-fold predictions</b><br/>every parcel predicted once, by a model<br/>that never saw its 20 km block<br/>5 inputs × 4 classifiers = 20 runs"]
+    OOF --> M["<b>Metrics per run</b><br/>macro-F1 (headline) · per-class F1 · balanced accuracy<br/>PR-AUC · Brier · ECE · 95% block-bootstrap CI"]
+    M --> CMP["<b>04 · compare models</b><br/>same parcels, same bootstrap samples<br/>Δ macro-F1 vs baseline · Holm-adjusted p"]
+    CMP --> ANS(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
 ```
+
+Per-model bands, patches and temporal handling: [Foundation models](../foundation_models.md#configuration-in-this-study).
+
+Classifier grids: [evaluation protocol §4](evaluation.md#4-classifiers). Optional sensitivity runs:
+S2-only baseline, TerraMind with S2 only, embeddings averaged over the months instead of PCA.
+
 
 | Step | Script | GPU | What it does |
 | --- | --- | --- | --- |
@@ -106,34 +78,19 @@ The design keeps everything equal except the input:
 
 ```mermaid
 flowchart LR
-    subgraph SAME["Kept identical for every input"]
-        P1["Same parcels<br/>(intersection of all runs)"]
-        P2["Same pixels<br/>(one tile store)"]
-        P3["Same spatial folds<br/>(20 km blocks)"]
-        P4["Same 4 classifiers<br/>and grids"]
-        P5["Same metrics and<br/>bootstrap samples"]
-    end
-    SAME --> D["Only the input differs:<br/>S1/S2 features vs<br/>Clay · Prithvi · TerraMind · AgriFM"]
-    D --> C["Paired difference in macro-F1<br/>with 95% block-bootstrap CI"]
+    SAME["<b>Kept identical for every input</b><br/>same parcels (intersection of all runs)<br/>same pixels (one tile store)<br/>same spatial folds (20 km blocks)<br/>same 4 classifiers and grids<br/>same metrics and bootstrap samples"] --> D["<b>Only the input differs</b><br/>S1/S2 features vs<br/>Clay · Prithvi · TerraMind · AgriFM"]
+    D --> C["<b>Paired difference</b><br/>in macro-F1 with<br/>95% block-bootstrap CI"]
 ```
 
-The foundation models are used **frozen**, as feature extractors (linear-probe-style evaluation). They are not fine-tuned. This tests what the pretrained representation already contains, and it keeps the comparison cheap and fair.
+The foundation models are used **frozen**, as fixed feature extractors, following the linear-probing protocol. No fine-tuning is performed at this stage; the evaluation therefore measures the information contained in the pretrained representations, at low computational cost and under identical conditions for all inputs.
 
 ---
 
 ## 3. Inputs compared
 
-| Input | Source | Sensors | Patch / pixel unit | Time handling | Vector per parcel |
-| --- | --- | --- | --- | --- | --- |
-| **S1/S2 baseline** | View A, inner pixels | S2 (12 bands + NDVI, NDWI, EVI) + S1 VV, VH (one orbit) | parcel median | 12 months side by side | 17 variables × 12 months = 204 features |
-| **Clay v1.5** | `chips_p8` | S2 (10 bands) | 8 × 8 px (80 m) | each month separately | 12 × 1024 |
-| **Prithvi-EO-2.0-300M-TL** | `chips_p16` | S2 (6 HLS bands) | 16 × 16 px (160 m) | 4 months per pass, 3 passes | 12 × 1024 |
-| **TerraMind-1.0-base** | `chips_p16` | S2 (12 bands) + S1 VV, VH | 16 × 16 px (160 m) | each month separately | 12 × 768 |
-| **AgriFM** | `chips_p16` | S2 (10 bands) | output stride 16 px (160 m) | whole year in one pass | 1 × D |
-
-**Only TerraMind uses Sentinel-1**, because it is the only one of the four models pretrained on radar. Clay, Prithvi and AgriFM receive optical bands only. To separate a "radar effect" from a "foundation-model effect", two sensitivity runs are possible:
-- an **S2-only baseline** (`S1S2_VARIABLES = "s2"` in script 03);
-- **TerraMind with optical only** (`MODALITIES = ["S2L2A"]` in 02c).
+The five inputs (S1/S2 baseline and four frozen GeoFMs), their bands, patch sizes and temporal handling, and the
+sensitivity runs that isolate the Sentinel-1 contribution are specified in
+[Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
 
 ---
 
@@ -142,15 +99,9 @@ The foundation models are used **frozen**, as feature extractors (linear-probe-s
 **Purpose:** find problems in the data before they show up as strange model results. It reads the dataset only and changes nothing.
 
 ```mermaid
-flowchart TD
-    IN["parcels.csv · tiles.parquet · parcel_overlaps.csv<br/>parcel_features_*.csv · chips_p*/index.csv · views_info.json"] --> S1["1 · Inventory<br/>parcels per class / season / fold<br/>and how many reach each view"]
-    IN --> S2["2 · Label QA<br/>overlaps · tiny parcels<br/>parcels with no inner pixel"]
-    IN --> S3["3 · Observation QA<br/>clear S2 obs and S1 scenes per month<br/>% parcel-months with no clear S2"]
-    IN --> S4["4 · Patch purity<br/>aligned vs centred, p8 and p16"]
-    IN --> S5["5 · Seasonal profiles<br/>NDVI · NDWI · VH per class<br/>median + IQR"]
-    IN --> S6["6 · Example chips<br/>true colour + NDVI, 12 months<br/>random parcels per class"]
-    IN --> S7["7 · Legacy agreement<br/>NDVI per month vs old Earth Engine table<br/>(if present)"]
-    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> OUT["outputs/study/01_inspection/"]
+flowchart LR
+    IN["<b>Dataset files</b><br/>parcels · tiles · overlaps<br/>parcel features · chips · views_info"] --> S["<b>Seven checks</b><br/>1 · inventory per class, season, fold<br/>2 · label QA: overlaps, tiny parcels<br/>3 · observations per month (S2, S1)<br/>4 · patch purity, aligned vs centred<br/>5 · seasonal profiles per class<br/>6 · example chips, 12 months<br/>7 · agreement with the old NDVI table"]
+    S --> OUT["outputs/study/<br/>01_inspection/"]
 ```
 
 What to look for:
@@ -168,6 +119,8 @@ What to look for:
 - `seasonal_profiles.png`
 - `examples_irrigated.png`, `examples_rainfed.png`
 - `legacy_agreement.csv`
+
+The resulting figures are shown in [Dataset preparation §7.6](../phase1_data/dataset.md#76-dataset-inspection).
 
 For a closer look in QGIS, `tools/a3_export_chips_geotiff.py` writes single chips as georeferenced GeoTIFFs to `01_inspection/chips_geotiff/`.
 
@@ -192,62 +145,25 @@ flowchart TD
     H --> O
 ```
 
-**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../dataset/index.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
+**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../phase1_data/dataset.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
 
 **Cloudy pixels.** NODATA pixels are set to 0 after normalisation, which equals the band mean. A month with no clear pixel at all is flagged `valid = False`, and script 03 fills it with the training median.
 
 **Resume.** Embeddings are saved in batches (`_parts_<model>_agyear_tiles/`) and merged at the end. A stopped run continues from the last batch.
 
-### 5.1 `02a_embed_clay.py` — Clay v1.5
+### 5.1 Scripts per model
 
-| | |
-| --- | --- |
-| Model | Clay v1.5, a masked-autoencoder ViT trained on Sentinel-2, Landsat, Sentinel-1, NAIP and others |
-| Bands | B2 B3 B4 B5 B6 B7 B8 B8A B11 B12 (blue … swir22), Clay's band mean / std from `metadata.yaml` |
-| Extra inputs | band wavelengths, pixel size (10 m), date (week of year and hour, sine/cosine; composites set to mid-month), location (lat/lon, sine/cosine) |
-| Patch | 8 × 8 px = 80 m, so a 64 px chip gives an 8 × 8 grid |
-| Time | one date per forward pass, so the 12 months are embedded separately |
-| Output | `[N, 12, 1024]` |
-| Weights | `checkpoints/clay/clay-v1.5.ckpt` |
+| Script | Model | Output |
+| --- | --- | --- |
+| `02a_embed_clay.py` | Clay v1.5 | `[N, 12, 1024]` |
+| `02b_embed_prithvi.py` | Prithvi-EO-2.0-300M-TL | `[N, 12, 1024]` |
+| `02c_embed_terramind.py` | TerraMind-1.0-base | `[N, 12, 768]` |
+| `02d_embed_agrifm.py` | AgriFM | `[N, 1, D]` |
 
-### 5.2 `02b_embed_prithvi.py` — Prithvi-EO-2.0-300M-TL
+Model-specific bands, normalisation, auxiliary inputs (date, location, wavelengths) and known limitations are
+described in [Foundation models · Model notes](../foundation_models.md#model-notes).
 
-| | |
-| --- | --- |
-| Model | Prithvi-EO-2.0-300M with temporal and location embeddings (IBM & NASA), pretrained on HLS time series |
-| Bands | B2 B3 B4 B8A B11 B12 (HLS Blue, Green, Red, Narrow NIR, SWIR 1, SWIR 2), Prithvi's mean / std |
-| Extra inputs | date (year, day of year) and location (lat, lon), `USE_COORDS = True` |
-| Patch | 16 × 16 px; position encoding rescaled to 64 × 64 |
-| Time | `FRAMES_PER_PASS = 4`, as in pretraining: Sep–Dec, Jan–Apr, May–Aug. Each frame keeps its own tokens, so there is still one vector per month. |
-| Pixel size | pretrained on 30 m HLS; used here on 10 m Sentinel-2 (patch = 160 m, closer to parcel size than 480 m) |
-| Output | `[N, 12, 1024]` |
-| Loaded via | TerraTorch (`prithvi_eo_v2_300_tl`), weights from Hugging Face |
-
-### 5.3 `02c_embed_terramind.py` — TerraMind-1.0-base
-
-| | |
-| --- | --- |
-| Model | TerraMind-1.0-base (IBM & ESA), a multimodal any-to-any transformer pretrained on nine modalities |
-| Inputs | `S2L2A`: B1 … B12 (12 bands); `S1GRD`: VV, VH in dB. Each is standardised with TerraMind's pretraining mean / std. |
-| Fusion | tokens of the two modalities averaged (`merge_method = "mean"`) |
-| Patch | 16 × 16 px, so a 4 × 4 grid |
-| Time | one date per pass, 12 months separately |
-| Output | `[N, 12, 768]` |
-| Ablation | `MODALITIES = ["S2L2A"]` gives optical only |
-
-### 5.4 `02d_embed_agrifm.py` — AgriFM
-
-| | |
-| --- | --- |
-| Model | AgriFM, a modified Video Swin Transformer pretrained on MODIS, Landsat and Sentinel-2 time series for agriculture |
-| Bands | B2 B3 B4 B5 B6 B7 B8 B8A B11 B12, normalised with the repository's `cropland_mapping.py` config |
-| Time | the **whole 12-month stack in one pass**. Time is compressed inside the network, so the output is one vector per parcel. |
-| Patch | (4 time steps, 2 × 2 px) at input; final feature map stride 16 px, so a 4 × 4 grid |
-| Output | `[N, 1, D]`, steps = `["year"]` |
-| Setup | code cloned to `external/AgriFM`, weights to `checkpoints/agrifm/AgriFM.pth` (automatic); only the encoder file is used, with mmengine registries |
-| **Check** | the config's normalisation mean (e.g. 4179 for blue) is far above typical L2A values (~1100). Confirm the expected pixel scale with the authors before reporting. |
-
-### 5.5 Embedding file format
+### 5.2 Embedding file format
 
 ```
 outputs/study/02_embeddings/<model>_agyear_tiles.npz
@@ -289,12 +205,15 @@ flowchart TD
 
 ### 6.2 Classifiers and hyperparameter grids
 
-| Name | Classifier | Grid (chosen on the validation fold) | Notes |
-| --- | --- | --- | --- |
-| `logreg` | Logistic regression | C ∈ {0.01, 0.1, 1, 10} | `class_weight = "balanced"`, standardised. On embeddings this is the standard **linear probe**. |
-| `rf` | Random forest | max_features ∈ {√p, 0.3}; min_samples_leaf ∈ {1, 5}; class_weight ∈ {none, balanced_subsample} | 500 trees |
-| `hgb` | Histogram gradient boosting | learning_rate ∈ {0.05, 0.1}; max_leaf_nodes ∈ {15, 31}; class_weight ∈ {none, balanced} | |
-| `svm` | RBF support vector machine | C ∈ {1, 10}; γ ∈ {scale, 0.01} | `class_weight = "balanced"`, standardised |
+| Name | Classifier | Principle | Grid (chosen on the validation fold) | Fixed settings |
+| --- | --- | --- | --- | --- |
+| `logreg` | Logistic regression | one linear decision boundary; on frozen embeddings the standard **linear probe** (Alain & Bengio, 2016), which measures the information contained in the features | C ∈ {0.01, 0.1, 1, 10} | L2 penalty, lbfgs, `max_iter = 5000`, `class_weight = "balanced"`, standardised inputs |
+| `rf` | Random forest (Breiman, 2001) | vote of many decision trees, each grown on a bootstrap sample and random feature subsets; the usual classifier in irrigation mapping | max_features ∈ {√p, 0.3}; min_samples_leaf ∈ {1, 5}; class_weight ∈ {none, balanced_subsample} | 500 trees, no depth limit, seed 42 |
+| `hgb` | Histogram gradient boosting | small trees added sequentially, each correcting the previous errors; features binned into histograms | learning_rate ∈ {0.05, 0.1}; max_leaf_nodes ∈ {15, 31}; class_weight ∈ {none, balanced} | 300 boosting rounds; built-in early stopping off, because it would use a random rather than a spatial validation split |
+| `svm` | RBF support vector machine | maximum-margin boundary, made non-linear by the RBF kernel; used for irrigation mapping with Sentinel-1/2 (Gao et al., 2018; Elwan et al., 2022) | C ∈ {1, 10}; γ ∈ {scale, 0.01} | `class_weight = "balanced"`, standardised inputs; no probability calibration (the decision score is used for PR-AUC) |
+
+The settings selected in each round are reported per experiment
+([E01](../experiments/E01_frozen_pca_nested/report.md#selected-hyperparameters)).
 
 The selection score is macro-F1, the mean of the irrigated F1 and rainfed F1. It treats the 14% rainfed class as equally important.
 
@@ -415,7 +334,7 @@ outputs/study/
 ├── 03_models/                        development runs only (EXPERIMENT = None)
 └── 04_comparison/                    development runs only
 
-experiments/<EXPERIMENT>/results/     runs that go into the thesis (see the Experiments pages)
+experiments/<EXPERIMENT>/results/     runs that are reported (see the Experiments pages)
 ├── s1s2-all_agyear_tiles-inner-asc/
 ├── clay_agyear_tiles_concat/
 ├── …                                 one folder per run

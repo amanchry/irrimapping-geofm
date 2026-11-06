@@ -147,6 +147,74 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 <!-- AUTO:RESULTS:END -->
 
+## Additional analyses
+
+Computed in the same runs (`cv_random_vs_spatial.csv`, `importance.csv` and `selected_hyperparameters.csv` of each
+run).
+
+### Random versus spatial cross-validation
+
+The same hyperparameters were re-evaluated with a stratified random 5-fold split that ignores the spatial blocks.
+
+| Input | Classifier | Random CV, mean macro-F1 | Spatial CV, mean macro-F1 | Spatial CV, worst fold |
+| --- | --- | ---: | ---: | ---: |
+| S1/S2 baseline | LogReg | 0.904 | 0.895 | 0.847 |
+| S1/S2 baseline | RF | 0.928 | 0.893 | 0.804 |
+| S1/S2 baseline | HGB | 0.946 | 0.894 | 0.734 |
+| S1/S2 baseline | SVM | 0.926 | 0.911 | 0.830 |
+| Clay v1.5 | SVM | 0.936 | 0.911 | 0.844 |
+| Prithvi-EO-2.0 | SVM | 0.916 | 0.906 | 0.831 |
+| TerraMind | SVM | 0.933 | 0.903 | 0.802 |
+| AgriFM | SVM | 0.913 | 0.863 | 0.703 |
+
+Random cross-validation is 1–5 points more optimistic for every input, and its folds lie within about one point of
+each other (SD ≤ 0.014), whereas the spatial folds differ by up to 0.24 (SD 0.04–0.10). Random validation thus both
+overstates accuracy and conceals the dependence of accuracy on the region.
+
+<figure markdown="span">
+  ![Random vs spatial CV, S1/S2 baseline](figures/cv_random_vs_spatial_baseline.png)
+  <figcaption><b>Figure E01.1.</b> Macro-F1 (left) and rainfed F1 (right) per fold for the S1/S2 baseline under random (grey) and spatial (blue) 5-fold cross-validation; bars mark the mean.</figcaption>
+</figure>
+
+### What the baseline relies on
+
+Grouped permutation importance of the random forest, computed on the test fold of each outer round: all features of
+one variable (or of one month) are permuted together and the drop in macro-F1 is recorded.
+
+| Variable | Drop in macro-F1 | | Month | Drop in macro-F1 |
+| --- | ---: | --- | --- | ---: |
+| NDWI | 0.262 | | February | 0.141 |
+| B12 (SWIR 2) | 0.066 | | July | 0.123 |
+| NDVI | 0.046 | | August | 0.113 |
+| EVI | 0.026 | | June | 0.091 |
+| B11 (SWIR 1) | 0.013 | | October | 0.089 |
+
+Water-sensitive variables (NDWI, SWIR) dominate, and the most informative months are the peak of the rainfed season
+(February) and the dry summer (June–August), when only irrigated fields remain green. This supports the use of the
+full agricultural year. For the foundation-model embeddings, permuting a single month changes macro-F1 by at most
+0.011 (Clay and Prithvi: February and May; TerraMind: July–September), i.e. the information is spread over the months.
+
+<figure markdown="span">
+  ![Permutation importance, S1/S2 baseline](figures/importance_baseline.png)
+  <figcaption><b>Figure E01.2.</b> Grouped permutation importance of the S1/S2 baseline (random forest) by variable (left) and by month (right); mean ± SD over the five outer folds.</figcaption>
+</figure>
+
+### Selected hyperparameters
+
+Setting chosen most often over the five outer rounds (count in brackets).
+
+| Input | LogReg | RF | HGB | SVM |
+| --- | --- | --- | --- | --- |
+| S1/S2 baseline | C = 1 (2/5) | √p · leaf 5 · balanced (5/5) | lr 0.1 · 15 leaves · balanced (2/5) | C = 1 · γ = scale (3/5) |
+| Clay v1.5 | C = 0.01 (4/5) | 0.3 · leaf 5 · balanced (5/5) | lr 0.05 · 15 leaves · balanced (3/5) | C = 1 · γ = scale (5/5) |
+| Prithvi-EO-2.0 | C = 0.01 (4/5) | 0.3 · leaf 5 · balanced (5/5) | lr 0.1 · 15 leaves · balanced (2/5) | C = 1 · γ = scale (5/5) |
+| TerraMind | C = 0.01 (5/5) | 0.3 · leaf 5 · balanced (5/5) | lr 0.05 · 15 leaves · balanced (4/5) | C = 1 · γ = scale (5/5) |
+| AgriFM | C = 0.01 (5/5) | 0.3 · leaf 5 · balanced (4/5) | lr 0.05 · 15 leaves · balanced (2/5) | C = 1 · γ = scale (5/5) |
+
+The embeddings require strong regularisation of the linear probe (C = 0.01), whereas the baseline features prefer
+weaker regularisation. Class weighting and small trees are selected almost everywhere, and the SVM keeps its default
+setting for every foundation model.
+
 ## Interpretation
 For RQ1, the frozen foundation models reach the accuracy of a conventional Sentinel-1/2 classifier but do not exceed
 it on average. This matches PANGAEA (Marsocci et al. 2024), where GeoFMs do not consistently beat supervised

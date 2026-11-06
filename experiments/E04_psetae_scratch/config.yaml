@@ -5,6 +5,7 @@ short_title: PSE-TAE from scratch   # name in the site's sidebar
 status: parked
 listed: false              # not on the overview pages yet (next phase)
 research_question: RQ1 (extra baseline)
+phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?
 changes_from: "E01/E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel"
 answer: ""

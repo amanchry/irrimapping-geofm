@@ -5,6 +5,7 @@ short_title: L-TAE pipeline · PASTIS   # name in the site's sidebar
 status: planned
 listed: true
 research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly S1/S2 features?
 changes_from: "E02: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA"
 answer: ""

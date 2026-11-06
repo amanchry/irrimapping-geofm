@@ -29,7 +29,8 @@ Choices made here (state them in the thesis)
 
 Steps
 -----
-1. Load the frozen encoder through TerraTorch (downloads the weights from Hugging Face once).
+1. Load the frozen encoder through TerraTorch (weights downloaded from Hugging Face
+   into checkpoints/prithvi/ on the first run, then reused).
 2. For each batch of parcels: take bands B2 B3 B4 B8A B11 B12, normalise with Prithvi's mean/std,
    cloudy pixels -> 0 (= band mean).
 3. Run the encoder on each group of FRAMES_PER_PASS months with their dates and the parcel location.
@@ -61,6 +62,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "prithvi"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+WEIGHTS_DIR = ROOT / "checkpoints" / "prithvi"               # Hugging Face download folder (ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL)
 BACKBONE = "prithvi_eo_v2_300_tl"                          # TerraTorch name of Prithvi-EO-2.0-300M-TL
 FRAMES_PER_PASS = 4                                        # months per forward pass (pretraining used 4)
 USE_COORDS = True                                          # give date and location to the model
@@ -206,6 +208,11 @@ PATCH_PX = 16
 
 def load_encoder():
     """Frozen Prithvi-EO-2.0 encoder built for FRAMES_PER_PASS frames (weights from Hugging Face)."""
+    # weights go to checkpoints/<model>/ instead of the hidden Hugging Face cache (set before TerraTorch loads)
+    import os
+    WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    os.environ["HF_HUB_CACHE"] = str(WEIGHTS_DIR)
+    os.environ["HUGGINGFACE_HUB_CACHE"] = str(WEIGHTS_DIR)
     from terratorch.registry import BACKBONE_REGISTRY
     model = BACKBONE_REGISTRY.build(BACKBONE, pretrained=True, num_frames=FRAMES_PER_PASS)
     return model.eval().to(DEVICE)

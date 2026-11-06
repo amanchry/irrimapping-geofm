@@ -1,17 +1,18 @@
-# 5 · Results
+# Results
 
-The finished experiments, newest last, each with its answer and its main figure. The full tables, the per-fold
-results and the caveats are in each experiment's report. The list of all experiments, including those still to
+This page summarises the completed experiments in chronological order, each with its principal finding and main
+figure. Full tables, per-fold results and caveats are given in the individual experiment reports. The list of all experiments, including those still to
 run, is on the [Experiments](experiments/index.md) page.
 
 ## Where each research question stands
 
-| RQ | Question (short) | Current answer | Evidence |
-| --- | --- | --- | --- |
-| RQ1 | Do frozen GeoFMs beat a Sentinel-1/2 classifier? | **Not on average.** The best GeoFMs equal the baseline (macro-F1 ≈ 0.91); Clay and Prithvi hold up better in the hardest region. To be confirmed with the final validation design (E02) and the L-TAE pipeline (E03). | [E01](experiments/E01_frozen_pca_nested/report.md) |
-| RQ2 | Does LoRA fine-tuning beat the frozen encoders? | not started | – |
-| RQ3 | Are the annual maps consistent across years? | not started | – |
-| RQ4 | How far does the model transfer? | not started | – |
+| Phase | RQ | Question (short) | Current answer | Evidence |
+| --- | --- | --- | --- | --- |
+| 2 | RQ1 | Do frozen GeoFMs beat a Sentinel-1/2 classifier? | **Not on average.** The best GeoFMs equal the baseline (macro-F1 ≈ 0.91); Clay and Prithvi hold up better in the hardest region. To be confirmed with the final validation design (E02) and the L-TAE pipeline (E03). | [E01](experiments/E01_frozen_pca_nested/report.md) |
+| 2 | RQ2 | Does LoRA fine-tuning improve on the frozen encoders? | not started | – |
+| 3, 5 | RQ3 | Is the best model consistent across years, and do the annual maps follow national statistics? | not started | – |
+| 3, 5 | RQ4 | How far does accuracy degrade in another region? | not started | – |
+| 4 | RQ5 | Does fusing several models improve on the best single model? | optional, not started | – |
 
 ## Finished experiments
 

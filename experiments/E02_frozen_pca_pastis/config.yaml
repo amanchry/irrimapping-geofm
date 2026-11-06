@@ -5,6 +5,7 @@ short_title: PCA pipeline · PASTIS   # name in the site's sidebar
 status: ready
 listed: true
 research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?
 changes_from: "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)"
 answer: ""                 # filled in from REPORT.md

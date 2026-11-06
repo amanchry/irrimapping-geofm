@@ -1,8 +1,8 @@
 # Experiments
 
-Every result in the thesis comes from an **experiment**: one folder that says what was asked, which settings were
-used, and what came out. An experiment can be run again at any time from its config file and gives the same
-result.
+Every reported result is produced by an **experiment**: a self-contained folder that records the research question,
+the complete configuration and the outputs. Each experiment can be re-run from its configuration file and
+reproduces the reported result.
 
 ## Experiment list
 
@@ -59,13 +59,6 @@ flowchart LR
     REP --> MD["docs/experiments/&lt;name&gt;/report.md<br/>experiment list · results page<br/>site menu"]
     EMB[("outputs/study/02_embeddings<br/>shared by all experiments")] -.-> S1
     EMB -.-> S2
-
-    classDef cfg fill:#FFF4E6,stroke:#B4541A,color:#1C2733
-    classDef step fill:#1F5F8B,color:#fff,stroke:#1F5F8B
-    classDef out fill:#F4F1EA,stroke:#8A919A,color:#1C2733
-    class CFG cfg
-    class RUN,S1,S2,C,REP step
-    class R,MD,EMB out
 ```
 
 - The **scripts in `models_run/` are not edited for an experiment.** Each has its settings at the top; in
@@ -80,8 +73,9 @@ flowchart LR
 
 ## Two pipelines for the monthly embeddings
 
-The foundation models give one embedding per month (Clay, Prithvi, TerraMind) or one per year (AgriFM). How the
-months are combined is the one step that differs between the two pipelines; everything before and after is shared.
+The foundation models produce one embedding per month (Clay, Prithvi-EO-2.0, TerraMind) or one per agricultural year
+(AgriFM). The two pipelines differ only in how the monthly embeddings are aggregated; all preceding and subsequent
+steps are shared.
 
 ```mermaid
 flowchart LR
@@ -92,18 +86,11 @@ flowchart LR
     K --> O["out-of-fold predictions<br/>same format"]
     H --> O
     O --> CMP["04_compare_models<br/>same parcels, same bootstrap draws"]
-
-    classDef a fill:#1F5F8B,color:#fff,stroke:#1F5F8B
-    classDef b fill:#B4541A,color:#fff,stroke:#B4541A
-    classDef n fill:#F4F1EA,stroke:#8A919A,color:#1C2733
-    class P1,K a
-    class P2,H b
-    class E,O,CMP n
 ```
 
 Because both pipelines write the same `oof_predictions.csv`, the comparison and the report need no change. E03 also
 lists the E02 runs under `compare: EXTRA_RUNS`, so PCA and L-TAE are compared on the same parcels and the same
-bootstrap draws. Details: [evaluation protocol §5](../research/protocol.md#5-temporal-aggregation-two-pipelines).
+bootstrap draws. Details: [evaluation protocol §5](../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
 
 ## Start a new experiment
 

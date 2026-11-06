@@ -1,9 +1,8 @@
-# Part 1 — ML-ready dataset of irrigated and rainfed parcels in Morocco
+# ML-ready dataset (Morocco)
 
-This folder builds the **training dataset**: labelled parcels, spatial train / validation / test
-folds, and one shared store of monthly Sentinel-1/2 imagery with label rasters, plus ready-made
-views for any kind of model. The dataset is independent of the study in `models_run/` and can be
-published on its own.
+This page describes the construction of the **machine-learning-ready dataset**: labelled parcels, spatial
+train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and derived
+views for the different model families.
 
 **Contents**
 
@@ -45,23 +44,16 @@ flowchart TD
     S04 --> VB["B · pixel sets<br/>(PSE-TAE)"]
     S04 --> VC["C · patch-aligned chips<br/>chips_p8 · chips_p16<br/>(foundation models)"]
     S03 --> VD["D · full tiles<br/>(segmentation, U-TAE)"]
-
-    classDef script fill:#1F5F8B,color:#fff,stroke:#1F5F8B
-    classDef view fill:#FFF4E6,stroke:#B4541A,color:#1C2733
-    classDef season fill:#EAF2F8,stroke:#1F5F8B,color:#1C2733
-    class S01,S02,S03,S04 script
-    class VA,VB,VC,VD view
-    class SPLIT season
 ```
 
-| Step | Script | Earth Engine | What comes out |
-| --- | --- | --- | --- |
-| 1 | `01_prepare_labels.py` | no | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
-| 2 | `02_make_spatial_folds.py` | no | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
-| 3 | `03_build_tiles.py` | **yes** | the tile store: monthly images + label rasters + QA |
-| 4 | `04_make_views.py` | no | model inputs A–C (D = the tiles themselves) |
+| Step | Script |  What comes out |
+| --- | --- | --- | 
+| 1 | `01_prepare_labels.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
+| 2 | `02_make_spatial_folds.py` | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
+| 3 | `03_build_tiles.py` | the tile store: monthly images + label rasters + QA |
+| 4 | `04_make_views.py` | model inputs A–C (D = the tiles themselves) |
 
-Steps 1–2 take minutes. Step 3 takes a few hours, and it picks up where it stopped if restarted. Step 4 runs locally.
+Steps 1–2 complete within minutes. Step 3 requires several hours and resumes from the last completed tile when restarted. Step 4 runs locally.
 
 ---
 
@@ -136,6 +128,19 @@ flowchart LR
 
 Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed parcels are 14% of the total, and nearly all of them (1,122 of 1,196) are in Doukkala. The classes are unbalanced, and the class is partly tied to the region, which is why section 5 matters.
 
+<figure markdown="span">
+  ![Map of irrigated and rainfed parcels](figures/parcels_map.png)
+  <figcaption><b>Figure 1.1.</b> Spatial distribution of the 8,781 labelled cropland parcels. Rainfed parcels are concentrated in Doukkala on the Atlantic coast.</figcaption>
+</figure>
+<figure markdown="span">
+  ![Class balance and parcel size](figures/class_balance_and_size.png)
+  <figcaption><b>Figure 1.2.</b> Class balance (left; 86.4% irrigated, 13.6% rainfed) and parcel-size distribution per class (right, logarithmic axis).</figcaption>
+</figure>
+<figure markdown="span">
+  ![Parcels by survey month](figures/survey_timing.png)
+  <figcaption><b>Figure 1.3.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
+</figure>
+
 **Outputs** (`outputs/dataset/01_labels/`):
 - `parcels_labelled.geojson`
 - `summary.csv`
@@ -151,15 +156,20 @@ Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed par
 
 ### 5.1 Why not a random split
 
-Surveyed parcels lie a few hundred metres apart, and neighbours usually share a class. With a random 5-fold split, 72% of test parcels have a training parcel within 250 m, and 98% within 1 km. The score then measures how well the model recognises nearby fields, not how well it maps new areas. This problem is described by Roberts et al. (2017), Ploton et al. (2020) and Kattenborn et al. (2022).
+Surveyed parcels are typically a few hundred metres apart, and neighbouring parcels usually share a class. Under a random 5-fold split, 72% of test parcels have a training parcel within 250 m and 98% within 1 km. Accuracy then reflects the recognition of nearby parcels rather than the ability to map new areas, a bias documented by Roberts et al. (2017), Ploton et al. (2020) and Kattenborn et al. (2022).
 
 ### 5.2 Choosing the block size
 
-How far does spatial dependence reach? Take pairs of parcels at a given distance and count how often they share a class. Compare that with the **random-placement level**: the probability that two parcels drawn at random share a class, 0.86² + 0.14² ≈ **76%**. Once the curve falls to that level, distance no longer tells you anything about the class.
+The range of spatial dependence is estimated from the proportion of parcel pairs that share a class as a function of their distance. This proportion is compared with the **random-placement level**, i.e. the probability that two randomly drawn parcels share a class, 0.86² + 0.14² ≈ **76%**. Beyond the distance at which the curve reaches this level, proximity carries no information about the class.
 
 | Distance between parcels | 0.2 km | 1 km | 5 km | 10 km | 15 km | 20 km | 30 km | 50 km |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Same class (%) | 96.1 | 95.2 | 92.0 | 91.0 | 86.7 | 81.4 | 79.7 | 73.7 |
+
+<figure markdown="span">
+  ![Class similarity by distance](figures/class_similarity_by_distance.png)
+  <figcaption><b>Figure 1.4.</b> Proportion of parcel pairs sharing a class as a function of distance. The proportion approaches the random-placement level (76%, dashed) at about 20–30 km, which motivates the 20 km block size (dotted).</figcaption>
+</figure>
 
 Candidate block sizes, each with 5 greedy-balanced folds:
 
@@ -210,6 +220,19 @@ Leakage, all folds averaged:
 | --- | ---: | ---: | ---: | ---: | ---: |
 | random split | 24.1% | 71.7% | 90.1% | 97.7% | 99.7% |
 | 20 km spatial split | 0.4% | 1.8% | 3.8% | 8.1% | 38.0% |
+
+<figure markdown="span">
+  ![Spatial folds and parcels per fold](figures/spatial_folds.png)
+  <figcaption><b>Figure 1.5.</b> Fold assignment of the parcels (left) and class counts per fold (right). Each fold contains about 1,530 irrigated and 240 rainfed parcels.</figcaption>
+</figure>
+<figure markdown="span">
+  ![Spatial blocks and folds](figures/spatial_folds_blocks.png)
+  <figcaption><b>Figure 1.6.</b> The 20 km blocks and their folds, with enlargements of Doukkala (A) and Tadla (B). Whole blocks are assigned to a single fold.</figcaption>
+</figure>
+<figure markdown="span">
+  ![Train-test distance, random vs spatial split](figures/train_test_distance.png)
+  <figcaption><b>Figure 1.7.</b> Distance from each test parcel to the nearest training parcel under a random split (median 154 m) and under the 20 km spatial split (median 6.8 km).</figcaption>
+</figure>
 
 ### 5.4 How the folds give train, validation and test
 
@@ -268,23 +291,16 @@ The survey ran from December 2023 to January 2025, so the parcels belong to two 
 
 ```mermaid
 flowchart TD
-    A["Survey date of each parcel"] --> B["ag_season = agricultural year<br/>(1 Sep – 31 Aug)<br/>Sep–Dec of Y → Y/Y+1 · Jan–Aug of Y → Y−1/Y"]
-    B --> E["2023/24 · 6,887 parcels"]
-    B --> F["2024/25 · 1,894 parcels"]
-
-    E --> P1["Tile plan 2023/24<br/>tile_id = 2023-24_ix_iy"]
-    F --> P2["Tile plan 2024/25<br/>tile_id = 2024-25_ix_iy"]
-
-    P1 --> L1["Label rasters: burn ONLY<br/>2023/24 parcels"]
-    P2 --> L2["Label rasters: burn ONLY<br/>2024/25 parcels"]
-
-    P1 --> G1["Earth Engine image 2023/24<br/>m01 = Sep 2023 … m12 = Aug 2024<br/>region = 2023/24 tiles + 2 km"]
-    P2 --> G2["Earth Engine image 2024/25<br/>m01 = Sep 2024 … m12 = Aug 2025<br/>region = 2024/25 tiles + 2 km"]
-
-    L1 & G1 --> T1["2,183 tiles (2023/24)"]
-    L2 & G2 --> T2["804 tiles (2024/25)"]
-    T1 & T2 --> S["One folder tiles/, one grid (same ix, iy),<br/>season in every tile name"]
-    S --> V["04_make_views.py reads each parcel<br/>from the tiles of ITS season"]
+    A["Survey date of each parcel"] --> B["<b>ag_season</b> = agricultural year (1 Sep – 31 Aug)<br/>Sep–Dec of Y → Y/Y+1 · Jan–Aug of Y → Y−1/Y"]
+    B --> P1["<b>2023/24</b> · 6,887 parcels<br/>tile plan: tile_id = 2023-24_ix_iy"]
+    B --> P2["<b>2024/25</b> · 1,894 parcels<br/>tile plan: tile_id = 2024-25_ix_iy"]
+    P1 --> X1["Label rasters: only 2023/24 parcels<br/>Earth Engine image Sep 2023 – Aug 2024<br/>(2023/24 tiles + 2 km)"]
+    P2 --> X2["Label rasters: only 2024/25 parcels<br/>Earth Engine image Sep 2024 – Aug 2025<br/>(2024/25 tiles + 2 km)"]
+    X1 --> T1["2,183 tiles (2023/24)"]
+    X2 --> T2["804 tiles (2024/25)"]
+    T1 --> S["One folder tiles/, one grid (same ix, iy),<br/>season in every tile name"]
+    T2 --> S
+    S --> V["04_make_views.py reads each parcel<br/>from the tiles of its own season"]
 ```
 
 How each part of the pipeline handles the season:
@@ -303,27 +319,48 @@ How each part of the pipeline handles the season:
 
 Currently 47 tile positions exist in both years: places with parcels surveyed in 2023/24 and in 2024/25.
 
-Why calendar months are aligned to the agricultural year, not to a calendar year: the rainfed cycle (sowing in Nov–Dec, peak in Feb–Mar, harvest in May) and summer irrigation (Jun–Aug) both fall inside one Sep–Aug window. A Jan–Dec window would cut the rainfed season in two.
+**Why the agricultural year (September – August).**
+
+```mermaid
+gantt
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b
+    section Rainfed cereals
+    Pre-season                 :r0, 2023-09-01, 2023-11-01
+    Sowing                     :r1, 2023-11-01, 2024-01-01
+    Growth, flowering Mar–Apr  :r2, 2024-01-01, 2024-05-01
+    Harvest                    :r3, 2024-05-01, 2024-07-31
+    section Irrigated land
+    Green whenever water is applied :i1, 2023-09-01, 2024-06-01
+    Dry summer :crit, i2, 2024-06-01, 2024-08-31
+```
+
+| Reason | Explanation |
+| --- | --- |
+| One complete rainfed cycle | rainfed cereals are sown in November–December and harvested in May–July; a calendar year would divide the cycle |
+| The dry summer carries the signal | from June to August only irrigated fields remain green, the clearest contrast between the classes (confirmed by the permutation importance in [E01](../experiments/E01_frozen_pca_nested/report.md#what-the-baseline-relies-on)) |
+| Irrigation status is seasonal | rainfall, reservoir allocations and fallowing change which fields are irrigated, so a label is valid for one season |
+| Consistency with existing products | LGRIP30, WorldCereal and GMIA-NEXT define irrigation for one growing season (Teluguntla et al., 2023; Van Tricht et al., 2023; Kebede et al., 2026) |
+| National convention | the Moroccan agricultural campaign, including the accounting of seasonal rainfall, starts on 1 September |
 
 ### 6.3 Monthly composites (per tile, per month)
 
 ```mermaid
 flowchart TD
     subgraph S2["Sentinel-2 L2A"]
-        A1["Scenes with CLOUDY_PIXEL_PERCENTAGE < 60"] --> A2["Cloud Score+ mask:<br/>keep pixels with cs_cdf ≥ 0.60"]
+        direction TB
+        A1["Scenes with cloud cover < 60 %"] --> A2["Cloud Score+ mask:<br/>keep pixels with cs_cdf ≥ 0.60"]
         A2 --> A3["Median of clear pixels<br/>12 bands, reflectance × 10,000"]
-        A2 --> A4["S2_NCLEAR = number of<br/>clear observations"]
+        A3 --> A4["+ S2_NCLEAR: number of<br/>clear observations"]
     end
     subgraph S1["Sentinel-1 GRD (IW, VV + VH)"]
-        B1["Split by orbit:<br/>ascending / descending"] --> B2["dB → linear power"]
-        B2 --> B3["Monthly mean in linear power"]
-        B3 --> B4["→ dB × 100<br/>VV, VH per orbit"]
-        B1 --> B5["S1_N = number of scenes"]
+        direction TB
+        B1["Split by orbit:<br/>ascending / descending"] --> B2["dB → linear power;<br/>monthly mean"]
+        B2 --> B3["→ dB × 100<br/>VV, VH per orbit"]
+        B3 --> B4["+ S1_N: number of scenes"]
     end
-    A3 --> M["One month = 19 bands"]
-    A4 --> M
+    A4 --> M["One month = 19 bands"]
     B4 --> M
-    B5 --> M
     M --> Y["12 months (Sep → Aug) = 228 bands, int16<br/>NODATA = −32768 where no observation"]
 ```
 
@@ -401,16 +438,11 @@ Only parcels of the tile's own agricultural year are burnt in.
 
 ```mermaid
 flowchart TD
-    TS["Tile store<br/>(tiles read through a cache of 48 tiles)"] --> L["For each parcel:<br/>read its window and its pixels<br/>(label raster: parcel_idx = this parcel)"]
-    L --> A["<b>View A</b> · parcel features<br/>median per band and month<br/>+ NDVI, NDWI, EVI"]
-    L --> B["<b>View B</b> · pixel sets<br/>all parcel pixels, all months"]
-    L --> C["<b>View C</b> · 64 × 64 chips<br/>patch-aligned, per patch size"]
-    A --> A1["parcel_features_all.csv"]
-    A --> A2["parcel_features_inner.csv<br/>(edge pixels removed)"]
-    B --> B1["pixelsets.npz"]
-    C --> C1["chips_p8/  (Clay)"]
-    C --> C2["chips_p16/ (Prithvi, TerraMind, AgriFM)"]
-    TS --> D["<b>View D</b> · full tiles as they are<br/>(segmentation models)"]
+    TS["<b>Tile store</b><br/>tiles read through a cache of 48 tiles"] --> L["<b>For each parcel</b><br/>read its window and its pixels<br/>(label raster: parcel_idx = this parcel)"]
+    L --> A["<b>View A · parcel features</b><br/>median per band and month + NDVI, NDWI, EVI<br/>parcel_features_all.csv · parcel_features_inner.csv"]
+    L --> B["<b>View B · pixel sets</b><br/>all parcel pixels, all months<br/>pixelsets.npz"]
+    L --> C["<b>View C · 64 × 64 chips</b><br/>patch-aligned, per patch size<br/>chips_p8/ (Clay) · chips_p16/ (others)"]
+    TS --> D["<b>View D · full tiles</b><br/>as they are, for<br/>segmentation models"]
 ```
 
 ### 7.1 View A — parcel feature tables
@@ -437,9 +469,9 @@ All pixels of each parcel, unaggregated, for set-based temporal models such as P
 
 ### 7.3 View C — patch-aligned chips for the foundation models
 
-Vision-transformer foundation models split an image into square patches: 8 × 8 px for Clay, and 16 × 16 px (160 m) for Prithvi-EO-2.0, TerraMind and AgriFM's output grid. Each patch gets one embedding.
+Vision-transformer foundation models partition an image into square patches: 8 × 8 px for Clay and 16 × 16 px (160 m) for Prithvi-EO-2.0, TerraMind and the output grid of AgriFM. Each patch is represented by one embedding.
 
-If the chip is simply centred on the parcel, and its size is a multiple of the patch size, the centroid falls on the **corner** of four patches. A small parcel is then split across four patches that are mostly neighbouring fields. Shifting the chip by half a patch puts the centroid at the **centre** of one patch:
+When a chip whose size is a multiple of the patch size is centred on the parcel, the centroid falls on the **corner** of four patches, and a small parcel is distributed over four patches dominated by neighbouring fields. Shifting the chip by half a patch places the centroid at the **centre** of a single patch:
 
 ```mermaid
 flowchart LR
@@ -460,6 +492,11 @@ Each chip folder holds:
 - `index.csv`: one row per parcel. Columns: `part`, `label`, `ag_season`, `fold`, `zone`, `lat`, `lon`, `epsg`, `x0`, `y0` (chip top-left corner, for georeferencing), `area_ha`, `n_px`, `n_px_in_chip`, `purity`, `purity_centred`.
 - `chips_info.json`: band order and scales. The 15 bands are B1 … B12, VV, VH, S2_NCLEAR.
 
+<figure markdown="span">
+  ![Patch purity of centred and aligned chips](figures/purity.png)
+  <figcaption><b>Figure 1.8.</b> Patch purity, i.e. the share of the pooled patches that lies inside the parcel, for centred chips (grey) and patch-aligned chips (blue), at 8 px (80 m, left) and 16 px (160 m, right) patch size. Alignment markedly increases purity, in particular for 8 px patches.</figcaption>
+</figure>
+
 ### 7.4 Sentinel-1 orbit for views B and C
 
 `S1_ORBIT = "auto"` picks the orbit direction with more valid tile-months over the whole study area and writes it to `views_info.json` (`s1_orbit_for_chips_and_pixelsets`). That orbit's bands are named simply `VV` and `VH` in the chips. `"ASC"` or `"DSC"` force one orbit. View A keeps both orbits as separate columns.
@@ -469,6 +506,28 @@ Each chip folder holds:
 - `qa_clear_obs.csv`: clear observations per parcel and month.
 - `qa_purity.csv`: purity distribution per patch size.
 - `views_info.json`: settings, the chosen orbit, and counts.
+
+### 7.6 Dataset inspection
+
+The checks of `models_run/01_inspect_dataset.py` ([Model training and inference §4](../phase2_models/frozen_encoders.md#4-script-01--inspect_dataset))
+characterise the final dataset before any model is trained.
+
+<figure markdown="span">
+  ![Clear observations per month](figures/observations_per_month.png)
+  <figcaption><b>Figure 1.9.</b> Mean number of clear Sentinel-2 observations per parcel and month (left) and share of parcels without any clear observation (right). Winter months have the fewest clear views, yet every parcel has at least one clear observation in every month.</figcaption>
+</figure>
+<figure markdown="span">
+  ![Seasonal profiles per class](figures/seasonal_profiles.png)
+  <figcaption><b>Figure 1.10.</b> Monthly parcel medians of NDVI, NDWI and Sentinel-1 VH backscatter (median and interquartile range per class). Irrigated parcels show markedly higher vegetation and moisture signals from December to April and higher backscatter throughout the year; rainfed parcels show a weak, short spring peak.</figcaption>
+</figure>
+<figure markdown="span">
+  ![Example chips, irrigated](figures/examples_irrigated.jpg)
+  <figcaption><b>Figure 1.11.</b> Example irrigated parcels: 16 px-aligned chips for the 12 months of the agricultural year, in true colour and NDVI (outline = parcel).</figcaption>
+</figure>
+<figure markdown="span">
+  ![Example chips, rainfed](figures/examples_rainfed.jpg)
+  <figcaption><b>Figure 1.12.</b> Example rainfed parcels, displayed as in Figure 1.11.</figcaption>
+</figure>
 
 ---
 

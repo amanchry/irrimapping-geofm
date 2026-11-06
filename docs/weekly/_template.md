@@ -9,7 +9,7 @@
 _Table or figure from an experiment report, and what it shows in two sentences._
 
 ## 3. To discuss / decide
-1. _question for the supervisors, with the options_
+1. _open question, with the options_
 
 ## 4. Next week
 - [ ] _task_
