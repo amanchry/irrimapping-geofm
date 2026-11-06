@@ -73,6 +73,14 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-11-06 (website style as the FOSS4G course site)
+- `mkdocs.yml` and `docs/SUMMARY.md` follow the style of the *Scalable Raster Analytics* course site: Material with teal / deep
+  orange, one left sidebar (no tabs) with collapsible groups (Method 1–5, Experiments, Meetings), instant navigation,
+  LinkedIn / GitHub icons in the footer. Custom CSS reduced to the Mermaid card and table font size.
+
+### 2026-11-06 (project description)
+- New one-paragraph thesis description (from the proposal) in `README.md` and `docs/index.md`, replacing the method-oriented summary.
+
 ### 2026-11-06 (all documentation in docs/, served by MkDocs; CLAUDE.md)
 - **One documentation folder.** Every page now lives in `docs/` (MkDocs `docs_dir`); moved with links rewritten:
   README → `docs/index.md` (home) + `docs/setup.md` (setup, run order, structure); `docs/0x_*.md` →

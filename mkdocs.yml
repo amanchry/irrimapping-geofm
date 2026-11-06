@@ -26,37 +26,38 @@ not_in_nav: |
 theme:
   name: material
   language: en
-  icon:
-    logo: material/sprout
-    repo: fontawesome/brands/github
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: custom
-      accent: custom
-      toggle: {icon: material/weather-night, name: Dark mode}
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: custom
-      accent: custom
-      toggle: {icon: material/weather-sunny, name: Light mode}
-  font:
-    text: Inter
-    code: JetBrains Mono
+    - scheme: default
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
-    - navigation.tabs              # top bar: Overview · Methodology · Experiments · Results · Meetings · References
-    - navigation.tabs.sticky
-    - navigation.sections          # sidebar: the pages of the current tab, as a tree
-    - navigation.indexes
-    - navigation.path              # breadcrumbs above the page title
-    - navigation.top
-    - navigation.footer            # previous / next page
+    - navigation.instant
     - navigation.tracking
-    - toc.follow
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
     - search.suggest
     - search.highlight
+    - content.code.annotate
     - content.code.copy
-    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/amanchry/
+    - icon: fontawesome/brands/github
+      link: https://github.com/amanchry
 
 extra_css:
   - assets/stylesheets/extra.css
@@ -65,7 +66,8 @@ extra_javascript:
   - assets/javascripts/mermaid.js
 
 plugins:
-  - search
+  - search:
+      lang: en
   - literate-nav:
       nav_file: SUMMARY.md
 
@@ -80,6 +82,8 @@ markdown_extensions:
       permalink: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}   # same anchors as GitHub
   - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.emoji:                       # :material-...: icons in the home-page cards
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg

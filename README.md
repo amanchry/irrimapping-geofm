@@ -2,11 +2,7 @@
 
 **📘 Documentation: [amanchry.github.io/irrimapping-geofm](https://amanchry.github.io/irrimapping-geofm/)**
 
-The project maps **irrigated** and **rainfed** cropland in Morocco from Sentinel-1 and Sentinel-2 time series. It
-compares hand-built satellite features with the embeddings of four geospatial foundation models (**Clay v1.5,
-Prithvi-EO-2.0, TerraMind, AgriFM**) on the same imagery and the same 8,781 field-surveyed parcels, tested with
-spatial cross-validation on areas the models have never seen. Later phases fine-tune the best model, produce annual
-irrigated-cropland maps and test transfer to a new region.
+Irrigated agriculture covers about a fifth of the world's cropland but produces around 40% of its food and accounts for most freshwater withdrawals. Knowing where and how much land is irrigated is therefore essential for water management and food security, especially in water-stressed regions such as North Africa. Yet most countries lack accurate, regularly updated irrigation maps, and existing global products are coarse or static. Geospatial foundation models, large models pretrained on vast archives of satellite imagery, promise accurate maps from few labels and better transfer to new regions. This thesis evaluates that promise for irrigated cropland mapping, using Morocco as a case study. It asks how accurately these models separate irrigated from rainfed cropland compared with conventional satellite-based methods, how much adapting them to the task helps, how consistent their maps are from year to year, and how well a model trained in Morocco transfers to a region with little ground truth.
 
 | | |
 | --- | --- |
