@@ -93,7 +93,7 @@ from sklearn.svm import SVC
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 EXPERIMENT = None                     # e.g. "E02_frozen_pca_pastis": settings from experiments/<name>/config.yaml,
                                       # results to experiments/<name>/results/ | None = the settings below
-INPUT = "terramind"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
+INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
 WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
 # S1/S2 baseline only

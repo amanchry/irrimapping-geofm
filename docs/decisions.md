@@ -17,6 +17,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D9](#d9-cloud-score-instead-of-qa60) | Cloud mask | cloud-masked composites | Cloud Score+ (cs_cdf ≥ 0.60) | Oct 2026 |
 | [D10](#d10-transfer-region-under-review) | Transfer region | Tunisia, 54 GMIA-NEXT points | under review (Tunisia or US states with dryland labels); after Morocco | 4 Nov 2026 |
 | [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | parcel benchmark with classical heads (RQ1) + segmentation head and pixel models for the maps (RQ2–RQ4); neural baselines TempCNN and U-TAE | 6 Nov 2026 |
+| [D12](#d12-agrifm-with-its-pretrained-4-px-patch-embedding) | AgriFM encoder | not specified | pretrained 4 × 4 px patch embedding (output stride 32 px); all weights checked on loading | 6 Nov 2026 |
 
 ---
 
@@ -117,3 +118,21 @@ stating the original plan, the current approach and the rationale. Smaller metho
   (Tong & Wang 2025), so a neural baseline is needed next to the classical one.
 - **Where:** [literature notes](references/heads-and-mapping.md).
 
+## D12. AgriFM with its pretrained 4-px patch embedding
+- **Before:** `02d_embed_agrifm.py` built the Sentinel-2 encoder with the patch size of the repository's fine-tuning
+  configuration (`configs/cropland_mapping.py`: 4 time steps × 2 × 2 px, output stride 16 px) and loaded
+  `AgriFM.pth` through mmengine. No weight was loaded: the checkpoint names carry the prefix `encoder.`, and the
+  pretrained patch embedding (`S2_patch_emd`, kernel 128 × 10 × 4 × 4 × 4) does not fit a 2 × 2 px patch. mmengine
+  only warns about mismatched names and still reports success, so all AgriFM embeddings produced up to 6 Nov 2026
+  (local and on the cluster, including E01) came from a randomly initialised encoder.
+- **Now:** patch size 4 × 4 × 4 (the size of the pretrained patch embedding), output stride 32 px (320 m; 2 × 2
+  cells per 64-px chip). The weights are mapped by name in the script and every encoder tensor must load; otherwise
+  the script stops. On the cluster 349 of 349 encoder tensors load.
+- **Why:** the frozen-encoder comparison (D5) must use each encoder as pretrained. In the fine-tuning set-up of the
+  repository the 2 × 2 px patch embedding is trained anew; with a frozen encoder it would stay random. The alternative,
+  resizing the 4 × 4 px kernel to 2 × 2 px, keeps a finer grid but replaces the pretrained first layer by an
+  approximation.
+- **Consequence:** AgriFM has the coarsest grid of the four models (320 m against 80–160 m), which matters for small
+  parcels; the patch-share weighting is unchanged. Earlier AgriFM results are void and are re-run.
+- **Where:** [`models_run/02d_embed_agrifm.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/models_run/02d_embed_agrifm.py),
+  [Foundation models · inputs](foundation_models.md).

@@ -12,6 +12,7 @@ readme-local.md
 # ---------------------------------------------------------------- data, checkpoints, outputs (rebuilt or downloaded)
 data/
 checkpoints/
+jobs/
 external/
 outputs/
 archive/

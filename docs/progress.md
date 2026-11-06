@@ -14,7 +14,7 @@ change log).
 | Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: 8,781 parcels (7,585 irrigated, 1,196 rainfed), 5 folds of 20 km blocks |
 | Tile store, model views | `ml_dataset_prep/03`, `04` | Done: 2,987 tiles; parcel features, pixel sets, chips p8 / p16 |
 | Dataset inspection | `models_run/01` | Done (`outputs/study/01_inspection/`) |
-| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind, AgriFM (`outputs/study/02_embeddings/`); AgriFM scaling still to confirm |
+| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind (`outputs/study/02_embeddings/`); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)); AgriFM scaling still to confirm |
 | E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
 | E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca_pastis` | Ready to run (main RQ1 result) |
 | E03 · frozen + L-TAE, PASTIS | `experiments/E03_frozen_ltae_pastis` | Planned: needs `models_run/03c_train_ltae.py` |
@@ -52,6 +52,7 @@ Next steps
 | 2026-10-15 | Clay: monthly chips one by one, 10 bands, Clay normalisation, week/lat-lon codes | Clay v1.5 docs and code |
 | 2026-10-15 | Prithvi: 6 bands (B2 B3 B4 B8A B11 B12), 4 frames per pass, date + location; 10 m input (pretrained on 30 m HLS) | Model card config.json |
 | 2026-10-15 | TerraMind: S2L2A (12 bands) + S1GRD, standardised with v1 pretraining stats, modalities averaged | TerraTorch terramind_register.py |
+| 2026-11-06 | AgriFM: patch size 4 × 4 × 4 px of the pretrained patch embedding (stride 32 px) instead of the fine-tuning config's 4 × 2 × 2; weights mapped by name and checked on loading | AgriFM.pth (S2 patch kernel 128 × 10 × 4 × 4 × 4); [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding) |
 | 2026-10-15 | AgriFM: 12 months at once, 10 bands, normalisation from its cropland config; loaded without mmcv (mmengine registries) | AgriFM repo configs/cropland_mapping.py |
 
 ---
@@ -59,7 +60,9 @@ Next steps
 ## Open points
 
 - [ ] AgriFM normalisation: config mean ~4,180 (blue) vs ~1,100 in Earth Engine S2 L2A -> confirm the pixel scale its weights expect.
-- [ ] AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.
+- [x] ~~AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.~~
+- [ ] AgriFM results of E01 (and any other run before 2026-11-06) used an untrained encoder: re-run with the fixed
+  `02d` embeddings ([D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
 - [x] ~~Complete the Ouassanouan et al. (2026) reference~~ (done 2026-11-05).
 - [ ] Prithvi on 10 m input (pretrained on 30 m HLS): state in thesis; optional 30 m ablation.
 - [ ] Neighbouring fields inside a chip (mixed 160 m patches, transformer context): add parcel "purity" + accuracy by parcel size; optional masked-chip ablation (`MASK_OUTSIDE`).
@@ -72,6 +75,25 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-06 (AgriFM weights were not loaded; fixed)
+
+- What: `models_run/02d_embed_agrifm.py` loads `AgriFM.pth` by name (prefix `encoder.` removed,
+  `S2_patch_emd` → `patch_emd.proj`) and stops unless every encoder tensor loads; patch size 4 × 4 × 4 px (the
+  pretrained patch embedding), output stride 32 px (`STRIDE_PX = 32`); a check stops the run if the feature grid
+  does not match the stride. Decision [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding).
+- Why: the AgriFM embeddings on the local machine and on the cluster disagreed (cosine similarity ≈ 0.05 against
+  ≈ 1.0 for TerraMind). The cause: no pretrained weight had been loaded (mmengine reported success despite the
+  mismatch), so all earlier AgriFM embeddings, including E01, came from a randomly initialised encoder.
+- Where: AgriFM re-embedded and re-trained on the cluster; old outputs kept as `*_random_init` on the cluster.
+
+### 2026-11-06 (setup on the UT EEMCS HPC cluster)
+
+- What: repository cloned to the UT EEMCS HPC cluster (`~/irrimapping-geofm`), conda environment `condaml` built
+  with the CUDA build of PyTorch (tested on an NVIDIA L40 node), input data and the 128 px tile dataset copied;
+  model weights are downloaded on the cluster on first use.
+- Why: the embedding and training runs need a GPU.
+- Where: `SERVER.md` in the project root (connection, environment, data transfer, Slurm job scripts).
 
 ### 2026-11-06 (content from the results presentation of week 45)
 

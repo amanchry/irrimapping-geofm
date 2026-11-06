@@ -158,7 +158,11 @@ flowchart TD
 | `02a_embed_clay.py` | Clay v1.5 | `[N, 12, 1024]` |
 | `02b_embed_prithvi.py` | Prithvi-EO-2.0-300M-TL | `[N, 12, 1024]` |
 | `02c_embed_terramind.py` | TerraMind-1.0-base | `[N, 12, 768]` |
-| `02d_embed_agrifm.py` | AgriFM | `[N, 1, D]` |
+| `02d_embed_agrifm.py` | AgriFM | `[N, 1, 1024]` |
+
+AgriFM uses the patch size of its pretrained Sentinel-2 patch embedding (4 × 4 px, output stride 32 px), and the
+script stops unless every encoder weight is loaded from `AgriFM.pth`; embeddings produced before 6 Nov 2026 came
+from an untrained encoder ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
 
 Model-specific bands, normalisation, auxiliary inputs (date, location, wavelengths) and known limitations are
 described in [Foundation models · Model notes](../foundation_models.md#model-notes).
@@ -379,6 +383,7 @@ python models_run/04_compare_models.py
 | --- | --- | --- |
 | Frozen encoders, no fine-tuning | all four GeoFMs | tests the pretrained representation; equal cost for all |
 | Parcel pooling | patch-share-weighted mean | describes the parcel, not the surroundings |
+| AgriFM patch size | 4 × 4 px (pretrained), stride 32 px | every pretrained weight is used; coarsest grid of the four models ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)) |
 | Chips | 64 × 64 px, patch-aligned | centroid at a patch centre (see dataset §7.3) |
 | Time | 12 monthly composites, Sep–Aug | covers the winter rainfed cycle and summer irrigation |
 | Embedding reduction | concat + PCA 128, fitted on training folds | keeps the timing information; same dimension for every model |

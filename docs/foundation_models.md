@@ -34,7 +34,7 @@ feature baseline is listed for comparison.
 | Clay v1.5 | p8 | 10 S2 bands | 8 px (80 m) | one month per forward pass | 12 × 1024 | `02a` |
 | Prithvi-EO-2.0 | p16 | 6 S2 bands (HLS set) | 16 px (160 m) | four months per pass, three passes | 12 × 1024 | `02b` |
 | TerraMind | p16 | 12 S2 bands, S1 VV and VH | 16 px (160 m) | one month per forward pass | 12 × 768 | `02c` |
-| AgriFM | p16 | 10 S2 bands | output stride 16 px (160 m) | full 12-month stack in one pass | 1 × D | `02d` |
+| AgriFM | p16 | 10 S2 bands | 4 px pretrained patch embedding; output stride 32 px (320 m) | full 12-month stack in one pass | 1 × 1024 | `02d` |
 
 TerraMind is the only model that receives Sentinel-1, because it is the only one pretrained on SAR data. Two
 sensitivity runs isolate the contribution of radar: an optical-only baseline (`S1S2_VARIABLES = "s2"` in script 03)

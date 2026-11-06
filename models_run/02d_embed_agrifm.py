@@ -15,9 +15,16 @@ Video Swin Transformer pretrained on MODIS, Landsat and Sentinel-2 time series f
 mapping. Unlike the other three models it takes the whole time series at once and compresses time
 inside the network, so it returns one embedding per parcel (not one per month). Settings follow
 the repository's configs/cropland_mapping.py: Sentinel-2 encoder, 10 bands (Blue, Green, Red,
-Red-Edge 1-3, NIR B08, NIR B08A, SWIR 1, SWIR 2 = B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), patch size
-(4 time steps, 2 x 2 pixels), normalised with the mean/std given in that config. The final feature
-map has a stride of 16 pixels (160 m), so a 64 x 64 chip gives a 4 x 4 grid.
+Red-Edge 1-3, NIR B08, NIR B08A, SWIR 1, SWIR 2 = B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), normalised with
+the mean/std given in that config. Exception: the patch size is (4 time steps, 4 x 4 pixels), the
+size of the PRETRAINED Sentinel-2 patch embedding in AgriFM.pth (kernel 128 x 10 x 4 x 4 x 4). The
+config's (4, 2, 2) belongs to its fine-tuning set-up, where that layer is trained anew; with a frozen
+encoder it would stay random. The final feature map therefore has a stride of 32 pixels (320 m), so
+a 64 x 64 chip gives a 2 x 2 grid.
+
+Weights: the checkpoint names start with "encoder." and the Sentinel-2 patch embedding is stored as
+"S2_patch_emd.weights/bias". load_encoder() maps these names itself and stops if any weight of the
+encoder is not loaded (mmengine's loader only warns and still reports success).
 
 Check before reporting results: the config's normalisation mean (e.g. 4179 for blue) is much
 higher than typical Earth Engine Sentinel-2 L2A values (~1100). Confirm with the AgriFM authors /
@@ -25,7 +32,8 @@ repository which pixel scale the pretrained weights expect, and adjust MEAN/STD 
 
 Steps
 -----
-1. Build the AgriFM Sentinel-2 encoder from the cloned repository's code and load the pretrained weights.
+1. Build the AgriFM Sentinel-2 encoder from the cloned repository's code and load the pretrained weights
+   (all encoder weights must load, see "Weights" above).
 2. For each batch of parcels: take the 10 bands for all 12 months, normalise; cloudy pixels -> 0.
 3. Run the encoder on the [batch, 12 months, 10 bands, 64, 64] stack.
 4. Weighted mean of the final feature-map cells covering the parcel (parcel mask stored with the chips).
@@ -74,7 +82,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # Input chips. "tiles" = patch-aligned chips cut by 04_make_views.py from the shared tile store
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
-CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+CHIP_PATCH_PX = 16                                         # chips aligned to 16 px (also aligned to the 32-px AgriFM grid)
 if CHIP_SOURCE == "tiles":
     CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
@@ -204,7 +212,8 @@ MEAN = np.array([4179.192015478227, 4065.9106675194444, 3957.274910960156, 5207.
 STD = np.array([4041.5212325268735, 3691.003119315892, 3629.331318356375, 2973.5178530908756, 3569.73343885,
                 3085.9151435, 2937.56005119, 2806.04462314, 1808.30013156, 1694.20220774],
                dtype=np.float32)[None, None, :, None, None]
-STRIDE_PX = 16                # final feature map: one cell per 16 x 16 pixels
+PATCH_SIZE = (4, 4, 4)        # (months, pixels, pixels) of the pretrained Sentinel-2 patch embedding
+STRIDE_PX = 32                # final feature map: one cell per 32 x 32 pixels (4-px patches, 3 x 2 downsampling)
 
 
 def import_agrifm_encoder():
@@ -264,20 +273,43 @@ def check_requirements(weights):
         download_weights(weights)
 
 
+def load_pretrained(encoder, weights):
+    """Copy the AgriFM.pth weights into the encoder. Checkpoint names: "encoder.backbone.*" -> "backbone.*",
+    "encoder.S2_patch_emd.weights/bias" -> "patch_emd.proj.weight/bias". Stops if any encoder weight is
+    missing or has another shape, so the encoder can never run with random weights unnoticed."""
+    state = torch.load(weights, map_location="cpu", weights_only=False)
+    state = state.get("state_dict", state)
+    renamed = {"encoder.S2_patch_emd.weights": "patch_emd.proj.weight", "encoder.S2_patch_emd.bias": "patch_emd.proj.bias"}
+    source = {renamed.get(k, k.removeprefix("encoder.")): v for k, v in state.items()
+              if k in renamed or k.startswith("encoder.backbone.")}
+    own = encoder.state_dict()
+    bad = [k for k, v in own.items() if k not in source or source[k].shape != v.shape]
+    # relative_position_index is a fixed lookup table (buffer) rebuilt by the model, not a learned weight
+    bad = [k for k in bad if not k.endswith("relative_position_index")]
+    if bad:
+        raise SystemExit(f"AgriFM weights: {len(bad)} encoder tensors not in {weights.name} or of another shape, "
+                         f"e.g. {bad[:3]}")
+    encoder.load_state_dict({k: v for k, v in source.items() if k in own}, strict=False)
+    n = sum(k in own for k in source)
+    print(f"AgriFM weights loaded: {n} of {len(own)} encoder tensors"
+          + ("" if n == len(own) else " (the rest: fixed relative_position_index tables)"))
+
+
 def load_encoder(weights=WEIGHTS):
     """AgriFM Sentinel-2 encoder (PretrainingSwinTransformer3DEncoder) with the pretrained weights."""
     check_requirements(weights)
     Encoder = import_agrifm_encoder()
     encoder = Encoder(
-        patch_emd_cfg=dict(type="SwinPatchEmbed3D", patch_size=(4, 2, 2), in_chans=10, embed_dim=128),
-        backbone_cfg=dict(type="SwinTransformer3D", pretrained=None, pretrained2d=False, patch_size=(4, 2, 2),
+        patch_emd_cfg=dict(type="SwinPatchEmbed3D", patch_size=PATCH_SIZE, in_chans=10, embed_dim=128),
+        backbone_cfg=dict(type="SwinTransformer3D", pretrained=None, pretrained2d=False, patch_size=PATCH_SIZE,
                           embed_dim=128, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], window_size=(8, 7, 7),
                           out_indices=(0, 1, 2, 3), mlp_ratio=4.0, qkv_bias=True, qk_scale=None, drop_rate=0.0,
                           attn_drop_rate=0.0, drop_path_rate=0.0, patch_norm=False, frozen_stages=-1,
                           use_checkpoint=False, downsample_steps=((2, 2, 2), (2, 2, 2), (2, 2, 2), (2, 2, 2)),
                           feature_fusion="cat", mean_frame_down=True),
-        init_cfg=dict(type="pretrained", checkpoint=str(weights)) if weights else None,
+        init_cfg=None,                       # weights loaded below (mmengine's loader skips mismatches silently)
     )
+    load_pretrained(encoder, weights)
     return encoder.eval().to(DEVICE)
 
 
@@ -297,6 +329,9 @@ def embed_batch(ids, chips, masks, info, index):
     valid = month_is_valid(x).any(axis=1, keepdims=True)         # at least one observed month
     x = np.ascontiguousarray(np.nan_to_num((x - MEAN) / STD, nan=0.0))
     grid = encode(x)
+    if grid.shape[1] != masks.shape[1] // STRIDE_PX:
+        raise SystemExit(f"AgriFM feature grid {grid.shape[1]} x {grid.shape[2]} does not match STRIDE_PX = {STRIDE_PX} "
+                         f"for {masks.shape[1]}-px chips")
     emb = pool_patches(grid, patch_weights(masks, STRIDE_PX))
     return emb[:, None, :], valid
 
