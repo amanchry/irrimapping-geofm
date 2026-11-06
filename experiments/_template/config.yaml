@@ -1,15 +1,16 @@
-# Experiment configuration: copy the _template folder to experiments/E<NN>_<short_name>/ and edit.
+# Experiment configuration: copy to experiments/E<NN>_<short_name>/config.yaml and edit; the setup page
+# (_template/README.md) goes to docs/experiments/E<NN>_<short_name>/index.md.
 # The sections train_evaluate / compare / psetae / ltae use the SAME setting names as the scripts in
 # models_run/ (they replace the values at the top of those scripts). Anything not listed keeps the script's value.
 id: E00
 title: Short title of the experiment
 short_title: Short name   # name in the site's sidebar
 status: planned            # planned | ready | running | done | parked
-listed: true               # false = left out of the overview pages (experiments/README.md, docs/05_results.md)
+listed: true               # false = left out of the overview pages (docs/experiments/index.md, docs/results.md, site menu)
 research_question: RQ1
 question: The one question this experiment answers.
 changes_from: E00 (what is different from the experiment it builds on)
-answer: ""                 # one sentence once the results are in (shown on docs/05_results.md)
+answer: ""                 # one sentence once the results are in (shown on docs/results.md)
 
 inputs: [s1s2, clay, prithvi, terramind, agrifm]
 steps: [train_evaluate, compare, report]

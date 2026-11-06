@@ -1,5 +1,3 @@
-[Home](../../README.md) › [Documentation](../README.md) › Weekly notes
-
 # Weekly notes
 
 One page per supervisor meeting: what was done, what came out, what needs a decision, and the plan for the next

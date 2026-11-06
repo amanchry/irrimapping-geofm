@@ -19,7 +19,7 @@ change log).
 | E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca_pastis` | Ready to run (main RQ1 result) |
 | E03 · frozen + L-TAE, PASTIS | `experiments/E03_frozen_ltae_pastis` | Planned: needs `models_run/03c_train_ltae.py` |
 | E04 · PSE-TAE from scratch | `experiments/E04_psetae_scratch` | Run exists; parked for the next phase |
-| Documentation | `docs/`, `mkdocs.yml` | Thesis design, overview, protocol, decisions, results, weekly notes, literature notes; website (MkDocs, GitHub Pages) |
+| Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
 1. Run E02 (`python experiments/run_experiment.py`, `EXPERIMENT = "E02_frozen_pca_pastis"`).
@@ -72,6 +72,24 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-06 (all documentation in docs/, served by MkDocs; CLAUDE.md)
+- **One documentation folder.** Every page now lives in `docs/` (MkDocs `docs_dir`); moved with links rewritten:
+  README → `docs/index.md` (home) + `docs/setup.md` (setup, run order, structure); `docs/0x_*.md` →
+  `docs/research/` (thesis_design, overview, protocol, decisions, literature); `ml_dataset_prep/README.md` →
+  `docs/dataset/index.md`; `models_run/README.md` → `docs/models/index.md`; experiment README / REPORT →
+  `docs/experiments/<name>/index.md` (setup) and `report.md`, figures in `docs/experiments/<name>/figures/`;
+  PROGRESS.md → `docs/progress.md`; `docs/05_results.md` → `docs/results.md`. Hand-written breadcrumbs and
+  previous / next lines removed (the site draws them). Old files in `tmp_trash/pre_docs_migration/`.
+- Root `README.md`: short project summary + links to the site; `ml_dataset_prep/`, `models_run/`, `experiments/`:
+  pointer READMEs. New `CLAUDE.md`: where every kind of change is documented, experiment workflow, style rules,
+  checks before finishing.
+- **Site:** top tabs Overview · Methodology · Experiments · Results · Meetings · References, sidebar tree per tab,
+  breadcrumbs, home page with cards (`docs/SUMMARY.md` = navigation). The mkdocs-gen-files mirror
+  (`mkdocs/gen_pages.py`) is no longer needed and was removed; style and Mermaid script in `docs/assets/`.
+- `experiments/make_report.py` writes report pages, figures (incl. one confusion-matrix figure per run) and the
+  Experiments menu (between AUTO markers in `docs/SUMMARY.md`) into `docs/`; templates in `experiments/_template/`
+  (config, setup page, report page). Workflow: builds on changes in `docs/` or `mkdocs.yml`, `--strict`.
 
 ### 2026-11-06 (documentation website with MkDocs; D11 heads and mapping)
 - **MkDocs Material website** replaces the hand-built HTML (`docs/build_site.py`, `docs/site/` moved to

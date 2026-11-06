@@ -1,13 +1,11 @@
-[Home](../../README.md) › [Experiments](../README.md) › E03
-
 # E03 · Frozen GeoFMs + L-TAE temporal aggregation
 
 | | |
 | --- | --- |
 | **Status** | 📝 planned — needs `models_run/03c_train_ltae.py` |
 | **Research question** | RQ1 — how the monthly embeddings are combined |
-| **Builds on** | [E02](../E02_frozen_pca_pastis/README.md) |
-| **Config** | [`config.yaml`](config.yaml) |
+| **Builds on** | [E02](../E02_frozen_pca_pastis/index.md) |
+| **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_ltae_pastis/config.yaml) |
 
 ## Question
 Does a **learned** temporal aggregation of the 12 monthly embeddings (L-TAE) classify irrigated vs rainfed
@@ -18,7 +16,7 @@ Clay, Prithvi and TerraMind give one embedding per month. E01/E02 put the 12 mon
 with PCA (a fixed, unsupervised step). PANGAEA (Marsocci et al. 2024) combines the monthly encodings of
 single-date models with a trained L-TAE and found it better than a linear mapping. E03 tests whether that holds
 for irrigated vs rainfed mapping. The same L-TAE is trained on the monthly S1/S2 features, so the baseline gets
-the same temporal model ([protocol §5](../../docs/03_protocol.md#5-temporal-aggregation-two-pipelines)).
+the same temporal model ([protocol §5](../../research/protocol.md#5-temporal-aggregation-two-pipelines)).
 
 ## What changes
 | | E02 (PCA pipeline) | E03 (L-TAE pipeline) |

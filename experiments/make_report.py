@@ -1,20 +1,20 @@
 """
-make_report.py  —  write the result tables and figures of an experiment into its REPORT.md
+make_report.py  —  write the result tables and figures of an experiment into its report page
 ==========================================================================================
 
 What it does
 ------------
-1. Reads the experiment's config.yaml and its results (results/comparison/ from
-   models_run/04_compare_models.py, and results/<run>/ from the training scripts).
-2. Writes two figures into results/figures/: macro-F1 per input and classifier (95% CI), and
-   macro-F1 per test fold (which region is hard).
-3. Fills the part of REPORT.md between <!-- AUTO:START --> and <!-- AUTO:END --> with the setup,
-   the result tables and the figures. Everything outside these markers (the answer, the
-   interpretation) is written by hand and never changed. A missing REPORT.md is created from
+1. Reads the experiment's config (experiments/<EXPERIMENT>/config.yaml) and its results (results/comparison/
+   from models_run/04_compare_models.py, and results/<run>/ from the training scripts).
+2. Writes the figures into the documentation, docs/experiments/<EXPERIMENT>/figures/: macro-F1 per input and
+   classifier (95% CI), macro-F1 per test fold, and the confusion matrices of every run.
+3. Fills the part of docs/experiments/<EXPERIMENT>/report.md between <!-- AUTO:RESULTS:START --> and
+   <!-- AUTO:RESULTS:END --> with the setup, the result tables and the figures. Everything outside these markers
+   (answer, findings, interpretation) is written by hand and never changed. A missing report.md is created from
    experiments/_template/REPORT.md.
-4. Refreshes the experiment list in experiments/README.md and the results overview in
-   docs/05_results.md (between their AUTO markers).
-Experiments with "listed: false" in their config are left out of the two overview pages.
+4. Refreshes the experiment list (docs/experiments/index.md), the results overview (docs/results.md) and the
+   Experiments part of the site navigation (docs/SUMMARY.md: the entries under "All experiments").
+Experiments with "listed: false" in their config are left out of the overview pages and the navigation.
 
 Run (from the project folder)
 -----------------------------
@@ -38,7 +38,9 @@ FOLDS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
 # ==========================================================================
 
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
-EXP_ROOT = ROOT / "experiments"
+EXP_ROOT = ROOT / "experiments"                 # configs, results, scripts
+DOCS = ROOT / "docs"                            # the MkDocs documentation
+REPO = "https://github.com/amanchry/irrimapping-geofm/tree/main"   # links to result tables on GitHub
 INPUT_NAMES = {"s1s2": "S1/S2 baseline", "clay": "Clay v1.5", "prithvi": "Prithvi-EO-2.0",
                "terramind": "TerraMind", "agrifm": "AgriFM", "psetae": "PSE-TAE"}
 CLF_NAMES = {"logreg": "LogReg", "rf": "RF", "hgb": "HGB", "svm": "SVM", "psetae": "PSE-TAE", "ltae": "L-TAE"}
@@ -278,8 +280,9 @@ def build_report(exp):
     per_fold = pd.concat(per_fold, ignore_index=True) if per_fold else pd.DataFrame()
     labels = fold_descriptions()
 
-    figs = res / "figures"
-    figs.mkdir(exist_ok=True)
+    page_dir = DOCS / "experiments" / exp                       # the experiment's pages in the documentation
+    figs = page_dir / "figures"
+    figs.mkdir(parents=True, exist_ok=True)
     figure_macro_f1(metrics, figs / "macro_f1_by_input.png")
     fold_clfs = [c for c in headline + ["svm"] if c in all_clfs][:3]
     if not per_fold.empty:
@@ -289,7 +292,7 @@ def build_report(exp):
              "## Results", "### Macro-F1 of every input and classifier",
              "Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that classifier.",
              table_macro_f1(metrics, all_clfs),
-             "![Macro-F1 per input and classifier](results/figures/macro_f1_by_input.png)"]
+             "![Macro-F1 per input and classifier](figures/macro_f1_by_input.png)"]
     if not diffs.empty:
         dtable, d = table_differences(diffs, headline)
         parts += ["### Difference from the S1/S2 baseline (headline classifiers)",
@@ -310,23 +313,29 @@ def build_report(exp):
                   "Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: "
                   + "; ".join(f"fold {f}: {d}" for f, d in labels.items()) + ".",
                   *[f"**{CLF_NAMES.get(c, c)}**\n\n" + table_per_fold(per_fold, c) for c in fold_clfs],
-                  "![Macro-F1 per test fold](results/figures/macro_f1_per_fold.png)"]
-    files = sorted(p.relative_to(exp_dir).as_posix() for p in res.glob("*/confusion_matrices.png"))
+                  "![Macro-F1 per test fold](figures/macro_f1_per_fold.png)"]
+    files = []
+    for p in sorted(res.glob("*/confusion_matrices.png")):           # confusion matrices -> figures/, one per run
+        name = f"confusion_{p.parent.name}.png"
+        (figs / name).write_bytes(p.read_bytes())
+        files.append((p.parent.name, f"figures/{name}"))
     info = json.loads((res / "run_info.json").read_text()) if (res / "run_info.json").exists() else {}
     last = info.get("runs", [{}])[-1] if info.get("runs") else {}
     parts += ["### Files\n\n" + "\n".join([
-              "- Tables: [`results/comparison/`](results/comparison/) (all metrics with CI, differences vs baseline)",
-              "- Per run (`results/<run>/`): out-of-fold predictions, metrics per fold, selected hyperparameters, "
-              "confusion matrices, run log",
-              *[f"- Confusion matrices: [{Path(f).parent.name}]({f})" for f in files],
+              f"- Tables: [`experiments/{exp}/results/comparison/`]({REPO}/experiments/{exp}/results/comparison) "
+              "(all metrics with CI, differences vs baseline)",
+              f"- Per run ([`experiments/{exp}/results/<run>/`]({REPO}/experiments/{exp}/results)): out-of-fold "
+              "predictions, metrics per fold, selected hyperparameters, run log",
+              f"- Settings: [`experiments/{exp}/config.yaml`]({REPO.replace('/tree/', '/blob/')}/experiments/{exp}/config.yaml)",
+              "- Confusion matrices: " + " · ".join(f"[{input_name(run)}]({path})" for run, path in files),
               f"- Code version: `{last.get('git_commit', 'see run_config.json of each run')}`"
               + (f", run {last.get('started')} – {last.get('finished')}" if last else "")])]
 
-    report = exp_dir / "REPORT.md"
+    report = page_dir / "report.md"
     text = report.read_text() if report.exists() else (EXP_ROOT / "_template" / "REPORT.md").read_text()
     text = text.replace("{{TITLE}}", cfg["title"]).replace("{{ID}}", cfg["id"])
     report.write_text(replace_block(text, "RESULTS", "\n\n".join(parts)))
-    print(f"{exp}: REPORT.md updated ({len(metrics['run'].unique())} runs)")
+    print(f"{exp}: docs/experiments/{exp}/report.md updated ({len(metrics['run'].unique())} runs)")
 
 
 # ------------------------------------------------------------ overview pages
@@ -360,29 +369,45 @@ def update_overviews():
             continue
         exp_dir = cfg_file.parent
         name = exp_dir.name
-        report = f"[report]({name}/REPORT.md)" if (exp_dir / "REPORT.md").exists() else "–"
+        report = f"[report]({name}/report.md)" if (DOCS / "experiments" / name / "report.md").exists() else "–"
         result = headline_of(exp_dir, cfg) if cfg.get("status") == "done" else "–"
-        rows.append(f"| **{cfg['id']}** | [{cfg['title']}]({name}/README.md) | {cfg.get('research_question', '')} | "
+        rows.append(f"| **{cfg['id']}** | [{cfg['title']}]({name}/index.md) | {cfg.get('research_question', '')} | "
                     f"{STATUS.get(cfg.get('status'), cfg.get('status'))} | {result} | {report} |")
         if cfg.get("status") == "done":
             results.append((name, cfg, result))
 
-    index = EXP_ROOT / "README.md"
+    index = DOCS / "experiments" / "index.md"
     table = ("| ID | Experiment | RQ | Status | Headline result (macro-F1) | Report |\n"
              "| --- | --- | --- | --- | --- | --- |\n" + "\n".join(rows))
     index.write_text(replace_block(index.read_text(), "INDEX", table))
 
-    overview = ROOT / "docs" / "05_results.md"
+    overview = DOCS / "results.md"
     if overview.exists():
         blocks = []
         for name, cfg, result in results:
             blocks.append(f"#### {cfg['id']} · {cfg['title']}\n\n{cfg.get('question', '')}\n\n"
                           f"- **Result:** {result}.\n- **Answer:** {cfg.get('answer', 'see the report')}\n"
-                          f"- Full report: [experiments/{name}/REPORT.md](../experiments/{name}/REPORT.md)\n\n"
-                          f"![{cfg['id']}](../experiments/{name}/results/figures/macro_f1_by_input.png)")
+                          f"- Full report: [{cfg['id']} report](experiments/{name}/report.md)\n\n"
+                          f"![{cfg['id']}](experiments/{name}/figures/macro_f1_by_input.png)")
         overview.write_text(replace_block(overview.read_text(), "RESULTS",
                                           "\n\n".join(blocks) or "_No finished experiment yet._"))
-    print(f"Updated {index.relative_to(ROOT)} and {overview.relative_to(ROOT)}")
+    summary = DOCS / "SUMMARY.md"                                   # site navigation: the Experiments section
+    if summary.exists():
+        nav = []
+        for cfg_file in sorted(EXP_ROOT.glob("E*/config.yaml")):
+            cfg = yaml.safe_load(cfg_file.read_text())
+            name = cfg_file.parent.name
+            if cfg.get("listed", True) is False or not (DOCS / "experiments" / name / "index.md").exists():
+                continue
+            nav.append(f"    * [{cfg['id']} · {cfg.get('short_title', cfg['title'])}](experiments/{name}/index.md)")
+            if (DOCS / "experiments" / name / "report.md").exists():
+                nav.append(f"        * [Report](experiments/{name}/report.md)")
+        # the lines after "* [All experiments](...)" up to the next tab ("* ...") are the experiment entries
+        lines = summary.read_text().splitlines()
+        i = next(k for k, l in enumerate(lines) if "](experiments/index.md)" in l) + 1
+        j = next((k for k in range(i, len(lines)) if lines[k].startswith("* ")), len(lines))
+        summary.write_text("\n".join(lines[:i] + nav + lines[j:]) + "\n")
+    print(f"Updated {index.relative_to(ROOT)}, {overview.relative_to(ROOT)} and the site navigation")
 
 
 if __name__ == "__main__":

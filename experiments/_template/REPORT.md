@@ -1,5 +1,4 @@
-[Home](../../README.md) › [Experiments](../README.md) › [{{ID}}](README.md) › Report
-
+<!-- Report page of an experiment: created by make_report.py as docs/experiments/<name>/report.md -->
 # {{ID}} · {{TITLE}} — report
 
 > **Answer.** _One or two sentences, written by hand once the results are in._

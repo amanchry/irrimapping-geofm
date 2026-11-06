@@ -1,0 +1,69 @@
+/* Project documentation: adjustments to the Material theme */
+
+/* ---------- colours (same blue / orange as the diagrams) */
+:root, [data-md-color-scheme] {
+  --md-primary-fg-color: #1F5F8B; --md-primary-fg-color--light: #2E78A8; --md-primary-fg-color--dark: #174A6C;
+  --md-accent-fg-color: #B4541A;
+  --nav-line: rgba(31, 95, 139, .18);
+}
+[data-md-color-scheme="slate"] { --nav-line: rgba(255, 255, 255, .12); }
+.md-grid { max-width: 1360px; }
+
+/* ---------- header */
+.md-header { box-shadow: 0 1px 0 rgba(0, 0, 0, .08); }
+.md-header__topic:first-child { font-weight: 650; letter-spacing: .1px; }
+
+/* ---------- left sidebar: hierarchy */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary { width: 15rem; }
+  .md-sidebar--primary .md-sidebar__scrollwrap { padding-right: .4rem; }
+  /* top-level sections: small capital headings with a rule */
+  .md-nav--primary > .md-nav__list > .md-nav__item--section { margin: 1.1em 0 .4em; }
+  .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link {
+    text-transform: uppercase; letter-spacing: .08em; font-size: .62rem; font-weight: 700;
+    color: var(--md-default-fg-color--light); padding-bottom: .35em; border-bottom: 1px solid var(--nav-line);
+    margin-bottom: .3em;
+  }
+  /* nested levels: a guide line on the left, like a tree */
+  .md-nav--primary .md-nav__item--section .md-nav .md-nav { border-left: 2px solid var(--nav-line);
+    margin-left: .55rem; padding-left: .1rem; }
+}
+.md-nav__link { border-radius: 4px; padding: .18em .45em; margin-top: .3em; transition: background .12s; }
+.md-nav__item .md-nav__link:hover { background: var(--md-default-fg-color--lightest); }
+/* the page you are on: tinted background and an accent bar */
+.md-nav__link--active { background: rgba(31, 95, 139, .10); font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--md-accent-fg-color); }
+[data-md-color-scheme="slate"] .md-nav__link--active { background: rgba(255, 255, 255, .08); }
+.md-nav__link .md-icon, .md-nav__link svg { opacity: .8; }
+
+/* ---------- right sidebar (contents of the page) */
+.md-sidebar--secondary .md-nav__title { text-transform: uppercase; letter-spacing: .08em; font-size: .6rem; }
+.md-sidebar--secondary .md-nav__link { margin-top: .25em; }
+
+/* ---------- breadcrumbs */
+.md-path { font-size: .66rem; margin-bottom: .2rem; }
+.md-path__link { color: var(--md-default-fg-color--light); }
+
+/* ---------- page content */
+.md-typeset h1 { font-weight: 700; color: var(--md-default-fg-color); letter-spacing: -.01em; margin-bottom: .9em; }
+.md-typeset h2 { font-weight: 650; padding-bottom: .25em; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+.md-typeset h3 { font-weight: 600; }
+.md-typeset table:not([class]) { font-size: .74rem; }
+.md-typeset table:not([class]) th { background: var(--md-default-fg-color--lightest); }
+.md-typeset img { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 4px; background: #fff; }
+.md-typeset blockquote { border-left: 4px solid var(--md-primary-fg-color); background: var(--md-code-bg-color);
+  padding: .5rem 1rem; border-radius: 0 6px 6px 0; color: var(--md-default-fg-color); }
+.md-typeset details { border-radius: 6px; }
+
+/* Mermaid diagrams: always on a white card, so their own colours read well in dark mode too */
+.md-typeset div.mermaid-diagram { background: #fff; border-radius: 6px; padding: .6rem; margin: 1em 0;
+  text-align: center; overflow-x: auto; border: 1px solid var(--md-default-fg-color--lightest); }
+
+/* ---------- footer: previous / next */
+.md-footer__link { padding-top: 1rem; padding-bottom: 1rem; }
+
+/* a section heading that is also the current page (e.g. Home under "Overview"): keep the heading style */
+.md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link--active,
+.md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__container > .md-nav__link--active {
+  background: none; box-shadow: none; color: var(--md-primary-fg-color);
+}

@@ -1,5 +1,3 @@
-[Home](../README.md) › [Documentation](README.md) › Thesis design
-
 # 1 · Thesis design
 
 **Evaluating Geospatial Foundation Models for Irrigated Cropland Mapping in North Africa and Their
@@ -8,8 +6,8 @@ Transferability to Data-Scarce Regions**
 Aman Chaudhary · MSc Geo-Information Science and Earth Observation (M-GEO), GeoAI, 2025–2027 · ITC, University of
 Twente · Supervisors: Dr. Mahdi Farnaghi, Prof. Dr. Raúl Zurita Milla
 
-The research design follows the [thesis proposal](../thesis_proposal/MScProposal_s3677133_AmanChaudhary.pdf).
-Where the implementation departs from it, the change and its reason are in [Decisions](04_decisions.md).
+The research design follows the [thesis proposal](https://github.com/amanchry/irrimapping-geofm/blob/main/thesis_proposal/MScProposal_s3677133_AmanChaudhary.pdf).
+Where the implementation departs from it, the change and its reason are in [Decisions](decisions.md).
 
 ---
 
@@ -29,10 +27,10 @@ To compare the performance and transferability of geospatial foundation models f
 
 | RQ | Question | Experiments | Status |
 | --- | --- | --- | --- |
-| **RQ1** | What accuracy does each foundation model achieve for irrigated vs rainfed mapping across Morocco's agricultural regions, and how does it compare with a conventional Sentinel-based classifier? | [E01](../experiments/E01_frozen_pca_nested/README.md), [E02](../experiments/E02_frozen_pca_pastis/README.md), [E03](../experiments/E03_frozen_ltae_pastis/README.md) | ⏳ in progress: first result in, main run ready |
+| **RQ1** | What accuracy does each foundation model achieve for irrigated vs rainfed mapping across Morocco's agricultural regions, and how does it compare with a conventional Sentinel-based classifier? | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca_pastis/index.md), [E03](../experiments/E03_frozen_ltae_pastis/index.md) | ⏳ in progress: first result in, main run ready |
 | **RQ2** | How much does parameter-efficient fine-tuning (LoRA) improve on a frozen encoder? | – | 📝 planned (Nov – Dec 2026) |
 | **RQ3** | How temporally consistent is the best model across years, and does the annual map series for Morocco follow reported irrigation trends? | – | 📝 planned |
-| **RQ4** | How does accuracy degrade when the Morocco-trained model is applied without retraining to another region? | – | 📝 planned; transfer region under review ([D10](04_decisions.md#d10-transfer-region-under-review)) |
+| **RQ4** | How does accuracy degrade when the Morocco-trained model is applied without retraining to another region? | – | 📝 planned; transfer region under review ([D10](decisions.md#d10-transfer-region-under-review)) |
 | RQ5 *(optional)* | Does fusing embeddings of several GeoFMs improve on the best single model? | – | optional |
 
 ## Study area and data
@@ -45,7 +43,7 @@ To compare the performance and transferability of geospatial foundation models f
 | **Seasons** | Each parcel uses its own survey season: 2023/24 or 2024/25 |
 | **Unit** | the parcel: one label per field, all metrics per parcel |
 
-Details: [Part 1 · Dataset](../ml_dataset_prep/README.md).
+Details: [Part 1 · Dataset](../dataset/index.md).
 
 ## Models compared
 
@@ -100,5 +98,3 @@ flowchart LR
 4. A measure of how far the models transfer to a region without dense labels.
 5. A reusable ML-ready dataset of irrigated and rainfed parcels (Part 1), publishable on its own.
 
----
-Next: [2 · Overview →](02_overview.md)

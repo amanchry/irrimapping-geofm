@@ -1,5 +1,3 @@
-[Home](../../README.md) › [Experiments](../README.md) › [E01](README.md) › Report
-
 # E01 · Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV) — report
 
 > **Answer.** No frozen foundation model classifies irrigated vs rainfed parcels better than the Sentinel-1/2
@@ -54,7 +52,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that c
 | TerraMind | **0.896** | 0.856 | 0.878 | 0.905 |
 | AgriFM | 0.865 | 0.839 | 0.868 | 0.866 |
 
-![Macro-F1 per input and classifier](results/figures/macro_f1_by_input.png)
+![Macro-F1 per input and classifier](figures/macro_f1_by_input.png)
 
 ### Difference from the S1/S2 baseline (headline classifiers)
 
@@ -71,7 +69,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that c
 | AgriFM | RF | -0.053 | [-0.084, -0.021] | < 0.001 | **worse** |
 | AgriFM | LogReg | -0.023 | [-0.045, -0.003] | 0.176 | lower, not significant after Holm |
 
-<details><summary>Other classifiers (robustness check)</summary>
+<details markdown="1"><summary>Other classifiers (robustness check)</summary>
 
 
 | Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
@@ -137,18 +135,15 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 | TerraMind | 0.802 | 0.867 | 0.944 | 0.953 | 0.948 | 0.903 ± 0.067 |
 | AgriFM | 0.703 | 0.813 | 0.933 | 0.939 | 0.924 | 0.863 ± 0.103 |
 
-![Macro-F1 per test fold](results/figures/macro_f1_per_fold.png)
+![Macro-F1 per test fold](figures/macro_f1_per_fold.png)
 
 ### Files
 
-- Tables: [`results/comparison/`](results/comparison/) (all metrics with CI, differences vs baseline)
-- Per run (`results/<run>/`): out-of-fold predictions, metrics per fold, selected hyperparameters, confusion matrices, run log
-- Confusion matrices: [agrifm_agyear_tiles_concat](results/agrifm_agyear_tiles_concat/confusion_matrices.png)
-- Confusion matrices: [clay_agyear_tiles_concat](results/clay_agyear_tiles_concat/confusion_matrices.png)
-- Confusion matrices: [prithvi_agyear_tiles_concat](results/prithvi_agyear_tiles_concat/confusion_matrices.png)
-- Confusion matrices: [s1s2-all_agyear_tiles-inner-asc](results/s1s2-all_agyear_tiles-inner-asc/confusion_matrices.png)
-- Confusion matrices: [terramind_agyear_tiles_concat](results/terramind_agyear_tiles_concat/confusion_matrices.png)
-- Code version: `before experiments/ existed (October 2026 code; settings in each run_config.json)`, run 2026-10-30 – 2026-10-30
+- Tables: [`experiments/E01_frozen_pca_nested/results/comparison/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results/comparison) (all metrics with CI, differences vs baseline)
+- Per run ([`experiments/E01_frozen_pca_nested/results/<run>/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results)): out-of-fold predictions, metrics per fold, selected hyperparameters, run log
+- Settings: [`experiments/E01_frozen_pca_nested/config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E01_frozen_pca_nested/config.yaml)
+- Confusion matrices: [AgriFM](figures/confusion_agrifm_agyear_tiles_concat.png) · [Clay v1.5](figures/confusion_clay_agyear_tiles_concat.png) · [Prithvi-EO-2.0](figures/confusion_prithvi_agyear_tiles_concat.png) · [S1/S2 baseline](figures/confusion_s1s2-all_agyear_tiles-inner-asc.png) · [TerraMind](figures/confusion_terramind_agyear_tiles_concat.png)
+- Code version: `858cb3d (with uncommitted changes)`, run 2026-11-05 17:39 – 2026-11-05 17:40
 
 <!-- AUTO:RESULTS:END -->
 
@@ -160,15 +155,15 @@ better with every classifier. That points to the next questions: is this fold ef
 design (E02), and does a learned temporal aggregation (E03) let the embeddings use the 12 months better than PCA?
 
 ## Caveats
-- **Nested validation design**, replaced by the PASTIS rotation in [E02](../E02_frozen_pca_pastis/README.md); E01 is
+- **Nested validation design**, replaced by the PASTIS rotation in [E02](../E02_frozen_pca_pastis/index.md); E01 is
   kept as a sensitivity check.
-- **AgriFM normalisation** not yet confirmed (open point in [PROGRESS.md](../../PROGRESS.md)).
+- **AgriFM normalisation** not yet confirmed (open point in [PROGRESS.md](../../progress.md)).
 - **Small rainfed class** (1,196 parcels, ~240 per fold): per-fold scores for rainfed rest on few parcels, hence the
   wide intervals.
 - **Region and year are partly confounded** (Gharb and Tadla only 2023/24; Souss only 2024/25), so the fold
   differences cannot be attributed to region alone.
 
 ## Next steps
-- Run [E02](../E02_frozen_pca_pastis/README.md) (PASTIS validation): the main RQ1 result.
+- Run [E02](../E02_frozen_pca_pastis/index.md) (PASTIS validation): the main RQ1 result.
 - Resolve the AgriFM normalisation and re-embed if needed.
-- Implement the L-TAE pipeline ([E03](../E03_frozen_ltae_pastis/README.md)).
+- Implement the L-TAE pipeline ([E03](../E03_frozen_ltae_pastis/index.md)).

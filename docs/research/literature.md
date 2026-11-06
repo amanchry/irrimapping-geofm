@@ -1,10 +1,8 @@
-[Home](../../README.md) › [Documentation](../README.md) › Literature notes
-
 # Literature notes
 
 The papers the method is built on, each with what it did and what this thesis takes from it. The full reference
-lists are in the [proposal](../../thesis_proposal/MScProposal_s3677133_AmanChaudhary.pdf) and at the end of the
-[dataset](../../ml_dataset_prep/README.md#12-references) and [models](../../models_run/README.md#11-references) pages.
+lists are in the [proposal](https://github.com/amanchry/irrimapping-geofm/blob/main/thesis_proposal/MScProposal_s3677133_AmanChaudhary.pdf) and at the end of the
+[dataset](../dataset/index.md#12-references) and [models](../models/index.md#11-references) pages.
 
 | Topic | Paper | Used for |
 | --- | --- | --- |
@@ -15,7 +13,7 @@ lists are in the [proposal](../../thesis_proposal/MScProposal_s3677133_AmanChaud
 | Spatial validation | [Roberts 2017, Ploton 2020](#spatial-validation) | spatial folds instead of a random split |
 | Comparing classifiers | [Foody 2009](#comparing-accuracies--foody-2009) | paired differences with confidence intervals |
 | Ground truth | [Ouassanouan et al. 2026](#ground-truth--ouassanouan-et-al-2026) | the Moroccan field survey |
-| Heads and mapping | [GeoFM heads, neural baselines](#heads-and-mapping-what-geofm-crop-studies-use) | parcel benchmark vs mapping models ([D11](../04_decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)) |
+| Heads and mapping | [GeoFM heads, neural baselines](#heads-and-mapping-what-geofm-crop-studies-use) | parcel benchmark vs mapping models ([D11](decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)) |
 
 ---
 
@@ -35,7 +33,7 @@ lists are in the [proposal](../../thesis_proposal/MScProposal_s3677133_AmanChaud
 https://arxiv.org/abs/2107.07933
 - Sentinel-2 time series of French parcels on 128 × 128 px patches; **5 folds**, used as 3 train / 1 validation /
   1 test in rotation.
-- **Taken here:** the same rotation for every model ([D3](../04_decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv));
+- **Taken here:** the same rotation for every model ([D3](decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv));
   non-overlapping 128 px tiles.
 
 ### L-TAE · Garnot & Landrieu (2020)
@@ -53,7 +51,7 @@ https://arxiv.org/abs/2505.08273
 - Our check of their split files: almost every test patch location also appears in training on another date
   (WA 2018: 31,056 of 31,064), so their scores are not spatially independent.
 - **Taken here:** the label sources (WSDA, Utah WRLU) as possible transfer data
-  ([D10](../04_decisions.md#d10-transfer-region-under-review)); an example of why spatial folds matter.
+  ([D10](decisions.md#d10-transfer-region-under-review)); an example of why spatial folds matter.
 
 ### Spatial validation
 - Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or
@@ -61,7 +59,7 @@ https://arxiv.org/abs/2505.08273
 - Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological
   mapping models. *Nature Communications*, 11, 4540.
 - **Taken here:** blocks larger than the range of spatial dependence, whole blocks per fold
-  ([dataset §5](../../ml_dataset_prep/README.md#5-script-02--make_spatial_folds)).
+  ([dataset §5](../dataset/index.md#5-script-02--make_spatial_folds)).
 
 ### Comparing accuracies · Foody (2009)
 *Classification accuracy comparison: hypothesis tests and the use of confidence intervals in evaluations of
@@ -72,14 +70,14 @@ difference, equivalence and non-inferiority.* Remote Sensing of Environment, 113
 *Crop and irrigation types ground-truth dataset for Moroccan agricultural regions.* Scientific Data, 13, 746.
 https://doi.org/10.1038/s41597-026-06993-y
 - About 10,000 parcels in El Gharb, Tadla, Doukkala, El Haouz and Souss, Dec 2023 – Jan 2025, with crop type,
-  irrigation system and a photo per parcel → [data source](../data_source/readme.md).
+  irrigation system and a photo per parcel → [data source](../data_source/index.md).
 
 ---
 
 ## Heads and mapping: what GeoFM crop studies use
 
 Literature search of 6 Nov 2026: which head is put on a GeoFM for crop classification, which neural baselines are
-used, and what wall-to-wall mapping requires. Result: [decision D11](../04_decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model).
+used, and what wall-to-wall mapping requires. Result: [decision D11](decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model).
 
 | Head | Used for | Papers |
 | --- | --- | --- |

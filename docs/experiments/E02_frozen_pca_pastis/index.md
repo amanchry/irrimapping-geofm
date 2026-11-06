@@ -1,14 +1,12 @@
-[Home](../../README.md) › [Experiments](../README.md) › E02
-
 # E02 · Frozen GeoFMs + PCA vs the S1/S2 baseline (PASTIS validation)
 
 | | |
 | --- | --- |
 | **Status** | 🟦 ready to run |
 | **Research question** | RQ1 — accuracy of each foundation model vs a Sentinel-based classifier |
-| **Builds on** | [E01](../E01_frozen_pca_nested/README.md) |
-| **Config** | [`config.yaml`](config.yaml) |
-| **Report** | `REPORT.md`, written when the results are in |
+| **Builds on** | [E01](../E01_frozen_pca_nested/index.md) |
+| **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E02_frozen_pca_pastis/config.yaml) |
+| **Report** | written when the results are in |
 
 ## Question
 Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features,
@@ -17,7 +15,7 @@ with the same parcels, folds and classifiers, under the **final validation desig
 ## Why
 E01 used nested spatial CV. The thesis now uses the PASTIS rotation for every model (classifiers and, later,
 neural networks), so they are trained, tuned and tested in exactly the same way
-([decision D3](../../docs/04_decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv)). E02 is the
+([decision D3](../../research/decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv)). E02 is the
 **main result of RQ1**; E01 becomes a sensitivity check of the validation design.
 
 ## What changes
@@ -27,7 +25,7 @@ neural networks), so they are trained, tuned and tested in exactly the same way
 | Model trained on | 4 folds | 3 folds |
 
 Inputs, embeddings, temporal aggregation (concat + PCA 128), classifiers, grids and metrics are unchanged; see the
-[evaluation protocol](../../docs/03_protocol.md).
+[evaluation protocol](../../research/protocol.md).
 
 ## How to run
 ```bash

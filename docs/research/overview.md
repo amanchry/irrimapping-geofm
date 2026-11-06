@@ -1,5 +1,3 @@
-[Home](../README.md) › [Documentation](README.md) › Overview
-
 # 2 · The method in plain language
 
 The question in one line: **is a field irrigated or rainfed?**, and does a pretrained foundation model answer it
@@ -79,5 +77,3 @@ better only if the difference is clearly above zero after correcting for the num
 - Region and year overlap in the survey (Gharb and Tadla only 2023/24, Souss only 2024/25), so a "hard region"
   may partly be a "hard year".
 
----
-← [1 · Thesis design](01_thesis_design.md) · Next: [3 · Evaluation protocol →](03_protocol.md)

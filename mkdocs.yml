@@ -1,10 +1,9 @@
-# MkDocs configuration of the project documentation (Material theme).
-#   pip install mkdocs-material mkdocs-gen-files mkdocs-literate-nav     (or: conda env update -f environment.yml)
-#   mkdocs serve          preview at http://127.0.0.1:8000 (reloads on every change)
-#   mkdocs build          static site in site/
-#   mkdocs gh-deploy      publish to GitHub Pages (branch gh-pages)
-# The markdown files stay where they are (README.md, docs/, ml_dataset_prep/, models_run/, experiments/):
-# mkdocs/gen_pages.py mirrors them into the site at build time, so links work the same on GitHub and on the site.
+# Documentation website of the project (MkDocs + Material theme). ALL documentation lives in docs/.
+#   pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-literate-nav     (or: conda env update -f environment.yml)
+#   mkdocs serve            preview at http://127.0.0.1:8000 (reloads on every change)
+#   mkdocs build --strict   check: stops on broken links or pages missing from the navigation
+#   mkdocs gh-deploy        publish to GitHub Pages (also done automatically on every push to main)
+# Navigation: docs/SUMMARY.md. Rules for keeping the documentation up to date: CLAUDE.md.
 
 site_name: Irrigated Cropland Mapping with GeoFMs
 site_description: Evaluating geospatial foundation models for irrigated cropland mapping in North Africa
@@ -12,11 +11,17 @@ site_author: Aman Chaudhary
 site_url: https://amanchry.github.io/irrimapping-geofm/
 repo_url: https://github.com/amanchry/irrimapping-geofm
 repo_name: amanchry/irrimapping-geofm
-edit_uri: ""
+edit_uri: edit/main/docs/
 copyright: Aman Chaudhary · MSc Geo-Information Science and Earth Observation · ITC, University of Twente
 
-docs_dir: mkdocs/pages              # nearly empty: the pages come from mkdocs/gen_pages.py
+docs_dir: docs
 site_dir: site
+exclude_docs: |
+  *.pdf
+  .DS_Store
+not_in_nav: |
+  weekly/_template.md
+  data_source/flowchat.md
 
 theme:
   name: material
@@ -27,41 +32,40 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue grey
-      accent: deep orange
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-night, name: Dark mode}
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue grey
-      accent: deep orange
+      primary: custom
+      accent: custom
       toggle: {icon: material/weather-sunny, name: Light mode}
   font:
     text: Inter
     code: JetBrains Mono
   features:
-    - navigation.tabs
-    - navigation.sections
+    - navigation.tabs              # top bar: Overview · Methodology · Experiments · Results · Meetings · References
+    - navigation.tabs.sticky
+    - navigation.sections          # sidebar: the pages of the current tab, as a tree
     - navigation.indexes
+    - navigation.path              # breadcrumbs above the page title
     - navigation.top
-    - navigation.footer
+    - navigation.footer            # previous / next page
     - navigation.tracking
     - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
-    - content.tabs.link
+    - content.action.edit
 
 extra_css:
-  - stylesheets/extra.css
+  - assets/stylesheets/extra.css
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js
-  - javascripts/mermaid.js
+  - assets/javascripts/mermaid.js
 
 plugins:
   - search
-  - gen-files:
-      scripts:
-        - mkdocs/gen_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
 
@@ -76,6 +80,9 @@ markdown_extensions:
       permalink: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}   # same anchors as GitHub
   - pymdownx.details
+  - pymdownx.emoji:                       # :material-...: icons in the home-page cards
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.highlight:
@@ -83,12 +90,13 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.superfences:
       custom_fences:
-        - name: mermaid                        # rendered by mkdocs/pages/javascripts/mermaid.js (keeps the
-          class: mermaid-diagram               # colours of each diagram; Material's own Mermaid recolours them)
+        - name: mermaid                    # rendered by assets/javascripts/mermaid.js (keeps the diagram colours)
+          class: mermaid-diagram
           format: !!python/name:pymdownx.superfences.fence_div_format
 
 validation:
   links:
     not_found: warn
     anchors: warn
-    unrecognized_links: info
+    absolute_links: warn
+    unrecognized_links: warn

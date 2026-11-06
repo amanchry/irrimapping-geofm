@@ -1,5 +1,3 @@
-[Home](../../README.md) › [Documentation](../README.md) › [Weekly notes](README.md) › YYYY-Www
-
 # Week YYYY-Www · meeting DD Month YYYY
 
 **In one line:** _the most important thing this week._

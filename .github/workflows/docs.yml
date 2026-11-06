@@ -4,7 +4,7 @@ name: docs
 on:
   push:
     branches: [main]
-    paths: ["**.md", "**.png", "mkdocs.yml", "mkdocs/**", "experiments/*/config.yaml", ".github/workflows/docs.yml"]
+    paths: ["docs/**", "mkdocs.yml", ".github/workflows/docs.yml"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-gen-files mkdocs-literate-nav
-      - run: mkdocs gh-deploy --force --clean
+      - run: pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-literate-nav
+      - run: mkdocs gh-deploy --force --clean --strict
         env:
           DISABLE_MKDOCS_2_WARNING: "true"

@@ -13,7 +13,7 @@ takes its settings from the config file and writes into experiments/<EXPERIMENT>
   ltae             models_run/03c_train_ltae.py        once per input in "inputs"   (not written yet)
   psetae           models_run/03b_train_psetae.py      once
   compare          models_run/04_compare_models.py     once: all runs of the experiment on the same parcels
-  report           experiments/make_report.py          once: tables + figures into REPORT.md, index pages
+  report           experiments/make_report.py          once: tables + figures into docs/experiments/<name>/report.md
 
 Runs that already have results are skipped (RERUN = False), so an interrupted experiment can be
 started again and continues where it stopped. The config used, the code version (git commit) and the
@@ -96,7 +96,7 @@ def main():
     run["finished"] = time.strftime("%Y-%m-%d %H:%M")
     info["runs"].append(run)
     info_file.write_text(json.dumps(info, indent=2, default=str))
-    print(f"\nDone. Results in {results.relative_to(ROOT)}; report: experiments/{EXPERIMENT}/REPORT.md")
+    print(f"\nDone. Results in {results.relative_to(ROOT)}; report: docs/experiments/{EXPERIMENT}/report.md")
 
 
 if __name__ == "__main__":

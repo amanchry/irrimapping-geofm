@@ -1,16 +1,14 @@
-[Home](../README.md) › [Documentation](README.md) › Results
-
 # 5 · Results
 
 The finished experiments, newest last, each with its answer and its main figure. The full tables, the per-fold
 results and the caveats are in each experiment's report. The list of all experiments, including those still to
-run, is on the [Experiments](../experiments/README.md) page.
+run, is on the [Experiments](experiments/index.md) page.
 
 ## Where each research question stands
 
 | RQ | Question (short) | Current answer | Evidence |
 | --- | --- | --- | --- |
-| RQ1 | Do frozen GeoFMs beat a Sentinel-1/2 classifier? | **Not on average.** The best GeoFMs equal the baseline (macro-F1 ≈ 0.91); Clay and Prithvi hold up better in the hardest region. To be confirmed with the final validation design (E02) and the L-TAE pipeline (E03). | [E01](../experiments/E01_frozen_pca_nested/REPORT.md) |
+| RQ1 | Do frozen GeoFMs beat a Sentinel-1/2 classifier? | **Not on average.** The best GeoFMs equal the baseline (macro-F1 ≈ 0.91); Clay and Prithvi hold up better in the hardest region. To be confirmed with the final validation design (E02) and the L-TAE pipeline (E03). | [E01](experiments/E01_frozen_pca_nested/report.md) |
 | RQ2 | Does LoRA fine-tuning beat the frozen encoders? | not started | – |
 | RQ3 | Are the annual maps consistent across years? | not started | – |
 | RQ4 | How far does the model transfer? | not started | – |
@@ -26,11 +24,9 @@ Do frozen foundation-model embeddings separate irrigated from rainfed parcels be
 
 - **Result:** best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 input-classifier pairs better, 2 worse than the baseline (Holm).
 - **Answer:** No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.906, difference within the noise); Clay and Prithvi hold up better in the hardest fold.
-- Full report: [experiments/E01_frozen_pca_nested/REPORT.md](../experiments/E01_frozen_pca_nested/REPORT.md)
+- Full report: [E01 report](experiments/E01_frozen_pca_nested/report.md)
 
-![E01](../experiments/E01_frozen_pca_nested/results/figures/macro_f1_by_input.png)
+![E01](experiments/E01_frozen_pca_nested/figures/macro_f1_by_input.png)
 
 <!-- AUTO:RESULTS:END -->
 
----
-← [4 · Decisions](04_decisions.md) · [Weekly notes →](weekly/README.md)
