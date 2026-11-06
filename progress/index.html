@@ -1,0 +1,3237 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/progress/">
+      
+      
+        <link rel="prev" href="../progress_report/">
+      
+      
+        <link rel="next" href="../weekly/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Change log - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#change-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Change log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../foundation_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase1_data/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase1_data/dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ML-ready dataset (Morocco)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/frozen_encoders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Frozen encoders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Transferability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E01_frozen_pca_nested/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA pipeline · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA pipeline · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E01_frozen_pca_nested/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E02_frozen_pca_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E03_frozen_ltae_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · L-TAE pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-status-2026-11-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current status (2026-11-05)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log-newest-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change log (newest first)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Change log (newest first)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-agrifm-weights-were-not-loaded-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (AgriFM weights were not loaded; fixed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-setup-on-the-ut-eemcs-hpc-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (setup on the UT EEMCS HPC cluster)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-content-from-the-results-presentation-of-week-45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (content from the results presentation of week 45)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-reference-summary-moroccan-field-survey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (reference summary: Moroccan field survey)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-documentation-organised-by-research-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (documentation organised by research phase)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-method-section-reordered-dataset-figures-in-the-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (Method section reordered; dataset figures in the documentation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-diagram-labels-no-longer-cut-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (diagram labels no longer cut off)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-foundation-models-page-academic-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (Foundation models page; academic register)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-model-weights-in-checkpoints-downloaded-on-the-first-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (model weights in checkpoints/, downloaded on the first run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-diagrams-one-neutral-academic-style-readable-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (diagrams: one neutral academic style, readable size)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-introduction-from-the-proposal-data-sources-reference-papers-progress-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (introduction from the proposal; data sources; reference papers; progress report)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-website-style-as-the-foss4g-course-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (website style as the FOSS4G course site)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-project-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (project description)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-all-documentation-in-docs-served-by-mkdocs-claudemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (all documentation in docs/, served by MkDocs; CLAUDE.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-documentation-website-with-mkdocs-d11-heads-and-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (documentation website with MkDocs; D11 heads and mapping)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-05-project-organised-experiments-documentation-hierarchy-html-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-05 (project organised: experiments, documentation hierarchy, HTML site)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-05-us-parcel-data-geodatabases-converted-to-shapefiles-irrmap-code-checked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-05 (US parcel data: geodatabases converted to shapefiles; IrrMap code checked)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-04-future-phase-us-data-for-spatial-and-temporal-transfer--decision-deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-04 (future phase: US data for spatial and temporal transfer — decision deferred)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-04-validation-design-pastis-scheme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-04 (validation design: PASTIS scheme)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-pse-tae-moved-to-next-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (PSE-TAE moved to next phase)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-models_run-workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (models_run workflow diagram)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-terminology-chips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (terminology: chips)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-deep-learning-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (deep-learning baseline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-folders-renamed-main-readme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (folders renamed, main README)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-dataset-check--parcel-explorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (dataset check + parcel explorer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-readme-two-agricultural-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (README: two agricultural years)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29 (documentation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29-restructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29 (restructure)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-27
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-16
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-15
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-2026-10-15-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before 2026-10-15 (summary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weekly/2026-W45/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Week 2026-W45
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong & Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-status-2026-11-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current status (2026-11-05)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-log-newest-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change log (newest first)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Change log (newest first)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-agrifm-weights-were-not-loaded-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (AgriFM weights were not loaded; fixed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-setup-on-the-ut-eemcs-hpc-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (setup on the UT EEMCS HPC cluster)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-content-from-the-results-presentation-of-week-45" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (content from the results presentation of week 45)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-reference-summary-moroccan-field-survey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (reference summary: Moroccan field survey)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-documentation-organised-by-research-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (documentation organised by research phase)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-method-section-reordered-dataset-figures-in-the-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (Method section reordered; dataset figures in the documentation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-diagram-labels-no-longer-cut-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (diagram labels no longer cut off)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-foundation-models-page-academic-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (Foundation models page; academic register)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-model-weights-in-checkpoints-downloaded-on-the-first-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (model weights in checkpoints/, downloaded on the first run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-diagrams-one-neutral-academic-style-readable-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (diagrams: one neutral academic style, readable size)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-introduction-from-the-proposal-data-sources-reference-papers-progress-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (introduction from the proposal; data sources; reference papers; progress report)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-website-style-as-the-foss4g-course-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (website style as the FOSS4G course site)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-project-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (project description)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-all-documentation-in-docs-served-by-mkdocs-claudemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (all documentation in docs/, served by MkDocs; CLAUDE.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-06-documentation-website-with-mkdocs-d11-heads-and-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-06 (documentation website with MkDocs; D11 heads and mapping)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-05-project-organised-experiments-documentation-hierarchy-html-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-05 (project organised: experiments, documentation hierarchy, HTML site)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-05-us-parcel-data-geodatabases-converted-to-shapefiles-irrmap-code-checked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-05 (US parcel data: geodatabases converted to shapefiles; IrrMap code checked)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-04-future-phase-us-data-for-spatial-and-temporal-transfer--decision-deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-04 (future phase: US data for spatial and temporal transfer — decision deferred)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-04-validation-design-pastis-scheme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-04 (validation design: PASTIS scheme)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-pse-tae-moved-to-next-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (PSE-TAE moved to next phase)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-models_run-workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (models_run workflow diagram)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-terminology-chips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (terminology: chips)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-deep-learning-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (deep-learning baseline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-folders-renamed-main-readme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (folders renamed, main README)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-dataset-check--parcel-explorer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (dataset check + parcel explorer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30-readme-two-agricultural-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30 (README: two agricultural years)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-30
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29 (documentation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29-restructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29 (restructure)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-29
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-27
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-16
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-10-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-10-15
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-2026-10-15-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before 2026-10-15 (summary)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="change-log">Change log<a class="headerlink" href="#change-log" title="Permanent link">&para;</a></h1>
+<p>Chronological record of decisions, code changes and open points of the study
+<em>Irrigated vs rainfed cropland mapping in Morocco with geospatial foundation models</em>.
+Update this file with every change to the code or the method (newest entry on top in the
+change log).</p>
+<hr />
+<h2 id="current-status-2026-11-05">Current status (2026-11-05)<a class="headerlink" href="#current-status-2026-11-05" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Where</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Labels, spatial folds</td>
+<td><code>ml_dataset_prep/01</code>, <code>02</code></td>
+<td>Done: 8,781 parcels (7,585 irrigated, 1,196 rainfed), 5 folds of 20 km blocks</td>
+</tr>
+<tr>
+<td>Tile store, model views</td>
+<td><code>ml_dataset_prep/03</code>, <code>04</code></td>
+<td>Done: 2,987 tiles; parcel features, pixel sets, chips p8 / p16</td>
+</tr>
+<tr>
+<td>Dataset inspection</td>
+<td><code>models_run/01</code></td>
+<td>Done (<code>outputs/study/01_inspection/</code>)</td>
+</tr>
+<tr>
+<td>Embeddings</td>
+<td><code>models_run/02a–02d</code></td>
+<td>Done for Clay, Prithvi, TerraMind (<code>outputs/study/02_embeddings/</code>); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, <a href="../decisions/#d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12</a>); AgriFM scaling still to confirm</td>
+</tr>
+<tr>
+<td>E01 · frozen + PCA, nested CV</td>
+<td><code>experiments/E01_frozen_pca_nested</code></td>
+<td>Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906)</td>
+</tr>
+<tr>
+<td>E02 · frozen + PCA, PASTIS</td>
+<td><code>experiments/E02_frozen_pca_pastis</code></td>
+<td>Ready to run (main RQ1 result)</td>
+</tr>
+<tr>
+<td>E03 · frozen + L-TAE, PASTIS</td>
+<td><code>experiments/E03_frozen_ltae_pastis</code></td>
+<td>Planned: needs <code>models_run/03c_train_ltae.py</code></td>
+</tr>
+<tr>
+<td>E04 · PSE-TAE from scratch</td>
+<td><code>experiments/E04_psetae_scratch</code></td>
+<td>Run exists; parked for the next phase</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td><code>docs/</code> (all pages), <code>mkdocs.yml</code></td>
+<td>Website https://amanchry.github.io/irrimapping-geofm/ ; rules in <code>CLAUDE.md</code></td>
+</tr>
+</tbody>
+</table>
+<p>Next steps
+1. Run E02 (<code>python experiments/run_experiment.py</code>, <code>EXPERIMENT = "E02_frozen_pca_pastis"</code>).
+2. Confirm the AgriFM normalisation; re-embed if needed.
+3. Write <code>models_run/03c_train_ltae.py</code>, run E03.
+4. Then RQ2 (LoRA fine-tuning).</p>
+<hr />
+<h2 id="method-decisions">Method decisions<a class="headerlink" href="#method-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Decision</th>
+<th>Reason / reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-11-05</td>
+<td>Results that go into the thesis are produced as <strong>experiments</strong> (config per experiment, <code>experiments/</code>); two temporal-aggregation pipelines: concat + PCA 128 (E01, E02) and L-TAE (E03)</td>
+<td>Reproducibility; PANGAEA (Marsocci et al. 2024)</td>
+</tr>
+<tr>
+<td>2026-11-04</td>
+<td>Validation = <strong>PASTIS rotation</strong> (3 folds train / next fold validation / 1 fold test); nested CV kept as sensitivity check (E01)</td>
+<td>Garnot &amp; Landrieu 2021; one design for classifiers and neural networks</td>
+</tr>
+<tr>
+<td>2026-10-29</td>
+<td>All inputs (parcel features and foundation-model chips) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the chips</td>
+<td>Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot &amp; Landrieu 2021), Sen4AgriNet (Sykas et al. 2022)</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Foundation models compared: Clay, Prithvi-EO-2.0, TerraMind, AgriFM (AlphaEarth only a pipeline test, not in the thesis)</td>
+<td>Thesis proposal</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Main comparison with <strong>frozen</strong> encoders + the same 4 classifiers; fine-tuning only as a secondary experiment</td>
+<td>Fair across models; Butsko et al. 2025, Marsocci et al. 2024</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Time window = <strong>agricultural year 1 Sep - 31 Aug</strong>; growing season only (Nov-May) and calendar year as ablations</td>
+<td>Ministry reports season rainfall from 1 Sep; sowing ~Nov, harvest May-Jul (FAO GIEWS; USDA FAS 2017); summer is when only irrigated land stays green</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Each parcel gets imagery from <strong>its own survey season</strong> (<code>ag_season</code>: 2023/24 or 2024/25); both years pooled in one dataset, periods aligned (p01 = September)</td>
+<td>Survey ran Dec 2023 - Jan 2025; dropping 2024/25 would lose 42% of rainfed parcels</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Year and region partly confounded (Gharb, Tadla only 2023/24; Souss, Statte only 2024/25) -&gt; no clean cross-year test; possible within Doukkala / El Haouz</td>
+<td>Survey design</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Validation = <strong>nested spatial CV</strong> on 20 km blocks (5 folds); random CV only to show its optimism</td>
+<td>Roberts et al. 2017; Ploton et al. 2020; Kattenborn et al. 2022</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Metrics: macro-F1 (main), per-class F1/precision/recall, balanced accuracy, PR-AUC, Brier, ECE; 95% CI by block bootstrap; inputs compared by paired differences + Holm</td>
+<td>Foody 2009; Pontius &amp; Millones 2011 (no kappa)</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Classifiers: logistic regression (linear probe), random forest, histogram gradient boosting, RBF SVM</td>
+<td>Alain &amp; Bengio 2016; Breiman 2001; Gao et al. 2018; Elwan et al. 2022</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Cloud mask: <strong>Cloud Score+</strong> (cs_cdf &gt;= 0.60) instead of QA60; scene filter raised to 60% cloud</td>
+<td>Pasquarella et al. 2023 (GEE dataset page: 0.50-0.65)</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>S1/S2 empty periods filled by <strong>linear interpolation in time</strong> per parcel (15-day file: 79% of parcels had a gap)</td>
+<td>Avoids constant median fill</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Parcels shrunk by <strong>10 m</strong> (one pixel) for S1/S2 feature extraction</td>
+<td>Removes mixed edge pixels</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>One shared <strong>chip store</strong> (64 x 64 px, 10 m, 12 months, 12 S2 bands + VV/VH) for all foundation models</td>
+<td>Same imagery for every model; one download</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Parcel embedding = patches covering the parcel, weighted by the share inside the parcel</td>
+<td>Parcel-level labels</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Clay: monthly chips one by one, 10 bands, Clay normalisation, week/lat-lon codes</td>
+<td>Clay v1.5 docs and code</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>Prithvi: 6 bands (B2 B3 B4 B8A B11 B12), 4 frames per pass, date + location; 10 m input (pretrained on 30 m HLS)</td>
+<td>Model card config.json</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>TerraMind: S2L2A (12 bands) + S1GRD, standardised with v1 pretraining stats, modalities averaged</td>
+<td>TerraTorch terramind_register.py</td>
+</tr>
+<tr>
+<td>2026-11-06</td>
+<td>AgriFM: patch size 4 × 4 × 4 px of the pretrained patch embedding (stride 32 px) instead of the fine-tuning config's 4 × 2 × 2; weights mapped by name and checked on loading</td>
+<td>AgriFM.pth (S2 patch kernel 128 × 10 × 4 × 4 × 4); <a href="../decisions/#d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12</a></td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>AgriFM: 12 months at once, 10 bands, normalisation from its cropland config; loaded without mmcv (mmengine registries)</td>
+<td>AgriFM repo configs/cropland_mapping.py</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="open-points">Open points<a class="headerlink" href="#open-points" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> AgriFM normalisation: config mean ~4,180 (blue) vs ~1,100 in Earth Engine S2 L2A -&gt; confirm the pixel scale its weights expect.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> ~~AgriFM weights: download <code>AgriFM.pth</code> to <code>checkpoints/agrifm/</code> and clone the repo to <code>external/AgriFM</code>.~~</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> AgriFM results of E01 (and any other run before 2026-11-06) used an untrained encoder: re-run with the fixed
+  <code>02d</code> embeddings (<a href="../decisions/#d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12</a>).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> ~~Complete the Ouassanouan et al. (2026) reference~~ (done 2026-11-05).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Prithvi on 10 m input (pretrained on 30 m HLS): state in thesis; optional 30 m ablation.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Neighbouring fields inside a chip (mixed 160 m patches, transformer context): add parcel "purity" + accuracy by parcel size; optional masked-chip ablation (<code>MASK_OUTSIDE</code>).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Per-year results (2023/24 vs 2024/25) from the out-of-fold predictions; year-transfer test within Doukkala / El Haouz.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Tunisia: label source and transfer experiment (zero-shot and few-shot).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Prediction / wall-to-wall mapping step (later).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Phase 2 (after Morocco is complete): US transfer study</strong> - see the change-log entry of 2026-11-04 (future phase). First step: one-day data check of the original state label sources.</li>
+</ul>
+<hr />
+<h2 id="change-log-newest-first">Change log (newest first)<a class="headerlink" href="#change-log-newest-first" title="Permanent link">&para;</a></h2>
+<h3 id="2026-11-06-agrifm-weights-were-not-loaded-fixed">2026-11-06 (AgriFM weights were not loaded; fixed)<a class="headerlink" href="#2026-11-06-agrifm-weights-were-not-loaded-fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What: <code>models_run/02d_embed_agrifm.py</code> loads <code>AgriFM.pth</code> by name (prefix <code>encoder.</code> removed,
+  <code>S2_patch_emd</code> → <code>patch_emd.proj</code>) and stops unless every encoder tensor loads; patch size 4 × 4 × 4 px (the
+  pretrained patch embedding), output stride 32 px (<code>STRIDE_PX = 32</code>); a check stops the run if the feature grid
+  does not match the stride. Decision <a href="../decisions/#d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12</a>.</li>
+<li>Why: the AgriFM embeddings on the local machine and on the cluster disagreed (cosine similarity ≈ 0.05 against
+  ≈ 1.0 for TerraMind). The cause: no pretrained weight had been loaded (mmengine reported success despite the
+  mismatch), so all earlier AgriFM embeddings, including E01, came from a randomly initialised encoder.</li>
+<li>Where: AgriFM re-embedded and re-trained on the cluster; old outputs kept as <code>*_random_init</code> on the cluster.</li>
+</ul>
+<h3 id="2026-11-06-setup-on-the-ut-eemcs-hpc-cluster">2026-11-06 (setup on the UT EEMCS HPC cluster)<a class="headerlink" href="#2026-11-06-setup-on-the-ut-eemcs-hpc-cluster" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What: repository cloned to the UT EEMCS HPC cluster (<code>~/irrimapping-geofm</code>), conda environment <code>condaml</code> built
+  with the CUDA build of PyTorch (tested on an NVIDIA L40 node), input data and the 128 px tile dataset copied;
+  model weights are downloaded on the cluster on first use.</li>
+<li>Why: the embedding and training runs need a GPU.</li>
+<li>Where: <code>SERVER.md</code> in the project root (connection, environment, data transfer, Slurm job scripts).</li>
+</ul>
+<h3 id="2026-11-06-content-from-the-results-presentation-of-week-45">2026-11-06 (content from the results presentation of week 45)<a class="headerlink" href="#2026-11-06-content-from-the-results-presentation-of-week-45" title="Permanent link">&para;</a></h3>
+<p>Only content that is still valid for the current pipeline was taken over; numbers from the earlier 30-day pipeline
+were not.
+- E01 report: new section <em>Additional analyses</em> from the E01 result files — random vs spatial CV (all inputs),
+  grouped permutation importance of the baseline (variables and months) with figure, settings selected per round.
+- RQ1 page §6.2: principle and fixed settings of each classifier (L2/lbfgs, 500 trees, HGB early stopping off and
+  why, SVM without probability calibration).
+- Evaluation protocol: why a fold rotation instead of one fixed split; no kappa (Pontius &amp; Millones 2011); block
+  bootstrap (Künsch 1989).
+- ML-ready dataset §6.2: crop calendar and the reasons for the September–August agricultural year.
+- References: Valavi 2019, Schratz 2019, Karasiak 2022, Orynbaikyzy 2022, Künsch 1989, Gao 2018, Elwan 2022.
+- <code>tools/a6_copy_doc_figures.py</code> also copies the two E01 figures.</p>
+<h3 id="2026-11-06-reference-summary-moroccan-field-survey">2026-11-06 (reference summary: Moroccan field survey)<a class="headerlink" href="#2026-11-06-reference-summary-moroccan-field-survey" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New summary page <a href="../references/ouassanouan-2026-morocco-survey/">Moroccan field survey · Ouassanouan et al. (2026)</a>
+  (from the paper PDF): protocol, attributes, data records (figshare doi:10.6084/m9.figshare.28486022.v2), quality
+  control, use in this research, limitations (rainfed concentrated in Doukkala, region–season confounding,
+  route-based sampling, single-season labels). Linked from the reference table, the menu and Data sources.</li>
+</ul>
+<h3 id="2026-11-06-documentation-organised-by-research-phase">2026-11-06 (documentation organised by research phase)<a class="headerlink" href="#2026-11-06-documentation-organised-by-research-phase" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New <a href="../research_plan/">Research plan</a>: five phases mapped to the objectives and RQs (1 Data preparation;
+  2 Model evaluation, RQ1–RQ2; 3 Transferability, RQ3–RQ4; 4 Multi-model fusion, RQ5; 5 Annual maps) plus
+  6 Synthesis and dissemination; components added to the proposal structure (mapping model, transfer-region dataset,
+  year-transfer test, map accuracy assessment).</li>
+<li>Phase folders: <code>phase1_data/</code> (overview, ML-ready dataset), <code>phase2_models/</code> (overview, RQ1 frozen encoders,
+  RQ2 fine-tuning starter, evaluation protocol); starter pages <code>phase3_transfer/</code>, <code>phase4_fusion/</code>, <code>phase5_maps/</code>.
+  Decisions moved to <code>decisions.md</code>; the <code>method/</code> folder is gone (old copies in <code>tmp_trash/pre_phase_move/</code>).</li>
+<li>Dataset figures renumbered 1.1–1.12; <code>tools/a6_copy_doc_figures.py</code> writes to <code>docs/phase1_data/figures/</code>.</li>
+<li>Experiment configs: new field <code>phase</code>. Results table and progress-report timeline grouped by phase; <code>CLAUDE.md</code>
+  rules for phase pages.</li>
+</ul>
+<h3 id="2026-11-06-method-section-reordered-dataset-figures-in-the-documentation">2026-11-06 (Method section reordered; dataset figures in the documentation)<a class="headerlink" href="#2026-11-06-method-section-reordered-dataset-figures-in-the-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Method pages moved into <code>docs/method/</code> in reading order: 1 Overview (<code>method/overview.md</code>), 2 Dataset preparation
+  (<code>method/dataset.md</code>), 3 Model training and inference (<code>method/models.md</code>), 4 Evaluation protocol
+  (<code>method/evaluation.md</code>), 5 Decisions (<code>method/decisions.md</code>); the Introduction moved to <code>docs/introduction.md</code>.
+  All links rewritten; old copies in <code>tmp_trash/pre_method_move/</code>. Site URLs change accordingly (e.g. <code>/method/dataset/</code>).</li>
+<li>Dataset preparation now shows the 12 figures produced by the pipeline (Figures 2.1–2.12: parcels, class balance,
+  survey timing, class similarity by distance, folds and blocks, train–test distance, patch purity, clear
+  observations, seasonal profiles, example chips), with captions; new §7.6 <em>Dataset inspection</em>.</li>
+<li>New <code>tools/a6_copy_doc_figures.py</code>: copies the figures from <code>outputs/</code> to <code>docs/method/figures/</code> (downscaled; example
+  chips as JPEG). Run it after re-running a pipeline step.</li>
+</ul>
+<h3 id="2026-11-06-diagram-labels-no-longer-cut-off">2026-11-06 (diagram labels no longer cut off)<a class="headerlink" href="#2026-11-06-diagram-labels-no-longer-cut-off" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Diagram text was clipped in some browsers (e.g. "Dec 2023 – Jan 202"): labels were measured with a fallback
+  font and drawn with the site font. <code>docs/assets/javascripts/mermaid.js</code> now waits for the web font and uses the
+  site font (Roboto); <code>extra.css</code> fixes the label font and shows any overflow. Checked: all 25 diagrams, no clipped
+  label.</li>
+</ul>
+<h3 id="2026-11-06-foundation-models-page-academic-register">2026-11-06 (Foundation models page; academic register)<a class="headerlink" href="#2026-11-06-foundation-models-page-academic-register" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New page <a href="../foundation_models/">Foundation models</a> after <em>Environment Setup</em>: selection criteria, overview table
+  (developer, architecture, pretraining, paper, weights), configuration in this study, notes per model, weights
+  folders and references. It is now the only place with per-model tables.</li>
+<li>Removed the duplicated model tables from the Introduction, Data sources, Environment setup, Evaluation protocol §3
+  and Models pipeline (table under the workflow, §3, §5.1–5.4); these pages now link to the new page.
+  Models pipeline §5.5 renumbered to §5.2.</li>
+<li>Narrative text rewritten in an academic, impersonal register (Method in brief, page introductions of the dataset,
+  models, protocol, decisions, results, experiments and setup pages). <code>CLAUDE.md</code> style rule updated accordingly.</li>
+</ul>
+<h3 id="2026-11-06-model-weights-in-checkpoints-downloaded-on-the-first-run">2026-11-06 (model weights in checkpoints/, downloaded on the first run)<a class="headerlink" href="#2026-11-06-model-weights-in-checkpoints-downloaded-on-the-first-run" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>models_run/02a_embed_clay.py</code>: downloads <code>clay-v1.5.ckpt</code> and <code>metadata.yaml</code> into <code>checkpoints/clay/</code> if missing
+  (new settings CHECKPOINT_URL, METADATA_URL; <code>.part</code> file until complete).</li>
+<li><code>models_run/02b_embed_prithvi.py</code>, <code>02c_embed_terramind.py</code>: new setting WEIGHTS_DIR; the Hugging Face download folder
+  is set to <code>checkpoints/prithvi/</code> and <code>checkpoints/terramind/</code> before TerraTorch loads the model (was the hidden
+  <code>~/.cache/huggingface</code>). AgriFM already used <code>checkpoints/agrifm/</code>. Copies of the old scripts in <code>tmp_trash/</code>.</li>
+<li>Docs: <em>Getting started</em> model-weights table (folder, script, source); Introduction models table with paper and
+  weights links.</li>
+</ul>
+<h3 id="2026-11-06-diagrams-one-neutral-academic-style-readable-size">2026-11-06 (diagrams: one neutral academic style, readable size)<a class="headerlink" href="#2026-11-06-diagrams-one-neutral-academic-style-readable-size" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All Mermaid diagrams restyled by one theme in <code>docs/assets/javascripts/mermaid.js</code> (white boxes, dark grey text and
+  lines, light grey groups, 15 px text); the 64 colour lines (<code>classDef</code> / <code>class</code>) removed from the pages.</li>
+<li>Diagrams render at natural size; slightly wider ones are fitted (text ≥ 12 px), long left-to-right chains are
+  redrawn top-down. Restructured the too-wide ones: main workflow (Method in brief), Earth Engine compositing and
+  model views (dataset), models workflow (details moved to a table), fairness and inspection diagrams (models).
+  Result: all 26 diagrams fit the page, none scrolls. Gantt timeline sized to the column.</li>
+<li><code>mkdocs.yml</code>: empty <code>extra:</code> (left after removing the social links) removed — it stopped the build.</li>
+</ul>
+<h3 id="2026-11-06-introduction-from-the-proposal-data-sources-reference-papers-progress-report">2026-11-06 (introduction from the proposal; data sources; reference papers; progress report)<a class="headerlink" href="#2026-11-06-introduction-from-the-proposal-data-sources-reference-papers-progress-report" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docs/research/introduction.md</code> (new, replaces thesis_design.md): background, state of the art, research gap, objectives
+  and RQs, study area and data, models, approach, expected outcomes, from the research proposal; the proposal is
+  published as <code>docs/assets/research_proposal.pdf</code> (exception in <code>.gitignore</code>). Home page: no names, no workflow
+  (moved to <em>Method in brief</em>), generic research wording across the site.</li>
+<li><code>docs/data_source/index.md</code>: tables of ground truth, satellite collections (Earth Engine IDs), auxiliary and reference
+  maps, pretrained weights, with provider, use, access link and status; survey details.</li>
+<li><code>docs/references/</code>: index of all papers from the proposal and the method (by topic, with links), summary pages for
+  AlphaEarth Foundations, Yang et al. 2026, PANGAEA, PASTIS / U-TAE, L-TAE, IrrMap, Tong &amp; Wang 2025, the heads-and-
+  mapping review (from the old literature page), and <code>_template.md</code> for new summaries.</li>
+<li><code>docs/progress_report.md</code>: summary, timeline (Gantt), milestones vs the proposal plan, done so far, key results,
+  next steps, open points and risks. Menu: Data sources; Progress (report, change log, meetings); References.</li>
+</ul>
+<h3 id="2026-11-06-website-style-as-the-foss4g-course-site">2026-11-06 (website style as the FOSS4G course site)<a class="headerlink" href="#2026-11-06-website-style-as-the-foss4g-course-site" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>mkdocs.yml</code> and <code>docs/SUMMARY.md</code> follow the style of the <em>Scalable Raster Analytics</em> course site: Material with teal / deep
+  orange, one left sidebar (no tabs) with collapsible groups (Method 1–5, Experiments, Meetings), instant navigation,
+  LinkedIn / GitHub icons in the footer. Custom CSS reduced to the Mermaid card and table font size.</li>
+</ul>
+<h3 id="2026-11-06-project-description">2026-11-06 (project description)<a class="headerlink" href="#2026-11-06-project-description" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New one-paragraph thesis description (from the proposal) in <code>README.md</code> and <code>docs/index.md</code>, replacing the method-oriented summary.</li>
+</ul>
+<h3 id="2026-11-06-all-documentation-in-docs-served-by-mkdocs-claudemd">2026-11-06 (all documentation in docs/, served by MkDocs; CLAUDE.md)<a class="headerlink" href="#2026-11-06-all-documentation-in-docs-served-by-mkdocs-claudemd" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>One documentation folder.</strong> Every page now lives in <code>docs/</code> (MkDocs <code>docs_dir</code>); moved with links rewritten:
+  README → <code>docs/index.md</code> (home) + <code>docs/setup.md</code> (setup, run order, structure); <code>docs/0x_*.md</code> →
+  <code>docs/research/</code> (thesis_design, overview, protocol, decisions, literature); <code>ml_dataset_prep/README.md</code> →
+  <code>docs/dataset/index.md</code>; <code>models_run/README.md</code> → <code>docs/models/index.md</code>; experiment README / REPORT →
+  <code>docs/experiments/&lt;name&gt;/index.md</code> (setup) and <code>report.md</code>, figures in <code>docs/experiments/&lt;name&gt;/figures/</code>;
+  PROGRESS.md → <code>docs/progress.md</code>; <code>docs/05_results.md</code> → <code>docs/results.md</code>. Hand-written breadcrumbs and
+  previous / next lines removed (the site draws them). Old files in <code>tmp_trash/pre_docs_migration/</code>.</li>
+<li>Root <code>README.md</code>: short project summary + links to the site; <code>ml_dataset_prep/</code>, <code>models_run/</code>, <code>experiments/</code>:
+  pointer READMEs. New <code>CLAUDE.md</code>: where every kind of change is documented, experiment workflow, style rules,
+  checks before finishing.</li>
+<li><strong>Site:</strong> top tabs Overview · Methodology · Experiments · Results · Meetings · References, sidebar tree per tab,
+  breadcrumbs, home page with cards (<code>docs/SUMMARY.md</code> = navigation). The mkdocs-gen-files mirror
+  (<code>mkdocs/gen_pages.py</code>) is no longer needed and was removed; style and Mermaid script in <code>docs/assets/</code>.</li>
+<li><code>experiments/make_report.py</code> writes report pages, figures (incl. one confusion-matrix figure per run) and the
+  Experiments menu (between AUTO markers in <code>docs/SUMMARY.md</code>) into <code>docs/</code>; templates in <code>experiments/_template/</code>
+  (config, setup page, report page). Workflow: builds on changes in <code>docs/</code> or <code>mkdocs.yml</code>, <code>--strict</code>.</li>
+</ul>
+<h3 id="2026-11-06-documentation-website-with-mkdocs-d11-heads-and-mapping">2026-11-06 (documentation website with MkDocs; D11 heads and mapping)<a class="headerlink" href="#2026-11-06-documentation-website-with-mkdocs-d11-heads-and-mapping" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>MkDocs Material website</strong> replaces the hand-built HTML (<code>docs/build_site.py</code>, <code>docs/site/</code> moved to
+  <code>tmp_trash/old_html_site/</code>). <code>mkdocs.yml</code> (root) + <code>mkdocs/gen_pages.py</code> (mkdocs-gen-files): the markdown files stay
+  where they are; at build time they are mirrored into the site at the same paths, so links work the same on GitHub
+  and on the site; images copied; links to scripts / tables / folders point to GitHub; navigation (tabs: Home,
+  Research, Results, Meetings, Code reference) written from the experiment configs (mkdocs-literate-nav).
+  Anchors use GitHub's slugs (pymdownx.slugs). Mermaid rendered by <code>mkdocs/pages/javascripts/mermaid.js</code> (keeps the
+  diagram colours). <code>.github/workflows/docs.yml</code> rebuilds and publishes to GitHub Pages on every push to main.
+  <code>environment.yml</code>: mkdocs&lt;2, mkdocs-material, mkdocs-gen-files, mkdocs-literate-nav. <code>.gitignore</code>: <code>site/</code>.
+  <code>make_report.py</code>: <code>&lt;details markdown="1"&gt;</code> so the collapsed table renders on both.
+  Checked: build without warnings; 19 pages, 26 Mermaid diagrams, no broken internal links or anchors.</li>
+<li><strong>D11</strong> (docs/04_decisions.md): parcel benchmark with classical heads for RQ1; for the maps (RQ2–RQ4) frozen GeoFM +
+  UPerNet on the tile label pixels, RF on per-pixel S1/S2 features, and neural baselines TempCNN (pixel) and U-TAE
+  (tile); pixel predictions aggregated per parcel for the same scoring. Literature table added to
+  docs/research/README.md (references checked against the papers).</li>
+</ul>
+<h3 id="2026-11-05-project-organised-experiments-documentation-hierarchy-html-site">2026-11-05 (project organised: experiments, documentation hierarchy, HTML site)<a class="headerlink" href="#2026-11-05-project-organised-experiments-documentation-hierarchy-html-site" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Experiments.</strong> New <code>experiments/</code>: one folder per experiment with <code>config.yaml</code> (all settings, same names as the
+  scripts), <code>README.md</code> (question, why, what changes, how to run), <code>REPORT.md</code> (answer first; tables and figures
+  generated) and <code>results/</code>. <code>run_experiment.py</code> runs the steps of a config (train_evaluate per input, compare,
+  report), skips finished runs and saves config + git commit + dates in <code>results/run_info.json</code>.
+  <code>make_report.py</code> writes the tables (macro-F1 per input × classifier, differences vs baseline with Holm verdict,
+  per-class metrics with CI, macro-F1 per fold) and two figures into REPORT.md, and refreshes
+  <code>experiments/README.md</code> and <code>docs/05_results.md</code>. Template in <code>experiments/_template/</code>.</li>
+<li><strong>Experiment mode in the scripts.</strong> <code>models_run/03_train_evaluate.py</code>, <code>03b_train_psetae.py</code>, <code>04_compare_models.py</code>:
+  new setting <code>EXPERIMENT</code> (None = as before, results in <code>outputs/study/</code>). When set (or by <code>run_experiment.py</code>), the
+  config's section replaces the settings, unknown names stop the run, results go to
+  <code>experiments/&lt;name&gt;/results/</code>; finished runs are skipped. 03: derived paths moved below the override; no
+  <code>_nested</code> suffix inside an experiment. 04: compares all runs of the experiment, baseline found automatically,
+  <code>EXTRA_RUNS</code> adds runs of other experiments (PCA vs L-TAE); figure title names the experiment.</li>
+<li><strong>Runs moved:</strong> the five runs of 30 Oct (nested CV) from <code>outputs/study/03_models/</code> to
+  <code>experiments/E01_frozen_pca_nested/results/</code>, compared and reported (8,775 common parcels); the PSE-TAE run to
+  <code>experiments/E04_psetae_scratch/results/</code> (parked, <code>listed: false</code>).</li>
+<li><strong>E01 result:</strong> no GeoFM differs from the baseline after Holm for Clay, Prithvi, TerraMind; AgriFM worse (RF, SVM).
+  Best: Clay + SVM 0.910, baseline SVM 0.906. Fold 0 (rainfed in Doukkala + Souss): baseline 0.80, Clay and Prithvi
+  higher with every classifier.</li>
+<li><strong>Planned:</strong> E02 (PASTIS validation, ready) and E03 (L-TAE pipeline; design in its README and in the protocol §5).</li>
+<li><strong>Documentation hierarchy:</strong> <code>docs/README.md</code> (index with map), <code>01_thesis_design.md</code>, <code>02_overview.md</code>,
+  <code>03_protocol.md</code>, <code>04_decisions.md</code> (D1–D10: departures from the proposal), <code>05_results.md</code>, <code>weekly/</code> (one page
+  per meeting; first: 2026-W45), <code>research/README.md</code> (literature notes). Breadcrumbs and next / previous links on
+  every page; main README, <code>ml_dataset_prep/README.md</code> and <code>models_run/README.md</code> linked into the hierarchy.</li>
+<li><strong>HTML site:</strong> <code>docs/build_site.py</code> (standard library) writes <code>docs/site/*.html</code> from the markdown: sidebar by
+  hierarchy, page contents, Mermaid diagrams, working links between pages.</li>
+<li>Fixed: Ouassanouan et al. (2026) reference completed (title, DOI, from the proposal); leftover of the chips rename
+  in <code>ml_dataset_prep/README.md</code> ("land use, chip and irrigation method" -&gt; "crop").</li>
+<li><code>.gitignore</code>: <code>*.pt</code> and the final models in experiment results.</li>
+<li><strong>Fixed tile-store path:</strong> <code>ml_dataset_prep/03</code>/<code>04</code> write to <code>outputs/dataset/03_tiles_128px/</code>, but the readers still
+  used <code>03_tiles/</code> -&gt; updated in <code>models_run/01, 02a-02d, 03, 03b</code>, <code>tools/a3, a4, a5</code>, docstrings and READMEs
+  (24 places). Without it every models_run script stopped with "views_info.json not found".</li>
+<li>Checked: config override and typo stop (03); <code>run_experiment.py</code> on E01 (finished runs skipped, compare + report
+  rerun, same numbers); a QUICK_TEST run of the baseline in experiment mode with the PASTIS rotation on the real data
+  (5 rounds, 1.4 min); site: 19 pages, 26 Mermaid diagrams, no console errors, no broken page or section links;
+  all markdown links and anchors resolve.</li>
+</ul>
+<h3 id="2026-11-05-us-parcel-data-geodatabases-converted-to-shapefiles-irrmap-code-checked">2026-11-05 (US parcel data: geodatabases converted to shapefiles; IrrMap code checked)<a class="headerlink" href="#2026-11-05-us-parcel-data-geodatabases-converted-to-shapefiles-irrmap-code-checked" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Data in <code>IrrMap/US_Parcel_Data</code> (outside this repo). New script there: <code>gdb_to_shp.py</code> (settings at top,
+  resumable in chunks). Output next to each source in <code>&lt;gdb name&gt;_shp/</code>, original CRS, checked against the source
+  (same feature count and total area for every layer).</li>
+<li>Arizona folder = USGS <em>Verified irrigated agricultural lands 2002-17</em>: 14 state layers (AZ, CA, CO, FL, GA, ID, IL,
+    MS, MT, NM, TX, UT, WA, WY), <strong>irrigated only</strong> (IRG_STATUS, IRG_SYS, CROP_TYPE, DATA_DATE, DATA_YEAR).</li>
+<li>Washington = WSDA crop distribution 2025, 222,520 fields; crop names joined from the WSDACrop table.
+    <strong>137,185 fields have Irrigation = "None"</strong> -&gt; candidate rainfed/dryland class (to verify: fallow, pasture, CRP).</li>
+<li>Colorado CRDSS Div 5 (2000-2023) and Utah WRLU (2017-2024) were already shapefiles.</li>
+<li>Field names shortened to 10 characters (e.g. InitialSurveyDate -&gt; InitSurvey); dates stored as text YYYY-MM-DD.</li>
+<li>
+<p>IrrMap code check: random 80/20 split of single-date patches; ~100% of test patch locations also appear in train on
+  other dates (WA 2018: 31,056 of 31,064) -&gt; their scores are not spatially independent. Test set also used for
+  per-epoch evaluation. Minor bugs (missing argparse import, undefined src_path, constant LAND_TYPE band).
+  Reusable for phase 2: the label sources only, not their patches.</p>
+</li>
+<li>
+<p>Usefulness check (both classes needed):</p>
+</li>
+<li><strong>Washington WSDA 2025 - most useful.</strong> Field crops (cereal, oilseed, vegetable, hay, seed): 53,723 rainfed
+    (Irrigation = None) vs 33,172 irrigated; rainfed mainly in the dry east (Whitman, Spokane, Lincoln, Adams).
+    Use eastern WA only (semi-arid, winter rain, dryland wheat next to irrigated fields = closest US match to Morocco).</li>
+<li><strong>Utah WRLU 2017-2025 - useful, adds years.</strong> 2023: 15,611 "Dry Crop" vs 110,907 irrigated (fallow/pasture removed).
+    Yearly maps -&gt; temporal transfer test.</li>
+<li>USGS verified irrigated lands 2002-17 (Arizona folder) and Colorado CRDSS Div 5: irrigated only -&gt; no rainfed class;
+    at most extra irrigated examples.</li>
+<li>Label definitions: Utah metadata defines "Dry Crop" = no irrigation method applied, crop watered by natural
+    processes (rain); "None" there = non-agricultural land. WSDA has no public definition of Irrigation = "None"
+    (WSDA's own "Dryland Crops" layer = crops grown without irrigation water). 34,235 of the 53,723 WA "None" crop
+    fields come from NASS (CDL), not WSDA ground survey -&gt; irrigation probably not observed. <strong>Use DataSource = WSDA
+    only: 19,390 rainfed vs 23,705 irrigated.</strong></li>
+</ul>
+<h3 id="2026-11-04-future-phase-us-data-for-spatial-and-temporal-transfer--decision-deferred">2026-11-04 (future phase: US data for spatial and temporal transfer — decision deferred)<a class="headerlink" href="#2026-11-04-future-phase-us-data-for-spatial-and-temporal-transfer--decision-deferred" title="Permanent link">&para;</a></h3>
+<p>Discussed after reading IrrMap (Mandal et al. 2025, arXiv:2505.08273). <strong>Decision: complete Morocco first; come back to this later.</strong>
+- <strong>IrrMap itself is not usable as the study area.</strong> It labels irrigation <em>method</em> (flood / sprinkler / drip, all else
+  "other"); there is <strong>no rainfed class</strong>, so irrigated vs rainfed cannot be studied with it. Its labels come from
+  state agency maps (not field survey); inputs are single-season 224 px patches; validation is a random 80/20 split
+  per state, with no validation split and no spatial test; only a U-Net (ResNet-34) is benchmarked, no GeoFMs.
+  -&gt; Keep Morocco as the AOI (field-surveyed labels, data-scarce region, 12-month time series, spatial folds).
+  Cite IrrMap as related work and as a model for the dataset paper (Part 1).
+- <strong>Idea for a second phase:</strong> use the <strong>original field boundaries and labels</strong> behind IrrMap (state datasets), build
+  chips from scratch with the same pipeline (labels -&gt; 20 km block folds -&gt; tile store -&gt; chips -&gt; embeddings -&gt;
+  same classifiers and validation), to test <strong>spatial and temporal transferability</strong>.
+  - Why it is valuable: state data often covers many years over the same fields -&gt; clean temporal transfer
+    (train earlier years, test later years), which Morocco cannot offer (year and region overlap); a second
+    continent tests whether GeoFMs transfer better than S1/S2 features (Morocco &lt;-&gt; US).
+  - Conditions: (1) the source data must contain <strong>non-irrigated / dryland parcels</strong> (deal-breaker; e.g. Washington
+    agricultural land-use data includes dryland wheat — to be checked state by state); (2) small scope: 1-2 states,
+    3-4 years, ~10-20k parcels; (3) only after Morocco is finished.
+  - Pipeline changes needed: new label reader in <code>ml_dataset_prep/01_prepare_labels.py</code>; <strong>support other UTM zones</strong> in
+    <code>03_build_tiles.py</code> (now fixed to UTM 29N; western US spans zones 10-13); US season window via <code>START_MONTH</code>;
+    optional fold by year in 02; a new transfer evaluation (train region/year A, test B). <code>models_run/</code> unchanged.
+  - Risks: administrative (noisier) labels; different crop systems (Morocco &lt;-&gt; US transfer may be poor for all models);
+    ~4-8 extra weeks.
+  - First step when resuming: one-day check of which state sources IrrMap used, whether they include
+    dryland / non-irrigated fields, which years, and whether field boundaries are downloadable.
+  - Fallback if the check fails: keep as future work; use GMIA-NEXT ground-truth points (<code>tools/a1</code>) or Tunisia as
+    the external test.</p>
+<h3 id="2026-11-04-validation-design-pastis-scheme">2026-11-04 (validation design: PASTIS scheme)<a class="headerlink" href="#2026-11-04-validation-design-pastis-scheme" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>models_run/03_train_evaluate.py</code>: new setting <code>VALIDATION = "pastis"</code> (default). Per round: 3 folds train,
+  the next fold (k + 1) is the validation fold that chooses the hyperparameters, fold k is the test fold; the
+  model is trained on the 3 training folds. Same scheme as PASTIS (Garnot &amp; Landrieu 2021) and
+  <code>03b_train_psetae.py</code>, so classifiers and the neural-network baseline are trained, tuned and tested identically.
+  <code>VALIDATION = "nested"</code> keeps the earlier design (inner spatial CV on 4 folds, refit on 4) for a sensitivity
+  check; its runs get the suffix <code>_nested</code>, so run names of the default stay the ones <code>04_compare_models.py</code> expects.</li>
+<li>READMEs (main, ml_dataset_prep §5.4, models_run §6.3 + workflow diagram) updated with the rotation table.</li>
+<li>Results produced before this change used the nested design.</li>
+</ul>
+<h3 id="2026-10-30-pse-tae-moved-to-next-phase">2026-10-30 (PSE-TAE moved to next phase)<a class="headerlink" href="#2026-10-30-pse-tae-moved-to-next-phase" title="Permanent link">&para;</a></h3>
+<ul>
+<li>PSE-TAE removed from the READMEs (main + models_run: workflow diagram, tables, section 6b, run order, settings,
+  reference); it will be presented in the next phase. Code kept unchanged: <code>models_run/03b_train_psetae.py</code> and the
+  PSE-TAE entry in <code>04_compare_models.py</code> (RUNS skips it until the run exists). Previous README versions in <code>tmp_trash/</code>.</li>
+</ul>
+<h3 id="2026-10-30-models_run-workflow-diagram">2026-10-30 (models_run workflow diagram)<a class="headerlink" href="#2026-10-30-models_run-workflow-diagram" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>models_run/README.md</code> section 1: new single Mermaid workflow diagram, from the Part 1 outputs to the comparison:
+  six inputs with their data, bands, patch size and time handling; embedding pooling + PCA; the four classifiers
+  with their grids; PSE-TAE training; nested spatial CV; metrics; comparison; optional sensitivity runs.</li>
+</ul>
+<h3 id="2026-10-30-terminology-chips">2026-10-30 (terminology: chips)<a class="headerlink" href="#2026-10-30-terminology-chips" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One term for the 64 x 64-px windows cut from the tiles around each parcel: <strong>chips</strong> (was "crops").
+  Code: <code>crops_p8/16</code> -&gt; <code>chips_p8/16</code>, <code>CROP_PX</code> -&gt; <code>CHIP_PX</code>, <code>CROP_PATCH_SIZES/PX</code> -&gt; <code>CHIP_PATCH_SIZES/PX</code>,
+  index column <code>n_px_in_crop</code> -&gt; <code>n_px_in_chip</code>, views_info key <code>s1_orbit_for_crops_and_pixelsets</code> -&gt;
+  <code>s1_orbit_for_chips_and_pixelsets</code>, study/03 option <code>S1_ORBIT = "crops"</code> -&gt; <code>"chips"</code>; the old separately
+  downloaded store is now called "legacy". Agricultural uses (cropland, crop type, Seasonal Crop) unchanged.</li>
+<li>Existing outputs renamed in place (folders, CSV headers, JSON keys): no re-run needed. Tested study/01 and 03b.</li>
+</ul>
+<h3 id="2026-10-30-deep-learning-baseline">2026-10-30 (deep-learning baseline)<a class="headerlink" href="#2026-10-30-deep-learning-baseline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Classifier choice: keep the 4 classifiers of study/03 (logistic regression, RF, HGB, SVM); headline = RF for all
+  inputs + logistic regression (linear probe) for the foundation models; HGB / SVM as robustness checks.</li>
+<li>New <code>models_run/03b_train_psetae.py</code>: PSE-TAE (Garnot et al. 2020) trained from scratch on the pixel sets
+  (10 S2 bands + S1 VV/VH of the chips' orbit, inner pixels), paper-default architecture, class-weighted
+  cross-entropy, early stopping on the next fold, same 5 outer spatial folds, same output format as 03.
+  Tested on synthetic pixel sets (learns the signal: macro-F1 0.998; early stop after 16-22 epochs).</li>
+<li><code>04_compare_models.py</code>: run <code>psetae_agyear_s2s1</code> added to RUNS; runs with their own model are compared with the
+  baseline's <code>BASELINE_CLASSIFIER = "rf"</code> (new column <code>baseline_classifier</code>). Tested.</li>
+<li>READMEs updated (models_run section 6b with diagrams, run order, settings; main README).</li>
+</ul>
+<h3 id="2026-10-30-folders-renamed-main-readme">2026-10-30 (folders renamed, main README)<a class="headerlink" href="#2026-10-30-folders-renamed-main-readme" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Folders renamed by the user: <code>dataset/</code> -&gt; <code>ml_dataset_prep/</code>, <code>study/</code> -&gt; <code>models_run/</code>, <code>analysis/</code> -&gt; <code>tools/</code>;
+  raw data moved from <code>data/raw/&lt;x&gt;</code> to <code>data/&lt;x&gt;</code>; <code>archive/</code> removed. Output folders unchanged (<code>outputs/dataset</code>,
+  <code>outputs/study</code>, <code>outputs/analysis</code>).</li>
+<li>Fixed the remaining <code>data/raw</code> paths (ml_dataset_prep/01, tools/a1, tools/a2) and <code>.gitignore</code> (<code>data/</code>).
+  Script descriptions, folder READMEs and this file updated to the new folder names (text only).</li>
+<li>Main README rewritten as an overview: the two parts, overall workflow diagram (Mermaid), project structure,
+  setup (environment, Earth Engine, input data, model weights), run order, tools, links to the folder READMEs.</li>
+</ul>
+<h3 id="2026-10-30-dataset-check--parcel-explorer">2026-10-30 (dataset check + parcel explorer)<a class="headerlink" href="#2026-10-30-dataset-check--parcel-explorer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Checked the full dataset run (dataset/01-04) and models_run/01: 2,987 tiles, 8,781 parcels in both chip views, 8,775 in the
+  feature tables (6 parcels fully covered by overlapping polygons have no own pixel; excluded automatically by
+  models_run/04), no missing values, every parcel-month has a clear S2 view, NDVI r = 0.97-0.99 vs the legacy EE table,
+  S1 orbit ASC. Purity (median) p8 0.36 -&gt; 0.59, p16 0.09 -&gt; 0.30 with patch alignment. Ready for models_run/02-04.</li>
+<li>New <code>tools/a5_parcel_explorer.py</code> -&gt; <code>outputs/analysis/parcel_explorer.html</code>: parcels on a satellite / street
+  basemap, filters (class, year, zone, fold), colour by class or fold, search; click -&gt; monthly NDVI / NDWI / VH / VV /
+  clear-observation profile against class median + IQR of the same agricultural year; pin parcels to compare.
+  Standard library only; tested in a headless browser (no errors).</li>
+</ul>
+<h3 id="2026-10-30-readme-two-agricultural-years">2026-10-30 (README: two agricultural years)<a class="headerlink" href="#2026-10-30-readme-two-agricultural-years" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>ml_dataset_prep/README.md</code>: new section 6.2 explaining how the two agricultural years are handled (season from the
+  survey date, tiles keyed by season + grid position, season-only label burning, one Earth Engine image per year,
+  same band layout, folds by location so a place in both years stays in one fold, 47 tile positions in both years),
+  with a flow diagram; the season split added to the overview diagram. Section 6 renumbered (6.3-6.6).</li>
+</ul>
+<h3 id="2026-10-30">2026-10-30<a class="headerlink" href="#2026-10-30" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New <code>tools/a4_build_vrt.py</code>: all tiles combined into GDAL virtual rasters, one per agricultural year (the years
+  overlap in space): labels, true colour, false colour and Sentinel-1 ascending for each month; optional 228-band
+  full stack (<code>FULL_STACK</code>, ~230 MB XML for 2023/24, off by default). Standard library only; relative paths.
+  Tested: VRT pixels and band names identical to the source tiles. Built for the current store: 2,183 tiles
+  (2023/24) and 804 tiles (2024/25) -&gt; 74 VRTs in <code>outputs/dataset/03_tiles/agyear/vrt/</code>.</li>
+</ul>
+<h3 id="2026-10-29-documentation">2026-10-29 (documentation)<a class="headerlink" href="#2026-10-29-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New <code>ml_dataset_prep/README.md</code> and <code>models_run/README.md</code>: full methodology of each part, every script (purpose, steps,
+  settings, outputs), Mermaid flow diagrams in the markdown, file formats, limitations and references.
+  The main README links to both. TODO: complete the Ouassanouan et al. (2026) reference (title, DOI).</li>
+<li>Docstrings corrected: embedding output names <code>&lt;model&gt;_agyear_tiles.npz</code> (02a-02d), baseline source in models_run/03,
+  a3 output folder.</li>
+</ul>
+<h3 id="2026-10-29-restructure">2026-10-29 (restructure)<a class="headerlink" href="#2026-10-29-restructure" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Code split into two parts.</strong> <code>ml_dataset_prep/</code> builds the ML-ready dataset (publishable separately);
+  <code>models_run/</code> uses only its outputs. <code>pipeline/</code> is no longer used.</li>
+<li>Renamed scripts: <code>pipeline/01</code>, <code>02</code> -&gt; <code>dataset/01</code>, <code>02</code>; <code>pipeline/04_build_tiles.py</code> -&gt; <code>ml_dataset_prep/03_build_tiles.py</code>;
+  <code>pipeline/04b_make_views.py</code> -&gt; <code>ml_dataset_prep/04_make_views.py</code>; <code>pipeline/05a-05d</code> -&gt; <code>models_run/02a-02d</code>;
+  <code>pipeline/06_train_evaluate.py</code> -&gt; <code>models_run/03_train_evaluate.py</code>; <code>pipeline/07_compare_models.py</code> -&gt; <code>models_run/04_compare_models.py</code>.
+  <code>pipeline/03_extract_s1s2_features.py</code> (Earth Engine features) moved to <code>archive/legacy_pipeline/</code>.</li>
+<li>Outputs moved: <code>outputs/01_labels</code>, <code>02_folds</code> -&gt; <code>outputs/dataset/</code>; tile store in <code>outputs/dataset/03_tiles/agyear/</code>;
+  <code>05_embeddings</code>, <code>06_models</code>, <code>07_comparison</code> -&gt; <code>outputs/study/02_embeddings</code>, <code>03_models</code>, <code>04_comparison</code>;
+  old <code>03_s1s2_features</code> and <code>04_chips</code> -&gt; <code>outputs/legacy/</code>. All paths in the scripts updated.</li>
+<li><strong>New <code>models_run/01_inspect_dataset.py</code>:</strong> inventory per class / season / fold, label QA (overlaps, tiny parcels),
+  clear observations per month, patch purity aligned vs centred, seasonal NDVI / NDWI / VH profiles,
+  example chips per class, NDVI agreement with the legacy Earth Engine features. Output: <code>outputs/study/01_inspection/</code>.</li>
+<li>a3 now reads <code>views/chips_p16</code> and writes to <code>outputs/study/01_inspection/chips_geotiff/</code>.</li>
+<li>README rewritten for the two-part structure. Backups: <code>archive/scripts_2026-10-29/</code>.</li>
+</ul>
+<h3 id="2026-10-29">2026-10-29<a class="headerlink" href="#2026-10-29" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>New data source for all inputs: shared tile store.</strong> <code>04_build_tiles.py</code> (non-overlapping 128 x 128-px tiles,
+  label / parcel-ID / edge rasters, S1 per orbit in linear power) and <code>04b_make_views.py</code> (parcel features, pixel sets,
+  patch-aligned chips <code>chips_p8</code> / <code>chips_p16</code>) replace <code>04_download_chips.py</code> and the Earth Engine features of
+  script 03. Old scripts and results are kept for reference; old runs keep their names.</li>
+<li><strong>05a-05d:</strong> new settings <code>CHIP_SOURCE = "tiles"</code> and <code>CHIP_PATCH_PX</code> (8 for Clay, 16 for Prithvi, TerraMind,
+  AgriFM). Output files are now <code>&lt;model&gt;_agyear_tiles.npz</code> (old: <code>&lt;model&gt;_agyear.npz</code>).</li>
+<li><strong>06:</strong> new settings <code>S1S2_SOURCE = "tiles"</code>, <code>TILE_FEATURES = "inner"</code>, <code>S1_ORBIT = "chips"</code>, <code>EMB_SOURCE = "tiles"</code>.
+  The parcel-feature table of 04b is read directly: bookkeeping columns (fold, n_px_used, used_inner) and the
+  observation counts (S2_NCLEAR, S1_N_*) are dropped, the chosen Sentinel-1 orbit is renamed to VV/VH (same orbit
+  as the foundation-model chips by default), months are labelled Sep ... Aug. New run names:
+  <code>s1s2-all_agyear_tiles-inner-&lt;orbit&gt;</code> and <code>&lt;model&gt;_agyear_tiles_concat</code>.</li>
+<li><strong>07:</strong> <code>BASELINE_RUN</code> and <code>RUNS</code> set to the five tile-store runs (old settings in a comment).</li>
+<li>Tested 06 end to end on a synthetic table in the 04b format: 192 features (216 with both orbits), all four
+  classifiers, importance by variable and month.</li>
+<li>Backups of the changed scripts: <code>archive/scripts_2026-10-29/</code>.</li>
+</ul>
+<h3 id="2026-10-27">2026-10-27<a class="headerlink" href="#2026-10-27" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>New chip design (tile store)</strong> replacing <code>04_download_chips.py</code> (moved to <code>archive/scripts_2026-10-27/</code>):</li>
+<li><code>04_build_tiles.py</code>: fixed non-overlapping 128 x 128 px tiles (1.28 km) in EPSG:32629; only tiles needed by the parcels
+    (1,755 home + 302 outline + 930 context = 2,987 tiles); 12 monthly composites x 19 bands: S2 median (Cloud Score+),
+    S2 clear-observation count, S1 ascending / descending separately as linear-power mean -&gt; dB, S1 scene counts;
+    label (0 ignore / 1 irrigated / 2 rainfed), parcel_idx and edge rasters; scene IDs per tile and month; QA per tile;
+    GeoParquet tile index with fold (87 tiles hold parcels of two folds -&gt; <code>mixed_folds</code>).</li>
+<li><code>04b_make_views.py</code>: parcel median features (all pixels / without edge pixels), pixel sets (PSE-TAE), and 64 x 64
+    chips per patch size (8, 16) shifted so the parcel centroid is at a patch centre; same format as the old chips.</li>
+<li>Why: old chips overlapped (median 8 other chips per chip, 6.3% across folds), baseline and foundation models used
+    different pixels / compositing, small parcels were split over 4 patches (purity 0.37 / 0.10 for 8 / 16 px patches;
+    aligned chips: 0.62 / 0.36 in the test sample), S1 was averaged in dB with orbits mixed, no observation counts.</li>
+<li>Label QA from the parcel geometry: 79 overlapping parcel pairs (2 with different labels, 25 covering &gt; 50% of the
+    smaller parcel) -&gt; <code>parcel_overlaps.csv</code>; 3,684 shared pixels set to ignore; 65 parcels have no pixel after the
+    10 m inner buffer.</li>
+<li>Design follows PASTIS, Sen4AgriNet, S2-Agri (PSE-TAE), Fields of The World, ClarkCGA / Prithvi crop chips.</li>
+<li>Next: run 04 with <code>N_TEST_TILES = 20</code>, inspect tiles in QGIS, full run, then 04b; point the 05 scripts to
+  <code>outputs/04_tiles/agyear/views/chips_p8</code> (Clay) or <code>chips_p16</code> (Prithvi, TerraMind; AgriFM to check).</li>
+</ul>
+<h3 id="2026-10-16">2026-10-16<a class="headerlink" href="#2026-10-16" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>05d_embed_agrifm.py</code>: downloads the weights automatically from https://glass.hku.hk/casual/AgriFM/AgriFM.pth and clones the AgriFM code if missing.</li>
+<li><code>05d_embed_agrifm.py</code>: checks for mmengine, the AgriFM code (<code>external/AgriFM</code>) and the weights before starting, with a clear message for each.</li>
+<li><code>06_train_evaluate.py</code>: <code>INPUT</code> reset to <code>"s1s2"</code> (it was set to <code>"clay"</code> before the Clay embeddings existed).</li>
+<li>S1/S2 features extracted: <code>outputs/03_s1s2_features/s1s2_features_agyear_30d.csv</code> (8,781 parcels, 192 features, no empty values).</li>
+<li>Note (macOS): if a script stops with <code>OMP: Error #15</code> (two OpenMP copies), install PyTorch from conda-forge instead of pip, or set <code>KMP_DUPLICATE_LIB_OK=TRUE</code> as a workaround.</li>
+</ul>
+<h3 id="2026-10-15">2026-10-15<a class="headerlink" href="#2026-10-15" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Added</strong> <code>tools/a3_export_chips_geotiff.py</code>: writes chips of selected parcels as GeoTIFFs (14 bands per month, 12-month NDVI, parcel mask and outline) for QGIS.</li>
+<li><strong>Restructured the project</strong> into <code>pipeline/</code>, <code>analysis/</code>, <code>data/raw/</code>, <code>checkpoints/</code>, <code>external/</code>, <code>secrets/</code>, <code>outputs/&lt;step&gt;/</code>, <code>docs/</code>, <code>archive/</code>. Old scripts, notebooks and outputs moved to <code>archive/</code>.</li>
+<li><strong>Converted all notebooks to scripts</strong>: <code>1_training_data_inspect</code> -&gt; <code>01_prepare_labels.py</code>; <code>3_split_train_test</code> -&gt; <code>02_make_spatial_folds.py</code>; <code>1b_gmia_next_inspect</code> -&gt; <code>tools/a1_gmia_next_points.py</code>; <code>map_esa_lgrip_morocco</code> -&gt; <code>tools/a2_map_reference_products.py</code>.</li>
+<li><strong>New</strong> <code>04_download_chips.py</code> (shared chip store) and <code>05a-05d</code> embedding scripts (Clay, Prithvi, TerraMind, AgriFM) with a common output format <code>outputs/05_embeddings/&lt;model&gt;_&lt;window&gt;.npz</code>.</li>
+<li><strong>New</strong> <code>06_train_evaluate.py</code>: one script for every input (<code>INPUT</code> setting), nested spatial CV, 4 classifiers, block-bootstrap CI, paired classifier differences, spatial vs random CV, grouped importance, final models.</li>
+<li><strong>New</strong> <code>07_compare_models.py</code>: all inputs on the same parcels, differences vs the S1/S2 baseline with bootstrap p-values (Holm-adjusted).</li>
+<li><strong>New</strong> <code>environment.yml</code> (conda env <code>condaml</code>), README, .gitignore. Clay installed with <code>--no-deps</code> (einops conflict with TerraTorch).</li>
+<li>S1/S2 extraction: per-parcel agricultural year, Cloud Score+, 10 m inner buffer, <code>ag_season</code> column in the output.</li>
+<li>Training: gap filling by interpolation; SVM added as 4th classifier; spatial-vs-random comparison at fixed hyperparameters.</li>
+<li>Methodology document drafted (Claude Docs: "Thesis Methodology: Irrigated vs Rainfed Mapping with GeoFMs") and reading list of verified references.</li>
+</ul>
+<h3 id="before-2026-10-15-summary">Before 2026-10-15 (summary)<a class="headerlink" href="#before-2026-10-15-summary" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Field survey inspected; irrigated / rainfed labels defined (pivot irrigation included; cropland only).</li>
+<li>20 km spatial blocks chosen (random split: 79% of test parcels within 250 m of a training parcel; spatial: ~2%).</li>
+<li>Feature extraction moved from open-source STAC to Google Earth Engine (speed).</li>
+<li>AlphaEarth tested as a first embedding input (not part of the thesis).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../progress_report/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Progress report">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Progress report
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../weekly/" class="md-footer__link md-footer__link--next" aria-label="Next: Meeting notes">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Meeting notes
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../assets/javascripts/mermaid.js"></script>
+      
+    
+  </body>
+</html>

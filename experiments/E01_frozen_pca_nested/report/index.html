@@ -1,0 +1,2906 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/experiments/E01_frozen_pca_nested/report/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../E02_frozen_pca_pastis/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Report - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#e01--frozen-geofms--pca-vs-the-s1s2-baseline-nested-spatial-cv--report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../foundation_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase1_data/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase1_data/dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ML-ready dataset (Morocco)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/frozen_encoders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Frozen encoders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Transferability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA pipeline · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA pipeline · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-classifier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and classifier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s1s2-baseline-headline-classifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S1/S2 baseline (headline classifiers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-classifiers-95-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline classifiers, 95% CI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-analyses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional analyses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional analyses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-versus-spatial-cross-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random versus spatial cross-validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-baseline-relies-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the baseline relies on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selected-hyperparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected hyperparameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E02_frozen_pca_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E03_frozen_ltae_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · L-TAE pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../weekly/2026-W45/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Week 2026-W45
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong & Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-classifier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and classifier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s1s2-baseline-headline-classifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S1/S2 baseline (headline classifiers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-classifiers-95-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline classifiers, 95% CI)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-analyses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional analyses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional analyses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-versus-spatial-cross-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Random versus spatial cross-validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-baseline-relies-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the baseline relies on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selected-hyperparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected hyperparameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="e01--frozen-geofms--pca-vs-the-s1s2-baseline-nested-spatial-cv--report">E01 · Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV) — report<a class="headerlink" href="#e01--frozen-geofms--pca-vs-the-s1s2-baseline-nested-spatial-cv--report" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Answer.</strong> No frozen foundation model classifies irrigated vs rainfed parcels better than the Sentinel-1/2
+baseline. The best pair, Clay + SVM (macro-F1 <strong>0.910</strong>), is level with the baseline + SVM (<strong>0.906</strong>;
+Δ +0.003, 95% CI −0.022 to +0.030). The embeddings carry about the same information as well-designed monthly
+S1/S2 features, and they hold up better in the hardest region.</p>
+</blockquote>
+<h2 id="key-findings">Key findings<a class="headerlink" href="#key-findings" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>No input differs from the baseline after correcting for multiple tests</strong> for Clay, Prithvi and TerraMind,
+  whatever the classifier. The four best results lie within 0.005 of each other (0.905–0.910, all with the SVM).</li>
+<li><strong>Linear probe:</strong> TerraMind 0.896, Clay 0.887 and the baseline 0.887 are level. The frozen embeddings are about as
+  linearly separable as the hand-built features, which is the standard test of what an encoder already knows.</li>
+<li><strong>Random forest is the weakest classifier on embeddings</strong> (0.839–0.878 against 0.892 for the baseline). PCA
+  components spread the information over many dense features, which suits SVM and LogReg better than axis-aligned
+  tree splits.</li>
+<li><strong>AgriFM is clearly behind</strong> (0.839–0.868; significantly worse with RF and SVM). Its input normalisation is still
+  an open point, so this is not yet a fair verdict on the model.</li>
+<li><strong>The hardest test fold separates the models.</strong> In fold 0 (rainfed parcels in Doukkala and Souss), the baseline
+  drops to 0.80 (RF, SVM) while Clay and Prithvi stay higher with every classifier (Prithvi 0.87 and Clay 0.86 with
+  the SVM). Across the five folds Clay and Prithvi vary about as much as or less than the baseline (SD 0.045–0.054
+  with LogReg/SVM, vs 0.044–0.075 for the baseline).</li>
+<li><strong>Rainfed is the hard class:</strong> rainfed F1 ~0.81–0.84 for the best pairs against irrigated F1 ~0.97.</li>
+</ul>
+<!-- AUTO:RESULTS:START -->
+<!-- generated by experiments/make_report.py: do not edit between these markers -->
+
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question</td>
+<td>Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?</td>
+</tr>
+<tr>
+<td>Research question</td>
+<td>RQ1</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>S1/S2 baseline, Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM</td>
+</tr>
+<tr>
+<td>Temporal aggregation (GeoFMs)</td>
+<td>12 monthly embeddings side by side → standardise → PCA 128 (fitted on the training folds only)</td>
+</tr>
+<tr>
+<td>Classifiers</td>
+<td>logistic regression (linear probe), random forest, gradient boosting (HGB), RBF SVM</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>5 spatial folds (20 km blocks); hyperparameters by inner spatial CV on the 4 training folds, model refit on all 4 (nested spatial CV)</td>
+</tr>
+<tr>
+<td>Parcels</td>
+<td>8,775 / 8,781 (inputs scored on the parcels common to all runs)</td>
+</tr>
+<tr>
+<td>Uncertainty</td>
+<td>95% CI from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted</td>
+</tr>
+<tr>
+<td>Changed from</td>
+<td>first experiment on the shared 128 px tile store with patch-aligned chips</td>
+</tr>
+</tbody>
+</table>
+<h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
+<h3 id="macro-f1-of-every-input-and-classifier">Macro-F1 of every input and classifier<a class="headerlink" href="#macro-f1-of-every-input-and-classifier" title="Permanent link">&para;</a></h3>
+<p>Out-of-fold predictions of all 5 spatial folds; <strong>bold</strong> = best input for that classifier.</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">LogReg</th>
+<th style="text-align: right;">RF</th>
+<th style="text-align: right;">HGB</th>
+<th style="text-align: right;">SVM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td style="text-align: right;">0.887</td>
+<td style="text-align: right;"><strong>0.892</strong></td>
+<td style="text-align: right;"><strong>0.899</strong></td>
+<td style="text-align: right;">0.906</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td style="text-align: right;">0.887</td>
+<td style="text-align: right;">0.878</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;"><strong>0.910</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td style="text-align: right;">0.880</td>
+<td style="text-align: right;">0.853</td>
+<td style="text-align: right;">0.881</td>
+<td style="text-align: right;">0.905</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td style="text-align: right;"><strong>0.896</strong></td>
+<td style="text-align: right;">0.856</td>
+<td style="text-align: right;">0.878</td>
+<td style="text-align: right;">0.905</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td style="text-align: right;">0.865</td>
+<td style="text-align: right;">0.839</td>
+<td style="text-align: right;">0.868</td>
+<td style="text-align: right;">0.866</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per input and classifier" src="../figures/macro_f1_by_input.png" /></p>
+<h3 id="difference-from-the-s1s2-baseline-headline-classifiers">Difference from the S1/S2 baseline (headline classifiers)<a class="headerlink" href="#difference-from-the-s1s2-baseline-headline-classifiers" title="Permanent link">&para;</a></h3>
+<p>Δ = input minus baseline with the same classifier, on the same parcels and the same bootstrap draws. <strong>Better / worse</strong> = the 95% CI excludes 0 <strong>and</strong> the Holm-adjusted p &lt; 0.05 (Holm corrects for testing all inputs × classifiers at once).</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Δ macro-F1</th>
+<th style="text-align: right;">95% CI</th>
+<th style="text-align: right;">p (Holm)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clay v1.5</td>
+<td>RF</td>
+<td style="text-align: right;">-0.014</td>
+<td style="text-align: right;">[-0.035, +0.011]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>LogReg</td>
+<td style="text-align: right;">-0.000</td>
+<td style="text-align: right;">[-0.018, +0.017]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>RF</td>
+<td style="text-align: right;">-0.039</td>
+<td style="text-align: right;">[-0.071, +0.006]</td>
+<td style="text-align: right;">0.760</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>LogReg</td>
+<td style="text-align: right;">-0.008</td>
+<td style="text-align: right;">[-0.027, +0.013]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>RF</td>
+<td style="text-align: right;">-0.036</td>
+<td style="text-align: right;">[-0.057, -0.013]</td>
+<td style="text-align: right;">0.056</td>
+<td>lower, not significant after Holm</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>LogReg</td>
+<td style="text-align: right;">+0.008</td>
+<td style="text-align: right;">[-0.012, +0.030]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>RF</td>
+<td style="text-align: right;">-0.053</td>
+<td style="text-align: right;">[-0.084, -0.021]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>worse</strong></td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>LogReg</td>
+<td style="text-align: right;">-0.023</td>
+<td style="text-align: right;">[-0.045, -0.003]</td>
+<td style="text-align: right;">0.176</td>
+<td>lower, not significant after Holm</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Other classifiers (robustness check)</summary>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Δ macro-F1</th>
+<th style="text-align: right;">95% CI</th>
+<th style="text-align: right;">p (Holm)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clay v1.5</td>
+<td>HGB</td>
+<td style="text-align: right;">-0.003</td>
+<td style="text-align: right;">[-0.041, +0.033]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>SVM</td>
+<td style="text-align: right;">+0.003</td>
+<td style="text-align: right;">[-0.022, +0.030]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>HGB</td>
+<td style="text-align: right;">-0.018</td>
+<td style="text-align: right;">[-0.056, +0.024]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>SVM</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">[-0.028, +0.030]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>HGB</td>
+<td style="text-align: right;">-0.020</td>
+<td style="text-align: right;">[-0.039, -0.005]</td>
+<td style="text-align: right;">0.056</td>
+<td>lower, not significant after Holm</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>SVM</td>
+<td style="text-align: right;">-0.001</td>
+<td style="text-align: right;">[-0.022, +0.024]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>HGB</td>
+<td style="text-align: right;">-0.030</td>
+<td style="text-align: right;">[-0.062, -0.009]</td>
+<td style="text-align: right;">0.056</td>
+<td>lower, not significant after Holm</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>SVM</td>
+<td style="text-align: right;">-0.040</td>
+<td style="text-align: right;">[-0.066, -0.015]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>worse</strong></td>
+</tr>
+</tbody>
+</table>
+</details>
+<h3 id="per-class-metrics-headline-classifiers-95-ci">Per-class metrics (headline classifiers, 95% CI)<a class="headerlink" href="#per-class-metrics-headline-classifiers-95-ci" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Macro-F1</th>
+<th style="text-align: right;">F1 rainfed</th>
+<th style="text-align: right;">Balanced acc.</th>
+<th style="text-align: right;">Overall acc.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td>RF</td>
+<td style="text-align: right;">0.892 [0.82–0.94]</td>
+<td style="text-align: right;">0.813 [0.69–0.90]</td>
+<td style="text-align: right;">0.893 [0.82–0.95]</td>
+<td style="text-align: right;">0.949 [0.92–0.98]</td>
+</tr>
+<tr>
+<td>S1/S2 baseline</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.887 [0.82–0.93]</td>
+<td style="text-align: right;">0.810 [0.69–0.89]</td>
+<td style="text-align: right;">0.931 [0.90–0.96]</td>
+<td style="text-align: right;">0.941 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>RF</td>
+<td style="text-align: right;">0.878 [0.82–0.93]</td>
+<td style="text-align: right;">0.787 [0.67–0.88]</td>
+<td style="text-align: right;">0.866 [0.81–0.92]</td>
+<td style="text-align: right;">0.944 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.887 [0.82–0.93]</td>
+<td style="text-align: right;">0.809 [0.69–0.89]</td>
+<td style="text-align: right;">0.926 [0.89–0.95]</td>
+<td style="text-align: right;">0.942 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>RF</td>
+<td style="text-align: right;">0.853 [0.80–0.90]</td>
+<td style="text-align: right;">0.746 [0.65–0.82]</td>
+<td style="text-align: right;">0.848 [0.80–0.90]</td>
+<td style="text-align: right;">0.932 [0.90–0.96]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.880 [0.81–0.93]</td>
+<td style="text-align: right;">0.796 [0.68–0.88]</td>
+<td style="text-align: right;">0.922 [0.89–0.95]</td>
+<td style="text-align: right;">0.937 [0.90–0.97]</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>RF</td>
+<td style="text-align: right;">0.856 [0.79–0.91]</td>
+<td style="text-align: right;">0.748 [0.62–0.84]</td>
+<td style="text-align: right;">0.832 [0.78–0.89]</td>
+<td style="text-align: right;">0.937 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.896 [0.83–0.94]</td>
+<td style="text-align: right;">0.823 [0.70–0.90]</td>
+<td style="text-align: right;">0.929 [0.89–0.96]</td>
+<td style="text-align: right;">0.947 [0.92–0.97]</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>RF</td>
+<td style="text-align: right;">0.839 [0.76–0.91]</td>
+<td style="text-align: right;">0.719 [0.57–0.84]</td>
+<td style="text-align: right;">0.821 [0.74–0.89]</td>
+<td style="text-align: right;">0.928 [0.89–0.96]</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.865 [0.80–0.92]</td>
+<td style="text-align: right;">0.772 [0.64–0.86]</td>
+<td style="text-align: right;">0.909 [0.87–0.95]</td>
+<td style="text-align: right;">0.929 [0.90–0.96]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="macro-f1-per-test-fold">Macro-F1 per test fold<a class="headerlink" href="#macro-f1-per-test-fold" title="Permanent link">&para;</a></h3>
+<p>Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: fold 0: Doukkala 180, Souss 59; fold 1: Doukkala 237; fold 2: Doukkala 241; fold 3: Doukkala 234; fold 4: Doukkala 230.</p>
+<p><strong>RF</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± SD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td style="text-align: right;">0.804</td>
+<td style="text-align: right;">0.821</td>
+<td style="text-align: right;">0.967</td>
+<td style="text-align: right;">0.949</td>
+<td style="text-align: right;">0.921</td>
+<td style="text-align: right;">0.893 ± 0.075</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">0.799</td>
+<td style="text-align: right;">0.926</td>
+<td style="text-align: right;">0.928</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;">0.878 ± 0.062</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td style="text-align: right;">0.855</td>
+<td style="text-align: right;">0.776</td>
+<td style="text-align: right;">0.917</td>
+<td style="text-align: right;">0.863</td>
+<td style="text-align: right;">0.858</td>
+<td style="text-align: right;">0.854 ± 0.051</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.816</td>
+<td style="text-align: right;">0.919</td>
+<td style="text-align: right;">0.876</td>
+<td style="text-align: right;">0.908</td>
+<td style="text-align: right;">0.854 ± 0.071</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td style="text-align: right;">0.729</td>
+<td style="text-align: right;">0.776</td>
+<td style="text-align: right;">0.889</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;">0.892</td>
+<td style="text-align: right;">0.840 ± 0.082</td>
+</tr>
+</tbody>
+</table>
+<p><strong>LogReg</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± SD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td style="text-align: right;">0.829</td>
+<td style="text-align: right;">0.853</td>
+<td style="text-align: right;">0.923</td>
+<td style="text-align: right;">0.928</td>
+<td style="text-align: right;">0.909</td>
+<td style="text-align: right;">0.889 ± 0.044</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td style="text-align: right;">0.859</td>
+<td style="text-align: right;">0.825</td>
+<td style="text-align: right;">0.929</td>
+<td style="text-align: right;">0.916</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;">0.889 ± 0.045</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td style="text-align: right;">0.830</td>
+<td style="text-align: right;">0.824</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">0.926</td>
+<td style="text-align: right;">0.916</td>
+<td style="text-align: right;">0.881 ± 0.050</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td style="text-align: right;">0.839</td>
+<td style="text-align: right;">0.836</td>
+<td style="text-align: right;">0.934</td>
+<td style="text-align: right;">0.943</td>
+<td style="text-align: right;">0.937</td>
+<td style="text-align: right;">0.898 ± 0.055</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td style="text-align: right;">0.811</td>
+<td style="text-align: right;">0.803</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">0.921</td>
+<td style="text-align: right;">0.902</td>
+<td style="text-align: right;">0.867 ± 0.056</td>
+</tr>
+</tbody>
+</table>
+<p><strong>SVM</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± SD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td style="text-align: right;">0.803</td>
+<td style="text-align: right;">0.866</td>
+<td style="text-align: right;">0.960</td>
+<td style="text-align: right;">0.969</td>
+<td style="text-align: right;">0.930</td>
+<td style="text-align: right;">0.906 ± 0.070</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td style="text-align: right;">0.861</td>
+<td style="text-align: right;">0.844</td>
+<td style="text-align: right;">0.944</td>
+<td style="text-align: right;">0.958</td>
+<td style="text-align: right;">0.949</td>
+<td style="text-align: right;">0.911 ± 0.054</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td style="text-align: right;">0.874</td>
+<td style="text-align: right;">0.831</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: right;">0.940</td>
+<td style="text-align: right;">0.906 ± 0.051</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td style="text-align: right;">0.802</td>
+<td style="text-align: right;">0.867</td>
+<td style="text-align: right;">0.944</td>
+<td style="text-align: right;">0.953</td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: right;">0.903 ± 0.067</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td style="text-align: right;">0.703</td>
+<td style="text-align: right;">0.813</td>
+<td style="text-align: right;">0.933</td>
+<td style="text-align: right;">0.939</td>
+<td style="text-align: right;">0.924</td>
+<td style="text-align: right;">0.863 ± 0.103</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per test fold" src="../figures/macro_f1_per_fold.png" /></p>
+<h3 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tables: <a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results/comparison"><code>experiments/E01_frozen_pca_nested/results/comparison/</code></a> (all metrics with CI, differences vs baseline)</li>
+<li>Per run (<a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results"><code>experiments/E01_frozen_pca_nested/results/&lt;run&gt;/</code></a>): out-of-fold predictions, metrics per fold, selected hyperparameters, run log</li>
+<li>Settings: <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E01_frozen_pca_nested/config.yaml"><code>experiments/E01_frozen_pca_nested/config.yaml</code></a></li>
+<li>Confusion matrices: <a href="../figures/confusion_agrifm_agyear_tiles_concat.png">AgriFM</a> · <a href="../figures/confusion_clay_agyear_tiles_concat.png">Clay v1.5</a> · <a href="../figures/confusion_prithvi_agyear_tiles_concat.png">Prithvi-EO-2.0</a> · <a href="../figures/confusion_s1s2-all_agyear_tiles-inner-asc.png">S1/S2 baseline</a> · <a href="../figures/confusion_terramind_agyear_tiles_concat.png">TerraMind</a></li>
+<li>Code version: <code>858cb3d (with uncommitted changes)</code>, run 2026-11-05 17:39 – 2026-11-05 17:40</li>
+</ul>
+<!-- AUTO:RESULTS:END -->
+
+<h2 id="additional-analyses">Additional analyses<a class="headerlink" href="#additional-analyses" title="Permanent link">&para;</a></h2>
+<p>Computed in the same runs (<code>cv_random_vs_spatial.csv</code>, <code>importance.csv</code> and <code>selected_hyperparameters.csv</code> of each
+run).</p>
+<h3 id="random-versus-spatial-cross-validation">Random versus spatial cross-validation<a class="headerlink" href="#random-versus-spatial-cross-validation" title="Permanent link">&para;</a></h3>
+<p>The same hyperparameters were re-evaluated with a stratified random 5-fold split that ignores the spatial blocks.</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Random CV, mean macro-F1</th>
+<th style="text-align: right;">Spatial CV, mean macro-F1</th>
+<th style="text-align: right;">Spatial CV, worst fold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td>LogReg</td>
+<td style="text-align: right;">0.904</td>
+<td style="text-align: right;">0.895</td>
+<td style="text-align: right;">0.847</td>
+</tr>
+<tr>
+<td>S1/S2 baseline</td>
+<td>RF</td>
+<td style="text-align: right;">0.928</td>
+<td style="text-align: right;">0.893</td>
+<td style="text-align: right;">0.804</td>
+</tr>
+<tr>
+<td>S1/S2 baseline</td>
+<td>HGB</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.894</td>
+<td style="text-align: right;">0.734</td>
+</tr>
+<tr>
+<td>S1/S2 baseline</td>
+<td>SVM</td>
+<td style="text-align: right;">0.926</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">0.830</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>SVM</td>
+<td style="text-align: right;">0.936</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">0.844</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>SVM</td>
+<td style="text-align: right;">0.916</td>
+<td style="text-align: right;">0.906</td>
+<td style="text-align: right;">0.831</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>SVM</td>
+<td style="text-align: right;">0.933</td>
+<td style="text-align: right;">0.903</td>
+<td style="text-align: right;">0.802</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>SVM</td>
+<td style="text-align: right;">0.913</td>
+<td style="text-align: right;">0.863</td>
+<td style="text-align: right;">0.703</td>
+</tr>
+</tbody>
+</table>
+<p>Random cross-validation is 1–5 points more optimistic for every input, and its folds lie within about one point of
+each other (SD ≤ 0.014), whereas the spatial folds differ by up to 0.24 (SD 0.04–0.10). Random validation thus both
+overstates accuracy and conceals the dependence of accuracy on the region.</p>
+<figure>
+  <img alt="Random vs spatial CV, S1/S2 baseline" src="../figures/cv_random_vs_spatial_baseline.png" />
+<br />
+<figcaption><b>Figure E01.1.</b> Macro-F1 (left) and rainfed F1 (right) per fold for the S1/S2 baseline under random (grey) and spatial (blue) 5-fold cross-validation; bars mark the mean.</figcaption>
+</figure>
+<h3 id="what-the-baseline-relies-on">What the baseline relies on<a class="headerlink" href="#what-the-baseline-relies-on" title="Permanent link">&para;</a></h3>
+<p>Grouped permutation importance of the random forest, computed on the test fold of each outer round: all features of
+one variable (or of one month) are permuted together and the drop in macro-F1 is recorded.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th style="text-align: right;">Drop in macro-F1</th>
+<th></th>
+<th>Month</th>
+<th style="text-align: right;">Drop in macro-F1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NDWI</td>
+<td style="text-align: right;">0.262</td>
+<td></td>
+<td>February</td>
+<td style="text-align: right;">0.141</td>
+</tr>
+<tr>
+<td>B12 (SWIR 2)</td>
+<td style="text-align: right;">0.066</td>
+<td></td>
+<td>July</td>
+<td style="text-align: right;">0.123</td>
+</tr>
+<tr>
+<td>NDVI</td>
+<td style="text-align: right;">0.046</td>
+<td></td>
+<td>August</td>
+<td style="text-align: right;">0.113</td>
+</tr>
+<tr>
+<td>EVI</td>
+<td style="text-align: right;">0.026</td>
+<td></td>
+<td>June</td>
+<td style="text-align: right;">0.091</td>
+</tr>
+<tr>
+<td>B11 (SWIR 1)</td>
+<td style="text-align: right;">0.013</td>
+<td></td>
+<td>October</td>
+<td style="text-align: right;">0.089</td>
+</tr>
+</tbody>
+</table>
+<p>Water-sensitive variables (NDWI, SWIR) dominate, and the most informative months are the peak of the rainfed season
+(February) and the dry summer (June–August), when only irrigated fields remain green. This supports the use of the
+full agricultural year. For the foundation-model embeddings, permuting a single month changes macro-F1 by at most
+0.011 (Clay and Prithvi: February and May; TerraMind: July–September), i.e. the information is spread over the months.</p>
+<figure>
+  <img alt="Permutation importance, S1/S2 baseline" src="../figures/importance_baseline.png" />
+<br />
+<figcaption><b>Figure E01.2.</b> Grouped permutation importance of the S1/S2 baseline (random forest) by variable (left) and by month (right); mean ± SD over the five outer folds.</figcaption>
+</figure>
+<h3 id="selected-hyperparameters">Selected hyperparameters<a class="headerlink" href="#selected-hyperparameters" title="Permanent link">&para;</a></h3>
+<p>Setting chosen most often over the five outer rounds (count in brackets).</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>LogReg</th>
+<th>RF</th>
+<th>HGB</th>
+<th>SVM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1/S2 baseline</td>
+<td>C = 1 (2/5)</td>
+<td>√p · leaf 5 · balanced (5/5)</td>
+<td>lr 0.1 · 15 leaves · balanced (2/5)</td>
+<td>C = 1 · γ = scale (3/5)</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>C = 0.01 (4/5)</td>
+<td>0.3 · leaf 5 · balanced (5/5)</td>
+<td>lr 0.05 · 15 leaves · balanced (3/5)</td>
+<td>C = 1 · γ = scale (5/5)</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>C = 0.01 (4/5)</td>
+<td>0.3 · leaf 5 · balanced (5/5)</td>
+<td>lr 0.1 · 15 leaves · balanced (2/5)</td>
+<td>C = 1 · γ = scale (5/5)</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>C = 0.01 (5/5)</td>
+<td>0.3 · leaf 5 · balanced (5/5)</td>
+<td>lr 0.05 · 15 leaves · balanced (4/5)</td>
+<td>C = 1 · γ = scale (5/5)</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>C = 0.01 (5/5)</td>
+<td>0.3 · leaf 5 · balanced (4/5)</td>
+<td>lr 0.05 · 15 leaves · balanced (2/5)</td>
+<td>C = 1 · γ = scale (5/5)</td>
+</tr>
+</tbody>
+</table>
+<p>The embeddings require strong regularisation of the linear probe (C = 0.01), whereas the baseline features prefer
+weaker regularisation. Class weighting and small trees are selected almost everywhere, and the SVM keeps its default
+setting for every foundation model.</p>
+<h2 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h2>
+<p>For RQ1, the frozen foundation models reach the accuracy of a conventional Sentinel-1/2 classifier but do not exceed
+it on average. This matches PANGAEA (Marsocci et al. 2024), where GeoFMs do not consistently beat supervised
+baselines. Where they may add value is <strong>robustness</strong>: in the region the baseline handles worst, Clay and Prithvi do
+better with every classifier. That points to the next questions: is this fold effect stable under the final validation
+design (E02), and does a learned temporal aggregation (E03) let the embeddings use the 12 months better than PCA?</p>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Nested validation design</strong>, replaced by the PASTIS rotation in <a href="../../E02_frozen_pca_pastis/">E02</a>; E01 is
+  kept as a sensitivity check.</li>
+<li><strong>AgriFM normalisation</strong> not yet confirmed (open point in <a href="../../../progress/">PROGRESS.md</a>).</li>
+<li><strong>Small rainfed class</strong> (1,196 parcels, ~240 per fold): per-fold scores for rainfed rest on few parcels, hence the
+  wide intervals.</li>
+<li><strong>Region and year are partly confounded</strong> (Gharb and Tadla only 2023/24; Souss only 2024/25), so the fold
+  differences cannot be attributed to region alone.</li>
+</ul>
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Run <a href="../../E02_frozen_pca_pastis/">E02</a> (PASTIS validation): the main RQ1 result.</li>
+<li>Resolve the AgriFM normalisation and re-embed if needed.</li>
+<li>Implement the L-TAE pipeline (<a href="../../E03_frozen_ltae_pastis/">E03</a>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: E01 · Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                E01 · Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../E02_frozen_pca_pastis/" class="md-footer__link md-footer__link--next" aria-label="Next: E02 · PCA pipeline · PASTIS">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                E02 · PCA pipeline · PASTIS
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../../assets/javascripts/mermaid.js"></script>
+      
+    
+  </body>
+</html>

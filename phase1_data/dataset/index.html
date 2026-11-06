@@ -1,0 +1,3370 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/phase1_data/dataset/">
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../../phase2_models/overview/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>ML-ready dataset (Morocco) - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ml-ready-dataset-morocco" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ML-ready dataset (Morocco)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ML-ready dataset (Morocco)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ML-ready dataset (Morocco)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Design principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-source-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Source data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-script-01--prepare_labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Script 01 — prepare_labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-script-02--make_spatial_folds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Script 02 — make_spatial_folds
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Script 02 — make_spatial_folds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-why-not-a-random-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Why not a random split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-choosing-the-block-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Choosing the block size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-fold-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Fold assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-how-the-folds-give-train-validation-and-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 How the folds give train, validation and test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-script-03--build_tiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Script 03 — build_tiles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Script 03 — build_tiles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-tile-grid-and-which-tiles-are-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Tile grid and which tiles are built
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-two-agricultural-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Two agricultural years
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-monthly-composites-per-tile-per-month" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Monthly composites (per tile, per month)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-label-rasters-local-no-earth-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Label rasters (local, no Earth Engine)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66-quality-numbers-per-tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Quality numbers per tile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-script-04--make_views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Script 04 — make_views
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Script 04 — make_views">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-view-a--parcel-feature-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 View A — parcel feature tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-view-b--pixel-sets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 View B — pixel sets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-view-c--patch-aligned-chips-for-the-foundation-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 View C — patch-aligned chips for the foundation models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-sentinel-1-orbit-for-views-b-and-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Sentinel-1 orbit for views B and C
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-qa-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 QA files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-dataset-inspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.6 Dataset inspection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-output-layout-and-file-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Output layout and file formats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-to-use-the-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. How to use the dataset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-running-settings-and-run-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Running, settings and run time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-known-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Known limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/frozen_encoders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Frozen encoders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Transferability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../experiments/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../experiments/E01_frozen_pca_nested/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA pipeline · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA pipeline · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../experiments/E01_frozen_pca_nested/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../experiments/E02_frozen_pca_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../experiments/E03_frozen_ltae_pastis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · L-TAE pipeline · PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../weekly/2026-W45/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Week 2026-W45
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong & Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Design principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-source-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Source data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-script-01--prepare_labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Script 01 — prepare_labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-script-02--make_spatial_folds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Script 02 — make_spatial_folds
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Script 02 — make_spatial_folds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-why-not-a-random-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Why not a random split
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-choosing-the-block-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Choosing the block size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-fold-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Fold assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-how-the-folds-give-train-validation-and-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 How the folds give train, validation and test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-script-03--build_tiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Script 03 — build_tiles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Script 03 — build_tiles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-tile-grid-and-which-tiles-are-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Tile grid and which tiles are built
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-two-agricultural-years" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Two agricultural years
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-monthly-composites-per-tile-per-month" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Monthly composites (per tile, per month)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-label-rasters-local-no-earth-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Label rasters (local, no Earth Engine)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66-quality-numbers-per-tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Quality numbers per tile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-script-04--make_views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Script 04 — make_views
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Script 04 — make_views">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-view-a--parcel-feature-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 View A — parcel feature tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-view-b--pixel-sets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 View B — pixel sets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-view-c--patch-aligned-chips-for-the-foundation-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 View C — patch-aligned chips for the foundation models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-sentinel-1-orbit-for-views-b-and-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Sentinel-1 orbit for views B and C
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-qa-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 QA files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-dataset-inspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.6 Dataset inspection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-output-layout-and-file-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Output layout and file formats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-how-to-use-the-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. How to use the dataset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-running-settings-and-run-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Running, settings and run time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-known-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Known limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="ml-ready-dataset-morocco">ML-ready dataset (Morocco)<a class="headerlink" href="#ml-ready-dataset-morocco" title="Permanent link">&para;</a></h1>
+<p>This page describes the construction of the <strong>machine-learning-ready dataset</strong>: labelled parcels, spatial
+train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and derived
+views for the different model families.</p>
+<p><strong>Contents</strong></p>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-design-principles">Design principles</a></li>
+<li><a href="#3-source-data">Source data</a></li>
+<li><a href="#4-script-01--prepare_labels">Script 01 — labels</a></li>
+<li><a href="#5-script-02--make_spatial_folds">Script 02 — spatial folds</a></li>
+<li><a href="#6-script-03--build_tiles">Script 03 — tile store</a></li>
+<li><a href="#7-script-04--make_views">Script 04 — model views</a></li>
+<li><a href="#8-output-layout-and-file-formats">Output layout and file formats</a></li>
+<li><a href="#9-how-to-use-the-dataset">How to use the dataset</a></li>
+<li><a href="#10-running-settings-and-run-time">Running, settings and run time</a></li>
+<li><a href="#11-known-limitations">Known limitations</a></li>
+<li><a href="#12-references">References</a></li>
+</ol>
+<hr />
+<h2 id="1-overview">1. Overview<a class="headerlink" href="#1-overview" title="Permanent link">&para;</a></h2>
+<div class="mermaid-diagram">flowchart TD
+    subgraph IN["Inputs"]
+        FS["Field survey&lt;br/&gt;~10,000 parcels&lt;br/&gt;Dec 2023 – Jan 2025"]
+        WC["ESA WorldCover 2021&lt;br/&gt;(cropland check)"]
+        GEE["Google Earth Engine&lt;br/&gt;Sentinel-2 L2A · Cloud Score+&lt;br/&gt;Sentinel-1 GRD"]
+    end
+
+    FS --&gt; S01["&lt;b&gt;01_prepare_labels.py&lt;/b&gt;&lt;br/&gt;clean geometry · label · cropland only&lt;br/&gt;agricultural year"]
+    WC --&gt; S01
+    S01 --&gt;|"parcels_labelled.geojson&lt;br/&gt;8,781 parcels"| S02["&lt;b&gt;02_make_spatial_folds.py&lt;/b&gt;&lt;br/&gt;20 km blocks → 5 balanced folds"]
+    S02 --&gt;|"parcels_folds.geojson&lt;br/&gt;+ block_id, fold"| SPLIT[["Split by agricultural year&lt;br/&gt;(ag_season from survey date)"]]
+    SPLIT --&gt;|"2023/24 · 6,887 parcels&lt;br/&gt;imagery Sep 2023 – Aug 2024"| S03["&lt;b&gt;03_build_tiles.py&lt;/b&gt;&lt;br/&gt;run per agricultural year:&lt;br/&gt;128 × 128 px tiles · 12 months × 19 bands&lt;br/&gt;label / parcel-ID / edge rasters"]
+    SPLIT --&gt;|"2024/25 · 1,894 parcels&lt;br/&gt;imagery Sep 2024 – Aug 2025"| S03
+    GEE --&gt; S03
+    S03 --&gt;|"tiles/ · parcels.csv · tiles.parquet"| S04["&lt;b&gt;04_make_views.py&lt;/b&gt;&lt;br/&gt;cut every model input from the same pixels"]
+
+    S04 --&gt; VA["A · parcel feature tables&lt;br/&gt;(RF / boosting)"]
+    S04 --&gt; VB["B · pixel sets&lt;br/&gt;(PSE-TAE)"]
+    S04 --&gt; VC["C · patch-aligned chips&lt;br/&gt;chips_p8 · chips_p16&lt;br/&gt;(foundation models)"]
+    S03 --&gt; VD["D · full tiles&lt;br/&gt;(segmentation, U-TAE)"]</div>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Script</th>
+<th>What comes out</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>01_prepare_labels.py</code></td>
+<td>8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>02_make_spatial_folds.py</code></td>
+<td>a fold (0–4) per parcel, from 91 spatial blocks of 20 km</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>03_build_tiles.py</code></td>
+<td>the tile store: monthly images + label rasters + QA</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>04_make_views.py</code></td>
+<td>model inputs A–C (D = the tiles themselves)</td>
+</tr>
+</tbody>
+</table>
+<p>Steps 1–2 complete within minutes. Step 3 requires several hours and resumes from the last completed tile when restarted. Step 4 runs locally.</p>
+<hr />
+<h2 id="2-design-principles">2. Design principles<a class="headerlink" href="#2-design-principles" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>How it is achieved</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>One set of pixels for every model</strong></td>
+<td>All imagery is downloaded once into one tile store. Every model input is cut from it locally, so differences between models cannot come from different compositing, masks or download windows.</td>
+</tr>
+<tr>
+<td><strong>No duplicated downloads</strong></td>
+<td>Fixed, non-overlapping 1.28 km tiles in one projection. Neighbouring parcels share tiles instead of each getting its own overlapping chip.</td>
+</tr>
+<tr>
+<td><strong>Imagery matched to the label date</strong></td>
+<td>Each parcel gets the 12 months of the agricultural year (1 Sep – 31 Aug) in which it was surveyed. The same place in another year is a different tile.</td>
+</tr>
+<tr>
+<td><strong>Honest validation</strong></td>
+<td>Folds are made of whole 20 km blocks, so a test parcel never has its next-door neighbour in training (section 5).</td>
+</tr>
+<tr>
+<td><strong>Uncertain pixels kept, not dropped</strong></td>
+<td>Label 0 = ignore (unlabelled or overlapping parcels), plus a separate edge flag for mixed boundary pixels. Users decide how to treat them.</td>
+</tr>
+<tr>
+<td><strong>Documented quality</strong></td>
+<td>Clear-observation counts per pixel and month, scene IDs per tile and month, QA per tile, overlap list, patch-purity scores.</td>
+</tr>
+<tr>
+<td><strong>Patch-aware chips</strong></td>
+<td>Chips for patch-based models are shifted so the parcel centroid sits at the centre of one model patch (section 7).</td>
+</tr>
+</tbody>
+</table>
+<p>The layout follows existing ML-ready crop datasets. PASTIS (Garnot &amp; Landrieu 2021) and Sen4AgriNet (Sykas et al. 2022) use fixed tiles with dense label and parcel-ID rasters. Fields of The World (Kerner et al. 2025) keeps an "unlabelled" ignore class. The ClarkCGA / Prithvi crop chips report QA counts per chip.</p>
+<hr />
+<h2 id="3-source-data">3. Source data<a class="headerlink" href="#3-source-data" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Use</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Field survey (Ouassanouan et al. 2026, <em>Scientific Data</em>)</td>
+<td>labels</td>
+<td>~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, crop and irrigation method</td>
+</tr>
+<tr>
+<td>GADM 4.1 Morocco</td>
+<td>maps</td>
+<td>country outline</td>
+</tr>
+<tr>
+<td>ESA WorldCover 2021 (10 m)</td>
+<td>label check</td>
+<td>share of each parcel mapped as cropland</td>
+</tr>
+<tr>
+<td>Sentinel-2 L2A harmonised (<code>COPERNICUS/S2_SR_HARMONIZED</code>)</td>
+<td>imagery</td>
+<td>12 bands, surface reflectance</td>
+</tr>
+<tr>
+<td>Cloud Score+ (<code>GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED</code>)</td>
+<td>cloud mask</td>
+<td><code>cs_cdf</code> ≥ 0.60 kept</td>
+</tr>
+<tr>
+<td>Sentinel-1 GRD (<code>COPERNICUS/S1_GRD</code>)</td>
+<td>imagery</td>
+<td>IW mode, VV + VH, ascending and descending kept apart</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-script-01--prepare_labels">4. Script 01 — <code>prepare_labels</code><a class="headerlink" href="#4-script-01--prepare_labels" title="Permanent link">&para;</a></h2>
+<p><strong>Purpose:</strong> turn the raw survey into one clean file of labelled cropland parcels. Every later step starts from this file.</p>
+<div class="mermaid-diagram">flowchart LR
+    A["Survey shapefile"] --&gt; B["Clean geometry&lt;br/&gt;drop empty · repair invalid&lt;br/&gt;drop exact duplicates"]
+    B --&gt; C["Normalise irrigation text&lt;br/&gt;(lower case, trimmed)"]
+    C --&gt; D{"Irrigation&lt;br/&gt;method?"}
+    D --&gt;|"drip · flood · sprinkler&lt;br/&gt;basin · pivot"| E["label 1&lt;br/&gt;irrigated"]
+    D --&gt;|"rainfed"| F["label 2&lt;br/&gt;rainfed"]
+    D --&gt;|"missing"| X["dropped"]
+    E --&gt; G{"Land use is&lt;br/&gt;cropland?"}
+    F --&gt; G
+    G --&gt;|"Seasonal Crop · Trees&lt;br/&gt;Trees + Seasonal"| H["Add attributes&lt;br/&gt;area_ha · ag_season&lt;br/&gt;nn_dist_m · WorldCover share"]
+    G --&gt;|"bare soil · weeds · water"| X
+    H --&gt; I["parcels_labelled.geojson&lt;br/&gt;summary.csv · figures"]</div>
+<p><strong>Steps</strong></p>
+<ol>
+<li>Read the survey shapefile.</li>
+<li>Clean the geometry: drop parcels without geometry, repair invalid polygons, drop exact duplicates.</li>
+<li>Label it: any irrigation method (drip, flood, sprinkler, basin, pivot) = <strong>1 irrigated</strong>; "rainfed" = <strong>2 rainfed</strong>. Spelling variants are normalised.</li>
+<li>Keep cropland only: <em>Seasonal Crop</em>, <em>Trees</em>, <em>Trees + Seasonal</em>.</li>
+<li>Add these attributes:</li>
+<li><code>area_ha</code>: area in UTM 29N.</li>
+<li><code>ag_season</code>: agricultural year of the survey date (1 Sep – 31 Aug, e.g. <code>2023/24</code>). This decides which imagery a parcel gets.</li>
+<li><code>nn_dist_m</code>: distance to the nearest other parcel.</li>
+<li><code>wc_cropland_frac</code>, <code>wc_major</code>: optional WorldCover check (<code>CHECK_WORLDCOVER</code>).</li>
+<li>Save the parcels, a summary table and four figures.</li>
+</ol>
+<p><strong>Result</strong></p>
+<table>
+<thead>
+<tr>
+<th>Agricultural year</th>
+<th style="text-align: right;">Irrigated</th>
+<th style="text-align: right;">Rainfed</th>
+<th style="text-align: right;">Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2023/24</td>
+<td style="text-align: right;">6,189 (11,034 ha)</td>
+<td style="text-align: right;">698 (836 ha)</td>
+<td style="text-align: right;">6,887</td>
+</tr>
+<tr>
+<td>2024/25</td>
+<td style="text-align: right;">1,396 (2,020 ha)</td>
+<td style="text-align: right;">498 (1,286 ha)</td>
+<td style="text-align: right;">1,894</td>
+</tr>
+<tr>
+<td><strong>All</strong></td>
+<td style="text-align: right;"><strong>7,585</strong></td>
+<td style="text-align: right;"><strong>1,196</strong></td>
+<td style="text-align: right;"><strong>8,781</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed parcels are 14% of the total, and nearly all of them (1,122 of 1,196) are in Doukkala. The classes are unbalanced, and the class is partly tied to the region, which is why section 5 matters.</p>
+<figure>
+  <img alt="Map of irrigated and rainfed parcels" src="../figures/parcels_map.png" />
+<br />
+<figcaption><b>Figure 1.1.</b> Spatial distribution of the 8,781 labelled cropland parcels. Rainfed parcels are concentrated in Doukkala on the Atlantic coast.</figcaption>
+</figure>
+<figure>
+  <img alt="Class balance and parcel size" src="../figures/class_balance_and_size.png" />
+<br />
+<figcaption><b>Figure 1.2.</b> Class balance (left; 86.4% irrigated, 13.6% rainfed) and parcel-size distribution per class (right, logarithmic axis).</figcaption>
+</figure>
+<figure>
+  <img alt="Parcels by survey month" src="../figures/survey_timing.png" />
+<br />
+<figcaption><b>Figure 1.3.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
+</figure>
+<p><strong>Outputs</strong> (<code>outputs/dataset/01_labels/</code>):
+- <code>parcels_labelled.geojson</code>
+- <code>summary.csv</code>
+- <code>parcels_map.png</code>
+- <code>class_balance_and_size.png</code>
+- <code>survey_timing.png</code></p>
+<hr />
+<h2 id="5-script-02--make_spatial_folds">5. Script 02 — <code>make_spatial_folds</code><a class="headerlink" href="#5-script-02--make_spatial_folds" title="Permanent link">&para;</a></h2>
+<p><strong>Purpose:</strong> split the parcels into 5 folds so a model can be trained on some areas and tested on <strong>other</strong> areas. This is the dataset's train / validation / test split.</p>
+<h3 id="51-why-not-a-random-split">5.1 Why not a random split<a class="headerlink" href="#51-why-not-a-random-split" title="Permanent link">&para;</a></h3>
+<p>Surveyed parcels are typically a few hundred metres apart, and neighbouring parcels usually share a class. Under a random 5-fold split, 72% of test parcels have a training parcel within 250 m and 98% within 1 km. Accuracy then reflects the recognition of nearby parcels rather than the ability to map new areas, a bias documented by Roberts et al. (2017), Ploton et al. (2020) and Kattenborn et al. (2022).</p>
+<h3 id="52-choosing-the-block-size">5.2 Choosing the block size<a class="headerlink" href="#52-choosing-the-block-size" title="Permanent link">&para;</a></h3>
+<p>The range of spatial dependence is estimated from the proportion of parcel pairs that share a class as a function of their distance. This proportion is compared with the <strong>random-placement level</strong>, i.e. the probability that two randomly drawn parcels share a class, 0.86² + 0.14² ≈ <strong>76%</strong>. Beyond the distance at which the curve reaches this level, proximity carries no information about the class.</p>
+<table>
+<thead>
+<tr>
+<th>Distance between parcels</th>
+<th>0.2 km</th>
+<th>1 km</th>
+<th>5 km</th>
+<th>10 km</th>
+<th>15 km</th>
+<th>20 km</th>
+<th>30 km</th>
+<th>50 km</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Same class (%)</td>
+<td>96.1</td>
+<td>95.2</td>
+<td>92.0</td>
+<td>91.0</td>
+<td>86.7</td>
+<td>81.4</td>
+<td>79.7</td>
+<td>73.7</td>
+</tr>
+</tbody>
+</table>
+<figure>
+  <img alt="Class similarity by distance" src="../figures/class_similarity_by_distance.png" />
+<br />
+<figcaption><b>Figure 1.4.</b> Proportion of parcel pairs sharing a class as a function of distance. The proportion approaches the random-placement level (76%, dashed) at about 20–30 km, which motivates the 20 km block size (dotted).</figcaption>
+</figure>
+<p>Candidate block sizes, each with 5 greedy-balanced folds:</p>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th style="text-align: right;">Rainfed in smallest fold</th>
+<th>Rainfed share per fold</th>
+<th style="text-align: right;">Test parcels with a training parcel ≤ 250 m</th>
+<th style="text-align: right;">≤ 1 km</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random</td>
+<td style="text-align: right;">239</td>
+<td>20–20%</td>
+<td style="text-align: right;">79.4%</td>
+<td style="text-align: right;">98.4%</td>
+</tr>
+<tr>
+<td>2 km blocks</td>
+<td style="text-align: right;">239</td>
+<td>20–20%</td>
+<td style="text-align: right;">12.8%</td>
+<td style="text-align: right;">65.6%</td>
+</tr>
+<tr>
+<td>5 km</td>
+<td style="text-align: right;">239</td>
+<td>20–20%</td>
+<td style="text-align: right;">6.3%</td>
+<td style="text-align: right;">31.7%</td>
+</tr>
+<tr>
+<td>10 km</td>
+<td style="text-align: right;">239</td>
+<td>20–20%</td>
+<td style="text-align: right;">3.2%</td>
+<td style="text-align: right;">18.0%</td>
+</tr>
+<tr>
+<td><strong>20 km</strong></td>
+<td style="text-align: right;"><strong>238</strong></td>
+<td><strong>20–20%</strong></td>
+<td style="text-align: right;"><strong>2.0%</strong></td>
+<td style="text-align: right;"><strong>10.2%</strong></td>
+</tr>
+<tr>
+<td>25 km</td>
+<td style="text-align: right;">239</td>
+<td>20–20%</td>
+<td style="text-align: right;">1.8%</td>
+<td style="text-align: right;">9.1%</td>
+</tr>
+<tr>
+<td>30 km</td>
+<td style="text-align: right;">142</td>
+<td>12–34%</td>
+<td style="text-align: right;">0.6%</td>
+<td style="text-align: right;">4.6%</td>
+</tr>
+<tr>
+<td>50 km</td>
+<td style="text-align: right;">202</td>
+<td>17–24%</td>
+<td style="text-align: right;">1.2%</td>
+<td style="text-align: right;">5.9%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>20 km</strong> is the chosen size:
+- It is near the distance where class similarity approaches the random-placement level.
+- It cuts leakage to 2% at 250 m.
+- It still gives five folds with equal class shares.</p>
+<p>From 30 km upwards there are too few blocks with rainfed parcels to balance the folds: one fold would hold 12% of the rainfed parcels and another 34%.</p>
+<h3 id="53-fold-assignment">5.3 Fold assignment<a class="headerlink" href="#53-fold-assignment" title="Permanent link">&para;</a></h3>
+<div class="mermaid-diagram">flowchart TD
+    A["Parcel centroids&lt;br/&gt;(UTM 29N)"] --&gt; B["20 km × 20 km grid&lt;br/&gt;→ 91 occupied blocks"]
+    B --&gt; C["Sort blocks: most rainfed parcels first&lt;br/&gt;(ties in random order, seed 42)"]
+    C --&gt; D["Take next block"]
+    D --&gt; E["Put it in the fold whose larger&lt;br/&gt;class share would stay lowest"]
+    E --&gt; F{"Blocks left?"}
+    F --&gt;|yes| D
+    F --&gt;|no| G["fold 0–4 for every parcel&lt;br/&gt;+ stratified random_fold for comparison"]</div>
+<p>Resulting folds (whole blocks per fold):</p>
+<table>
+<thead>
+<tr>
+<th>Fold</th>
+<th style="text-align: right;">Irrigated</th>
+<th style="text-align: right;">Rainfed</th>
+<th style="text-align: right;">Blocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td style="text-align: right;">1,528</td>
+<td style="text-align: right;">239</td>
+<td style="text-align: right;">12</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align: right;">1,528</td>
+<td style="text-align: right;">239</td>
+<td style="text-align: right;">13</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">1,473</td>
+<td style="text-align: right;">241</td>
+<td style="text-align: right;">42</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">1,528</td>
+<td style="text-align: right;">238</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">1,528</td>
+<td style="text-align: right;">239</td>
+<td style="text-align: right;">13</td>
+</tr>
+</tbody>
+</table>
+<p>Leakage, all folds averaged:</p>
+<table>
+<thead>
+<tr>
+<th>Training parcel within …</th>
+<th style="text-align: right;">100 m</th>
+<th style="text-align: right;">250 m</th>
+<th style="text-align: right;">500 m</th>
+<th style="text-align: right;">1 km</th>
+<th style="text-align: right;">5 km</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random split</td>
+<td style="text-align: right;">24.1%</td>
+<td style="text-align: right;">71.7%</td>
+<td style="text-align: right;">90.1%</td>
+<td style="text-align: right;">97.7%</td>
+<td style="text-align: right;">99.7%</td>
+</tr>
+<tr>
+<td>20 km spatial split</td>
+<td style="text-align: right;">0.4%</td>
+<td style="text-align: right;">1.8%</td>
+<td style="text-align: right;">3.8%</td>
+<td style="text-align: right;">8.1%</td>
+<td style="text-align: right;">38.0%</td>
+</tr>
+</tbody>
+</table>
+<figure>
+  <img alt="Spatial folds and parcels per fold" src="../figures/spatial_folds.png" />
+<br />
+<figcaption><b>Figure 1.5.</b> Fold assignment of the parcels (left) and class counts per fold (right). Each fold contains about 1,530 irrigated and 240 rainfed parcels.</figcaption>
+</figure>
+<figure>
+  <img alt="Spatial blocks and folds" src="../figures/spatial_folds_blocks.png" />
+<br />
+<figcaption><b>Figure 1.6.</b> The 20 km blocks and their folds, with enlargements of Doukkala (A) and Tadla (B). Whole blocks are assigned to a single fold.</figcaption>
+</figure>
+<figure>
+  <img alt="Train-test distance, random vs spatial split" src="../figures/train_test_distance.png" />
+<br />
+<figcaption><b>Figure 1.7.</b> Distance from each test parcel to the nearest training parcel under a random split (median 154 m) and under the 20 km spatial split (median 6.8 km).</figcaption>
+</figure>
+<h3 id="54-how-the-folds-give-train-validation-and-test">5.4 How the folds give train, validation and test<a class="headerlink" href="#54-how-the-folds-give-train-validation-and-test" title="Permanent link">&para;</a></h3>
+<p>There is no single fixed train / validation / test split. The folds take turns, as in the PASTIS benchmark (Garnot &amp; Landrieu 2021): in each of 5 rounds, 3 folds train, the next fold validates (chooses the hyperparameters) and one fold is the test fold.</p>
+<table>
+<thead>
+<tr>
+<th>Round</th>
+<th>Train</th>
+<th>Validation</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>folds 2, 3, 4</td>
+<td>fold 1</td>
+<td>fold 0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>folds 3, 4, 0</td>
+<td>fold 2</td>
+<td>fold 1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>folds 4, 0, 1</td>
+<td>fold 3</td>
+<td>fold 2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>folds 0, 1, 2</td>
+<td>fold 4</td>
+<td>fold 3</td>
+</tr>
+<tr>
+<td>5</td>
+<td>folds 1, 2, 3</td>
+<td>fold 0</td>
+<td>fold 4</td>
+</tr>
+</tbody>
+</table>
+<p>After 5 rounds every parcel has been tested once, by a model that never saw its block. Unlike PASTIS, the folds are made of whole 20 km blocks, so the test fold is always a set of regions the model has never seen.</p>
+<p>For quick experiments, the column <code>split</code> gives one fixed split: fold 0 = test, fold 1 = validation, folds 2–4 = train. <code>random_fold</code> gives a stratified random split, so the optimism of random validation can be measured.</p>
+<p><strong>Outputs</strong> (<code>outputs/dataset/02_folds/</code>):
+- <code>parcels_folds.geojson</code>: parcels + <code>block_id</code>, <code>fold</code>, <code>random_fold</code>, <code>split</code>
+- <code>fold_counts.csv</code>
+- <code>block_size_comparison.csv</code>
+- <code>class_similarity_by_distance.csv</code> / <code>.png</code>
+- <code>leakage_check.csv</code>
+- <code>spatial_folds.png</code>, <code>spatial_folds_blocks.png</code>
+- <code>train_test_distance.png</code></p>
+<hr />
+<h2 id="6-script-03--build_tiles">6. Script 03 — <code>build_tiles</code><a class="headerlink" href="#6-script-03--build_tiles" title="Permanent link">&para;</a></h2>
+<p><strong>Purpose:</strong> build the single image store that every model reads from.</p>
+<h3 id="61-tile-grid-and-which-tiles-are-built">6.1 Tile grid and which tiles are built<a class="headerlink" href="#61-tile-grid-and-which-tiles-are-built" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One projection for the whole area, UTM 29N (EPSG:32629), with 10 m pixels. The few parcels in zone 30N are resampled.</li>
+<li>A fixed grid of <strong>128 × 128-pixel tiles (1.28 km × 1.28 km)</strong>. Tile IDs are <code>&lt;season&gt;_&lt;ix&gt;_&lt;iy&gt;</code>, e.g. <code>2023-24_412_3561</code>.</li>
+<li>Only the tiles the parcels need are built:</li>
+<li><strong>home</strong> tile: holds the parcel centroid;</li>
+<li><strong>outline</strong> tiles: touched by the parcel polygon;</li>
+<li><strong>context</strong> tiles: reached by the largest model chip around the centroid. That is 64 px plus up to 8 px of alignment shift, i.e. 40 px (400 m) in every direction.</li>
+</ul>
+<div class="mermaid-diagram">flowchart LR
+    P["Parcel&lt;br/&gt;centroid + outline"] --&gt; H["home tile&lt;br/&gt;(contains centroid)"]
+    P --&gt; O["outline tiles&lt;br/&gt;(polygon crosses into them)"]
+    P --&gt; C["context tiles&lt;br/&gt;(within 32 + 8 px of the centroid)"]
+    H --&gt; U["Union over all parcels&lt;br/&gt;and both seasons"]
+    O --&gt; U
+    C --&gt; U
+    U --&gt; T["Tile plan:&lt;br/&gt;each tile built once"]</div>
+<h3 id="62-two-agricultural-years">6.2 Two agricultural years<a class="headerlink" href="#62-two-agricultural-years" title="Permanent link">&para;</a></h3>
+<p>The survey ran from December 2023 to January 2025, so the parcels belong to two agricultural years. Each parcel must be described by the imagery of the season in which its label was observed. A field that was irrigated in 2023/24 may be rainfed or fallow in 2024/25. The two years are therefore handled as two separate, parallel tile stores that share one grid:</p>
+<div class="mermaid-diagram">flowchart TD
+    A["Survey date of each parcel"] --&gt; B["&lt;b&gt;ag_season&lt;/b&gt; = agricultural year (1 Sep – 31 Aug)&lt;br/&gt;Sep–Dec of Y → Y/Y+1 · Jan–Aug of Y → Y−1/Y"]
+    B --&gt; P1["&lt;b&gt;2023/24&lt;/b&gt; · 6,887 parcels&lt;br/&gt;tile plan: tile_id = 2023-24_ix_iy"]
+    B --&gt; P2["&lt;b&gt;2024/25&lt;/b&gt; · 1,894 parcels&lt;br/&gt;tile plan: tile_id = 2024-25_ix_iy"]
+    P1 --&gt; X1["Label rasters: only 2023/24 parcels&lt;br/&gt;Earth Engine image Sep 2023 – Aug 2024&lt;br/&gt;(2023/24 tiles + 2 km)"]
+    P2 --&gt; X2["Label rasters: only 2024/25 parcels&lt;br/&gt;Earth Engine image Sep 2024 – Aug 2025&lt;br/&gt;(2024/25 tiles + 2 km)"]
+    X1 --&gt; T1["2,183 tiles (2023/24)"]
+    X2 --&gt; T2["804 tiles (2024/25)"]
+    T1 --&gt; S["One folder tiles/, one grid (same ix, iy),&lt;br/&gt;season in every tile name"]
+    T2 --&gt; S
+    S --&gt; V["04_make_views.py reads each parcel&lt;br/&gt;from the tiles of its own season"]</div>
+<p>How each part of the pipeline handles the season:</p>
+<table>
+<thead>
+<tr>
+<th>Where</th>
+<th>How the season is handled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01_prepare_labels.py</code></td>
+<td><code>ag_season</code> from the survey date: 1 Sep – 31 Aug (a parcel surveyed in Jan 2024 → <code>2023/24</code>; Dec 2024 → <code>2024/25</code>)</td>
+</tr>
+<tr>
+<td>Tile plan</td>
+<td>a tile is the triple (season, ix, iy). The same 1.28 km square can exist once for each year, with the same grid position.</td>
+</tr>
+<tr>
+<td>Tile name</td>
+<td>the season comes first: <code>2023-24_374_2793</code>, <code>2024-25_374_2793</code></td>
+</tr>
+<tr>
+<td>Label rasters</td>
+<td>only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile</td>
+</tr>
+<tr>
+<td>Imagery</td>
+<td>one 12-month Earth Engine image per year, built over that year's tiles only. The month bands are named identically (<code>m01</code> … <code>m12</code>), so both years have the same 228-band layout and models can mix them.</td>
+</tr>
+<tr>
+<td>QA, <code>tiles.parquet</code></td>
+<td>one row per (season, tile), with an <code>ag_season</code> column</td>
+</tr>
+<tr>
+<td>Views (<code>04_make_views.py</code>)</td>
+<td>every parcel is cut from the tiles of its own season; <code>ag_season</code> is kept in every output table</td>
+</tr>
+<tr>
+<td>Folds (<code>02</code>)</td>
+<td>blocks are defined by location only, so a place surveyed in both years falls in the <strong>same</strong> block and fold. No information leaks between years from training to test.</td>
+</tr>
+<tr>
+<td>Viewing (<code>tools/a4_build_vrt.py</code>)</td>
+<td>one virtual raster per year, because the two years overlap in space</td>
+</tr>
+</tbody>
+</table>
+<p>Currently 47 tile positions exist in both years: places with parcels surveyed in 2023/24 and in 2024/25.</p>
+<p><strong>Why the agricultural year (September – August).</strong></p>
+<div class="mermaid-diagram">gantt
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b
+    section Rainfed cereals
+    Pre-season                 :r0, 2023-09-01, 2023-11-01
+    Sowing                     :r1, 2023-11-01, 2024-01-01
+    Growth, flowering Mar–Apr  :r2, 2024-01-01, 2024-05-01
+    Harvest                    :r3, 2024-05-01, 2024-07-31
+    section Irrigated land
+    Green whenever water is applied :i1, 2023-09-01, 2024-06-01
+    Dry summer :crit, i2, 2024-06-01, 2024-08-31</div>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One complete rainfed cycle</td>
+<td>rainfed cereals are sown in November–December and harvested in May–July; a calendar year would divide the cycle</td>
+</tr>
+<tr>
+<td>The dry summer carries the signal</td>
+<td>from June to August only irrigated fields remain green, the clearest contrast between the classes (confirmed by the permutation importance in <a href="../../experiments/E01_frozen_pca_nested/report/#what-the-baseline-relies-on">E01</a>)</td>
+</tr>
+<tr>
+<td>Irrigation status is seasonal</td>
+<td>rainfall, reservoir allocations and fallowing change which fields are irrigated, so a label is valid for one season</td>
+</tr>
+<tr>
+<td>Consistency with existing products</td>
+<td>LGRIP30, WorldCereal and GMIA-NEXT define irrigation for one growing season (Teluguntla et al., 2023; Van Tricht et al., 2023; Kebede et al., 2026)</td>
+</tr>
+<tr>
+<td>National convention</td>
+<td>the Moroccan agricultural campaign, including the accounting of seasonal rainfall, starts on 1 September</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-monthly-composites-per-tile-per-month">6.3 Monthly composites (per tile, per month)<a class="headerlink" href="#63-monthly-composites-per-tile-per-month" title="Permanent link">&para;</a></h3>
+<div class="mermaid-diagram">flowchart TD
+    subgraph S2["Sentinel-2 L2A"]
+        direction TB
+        A1["Scenes with cloud cover &lt; 60 %"] --&gt; A2["Cloud Score+ mask:&lt;br/&gt;keep pixels with cs_cdf ≥ 0.60"]
+        A2 --&gt; A3["Median of clear pixels&lt;br/&gt;12 bands, reflectance × 10,000"]
+        A3 --&gt; A4["+ S2_NCLEAR: number of&lt;br/&gt;clear observations"]
+    end
+    subgraph S1["Sentinel-1 GRD (IW, VV + VH)"]
+        direction TB
+        B1["Split by orbit:&lt;br/&gt;ascending / descending"] --&gt; B2["dB → linear power;&lt;br/&gt;monthly mean"]
+        B2 --&gt; B3["→ dB × 100&lt;br/&gt;VV, VH per orbit"]
+        B3 --&gt; B4["+ S1_N: number of scenes"]
+    end
+    A4 --&gt; M["One month = 19 bands"]
+    B4 --&gt; M
+    M --&gt; Y["12 months (Sep → Aug) = 228 bands, int16&lt;br/&gt;NODATA = −32768 where no observation"]</div>
+<ul>
+<li><strong>19 bands per month:</strong></li>
+<li>B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B11, B12</li>
+<li>S2_NCLEAR</li>
+<li>VV_ASC, VH_ASC, S1_N_ASC</li>
+<li>VV_DSC, VH_DSC, S1_N_DSC</li>
+<li><strong>Months:</strong> <code>m01</code> = September … <code>m12</code> = August of the parcel's agricultural year. Band names in the GeoTIFF look like <code>B4_m03</code> (red, November).</li>
+<li><strong>Why linear power for Sentinel-1:</strong> backscatter in dB is a logarithm. Averaging in dB gives the geometric mean and biases the composite downwards. Averaging is therefore done in linear power, and the result converted back to dB.</li>
+<li><strong>Why the orbits are kept apart:</strong> ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored, and the view script picks one.</li>
+<li>Each tile's <code>_scenes.json</code> lists the Sentinel-1/2 scene IDs used in each month, so every pixel can be traced to its source.</li>
+</ul>
+<h3 id="64-label-rasters-local-no-earth-engine">6.4 Label rasters (local, no Earth Engine)<a class="headerlink" href="#64-label-rasters-local-no-earth-engine" title="Permanent link">&para;</a></h3>
+<p>Each tile has a 3-band <code>int32</code> label raster on exactly the same grid:</p>
+<table>
+<thead>
+<tr>
+<th>Band</th>
+<th>Values</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>label</code></td>
+<td>0 / 1 / 2</td>
+<td>0 = unlabelled or ignore, 1 = irrigated, 2 = rainfed</td>
+</tr>
+<tr>
+<td><code>parcel_idx</code></td>
+<td>0 / 1…N</td>
+<td>0 = no parcel, otherwise the parcel's row in <code>parcels.csv</code></td>
+</tr>
+<tr>
+<td><code>edge</code></td>
+<td>0 / 1</td>
+<td>1 = parcel pixel within 10 m of the outline (mixed boundary pixel)</td>
+</tr>
+</tbody>
+</table>
+<p>Rules:</p>
+<div class="mermaid-diagram">flowchart TD
+    A["Parcel polygon&lt;br/&gt;(same season as the tile)"] --&gt; B{"Contains at least&lt;br/&gt;one pixel centre?"}
+    B --&gt;|yes| C["Burn pixels whose&lt;br/&gt;centre is inside"]
+    B --&gt;|no: very small parcel| D["Burn all touched pixels&lt;br/&gt;flag all_touched = True"]
+    C --&gt; E{"Pixel claimed by&lt;br/&gt;two parcels?"}
+    D --&gt; E
+    E --&gt;|yes| F["label = 0, parcel_idx = 0&lt;br/&gt;(ignore) · pair listed in parcel_overlaps.csv"]
+    E --&gt;|no| G["label, parcel_idx set"]
+    G --&gt; H["edge = 1 if within 10 m&lt;br/&gt;of the outline"]</div>
+<p>Only parcels of the tile's own agricultural year are burnt in.</p>
+<h3 id="65-steps">6.5 Steps<a class="headerlink" href="#65-steps" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Read the parcels with folds and project them to UTM 29N.</li>
+<li>Parcel table: index, centroid, bounds, area, perimeter, pixel counts (all and inner), home tile, tiles needed.</li>
+<li>Tile plan (6.1).</li>
+<li>Label rasters for all planned tiles (6.3). Local and fast.</li>
+<li>Earth Engine: one 228-band monthly image per agricultural year. Each tile is downloaded with <code>computePixels</code>, 8 requests in parallel and up to 4 retries, and written as a compressed GeoTIFF with its scene IDs. Finished tiles are skipped on a restart.</li>
+<li>Tile index (<code>tiles.parquet</code>) with fold, role, labelled pixels and QA.</li>
+</ol>
+<p><code>DOWNLOAD = False</code> stops after step 4, so the plan and labels can be checked without Earth Engine. <code>N_TEST_TILES = 20</code> builds only 20 tiles per season, for a test run.</p>
+<h3 id="66-quality-numbers-per-tile">6.6 Quality numbers per tile<a class="headerlink" href="#66-quality-numbers-per-tile" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>s2_nodata_pct</code></td>
+<td>share of tile-months without any clear Sentinel-2 pixel</td>
+</tr>
+<tr>
+<td><code>s2_nodata_parcel_pct</code></td>
+<td>the same, on parcel pixels only</td>
+</tr>
+<tr>
+<td><code>s2_nclear_parcel_median</code></td>
+<td>median number of clear observations on parcel pixels, per month</td>
+</tr>
+<tr>
+<td><code>s1_asc_months</code>, <code>s1_dsc_months</code></td>
+<td>months with at least one ascending / descending scene</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>home, outline or context</td>
+</tr>
+<tr>
+<td><code>mixed_folds</code></td>
+<td>the tile holds parcels from more than one fold (relevant for segmentation, section 11)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Outputs</strong> (<code>outputs/dataset/03_tiles_128px/agyear/</code>):
+- <code>tiles/&lt;id&gt;_img.tif</code>, <code>tiles/&lt;id&gt;_lab.tif</code>, <code>tiles/&lt;id&gt;_scenes.json</code>
+- <code>parcels.csv</code>
+- <code>parcel_overlaps.csv</code>
+- <code>tiles.parquet</code>
+- <code>tiles_qa.jsonl</code>
+- <code>tiles_info.json</code></p>
+<hr />
+<h2 id="7-script-04--make_views">7. Script 04 — <code>make_views</code><a class="headerlink" href="#7-script-04--make_views" title="Permanent link">&para;</a></h2>
+<p><strong>Purpose:</strong> cut every model input from the tile store. It runs locally and needs no Earth Engine.</p>
+<div class="mermaid-diagram">flowchart TD
+    TS["&lt;b&gt;Tile store&lt;/b&gt;&lt;br/&gt;tiles read through a cache of 48 tiles"] --&gt; L["&lt;b&gt;For each parcel&lt;/b&gt;&lt;br/&gt;read its window and its pixels&lt;br/&gt;(label raster: parcel_idx = this parcel)"]
+    L --&gt; A["&lt;b&gt;View A · parcel features&lt;/b&gt;&lt;br/&gt;median per band and month + NDVI, NDWI, EVI&lt;br/&gt;parcel_features_all.csv · parcel_features_inner.csv"]
+    L --&gt; B["&lt;b&gt;View B · pixel sets&lt;/b&gt;&lt;br/&gt;all parcel pixels, all months&lt;br/&gt;pixelsets.npz"]
+    L --&gt; C["&lt;b&gt;View C · 64 × 64 chips&lt;/b&gt;&lt;br/&gt;patch-aligned, per patch size&lt;br/&gt;chips_p8/ (Clay) · chips_p16/ (others)"]
+    TS --&gt; D["&lt;b&gt;View D · full tiles&lt;/b&gt;&lt;br/&gt;as they are, for&lt;br/&gt;segmentation models"]</div>
+<h3 id="71-view-a--parcel-feature-tables">7.1 View A — parcel feature tables<a class="headerlink" href="#71-view-a--parcel-feature-tables" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Per parcel and month: the <strong>median</strong> over the parcel's pixels of each of these:</li>
+<li>the 12 Sentinel-2 bands (reflectance 0–1);</li>
+<li>NDVI = (B8 − B4)/(B8 + B4);</li>
+<li>NDWI = (B8 − B11)/(B8 + B11), which measures canopy water;</li>
+<li>EVI = 2.5 (B8 − B4)/(B8 + 6 B4 − 7.5 B2 + 1);</li>
+<li>VV and VH for both orbits (dB).</li>
+<li>Indices are computed per pixel first, then the median is taken.</li>
+<li>The median is used instead of the mean because it is robust to leftover clouds and mixed edge pixels.</li>
+<li>Observation counts are added: the mean S2_NCLEAR over the parcel, and the maximum S1_N per orbit.</li>
+<li>Column names are <code>&lt;variable&gt;_m&lt;month&gt;</code>, e.g. <code>NDVI_m10</code> (NDVI in June). Each parcel has 19 variables × 12 months = 228 feature columns, plus counts and metadata (<code>parcel_id</code>, <code>label</code>, <code>ag_season</code>, <code>fold</code>, <code>n_px_used</code>, <code>used_inner</code>).</li>
+<li><code>parcel_features_inner.csv</code> leaves out edge pixels. A parcel with no inner pixel falls back to all of its pixels (<code>used_inner = False</code>).</li>
+</ul>
+<h3 id="72-view-b--pixel-sets">7.2 View B — pixel sets<a class="headerlink" href="#72-view-b--pixel-sets" title="Permanent link">&para;</a></h3>
+<p>All pixels of each parcel, unaggregated, for set-based temporal models such as PSE-TAE (Garnot et al. 2020).</p>
+<ul>
+<li><code>pixels [N_pixels, 12, bands]</code> int16</li>
+<li><code>offsets [parcels + 1]</code>: parcel <em>i</em> = <code>pixels[offsets[i]:offsets[i+1]]</code></li>
+<li><code>edge [N_pixels]</code>, <code>parcel_id</code>, <code>label</code>, <code>bands</code></li>
+</ul>
+<h3 id="73-view-c--patch-aligned-chips-for-the-foundation-models">7.3 View C — patch-aligned chips for the foundation models<a class="headerlink" href="#73-view-c--patch-aligned-chips-for-the-foundation-models" title="Permanent link">&para;</a></h3>
+<p>Vision-transformer foundation models partition an image into square patches: 8 × 8 px for Clay and 16 × 16 px (160 m) for Prithvi-EO-2.0, TerraMind and the output grid of AgriFM. Each patch is represented by one embedding.</p>
+<p>When a chip whose size is a multiple of the patch size is centred on the parcel, the centroid falls on the <strong>corner</strong> of four patches, and a small parcel is distributed over four patches dominated by neighbouring fields. Shifting the chip by half a patch places the centroid at the <strong>centre</strong> of a single patch:</p>
+<div class="mermaid-diagram">flowchart LR
+    subgraph OLD["Centred chip (old)"]
+        O1["Centroid on the corner&lt;br/&gt;of 4 patches"] --&gt; O2["Parcel split over 4 patches,&lt;br/&gt;each mostly neighbouring fields"]
+    end
+    subgraph NEW["Patch-aligned chip (now)"]
+        N1["Chip shifted by half a patch&lt;br/&gt;(4 px for p8, 8 px for p16)"] --&gt; N2["Centroid at the centre&lt;br/&gt;of one patch"]
+        N2 --&gt; N3["Higher share of the pooled&lt;br/&gt;patches inside the parcel"]
+    end
+    OLD -.-&gt;|"replaced by"| NEW</div>
+<p><strong>Purity</strong> measures this. A patch's weight is the share of its pixels inside the parcel, and those weights are also what the study uses to pool patch embeddings. Purity is the weighted share of parcel pixels in the pooled patches: Σ w² / Σ w, from 0 to 1. <code>index.csv</code> stores both <code>purity</code> (aligned) and <code>purity_centred</code> (old rule), so the gain is measurable.</p>
+<p>Each chip folder holds:
+- <code>part_*.npz</code>: <code>chips [n, 12, 15, 64, 64]</code> int16, <code>mask [n, 64, 64]</code> (parcel pixels), <code>parcel_id</code>.
+- <code>index.csv</code>: one row per parcel. Columns: <code>part</code>, <code>label</code>, <code>ag_season</code>, <code>fold</code>, <code>zone</code>, <code>lat</code>, <code>lon</code>, <code>epsg</code>, <code>x0</code>, <code>y0</code> (chip top-left corner, for georeferencing), <code>area_ha</code>, <code>n_px</code>, <code>n_px_in_chip</code>, <code>purity</code>, <code>purity_centred</code>.
+- <code>chips_info.json</code>: band order and scales. The 15 bands are B1 … B12, VV, VH, S2_NCLEAR.</p>
+<figure>
+  <img alt="Patch purity of centred and aligned chips" src="../figures/purity.png" />
+<br />
+<figcaption><b>Figure 1.8.</b> Patch purity, i.e. the share of the pooled patches that lies inside the parcel, for centred chips (grey) and patch-aligned chips (blue), at 8 px (80 m, left) and 16 px (160 m, right) patch size. Alignment markedly increases purity, in particular for 8 px patches.</figcaption>
+</figure>
+<h3 id="74-sentinel-1-orbit-for-views-b-and-c">7.4 Sentinel-1 orbit for views B and C<a class="headerlink" href="#74-sentinel-1-orbit-for-views-b-and-c" title="Permanent link">&para;</a></h3>
+<p><code>S1_ORBIT = "auto"</code> picks the orbit direction with more valid tile-months over the whole study area and writes it to <code>views_info.json</code> (<code>s1_orbit_for_chips_and_pixelsets</code>). That orbit's bands are named simply <code>VV</code> and <code>VH</code> in the chips. <code>"ASC"</code> or <code>"DSC"</code> force one orbit. View A keeps both orbits as separate columns.</p>
+<h3 id="75-qa-files">7.5 QA files<a class="headerlink" href="#75-qa-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>qa_clear_obs.csv</code>: clear observations per parcel and month.</li>
+<li><code>qa_purity.csv</code>: purity distribution per patch size.</li>
+<li><code>views_info.json</code>: settings, the chosen orbit, and counts.</li>
+</ul>
+<h3 id="76-dataset-inspection">7.6 Dataset inspection<a class="headerlink" href="#76-dataset-inspection" title="Permanent link">&para;</a></h3>
+<p>The checks of <code>models_run/01_inspect_dataset.py</code> (<a href="../../phase2_models/frozen_encoders/#4-script-01--inspect_dataset">Model training and inference §4</a>)
+characterise the final dataset before any model is trained.</p>
+<figure>
+  <img alt="Clear observations per month" src="../figures/observations_per_month.png" />
+<br />
+<figcaption><b>Figure 1.9.</b> Mean number of clear Sentinel-2 observations per parcel and month (left) and share of parcels without any clear observation (right). Winter months have the fewest clear views, yet every parcel has at least one clear observation in every month.</figcaption>
+</figure>
+<figure>
+  <img alt="Seasonal profiles per class" src="../figures/seasonal_profiles.png" />
+<br />
+<figcaption><b>Figure 1.10.</b> Monthly parcel medians of NDVI, NDWI and Sentinel-1 VH backscatter (median and interquartile range per class). Irrigated parcels show markedly higher vegetation and moisture signals from December to April and higher backscatter throughout the year; rainfed parcels show a weak, short spring peak.</figcaption>
+</figure>
+<figure>
+  <img alt="Example chips, irrigated" src="../figures/examples_irrigated.jpg" />
+<br />
+<figcaption><b>Figure 1.11.</b> Example irrigated parcels: 16 px-aligned chips for the 12 months of the agricultural year, in true colour and NDVI (outline = parcel).</figcaption>
+</figure>
+<figure>
+  <img alt="Example chips, rainfed" src="../figures/examples_rainfed.jpg" />
+<br />
+<figcaption><b>Figure 1.12.</b> Example rainfed parcels, displayed as in Figure 1.11.</figcaption>
+</figure>
+<hr />
+<h2 id="8-output-layout-and-file-formats">8. Output layout and file formats<a class="headerlink" href="#8-output-layout-and-file-formats" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>outputs/dataset/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── 01_labels/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── parcels_labelled.geojson         EPSG:4326 polygons
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   └── summary.csv, *.png
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── 02_folds/
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── parcels_folds.geojson            + block_id, fold, random_fold, split
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   └── fold_counts.csv, block_size_comparison.csv, leakage_check.csv, class_similarity_by_distance.csv, *.png
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>└── 03_tiles_128px/agyear/
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ├── tiles/
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    │   ├── &lt;tile_id&gt;_img.tif            int16, 228 bands (12 months × 19), NODATA −32768, EPSG:32629, 10 m
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    │   ├── &lt;tile_id&gt;_lab.tif            int32, 3 bands: label, parcel_idx, edge
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    │   └── &lt;tile_id&gt;_scenes.json        scene IDs per month (S2, S1 asc, S1 dsc)
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    ├── parcels.csv                      one row per parcel (parcel_idx = value in the label raster)
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ├── parcel_overlaps.csv              overlapping parcel pairs, their labels and overlap share
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ├── tiles.parquet                    GeoParquet tile index: geometry, season, role, fold(s), QA
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    ├── tiles_info.json                  grid, bands, months, scales, cloud settings
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    └── views/
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        ├── parcel_features_all.csv      view A
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        ├── parcel_features_inner.csv    view A, edge pixels removed
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        ├── pixelsets.npz                view B
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        ├── chips_p8/  chips_p16/        view C: part_*.npz, index.csv, chips_info.json
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        ├── qa_purity.csv, qa_clear_obs.csv
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        └── views_info.json
+</code></pre></div>
+<p><strong>Scales:</strong>
+- Sentinel-2: reflectance × 10,000.
+- Sentinel-1: dB × 100. For example, −1,523 = −15.23 dB.
+- Counts: plain integers.
+- −32,768 = no observation. Count bands are 0 there.</p>
+<hr />
+<h2 id="9-how-to-use-the-dataset">9. How to use the dataset<a class="headerlink" href="#9-how-to-use-the-dataset" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Model family</th>
+<th>Use</th>
+<th>Train / validation / test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Random forest, gradient boosting, SVM</td>
+<td>View A</td>
+<td><code>fold</code> (5 rounds: 3 train / 1 validation / 1 test) or <code>split</code></td>
+</tr>
+<tr>
+<td>Pixel-set temporal models (PSE-TAE, L-TAE)</td>
+<td>View B</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Foundation models / any CNN or ViT on chips</td>
+<td>View C (<code>chips_p8</code> or <code>chips_p16</code>) with <code>mask</code></td>
+<td>same, from <code>index.csv</code></td>
+</tr>
+<tr>
+<td>Segmentation (U-Net, U-TAE)</td>
+<td>View D: <code>_img.tif</code> + <code>_lab.tif</code>, loss masked where <code>label = 0</code></td>
+<td>split by <strong>tile</strong>, using <code>tiles.parquet</code> (<code>fold</code>, <code>mixed_folds</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Minimal example: read the chips.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">folder</span> <span class="o">=</span> <span class="s2">"outputs/dataset/03_tiles_128px/agyear/views/chips_p16"</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2">/index.csv"</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s2">"parcel_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">info</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2">/chips_info.json"</span><span class="p">))</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">index</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">chips</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">"chips"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"mask"</span><span class="p">]</span>            <span class="c1"># [n, 12, 15, 64, 64], [n, 64, 64]</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">red_june</span> <span class="o">=</span> <span class="n">chips</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"B4"</span><span class="p">)]</span> <span class="o">/</span> <span class="mi">10000</span>
+</code></pre></div>
+<hr />
+<h2 id="10-running-settings-and-run-time">10. Running, settings and run time<a class="headerlink" href="#10-running-settings-and-run-time" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>condaml
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python<span class="w"> </span>ml_dataset_prep/01_prepare_labels.py<span class="w">          </span><span class="c1"># minutes</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>ml_dataset_prep/02_make_spatial_folds.py<span class="w">      </span><span class="c1"># minutes</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>python<span class="w"> </span>ml_dataset_prep/03_build_tiles.py<span class="w">             </span><span class="c1"># Earth Engine; a few hours; resumable</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>python<span class="w"> </span>ml_dataset_prep/04_make_views.py<span class="w">              </span><span class="c1"># local</span>
+</code></pre></div>
+<p>Run 03 first with <code>N_TEST_TILES = 20</code>, then check the result with <code>models_run/01_inspect_dataset.py</code> and <code>tools/a3_export_chips_geotiff.py</code> (QGIS) before the full run.</p>
+<p>To view the whole tile store as one layer, <code>tools/a4_build_vrt.py</code> writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to <code>outputs/dataset/03_tiles_128px/agyear/vrt/</code>. They only point to the tiles, so nothing is copied.</p>
+<p>The settings sit at the top of each script:</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Main settings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td><code>SEASON_START_MONTH = 9</code>, <code>CROP_KEEP</code>, <code>IRRIGATED_TEXT</code>, <code>RAINFED_TEXT</code>, <code>CHECK_WORLDCOVER</code></td>
+</tr>
+<tr>
+<td>02</td>
+<td><code>N_FOLDS = 5</code>, <code>BLOCK_KM = 20</code>, <code>CANDIDATE_KM</code>, <code>SEED = 42</code></td>
+</tr>
+<tr>
+<td>03</td>
+<td><code>TILE_PX = 128</code>, <code>GSD_M = 10</code>, <code>CRS_EPSG = 32629</code>, <code>CHIP_PX = 64</code>, <code>MAX_SHIFT_PX = 8</code>, <code>INNER_BUFFER_M = 10</code>, <code>CLOUD_COVER_PERCENTAGE = 60</code>, <code>CS_THRESHOLD = 0.60</code>, <code>DOWNLOAD</code>, <code>DOWNLOAD_WORKERS = 8</code>, <code>N_TEST_TILES</code></td>
+</tr>
+<tr>
+<td>04</td>
+<td><code>CHIP_PATCH_SIZES = [8, 16]</code>, <code>CHIP_PX = 64</code>, <code>S1_ORBIT = "auto"</code>, <code>MAKE_FEATURES</code>, <code>MAKE_PIXELSETS</code></td>
+</tr>
+</tbody>
+</table>
+<p>Earth Engine access uses a service-account key in <code>secrets/</code>, which is never committed.</p>
+<hr />
+<h2 id="11-known-limitations">11. Known limitations<a class="headerlink" href="#11-known-limitations" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Class balance and geography:</strong> 14% of parcels are rainfed, and 94% of those are in Doukkala. A model can partly learn "region" rather than "irrigation". Per-zone results should be reported.</li>
+<li><strong>Reprojection:</strong> the few parcels in UTM 30N are resampled to 29N.</li>
+<li><strong>Monthly composites:</strong> in cloudy winter months some parcels have no clear Sentinel-2 view (NODATA). The counts show where.</li>
+<li><strong>Segmentation with view D:</strong> a tile can hold parcels of two folds (<code>mixed_folds</code>), and context tiles reach across fold borders. Tile-level models need their own tile split, or a loss mask restricted to the training fold.</li>
+<li><strong>Labels:</strong> a single survey visit per parcel. Overlapping parcels are set to ignore and listed, but labels are not otherwise checked against imagery.</li>
+</ul>
+<hr />
+<h2 id="12-references">12. References<a class="headerlink" href="#12-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Garnot, V. S. F., Landrieu, L., Giordano, S., &amp; Chehata, N. (2020). Satellite image time series classification with pixel-set encoders and temporal self-attention. <em>CVPR</em>.</li>
+<li>Garnot, V. S. F., &amp; Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional temporal attention networks (PASTIS). <em>ICCV</em>.</li>
+<li>Kattenborn, T., Schiefer, F., Frey, J., Feilhauer, H., Mahecha, M. D., &amp; Dormann, C. F. (2022). Spatially autocorrelated training and validation samples inflate performance assessment of convolutional neural networks. <em>ISPRS Open Journal of Photogrammetry and Remote Sensing</em>, 5, 100018.</li>
+<li>Kerner, H., et al. (2025). Fields of The World: a machine learning benchmark dataset for global agricultural field boundary segmentation. <em>AAAI</em>.</li>
+<li>Ouassanouan, Y., Elfarkh, J., Grich, S., Liblab, A., &amp; Chehbouni, A. (2026). Crop and irrigation types ground-truth dataset for Moroccan agricultural regions. <em>Scientific Data</em>, 13, 746. https://doi.org/10.1038/s41597-026-06993-y (source of the labels)</li>
+<li>Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological mapping models. <em>Nature Communications</em>, 11, 4540.</li>
+<li>Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. <em>Ecography</em>, 40, 913–929.</li>
+<li>Sykas, D., Sdraka, M., Zografakis, D., &amp; Papoutsis, I. (2022). A Sentinel-2 multiyear, multicountry benchmark dataset for crop classification and segmentation with deep learning (Sen4AgriNet). <em>IEEE JSTARS</em>, 15, 3323–3339.</li>
+<li>Pasquarella, V. J., Brown, C. F., Czerwinski, W., &amp; Rucklidge, W. J. (2023). Comprehensive quality assessment of optical satellite imagery using weakly supervised video learning (Cloud Score+). <em>CVPR Workshops</em>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../overview/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../phase2_models/overview/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../assets/javascripts/mermaid.js"></script>
+      
+    
+  </body>
+</html>

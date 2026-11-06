@@ -1,0 +1,21 @@
+/* Minimal additions to the Material theme */
+
+/* Diagrams: natural size on a white card; scroll sideways when wider than the page */
+.md-typeset div.mermaid-diagram { background: #fff; border: 1px solid #E0E4E7; border-radius: 4px;
+  padding: .8rem; margin: 1.2em 0; overflow-x: auto; text-align: center; }
+.md-typeset div.mermaid-diagram svg { max-width: none; height: auto; }
+/* labels never clipped: same font as measured, no wrapping inside a measured line, overflow shown */
+.md-typeset div.mermaid-diagram foreignObject { overflow: visible; }
+.md-typeset div.mermaid-diagram foreignObject div,
+.md-typeset div.mermaid-diagram foreignObject span { font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px; line-height: 1.5; letter-spacing: normal; }
+.md-typeset div.mermaid-diagram svg[aria-roledescription="gantt"] { max-width: 100%; }
+
+/* more room for wide tables and diagrams */
+.md-grid { max-width: 1440px; }
+.md-typeset table:not([class]) { font-size: .75rem; }
+
+/* figures with captions (dataset and model pages) */
+.md-typeset figure { margin: 1.4em auto; }
+.md-typeset figure img { max-width: 100%; border: 1px solid #E0E4E7; border-radius: 4px; background: #fff; }
+.md-typeset figcaption { max-width: 46rem; font-size: .72rem; line-height: 1.5; text-align: left; color: var(--md-default-fg-color--light); }
