@@ -43,14 +43,18 @@ Install (once, in the condaml environment)
 
 Output
 ------
-outputs/morocco/study/02_embeddings/prithvi_<WINDOW>_tiles.npz  (same layout as the other models)
+outputs/<REGION>/study/02_embeddings/prithvi_<WINDOW>_tiles.npz  (same layout as the other models)
     embeddings [N, 12, 1024] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
 -----------------------------
     python models_run/02b_embed_prithvi.py
+    # Utah (or any region / views folder) without editing the script, e.g. in a Slurm job:
+    EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02b_embed_prithvi.py
+    # -> outputs/utah/study/02_embeddings/<model>_agyear_tiles_2023-24.npz
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -62,6 +66,8 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "prithvi"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (ml_dataset_prep/regions.py)
+VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 WEIGHTS_DIR = ROOT / "checkpoints" / "prithvi"               # Hugging Face download folder (ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL)
 BACKBONE = "prithvi_eo_v2_300_tl"                          # TerraTorch name of Prithvi-EO-2.0-300M-TL
 FRAMES_PER_PASS = 4                                        # months per forward pass (pretraining used 4)
@@ -77,13 +83,15 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
-    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+    CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or
+                                                             # <model>_agyear_tiles_2023-24.npz (views_2023-24)
 else:
     CHIP_DIR = ROOT / "outputs" / "morocco" / "legacy" / "04_chips" / WINDOW
     TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
+OUT_DIR = ROOT / "outputs" / REGION / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 

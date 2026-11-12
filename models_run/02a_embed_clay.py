@@ -37,15 +37,19 @@ checkpoints/clay/ on the first run.
 
 Output
 ------
-outputs/morocco/study/02_embeddings/clay_<WINDOW>_tiles.npz
+outputs/<REGION>/study/02_embeddings/clay_<WINDOW>_tiles.npz
     parcel_id [N], label [N], ag_season [N], steps [12] (month names),
     embeddings [N, 12, 1024] float16, valid [N, 12] (False = month without any clear pixel)
 
 Run (from the project folder)
 -----------------------------
     python models_run/02a_embed_clay.py
+    # Utah (or any region / views folder) without editing the script, e.g. in a Slurm job:
+    EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02a_embed_clay.py
+    # -> outputs/utah/study/02_embeddings/<model>_agyear_tiles_2023-24.npz
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -57,6 +61,8 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "clay"
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (ml_dataset_prep/regions.py)
+VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 CHECKPOINT = ROOT / "checkpoints" / "clay" / "clay-v1.5.ckpt"
 METADATA = ROOT / "checkpoints" / "clay" / "metadata.yaml"
 CHECKPOINT_URL = "https://huggingface.co/made-with-clay/Clay/resolve/main/v1.5/clay-v1.5.ckpt"          # if missing
@@ -73,11 +79,15 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
-
-CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
-TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
-                                         # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
+VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
+if CHIP_SOURCE == "tiles":
+    CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or
+                                                             # <model>_agyear_tiles_2023-24.npz (views_2023-24)
+else:
+    CHIP_DIR = ROOT / "outputs" / "morocco" / "legacy" / "04_chips" / WINDOW
+    TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
+OUT_DIR = ROOT / "outputs" / REGION / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 

@@ -11,7 +11,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D3](#d3-validation-pastis-rotation-instead-of-nested-cv) | Validation design | validation subset from the training data | PASTIS rotation: 3 train / 1 validation / 1 test | 4 Nov 2026 |
 | [D4](#d4-one-shared-tile-store-for-every-input) | Image preparation | annual stacks via STAC / xarray | one tile store from Google Earth Engine for every input | 27 Oct 2026 |
 | [D5](#d5-frozen-encoder--classical-classifiers) | Frozen-encoder strategy | frozen encoder + decoder / head | frozen encoder → parcel embedding → four classifiers | Oct 2026 |
-| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | four classifiers (RF headline) on every input | Oct 2026 |
+| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | three classifiers (LogReg, RF, SVM) and an MLP head on every input; gradient boosting dropped (12 Nov 2026) | Oct 2026 |
 | [D7](#d7-macro-f1-as-the-headline-metric) | Selection metric | mean F1 over folds ± SD | macro-F1 of the out-of-fold predictions, 95% block-bootstrap CI, per-fold mean ± SD | Oct 2026 |
 | [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | PCA pipeline now; L-TAE pipeline next | 4 Nov 2026 |
 | [D9](#d9-cloud-score-instead-of-qa60) | Cloud mask | cloud-masked composites | Cloud Score+ (cs_cdf ≥ 0.60) | Oct 2026 |
@@ -19,6 +19,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | parcel benchmark with classical heads (RQ1) + segmentation head and pixel models for the maps (RQ2–RQ4); neural baselines TempCNN and U-TAE | 6 Nov 2026 |
 | [D12](#d12-agrifm-with-its-pretrained-4-px-patch-embedding) | AgriFM encoder | not specified | pretrained 4 × 4 px patch embedding (output stride 32 px); all weights checked on loading | 6 Nov 2026 |
 | [D13](#d13-utah-as-a-second-independent-study-area) | RQ3 / RQ4: second region and temporal test | zero-shot transfer of the Morocco model to Tunisia (RQ4); temporal test within Morocco (RQ3) | Utah (WRLU) as an independent second study area, no transfer; temporal test in Utah: train on WRLU 2024, test on WRLU 2021 on held-out folds | 12 Nov 2026 |
+| [D14](#d14-sentinel-2-only-for-every-input) | Input data of the models | Sentinel-1 and Sentinel-2 | Sentinel-2 only for every GeoFM and the baselines; Sentinel-1 as an optional ablation (Morocco) | 12 Nov 2026 |
+| [D15](#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips) | AgriFM normalisation | not specified | per-band mean / std of the region's own chips; config statistics as sensitivity run | 12 Nov 2026 |
 
 ---
 
@@ -69,6 +71,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Now:** logistic regression, random forest, gradient boosting and SVM on every input (RF stays the headline).
 - **Why:** a classifier that suits hand-built features (RF) may not suit dense embeddings (E01: RF is the weakest
   classifier on embeddings). Reporting all four keeps the comparison from depending on one choice.
+- **Update (12 Nov 2026):** from E02 on, three classifiers: logistic regression (linear probe), random forest
+  (standard remote-sensing classifier, the proposal's baseline) and SVM (strongest in E01), plus a trainable **MLP
+  head** (E05, E03). Gradient boosting is dropped: in E01 it was never the best classifier and always within the
+  confidence interval of SVM. Plan: [RQ1 · Experiment plan](phase2_models/experiment_plan.md).
 
 ## D7. Macro-F1 as the headline metric
 - **Proposal (§4.2.4):** OA, precision, recall, F1; best model by mean F1 over the five folds, SD as consistency.
@@ -165,3 +171,44 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Consequence:** RQ4 changes from "spatial transferability of the Morocco model" to "do the results hold in a
   second region"; RQ3 is answered in Utah. To be agreed with the supervisors.
 - **Where:** [Utah training data](phase1_data/utah.md), `ml_dataset_prep/01_prepare_labels_Utah.py`.
+
+## D14. Sentinel-2 only for every input
+- **Proposal:** Sentinel-1 and Sentinel-2 time series.
+- **Before:** the baseline used Sentinel-2 + Sentinel-1 features (one orbit), TerraMind received Sentinel-2 +
+  Sentinel-1, the other three GeoFMs Sentinel-2 only.
+- **Now:** every input of the model comparison uses **Sentinel-2 only**: the four GeoFMs (TerraMind with
+  `MODALITIES = ["S2L2A"]`), the feature baseline (`S1S2_VARIABLES = "s2"`) and PSE-TAE (`BANDS = "s2"`). No model is
+  given an input it was not pretrained on, and no fusion of embeddings with radar features is designed for the
+  optical-only models.
+- **Why:**
+    - Every model sees the same optical data, so a difference comes from the representation and the head, not from
+      one model having radar.
+    - Morocco and Utah are treated alike.
+    - Sentinel-1 coverage of Utah changed between the years: after Sentinel-1B failed (December 2021) only
+      Sentinel-1A covered the area in 2023/24 (only the descending orbit was usable), while the 2020/21 test year had
+      both satellites. With radar, the 2024 → 2021 temporal test (D13) would partly measure a change in radar coverage.
+- **Consequence:** the multimodal pretraining of TerraMind is not used in the main comparison. An optional ablation
+  in Morocco (both orbits available) adds Sentinel-1 to TerraMind (`terramind-s1s2`) and to the baseline
+  (`S1S2_VARIABLES = "all"`, PSE-TAE `morocco_s2s1`). E01 (done before this decision) used Sentinel-1 in the baseline
+  and in TerraMind and is kept as it is.
+- **Where:** [Foundation models · Configuration](foundation_models.md#configuration-in-this-study),
+  [Models pipeline](phase2_models/frozen_encoders.md).
+
+## D15. AgriFM normalised with the statistics of the region's chips
+- **Before:** AgriFM inputs were normalised with the statistics of the repository's fine-tuning example
+  (`configs/cropland_mapping.py`).
+- **Problem:** neither the AgriFM paper (Li et al. 2025) nor the repository documents the normalisation of the
+  pretraining data. The config statistics (blue 4,179 ± 4,042) describe raw, partly cloudy time series; the
+  cloud-masked monthly composites of this study have blue 714 ± 344 (Morocco). With the config statistics the
+  visible and NIR bands use only 8–30% of the expected spread and sit about 0.8 SD below zero, so the frozen encoder
+  sees an almost constant input in these bands.
+- **Now:** per-band mean and standard deviation of the region's own chips (`NORM = "data"` in `02d_embed_agrifm.py`):
+  all valid pixels of 20 evenly spaced chip files, every 4th pixel; computed from imagery only (no labels), saved to
+  `agrifm_norm_stats_<tag>.json` and reused. For the Utah temporal test the 2023/24 statistics are reused for 2020/21
+  (`NORM_STATS_FILE`), so both years are scaled identically.
+- **Why:** standardising each band to zero mean and unit variance is what a z-score normalisation with the pretraining
+  statistics does on the pretraining data; when those statistics are unknown, the data's own statistics are the
+  closest equivalent.
+- **Sensitivity:** the config statistics are kept as a second embedding (`NORM = "config"`, `agrifm-cfgnorm_*.npz`;
+  the Morocco file made on 6 Nov 2026 is this version).
+- **Where:** [Foundation models · AgriFM](foundation_models.md#agrifm), `models_run/02d_embed_agrifm.py`.

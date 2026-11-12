@@ -5,7 +5,7 @@ research questions. Both are evaluated on spatially independent areas under one 
 
 | RQ | Question | Approach | Status | Page |
 | --- | --- | --- | --- | --- |
-| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-1/2 feature baseline | ⏳ E01 done, E02 running, E03 planned | [RQ1 · Frozen encoders](frozen_encoders.md) |
+| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-2 feature baseline | ⏳ E01 done; E02–E06 planned ([experiment plan](experiment_plan.md)) | [RQ1 · Frozen encoders](frozen_encoders.md) |
 | **RQ2** | To what extent does parameter-efficient fine-tuning improve on a frozen encoder? | segmentation head on frozen and LoRA-adapted encoders; neural baselines | 📝 planned | [RQ2 · Fine-tuning](fine_tuning.md) |
 
 The remainder of this page summarises the RQ1 workflow, which forms the reference for all later comparisons.
@@ -32,9 +32,9 @@ flowchart TD
     end
 
     subgraph P2["Phase 2 · Model evaluation"]
-        BL["<b>S1/S2 baseline</b><br/>204 features per parcel"]
+        BL["<b>S2 baseline</b><br/>180 features per parcel"]
         FM["<b>Foundation models (frozen)</b><br/>Clay · Prithvi-EO-2.0 · TerraMind · AgriFM<br/>→ one embedding per parcel"]
-        CF["<b>Classifiers</b><br/>LogReg · RF · HGB · SVM<br/>3 train / 1 validation / 1 test folds"]
+        CF["<b>Heads</b><br/>LogReg · RF · SVM · MLP · L-TAE<br/>3 train / 1 validation / 1 test folds"]
         CM["<b>Comparison</b><br/>same parcels · paired differences<br/>block-bootstrap 95% CI"]
         BL --> CF
         FM --> CF
@@ -44,7 +44,7 @@ flowchart TD
     FE --> BL
     CH --> FM
     SF -. "folds" .-> CF
-    CM --> R(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
+    CM --> R(["Does a foundation model beat<br/>the Sentinel-2 baseline?"])
 ```
 
 ## Step by step
@@ -66,7 +66,7 @@ performance are attributable to the representation rather than to the input data
 **4. Parcel representations.**
 
 - *Feature baseline:* for each of the 12 months, the median of the parcel's inner pixels for the Sentinel-2 bands,
-  three spectral indices and Sentinel-1 backscatter, yielding 204 features. Months without clear observations are
+  three spectral indices, yielding 180 features (Sentinel-2 only, [D14](../decisions.md#d14-sentinel-2-only-for-every-input)). Months without clear observations are
   temporally interpolated.
 - *Foundation-model embedding:* a 64 × 64 px window (640 m) around the parcel is passed through the frozen encoder.
   The resulting patch embeddings are averaged with weights equal to the fraction of each patch inside the parcel.

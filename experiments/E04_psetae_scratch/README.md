@@ -16,6 +16,10 @@ A first run on the 128 px tile store exists (outer 5 spatial folds, 3 folds trai
 
 ## Runs (one config file each, in `configs/`)
 
+Sentinel-2 only for every input ([D14](../../docs/decisions.md#d14-sentinel-2-only-for-every-input)):
+`config.yaml` runs `morocco_s2` and `utah_s2`. `morocco_s2s1` is the optional Sentinel-1 ablation; `utah_s2s1`
+is kept but not run (Sentinel-1 is thin in Utah after the loss of Sentinel-1B).
+
 | Config | Region · views | Bands | Results |
 | --- | --- | --- | --- |
 | `morocco_s2.yaml` | Morocco · `views` (2023/24 + 2024/25) | 10 Sentinel-2 bands | `results/psetae_morocco_views_s2/` |

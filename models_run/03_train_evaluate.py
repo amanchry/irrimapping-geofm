@@ -5,7 +5,8 @@
 What it does
 ------------
 One script for every input, so all of them are evaluated in exactly the same way:
-  INPUT = "s1s2"       Sentinel-1/2 parcel features per month (ml_dataset_prep/04_make_views.py, view A)  -> the baseline
+  INPUT = "s1s2"       Sentinel-2 (optionally + Sentinel-1) parcel features per month (ml_dataset_prep/04_make_views.py,
+                       view A)  -> the baseline; Sentinel-2 only by default (D14)
   INPUT = "clay"       Clay embeddings              (02a_embed_clay.py)
   INPUT = "prithvi"    Prithvi-EO-2.0 embeddings    (02b_embed_prithvi.py)
   INPUT = "terramind"  TerraMind embeddings         (02c_embed_terramind.py)
@@ -94,12 +95,13 @@ ROOT = Path(__file__).resolve().parents[1]                 # project folder
 EXPERIMENT = None                     # e.g. "E02_frozen_pca_pastis": settings from experiments/<name>/config.yaml,
                                       # results to experiments/<name>/results/ | None = the settings below
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
+                                      # ("terramind-s1s2" = TerraMind with Sentinel-1, ablation)
 WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
 # S1/S2 baseline only
 INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOURCE = 'gee'): 30 or 15
 START_MONTH = 9                       # first month of the window (labels of the periods)
-S1S2_VARIABLES = "all"                # "all" | "s2" (optical only) | "s1" (radar only)
+S1S2_VARIABLES = "s2"                 # "s2" (optical only; default, D14: every input sees only Sentinel-2) | "all" | "s1" (radar only)
 S1S2_SOURCE = "tiles"                 # "tiles" = parcel features cut from the tile store (04_make_views.py, view A;
                                       #           same pixels as the foundation-model chips) | "gee" = old script-03 table
 TILE_FEATURES = "inner"               # tiles only: "inner" (edge pixels removed) | "all" (all parcel pixels)
@@ -139,12 +141,14 @@ SPLIT_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_fo
 VIEWS_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views"
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
-    if S1_ORBIT == "chips" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the chips
+    if S1S2_VARIABLES == "s2":
+        S1_ORBIT = "none"                                         # no radar variables: the orbit plays no role
+    elif S1_ORBIT == "chips" and INPUT == "s1s2":                 # orbit chosen by ml_dataset_prep/04_make_views.py for the chips
         if not (VIEWS_DIR / "views_info.json").exists():
             raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run 03_build_tiles.py and 04_make_views.py "
                              f"first, or set S1S2_SOURCE = 'gee'")
         S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_chips_and_pixelsets"]
-    S1S2_TAG = f"tiles-{TILE_FEATURES}-{S1_ORBIT.lower()}"
+    S1S2_TAG = f"tiles-{TILE_FEATURES}" + ("" if S1_ORBIT == "none" else f"-{S1_ORBIT.lower()}")
 else:
     S1S2_FILE = ROOT / "outputs" / "morocco" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
     S1S2_TAG = f"{INTERVAL_DAYS}d"

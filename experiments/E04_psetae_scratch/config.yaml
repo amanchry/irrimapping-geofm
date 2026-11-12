@@ -14,7 +14,8 @@ inputs: []
 steps: [psetae]            # report step later: make_report.py does not yet handle two regions in one experiment
 
 # models_run/03b_train_psetae.py runs once per file in configs/ (each file holds all settings of one run)
-psetae_configs: [morocco_s2.yaml, morocco_s2s1.yaml, utah_s2.yaml, utah_s2s1.yaml]
+psetae_configs: [morocco_s2.yaml, utah_s2.yaml]   # Sentinel-2 only (D14); morocco_s2s1.yaml = Sentinel-1 ablation
+                                                  # (utah_s2s1.yaml kept but not used: Sentinel-1 is thin in Utah)
 
 report:
   HEADLINE_CLASSIFIERS: [psetae]

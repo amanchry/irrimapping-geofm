@@ -50,16 +50,16 @@ OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "04_comparison"
 # Runs from the shared tile store (03_build_tiles.py + 04_make_views.py). Set the orbit tag ("asc"/"dsc")
 # to the one written in outputs/morocco/dataset/03_tiles_128px/agyear/views/views_info.json. Older runs (EE features, old chips):
 # BASELINE_RUN = "s1s2-all_agyear_30d" and RUNS = None.
-BASELINE_RUN = "s1s2-all_agyear_tiles-inner-asc"           # run folder of the Sentinel-1/2 baseline
+BASELINE_RUN = "s1s2-s2_agyear_tiles-inner"                # run folder of the baseline (Sentinel-2 only, D14)
 RUNS = ([BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi", "terramind", "agrifm")]
-        + ["psetae_agyear_s2s1"])                         # deep-learning baseline (03b_train_psetae.py)
+        + ["psetae_morocco_views_s2"])                    # deep-learning baseline (03b_train_psetae.py)
 BASELINE_CLASSIFIER = "rf"     # runs with their own model (e.g. psetae) are compared with this baseline classifier
 N_BOOT = 1000
 SEED = 42
 
 # ------------------------------------------------------------ experiment mode
 # experiments/run_experiment.py sets EXPERIMENT; all runs in its results/ folder are compared, the
-# Sentinel-1/2 run (s1s2-...) is the baseline, and the section "compare" of config.yaml can change the settings.
+# feature run (s1s2-..., Sentinel-2 only by default) is the baseline, and the section "compare" of config.yaml can change the settings.
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 if EXPERIMENT:
     import yaml
@@ -67,7 +67,8 @@ if EXPERIMENT:
     OUT_DIR = RUNS_DIR / "comparison"
     RUNS = None
     _found = sorted(f.parent.name for f in RUNS_DIR.glob("*/oof_predictions.csv"))
-    BASELINE_RUN = next((r for r in _found if r.startswith("s1s2-all")), BASELINE_RUN)
+    BASELINE_RUN = next((r for r in _found if r.startswith("s1s2-s2")),
+                        next((r for r in _found if r.startswith("s1s2-")), BASELINE_RUN))
     _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     for _key, _value in (_cfg.get("compare") or {}).items():
         if _key not in globals():

@@ -52,8 +52,8 @@ settings chosen by spatial CV on the 4 non-test folds, model refit on all 4.
 
 ## 3. Inputs
 
-Five inputs are compared: a Sentinel-1/2 parcel-feature baseline (12 Sentinel-2 bands, NDVI, NDWI, EVI and
-Sentinel-1 VV, VH over 12 months; 204 features) and the embeddings of four frozen foundation models (Clay v1.5,
+Five inputs are compared, all Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)): a
+Sentinel-2 parcel-feature baseline (12 Sentinel-2 bands, NDVI, NDWI, EVI over 12 months; 180 features) and the embeddings of four frozen foundation models (Clay v1.5,
 Prithvi-EO-2.0, TerraMind, AgriFM). A parcel's embedding is the mean of the patch embeddings that cover it, weighted
 by the share of each patch inside the parcel; chips are 64 × 64 px and shifted so that the parcel centroid lies at a
 patch centre. Bands, patch size and temporal handling per model: [Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
@@ -64,11 +64,12 @@ patch centre. Bands, patch size and temporal handling per model: [Foundation mod
 | --- | --- | --- | --- |
 | `logreg` | logistic regression (**linear probe**) | C ∈ {0.01, 0.1, 1, 10} | balanced classes, standardised |
 | `rf` | random forest | max_features ∈ {√p, 0.3} · min_samples_leaf ∈ {1, 5} · class_weight ∈ {none, balanced_subsample} | 500 trees |
-| `hgb` | histogram gradient boosting | learning_rate ∈ {0.05, 0.1} · max_leaf_nodes ∈ {15, 31} · class_weight ∈ {none, balanced} | |
 | `svm` | RBF support vector machine | C ∈ {1, 10} · γ ∈ {scale, 0.01} | balanced classes, standardised |
 
 **Headline classifiers:** random forest (the proposal's baseline classifier) for every input, and logistic
-regression (linear probe) for the foundation models. HGB and SVM are robustness checks and are always reported.
+regression (linear probe) for the foundation models. SVM is always reported. Histogram gradient boosting was used in
+E01 and is dropped from E02 on ([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). A trainable
+MLP head is added in E05 and E03 ([experiment plan](experiment_plan.md)).
 
 ## 5. Temporal aggregation: two pipelines
 
@@ -79,7 +80,7 @@ the two pipelines. Everything before (embeddings) and after (comparison, metrics
 flowchart LR
     E["<b>Monthly embeddings</b><br/>12 × D per parcel<br/>(AgriFM: 1 × D)"] --> A["<b>PCA pipeline</b><br/>fill empty months (training median)<br/>→ concat 12 months → standardise<br/>→ PCA 128, fitted on the training folds"]
     E --> B["<b>L-TAE pipeline</b><br/>standardise per channel<br/>→ L-TAE attention over the months<br/>(empty months masked)"]
-    A --> C["LogReg · RF · HGB · SVM<br/>grid on the validation fold"]
+    A --> C["LogReg · RF · SVM (E02)<br/>or MLP (E05)"]
     B --> D["MLP head, trained with the L-TAE<br/>early stopping on the validation fold<br/>3 seeds"]
     C --> O["<b>oof_predictions.csv</b><br/>same format"]
     D --> O
@@ -91,12 +92,12 @@ flowchart LR
 | Experiments | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca_pastis/index.md) | [E03](../experiments/E03_frozen_ltae_pastis/index.md) |
 | Learns which months matter | no (PCA is unsupervised) | yes (attention weights) |
 | Keeps the order of the months | only as positions in the vector | yes (positional encoding) |
-| Classifier | the four of §4 | its own MLP head |
-| Applies to the baseline | yes (204 features, no PCA) | yes (17 variables × 12 months) |
+| Classifier | the three of §4 (E02) or an MLP (E05) | its own MLP head |
+| Applies to the baseline | yes (180 features, no PCA) | yes (15 variables × 12 months) |
 | Applies to AgriFM | yes | no (one vector per year) |
 | Reference | linear probing of frozen features | PANGAEA: single-date encoders + L-TAE (Marsocci et al. 2024); L-TAE (Garnot & Landrieu 2020) |
 
-The L-TAE pipeline is also trained on the monthly S1/S2 features, so that the baseline benefits from the same
+The L-TAE pipeline is also trained on the monthly Sentinel-2 features, so that the baseline benefits from the same
 temporal model and the comparison remains balanced. Because both pipelines write the same out-of-fold predictions, E03 compares them
 directly with the E02 runs on the same parcels.
 

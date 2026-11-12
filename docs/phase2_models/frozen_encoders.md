@@ -1,6 +1,6 @@
 # RQ1 · Frozen encoders: embeddings and classifiers
 
-This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-1/2 feature baseline under an identical spatial validation design.
+This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-2 feature baseline under an identical spatial validation design. Every input uses Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 
 It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
 
@@ -55,7 +55,7 @@ flowchart TD
 Per-model bands, patches and temporal handling: [Foundation models](../foundation_models.md#configuration-in-this-study).
 
 Classifier grids: [evaluation protocol §4](evaluation.md#4-classifiers). Optional sensitivity runs:
-S2-only baseline, TerraMind with S2 only, embeddings averaged over the months instead of PCA.
+Sentinel-1 added to the baseline and to TerraMind (Morocco), embeddings averaged over the months instead of PCA.
 
 
 | Step | Script | GPU | What it does |
@@ -88,8 +88,8 @@ The foundation models are used **frozen**, as fixed feature extractors, followin
 
 ## 3. Inputs compared
 
-The five inputs (S1/S2 baseline and four frozen GeoFMs), their bands, patch sizes and temporal handling, and the
-sensitivity runs that isolate the Sentinel-1 contribution are specified in
+The five inputs (Sentinel-2 baseline and four frozen GeoFMs, all Sentinel-2 only), their bands, patch sizes and
+temporal handling, and the optional Sentinel-1 ablation are specified in
 [Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
 
 ---
@@ -165,12 +165,22 @@ script stops unless every encoder weight is loaded from `AgriFM.pth`; embeddings
 from an untrained encoder ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
 
 Model-specific bands, normalisation, auxiliary inputs (date, location, wavelengths) and known limitations are
-described in [Foundation models · Model notes](../foundation_models.md#model-notes).
+described in [Foundation models · Model notes](../foundation_models.md#model-notes). AgriFM is normalised with the
+statistics of the region's own chips ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)).
+
+**Region.** Each script has `REGION` and `VIEWS_NAME` at the top; the environment variables `EMBED_REGION` and
+`EMBED_VIEWS` set them without editing the script (Slurm jobs):
+
+```bash
+python models_run/02a_embed_clay.py                                              # Morocco, views/
+EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02a_embed_clay.py  # Utah 2023/24
+```
 
 ### 5.2 Embedding file format
 
 ```
-outputs/morocco/study/02_embeddings/<model>_agyear_tiles.npz
+outputs/<REGION>/study/02_embeddings/<model>_agyear_tiles.npz          Morocco (views/)
+outputs/<REGION>/study/02_embeddings/<model>_agyear_tiles_2023-24.npz  Utah (views_2023-24/)
     parcel_id [N]   label [N]   ag_season [N]
     steps [T]                    month names (Sep … Aug), or ["year"] for AgriFM
     embeddings [N, T, D]         float16
@@ -296,7 +306,7 @@ flowchart LR
 - `run_config.json`, `run.log`
 
 **Run names:**
-- Baseline: `s1s2-<variables>_agyear_tiles-<inner|all>-<orbit>`, e.g. `s1s2-all_agyear_tiles-inner-asc`.
+- Baseline: `s1s2-<variables>_agyear_tiles-<inner|all>[-<orbit>]`, e.g. `s1s2-s2_agyear_tiles-inner` (Sentinel-2 only, no orbit) or `s1s2-all_agyear_tiles-inner-asc`.
 - GeoFMs: `<model>_agyear_tiles_<concat|mean>`, e.g. `clay_agyear_tiles_concat`.
 
 ---
@@ -320,7 +330,7 @@ flowchart TD
 - **Multiple comparisons:** 4 GeoFMs × 4 classifiers = 16 comparisons, Holm-adjusted.
 - **Interpretation:** a GeoFM is better than the baseline only if the 95% interval of Δ macro-F1 lies entirely above 0.
 
-`BASELINE_RUN` must match the orbit that was actually used (`views_info.json`), for example `s1s2-all_agyear_tiles-inner-asc`.
+`BASELINE_RUN` is the Sentinel-2 baseline `s1s2-s2_agyear_tiles-inner`; for a run with Sentinel-1 it must match the orbit that was actually used (`views_info.json`), for example `s1s2-all_agyear_tiles-inner-asc`.
 
 ### 7.1 Script 05 — `breakdown_oof` (results by region, season and purity)
 
@@ -355,14 +365,14 @@ outputs/morocco/study/
 ├── 02_embeddings/
 │   ├── clay_agyear_tiles.npz
 │   ├── prithvi_agyear_tiles.npz
-│   ├── terramind_agyear_tiles.npz
+│   ├── terramind_agyear_tiles.npz          Sentinel-2 only (terramind-s1s2_… = with Sentinel-1)
 │   ├── agrifm_agyear_tiles.npz
 │   └── _parts_<model>_agyear_tiles/  batch files (resume)
 ├── 03_models/                        development runs only (EXPERIMENT = None)
 └── 04_comparison/                    development runs only
 
 experiments/<EXPERIMENT>/results/     runs that are reported (see the Experiments pages)
-├── s1s2-all_agyear_tiles-inner-asc/
+├── s1s2-s2_agyear_tiles-inner/
 ├── clay_agyear_tiles_concat/
 ├── …                                 one folder per run
 ├── comparison/                       metrics_all_runs.csv · differences_vs_baseline.csv · comparison_macro_f1.png
@@ -394,7 +404,7 @@ python models_run/04_compare_models.py
 | --- | --- |
 | 01 | `EXAMPLE_PATCH = 16`, `N_EXAMPLES = 3`, `SEED = 42` |
 | 02a–02d | `CHIP_SOURCE = "tiles"`, `CHIP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
-| 03 | `INPUT`, `S1S2_VARIABLES` (all / s2 / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
+| 03 | `INPUT`, `S1S2_VARIABLES` (s2 default / all / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
 | 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`; in experiment mode `EXTRA_RUNS` |
 | 03, 03b, 04 | `EXPERIMENT`: name of a folder in `experiments/`; its `config.yaml` replaces the settings above (same names) and the results go to that folder |
 | 03b | `REGION`, `VIEWS_NAME`, `BANDS` (s2 / s2s1); `CONFIG`: a file in `experiments/<EXPERIMENT>/configs/` with all settings of one run (E04: `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1`), also settable as the environment variable `PSETAE_CONFIG` |
@@ -411,14 +421,13 @@ python models_run/04_compare_models.py
 | Chips | 64 × 64 px, patch-aligned | centroid at a patch centre (see dataset §7.3) |
 | Time | 12 monthly composites, Sep–Aug | covers the winter rainfed cycle and summer irrigation |
 | Embedding reduction | concat + PCA 128, fitted on training folds | keeps the timing information; same dimension for every model |
-| Baseline features | inner-pixel medians, one S1 orbit | same orbit as the TerraMind chips |
+| Inputs | Sentinel-2 only for every model and the baseline | same optical data for all; S1 coverage of Utah changed between years ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
+| Baseline features | inner-pixel medians of 12 S2 bands, NDVI, NDWI, EVI | same pixels as the chips |
 | Validation | 5 spatial folds (20 km blocks), per round 3 train / 1 validation / 1 test, as PASTIS | estimates mapping of unseen areas; identical for classifiers and neural networks |
 | Uncertainty | block bootstrap, Holm | blocks are the independent units |
 
 **Open points:**
-- AgriFM normalisation scale (§5.4).
 - Prithvi on 10 m instead of 30 m data.
-- Late fusion of GeoFM embeddings with S1 features for the optical-only models.
 - Results per zone, since rainfed parcels are concentrated in Doukkala.
 
 ---

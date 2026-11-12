@@ -10,6 +10,7 @@
     * [Utah training data](phase1_data/utah.md)
 * Phase 2 · Model evaluation
     * [Overview](phase2_models/overview.md)
+    * [RQ1 · Experiment plan](phase2_models/experiment_plan.md)
     * [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md)
     * [RQ2 · Fine-tuning](phase2_models/fine_tuning.md)
     * [Evaluation protocol](phase2_models/evaluation.md)

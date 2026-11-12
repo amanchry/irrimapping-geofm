@@ -1,30 +1,32 @@
 """
-02c_embed_terramind.py  —  TerraMind embeddings for every parcel (frozen encoder, Sentinel-1 + Sentinel-2)
-===========================================================================================================
+02c_embed_terramind.py  —  TerraMind embeddings for every parcel (frozen encoder, Sentinel-2; Sentinel-1 optional)
+=============================================================================================================
 
 What it does
 ------------
 Turns each parcel's chips (ml_dataset_prep/04_make_views.py) into TerraMind embeddings: one 768-number vector
-per month, computed from Sentinel-2 AND Sentinel-1 together. The encoder is frozen; the embeddings
-are classified in 03_train_evaluate.py like every other input.
+per month, from Sentinel-2 (default, D14: every model sees only Sentinel-2), or from Sentinel-2 AND Sentinel-1
+together (MODALITIES, ablation). The encoder is frozen; the embeddings are classified in 03_train_evaluate.py
+like every other input.
 
 The model
 ---------
 TerraMind-1.0-base (IBM & ESA; Jakubik et al. 2025, arXiv:2504.11171;
 https://huggingface.co/ibm-esa-geospatial/TerraMind-1.0-base): a multimodal transformer pretrained
-on nine Earth-observation modalities. Used here as a backbone through TerraTorch with two inputs:
+on nine Earth-observation modalities. Used here as a backbone through TerraTorch with one or two inputs:
   S2L2A  12 Sentinel-2 bands B1 B2 B3 B4 B5 B6 B7 B8 B8A B9 B11 B12 (reflectance x 10000)
-  S1GRD  Sentinel-1 VV, VH in dB
+  S1GRD  Sentinel-1 VV, VH in dB (only with MODALITIES = ["S2L2A", "S1GRD"])
 Each input is standardised with TerraMind's pretraining mean/std (TerraTorch terramind_register.py);
 the backbone does not do this itself. Patches are 16 x 16 pixels (160 m); the position encoding is
-interpolated to the 64 x 64 chips. Tokens of the two modalities are averaged (merge_method "mean").
+interpolated to the 64 x 64 chips. With two inputs the tokens of the modalities are averaged (merge_method "mean").
 TerraMind takes one date per input, so the 12 months are embedded one by one.
 
 Steps
 -----
 1. Load the frozen TerraMind backbone (weights downloaded from Hugging Face
    into checkpoints/terramind/ on the first run, then reused).
-2. For each batch of parcels and each month: standardise S2 and S1, cloudy/missing pixels -> 0.
+2. For each batch of parcels and each month: standardise S2 (and S1 if used), cloudy/missing pixels -> 0.
+   A month counts as valid if it has clear Sentinel-2 pixels (or Sentinel-1 data, when S1 is used).
 3. Run the encoder; take the last layer's tokens on their 4 x 4 grid.
 4. Weighted mean of the patches covering the parcel (parcel mask stored with the chips).
 5. Save in batches (resume possible) and merge into one file.
@@ -33,14 +35,20 @@ Install: terratorch (already in environment.yml).
 
 Output
 ------
-outputs/morocco/study/02_embeddings/terramind_<WINDOW>_tiles.npz  (same layout as the other models)
+outputs/<REGION>/study/02_embeddings/terramind_<WINDOW>_tiles.npz        Sentinel-2 only (same layout as the other models)
+outputs/<REGION>/study/02_embeddings/terramind-s1s2_<WINDOW>_tiles.npz   Sentinel-2 + Sentinel-1 (ablation; 03_train_evaluate.py
+                                                                        INPUT = "terramind-s1s2")
     embeddings [N, 12, 768] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
 -----------------------------
     python models_run/02c_embed_terramind.py
+    # Utah (or any region / views folder) without editing the script, e.g. in a Slurm job:
+    EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02c_embed_terramind.py
+    # -> outputs/utah/study/02_embeddings/<model>_agyear_tiles_2023-24.npz
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -50,11 +58,13 @@ import torch
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-MODEL_NAME = "terramind"
+MODALITIES = ["S2L2A"]                                     # Sentinel-2 only (D14) | ["S2L2A", "S1GRD"] = + Sentinel-1 (ablation)
+MODEL_NAME = "terramind" if MODALITIES == ["S2L2A"] else "terramind-s1s2"   # output file name
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (ml_dataset_prep/regions.py)
+VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 WEIGHTS_DIR = ROOT / "checkpoints" / "terramind"               # Hugging Face download folder (ibm-esa-geospatial/TerraMind-1.0-base)
 BACKBONE = "terramind_v1_base"
-MODALITIES = ["S2L2A", "S1GRD"]                            # ["S2L2A"] = optical only (ablation)
 BATCH_PARCELS = 16
 EMBED_BATCH = 64
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -67,13 +77,15 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
+VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
-    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+    CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or
+                                                             # <model>_agyear_tiles_2023-24.npz (views_2023-24)
 else:
     CHIP_DIR = ROOT / "outputs" / "morocco" / "legacy" / "04_chips" / WINDOW
     TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
+OUT_DIR = ROOT / "outputs" / REGION / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
@@ -236,7 +248,7 @@ def embed_batch(ids, chips, masks, info, index):
     """Chips of a batch of parcels -> embeddings [B, months, 768] and valid [B, months]."""
     s2 = select_bands(chips, info, S2_NAMES)                                    # reflectance x 10000
     s1 = select_bands(chips, info, S1_NAMES, scale=info["s1_scale"])           # dB
-    valid = month_is_valid(s2) | month_is_valid(s1)
+    valid = month_is_valid(s2) if "S1GRD" not in MODALITIES else month_is_valid(s2) | month_is_valid(s1)
     b, m = s2.shape[:2]
     inputs = {}
     if "S2L2A" in MODALITIES:

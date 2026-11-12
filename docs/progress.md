@@ -60,11 +60,9 @@ Next steps
 
 ## Open points
 
-- [ ] AgriFM normalisation (examined 2026-11-12): the config statistics compress the visible/NIR bands of the
-  composites to 0.09–0.30 of unit variance; the paper does not report its normalisation. Plan: ask the authors;
-  re-embed with (a) config statistics and (b) statistics of the training chips; compare embedding health and
-  validation-fold macro-F1; report both; optionally pool the finer `features_list` maps (stride 8–16 px) instead of
-  the 32-px output.
+- [x] ~~AgriFM normalisation~~: chip statistics of each region, config statistics as sensitivity run
+  ([D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)). Still optional: pool the finer
+  `features_list` maps (stride 8–16 px) instead of the 32-px output.
 - [ ] Region confounding: repeat `05_breakdown_oof.py` on E02; coordinate ablation (Prithvi `USE_COORDS = False`,
   Clay with constant time/location).
 - [x] ~~AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.~~
@@ -84,6 +82,48 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-12 (embeddings for two regions; AgriFM normalisation)
+
+- Scripts `02a`–`02d`: new settings `REGION` and `VIEWS_NAME` (environment variables `EMBED_REGION`,
+  `EMBED_VIEWS`); chips are read from `outputs/<REGION>/dataset/03_tiles_128px/agyear/<VIEWS_NAME>/` and embeddings
+  written to `outputs/<REGION>/study/02_embeddings/`. Output names: `<model>_agyear_tiles.npz` (`views`),
+  `<model>_agyear_tiles_2023-24.npz` (`views_2023-24`). Morocco names unchanged.
+- `02d_embed_agrifm.py`: `NORM = "data"` (default) normalises with the per-band statistics of the region's chips,
+  saved to `agrifm_norm_stats_<tag>.json`; `NORM = "config"` keeps the fine-tuning config statistics (output
+  `agrifm-cfgnorm_*.npz`). Decision [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips).
+  Morocco chip statistics: blue 714 ± 344 … SWIR2 2,471 ± 953.
+- The Morocco AgriFM embeddings of 6 Nov 2026 (config statistics) were renamed to `agrifm-cfgnorm_agyear_tiles.npz`.
+- Morocco re-embedding started locally: AgriFM (chip statistics), then TerraMind (Sentinel-2 only). Clay and Prithvi
+  are kept (already Sentinel-2 only). Utah: all four models from `views_2023-24/` on the cluster.
+
+### 2026-11-12 (RQ1 experiment plan)
+
+- New page [RQ1 · Experiment plan](phase2_models/experiment_plan.md) (Phase 2): decisions, shared settings, inputs,
+  design (input × temporal handling × head), E02 PCA + LogReg/RF/SVM, E05 PCA + MLP, E03 L-TAE + MLP, E04 PSE-TAE,
+  E06 label efficiency, ablations A1–A5 (incl. a location-shortcut test for Clay and Prithvi), analyses, the tables
+  and figures of every experiment's report page, order of work and number of runs.
+- D6 updated: three classifiers (LogReg, RF, SVM) plus an MLP head; gradient boosting dropped (not yet in the code).
+- Evaluation protocol and Phase 2 overview: Sentinel-2 baseline (180 features), heads updated.
+
+### 2026-11-12 (Sentinel-2 only for every input, D14)
+
+- Decision [D14](decisions.md#d14-sentinel-2-only-for-every-input): all inputs of the model comparison use
+  Sentinel-2 only; Sentinel-1 becomes an optional ablation in Morocco.
+- `models_run/03_train_evaluate.py`: `S1S2_VARIABLES = "s2"` by default. With Sentinel-2 only the orbit plays no role
+  and is left out of the run name (`s1s2-s2_agyear_tiles-inner`).
+- `models_run/02c_embed_terramind.py`: `MODALITIES = ["S2L2A"]` by default; the output is `terramind_agyear_tiles.npz`
+  for Sentinel-2 only and `terramind-s1s2_agyear_tiles.npz` with Sentinel-1 (`INPUT = "terramind-s1s2"` in script 03).
+  With Sentinel-2 only, a month counts as valid only if it has clear Sentinel-2 pixels (before, Sentinel-1 data alone
+  also made a month valid).
+- The existing local TerraMind embeddings (made with Sentinel-1) were renamed to `terramind-s1s2_agyear_tiles.npz`
+  (and `_parts_terramind-s1s2_agyear_tiles/`); TerraMind must be embedded again with Sentinel-2 only. The cluster
+  copy still has the old name.
+- `models_run/03b_train_psetae.py`: `BANDS = "s2"` by default. E04 runs `morocco_s2` and `utah_s2`;
+  `morocco_s2s1` stays as the Sentinel-1 ablation, `utah_s2s1` is no longer run.
+- `models_run/04_compare_models.py`: baseline run `s1s2-s2_agyear_tiles-inner` (experiment mode picks the
+  Sentinel-2 baseline first); PSE-TAE run `psetae_morocco_views_s2`.
+- E02 and E03 configs: Sentinel-2 baseline. Docs: foundation models table (baseline 180 features), models pipeline.
 
 ### 2026-11-12 (PSE-TAE baseline for two regions: one config file per run)
 

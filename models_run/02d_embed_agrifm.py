@@ -15,8 +15,8 @@ Video Swin Transformer pretrained on MODIS, Landsat and Sentinel-2 time series f
 mapping. Unlike the other three models it takes the whole time series at once and compresses time
 inside the network, so it returns one embedding per parcel (not one per month). Settings follow
 the repository's configs/cropland_mapping.py: Sentinel-2 encoder, 10 bands (Blue, Green, Red,
-Red-Edge 1-3, NIR B08, NIR B08A, SWIR 1, SWIR 2 = B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), normalised with
-the mean/std given in that config. Exception: the patch size is (4 time steps, 4 x 4 pixels), the
+Red-Edge 1-3, NIR B08, NIR B08A, SWIR 1, SWIR 2 = B2 B3 B4 B5 B6 B7 B8 B8A B11 B12), normalised per band (see
+"Normalisation" below). Exception: the patch size is (4 time steps, 4 x 4 pixels), the
 size of the PRETRAINED Sentinel-2 patch embedding in AgriFM.pth (kernel 128 x 10 x 4 x 4 x 4). The
 config's (4, 2, 2) belongs to its fine-tuning set-up, where that layer is trained anew; with a frozen
 encoder it would stay random. The final feature map therefore has a stride of 32 pixels (320 m), so
@@ -26,14 +26,22 @@ Weights: the checkpoint names start with "encoder." and the Sentinel-2 patch emb
 "S2_patch_emd.weights/bias". load_encoder() maps these names itself and stops if any weight of the
 encoder is not loaded (mmengine's loader only warns and still reports success).
 
-Check before reporting results: the config's normalisation mean (e.g. 4179 for blue) is much
-higher than typical Earth Engine Sentinel-2 L2A values (~1100). Confirm with the AgriFM authors /
-repository which pixel scale the pretrained weights expect, and adjust MEAN/STD if needed.
+Normalisation (NORM): neither the AgriFM paper nor the repository documents the normalisation of the
+PRETRAINING data; the only published statistics are those of the repository's fine-tuning example
+(configs/cropland_mapping.py, e.g. blue mean 4179, std 4042: raw, partly cloudy time series). Our cloud-masked
+monthly composites have blue mean ~740, std ~340 (Morocco), so with the config statistics the visible bands use
+only 8-20% of the expected spread and sit ~0.8 SD below zero: the encoder would see almost constant input.
+  NORM = "data"    (default) per-band mean / std of this region's chips (all valid pixels of a sample of the
+                   chip files; no labels involved), saved to <OUT_DIR>/agrifm_norm_stats_<TAG>.json and reused.
+                   NORM_STATS_FILE can point to another region's or year's file (e.g. the 2023/24 statistics for
+                   the 2020/21 temporal test), so both years are scaled identically.
+  NORM = "config"  the fine-tuning config's statistics (sensitivity check; output agrifm-cfgnorm_*.npz).
 
 Steps
 -----
 1. Build the AgriFM Sentinel-2 encoder from the cloned repository's code and load the pretrained weights
    (all encoder weights must load, see "Weights" above).
+1b. Per-band mean / std of this region's chips (NORM = "data"; computed once and saved) or the config's.
 2. For each batch of parcels: take the 10 bands for all 12 months, normalise; cloudy pixels -> 0.
 3. Run the encoder on the [batch, 12 months, 10 bands, 64, 64] stack.
 4. Weighted mean of the final feature-map cells covering the parcel (parcel mask stored with the chips).
@@ -48,14 +56,18 @@ Install (once, in the condaml environment)
 
 Output
 ------
-outputs/morocco/study/02_embeddings/agrifm_<WINDOW>_tiles.npz  (same layout as the other models)
+outputs/<REGION>/study/02_embeddings/agrifm_<WINDOW>_tiles.npz  (same layout as the other models)
     embeddings [N, 1, D] float16 (one step: the whole year), valid [N, 1], steps = ["year"]
 
 Run (from the project folder)
 -----------------------------
     python models_run/02d_embed_agrifm.py
+    # Utah (or any region / views folder) without editing the script, e.g. in a Slurm job:
+    EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02d_embed_agrifm.py
+    # -> outputs/utah/study/02_embeddings/<model>_agyear_tiles_2023-24.npz
 """
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -66,8 +78,13 @@ import torch
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-MODEL_NAME = "agrifm"
+NORM = "data"                                              # "data" = this region's chip statistics | "config" = AgriFM config
+NORM_STATS_FILE = None                                     # None = <OUT_DIR>/agrifm_norm_stats_<TAG>.json (computed if missing)
+NORM_STATS_PARTS = 20                                      # chip files sampled (evenly spaced) for the statistics
+MODEL_NAME = "agrifm" if NORM == "data" else "agrifm-cfgnorm"   # output file name
 WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (ml_dataset_prep/regions.py)
+VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 AGRIFM_REPO = ROOT / "external" / "AgriFM"                 # git clone of github.com/flyakon/AgriFM
 WEIGHTS = ROOT / "checkpoints" / "agrifm" / "AgriFM.pth"
 WEIGHTS_URL = "https://glass.hku.hk/casual/AgriFM/AgriFM.pth"   # downloaded automatically if WEIGHTS is missing
@@ -83,13 +100,15 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # chips aligned to 16 px (also aligned to the 32-px AgriFM grid)
+VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
-    TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
+    CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
+    TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or
+                                                             # <model>_agyear_tiles_2023-24.npz (views_2023-24)
 else:
     CHIP_DIR = ROOT / "outputs" / "morocco" / "legacy" / "04_chips" / WINDOW
     TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
+OUT_DIR = ROOT / "outputs" / REGION / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 
@@ -204,12 +223,12 @@ def run(embed_batch_fn, steps_fn):
 
 
 # =========================== AGRIFM-SPECIFIC CODE ==========================
-# Bands, normalisation and architecture from AgriFM configs/cropland_mapping.py (Sentinel-2 encoder)
+# Bands, (config) normalisation and architecture from AgriFM configs/cropland_mapping.py (Sentinel-2 encoder)
 S2_NAMES = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]
-MEAN = np.array([4179.192015478227, 4065.9106675194444, 3957.274910960156, 5207.452475253116, 4327.12234687,
+CONFIG_MEAN = np.array([4179.192015478227, 4065.9106675194444, 3957.274910960156, 5207.452475253116, 4327.12234687,
                  4873.16102239, 5049.1637925, 5111.07806856, 3056.86349163, 2490.9675032],
                 dtype=np.float32)[None, None, :, None, None]
-STD = np.array([4041.5212325268735, 3691.003119315892, 3629.331318356375, 2973.5178530908756, 3569.73343885,
+CONFIG_STD = np.array([4041.5212325268735, 3691.003119315892, 3629.331318356375, 2973.5178530908756, 3569.73343885,
                 3085.9151435, 2937.56005119, 2806.04462314, 1808.30013156, 1694.20220774],
                dtype=np.float32)[None, None, :, None, None]
 PATCH_SIZE = (4, 4, 4)        # (months, pixels, pixels) of the pretrained Sentinel-2 patch embedding
@@ -336,8 +355,61 @@ def embed_batch(ids, chips, masks, info, index):
     return emb[:, None, :], valid
 
 
+def chip_statistics(path):
+    """Per-band mean / std of the 10 AgriFM bands over the valid pixels of NORM_STATS_PARTS chip files (every
+    4th pixel in x and y), written to path. Uses only the imagery, no labels."""
+    info, _ = read_chip_info()
+    parts = sorted(CHIP_DIR.glob("part_*.npz"))
+    pick = parts[:: max(1, len(parts) // NORM_STATS_PARTS)][:NORM_STATS_PARTS]
+    idx = [info["bands"].index(n) for n in S2_NAMES]
+    total, total_sq, count = np.zeros(len(idx)), np.zeros(len(idx)), np.zeros(len(idx))
+    for f in pick:
+        c = np.load(f)["chips"][:, :, idx, ::4, ::4].astype(np.float64)       # [B, months, 10, h, w]
+        c = np.moveaxis(c, 2, 0).reshape(len(idx), -1)
+        ok = c != info["nodata"]
+        total += np.where(ok, c, 0).sum(1)
+        total_sq += np.where(ok, c ** 2, 0).sum(1)
+        count += ok.sum(1)
+    mean = total / count
+    std = np.sqrt(total_sq / count - mean ** 2)
+    stats = {"bands": S2_NAMES, "mean": mean.round(2).tolist(), "std": std.round(2).tolist(),
+             "pixels_per_band": count.astype(int).tolist(), "chip_dir": str(CHIP_DIR.relative_to(ROOT)),
+             "files_sampled": len(pick), "files_total": len(parts)}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(stats, indent=2))
+    return stats
+
+
+def set_normalisation():
+    """MEAN / STD used by embed_batch: the config's, or this region's chip statistics (computed once, then reused)."""
+    global MEAN, STD
+    if NORM == "config":
+        MEAN, STD = CONFIG_MEAN, CONFIG_STD
+        print("Normalisation: AgriFM config statistics")
+        return
+    if NORM != "data":
+        raise SystemExit(f"NORM must be 'data' or 'config', not {NORM!r}")
+    path = Path(NORM_STATS_FILE) if NORM_STATS_FILE else OUT_DIR / f"agrifm_norm_stats_{TAG}.json"
+    if path.exists():
+        stats = json.loads(path.read_text())
+        print(f"Normalisation: chip statistics from {path}")
+    elif NORM_STATS_FILE:
+        raise SystemExit(f"NORM_STATS_FILE {path} not found")
+    else:
+        stats = chip_statistics(path)
+        print(f"Normalisation: chip statistics computed from {stats['files_sampled']} of {stats['files_total']} "
+              f"chip files -> {path}")
+    if stats["bands"] != S2_NAMES:
+        raise SystemExit(f"{path}: bands {stats['bands']} differ from {S2_NAMES}")
+    MEAN = np.array(stats["mean"], dtype=np.float32)[None, None, :, None, None]
+    STD = np.array(stats["std"], dtype=np.float32)[None, None, :, None, None]
+    for n, m, s in zip(S2_NAMES, stats["mean"], stats["std"]):
+        print(f"  {n:4s} mean {m:7.1f}  std {s:7.1f}")
+
+
 def main():
     global ENCODER
+    set_normalisation()
     ENCODER = load_encoder()
     run(embed_batch, lambda info: ["year"])
 

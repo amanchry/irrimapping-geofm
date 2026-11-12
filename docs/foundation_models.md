@@ -25,20 +25,23 @@ multimodal generative model (TerraMind) and an agriculture-specific spatio-tempo
 All encoders are used **frozen**, i.e. as fixed feature extractors without gradient updates. Each model receives a
 64 × 64 px chip (640 m) centred on the parcel, with the bands and normalisation statistics of its own pretraining.
 The parcel embedding is the mean of the patch tokens covering the parcel, weighted by the fraction of each patch
-inside the parcel ([Models pipeline §5](phase2_models/frozen_encoders.md#5-scripts-02a02d--foundation-model-embeddings)). The Sentinel-1/2
-feature baseline is listed for comparison.
+inside the parcel ([Models pipeline §5](phase2_models/frozen_encoders.md#5-scripts-02a02d--foundation-model-embeddings)). The Sentinel-2
+feature baseline is listed for comparison. **Every input uses Sentinel-2 only**
+([D14](decisions.md#d14-sentinel-2-only-for-every-input)).
 
 | Input | Chips | Bands | Patch | Temporal handling | Output per parcel | Script |
 | --- | --- | --- | --- | --- | --- | --- |
-| S1/S2 baseline | parcel features (inner pixels) | 12 S2 bands, NDVI, NDWI, EVI, S1 VV and VH (one orbit) | parcel median | 12 months concatenated | 204 features | `03` |
+| S2 baseline | parcel features (inner pixels) | 12 S2 bands, NDVI, NDWI, EVI | parcel median | 12 months concatenated | 180 features | `03` |
 | Clay v1.5 | p8 | 10 S2 bands | 8 px (80 m) | one month per forward pass | 12 × 1024 | `02a` |
 | Prithvi-EO-2.0 | p16 | 6 S2 bands (HLS set) | 16 px (160 m) | four months per pass, three passes | 12 × 1024 | `02b` |
-| TerraMind | p16 | 12 S2 bands, S1 VV and VH | 16 px (160 m) | one month per forward pass | 12 × 768 | `02c` |
+| TerraMind | p16 | 12 S2 bands | 16 px (160 m) | one month per forward pass | 12 × 768 | `02c` |
 | AgriFM | p16 | 10 S2 bands | 4 px pretrained patch embedding; output stride 32 px (320 m) | full 12-month stack in one pass | 1 × 1024 | `02d` |
 
-TerraMind is the only model that receives Sentinel-1, because it is the only one pretrained on SAR data. Two
-sensitivity runs isolate the contribution of radar: an optical-only baseline (`S1S2_VARIABLES = "s2"` in script 03)
-and TerraMind with optical input only (`MODALITIES = ["S2L2A"]` in script 02c).
+Sentinel-1 is left out of the main comparison ([D14](decisions.md#d14-sentinel-2-only-for-every-input)): every model
+then sees the same optical data, and Sentinel-1 coverage of Utah changed between the years. An optional ablation
+(Morocco only) adds it back where a model was pretrained on it: TerraMind with Sentinel-1 (`MODALITIES = ["S2L2A",
+"S1GRD"]` in script 02c, written as `terramind-s1s2_agyear_tiles.npz`) and the baseline with radar features
+(`S1S2_VARIABLES = "all"` in script 03).
 
 ## Model notes
 
@@ -71,12 +74,20 @@ standardised with TerraMind's pretraining statistics. The tokens of the two moda
 ### AgriFM
 
 AgriFM is designed for crop mapping and models the temporal dimension within the network. The full 12-month stack
-of ten Sentinel-2 bands is processed in a single pass, normalised with the repository's `cropland_mapping.py`
-configuration. Input tokens span four time steps and 2 × 2 px; the final feature map has a stride of 16 px. Because
-time is compressed inside the network, the output is one vector per parcel and season. Only the encoder is used,
-through the mmengine registries of the cloned repository. **Open point:** the configuration's normalisation mean
-(e.g. ~4,180 for the blue band) is well above typical Sentinel-2 L2A reflectance values (~1,100); the expected pixel
-scale is being verified before AgriFM results are reported as final.
+of ten Sentinel-2 bands is processed in a single pass. Input tokens span four time steps and 4 × 4 px (the
+pretrained patch embedding); the final feature map has a stride of 32 px
+([D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)). Because time is compressed inside the
+network, the output is one vector per parcel and season. Only the encoder is used, through the mmengine registries of
+the cloned repository.
+
+**Normalisation** ([D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)). Neither
+the AgriFM paper nor the repository documents the normalisation of the pretraining data; the only published
+statistics belong to the repository's fine-tuning example (`configs/cropland_mapping.py`, blue 4,179 ± 4,042). The
+cloud-masked composites of this study are on a different scale (Morocco blue 714 ± 344), so with the config
+statistics the visible and NIR bands would use only 8–30% of the expected spread. AgriFM is therefore normalised per
+band with the mean and standard deviation of the region's own chips (`NORM = "data"`; statistics saved to
+`agrifm_norm_stats_<tag>.json`), the usual choice when the pretraining statistics are unknown. The config
+statistics are kept as a sensitivity run (`NORM = "config"`, file `agrifm-cfgnorm_*.npz`).
 
 ## Weights
 

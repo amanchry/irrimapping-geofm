@@ -93,7 +93,7 @@ REGION = "morocco"             # "morocco" | "utah": dataset of ml_dataset_prep/
 WINDOW = "agyear"
 VIEWS_NAME = "views"           # views folder of ml_dataset_prep/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
 
-BANDS = "s2s1"                 # "s2s1" = 10 Sentinel-2 bands + Sentinel-1 VV, VH | "s2" = Sentinel-2 only
+BANDS = "s2"                   # "s2" = 10 Sentinel-2 bands (default, D14) | "s2s1" = + Sentinel-1 VV, VH (ablation)
 S2_BANDS = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]   # the 10 bands used in the paper
 USE_EDGE_PIXELS = False        # False = leave out pixels within 10 m of the outline (as the baseline features)
 MIN_INNER_PIXELS = 4           # parcels with fewer inner pixels keep all their pixels
