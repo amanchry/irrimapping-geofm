@@ -430,6 +430,18 @@ Only parcels of the tile's own agricultural year are burnt in.
 - `tiles_qa.jsonl`
 - `tiles_info.json`
 
+### 6.7 Visual check of tiles — `03b_tile_quicklooks.py`
+
+`03b_tile_quicklooks.py` draws one figure per tile for a visual check of the tile store: the 12 monthly
+composites as true colour (B4/B3/B2), NDVI and Sentinel-1 VH, the three label rasters (label, parcel index,
+edge pixels) and the mean NDVI and VH per month of the irrigated and rainfed parcel pixels. By default it
+selects, per agricultural year, the three downloaded home tiles with the most pixels of both classes, the tile
+with the most irrigated pixels and the tile with the most rainfed pixels (Sentinel-2 missing data < 1 %);
+`TILE_IDS` selects tiles explicitly. The Sentinel-1 orbit with more observations in the tile is drawn
+(`ORBIT = "auto"`). The region is set with `REGION` at the top, as in scripts 02–04.
+
+**Output:** `outputs/<region>/dataset/03_tiles_128px/agyear/quicklooks/<tile_id>.png`
+
 ---
 
 ## 7. Script 04 — `make_views`

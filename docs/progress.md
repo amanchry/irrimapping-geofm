@@ -85,6 +85,30 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-11-12 (PSE-TAE baseline for two regions: one config file per run)
+
+- `models_run/03b_train_psetae.py` reads the region and the views folder from the settings (`REGION`, `VIEWS_NAME`)
+  instead of fixed Morocco paths. The input paths are built after the config file has been read, so a config that
+  sets the region also changes the pixel sets and the folds that are read. The run name now carries the region, the
+  views folder and the band set (`psetae_<REGION>_<VIEWS_NAME>_<BANDS>`), so runs of the two regions no longer
+  overwrite each other.
+- New setting `CONFIG` (or the environment variable `PSETAE_CONFIG`): one file in
+  `experiments/E04_psetae_scratch/configs/` holds all settings of one run. Four files define the four runs:
+  `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1` (Sentinel-2 only vs Sentinel-2 + Sentinel-1; Morocco
+  `views` with the ascending orbit, Utah `views_2023-24` with the descending orbit). Unknown setting names stop the run.
+- `experiments/run_experiment.py`: the `psetae` step runs once per file listed in `psetae_configs` of the
+  experiment's `config.yaml`. E04 lists the four files; the report step is left out until `make_report.py` handles
+  two regions in one experiment.
+- Checked with `QUICK_TEST` on Morocco (s2 and s2s1, 3 epochs, then deleted) and a path check for Utah. The earlier
+  E04 run (`results/psetae_agyear_s2s1`) is kept unchanged. Model, folds and metrics are unchanged.
+
+### 2026-11-12 (tile quick-looks; tile store check on the cluster; Utah 2023/24 tiles downloaded)
+
+- New script `ml_dataset_prep/03b_tile_quicklooks.py`: one figure per tile (monthly true colour, NDVI, Sentinel-1 VH, label rasters, mean NDVI and VH per class); documented in [Morocco training data §6.7](phase1_data/morocco.md#67-visual-check-of-tiles--03b_tile_quicklookspy).
+- Utah 2023/24 tiles downloaded on the cluster: 2,720 of 2,720 tiles (9.1 GB).
+- Check of every downloaded tile of both regions (band order, data type, grid, label consistency with `parcels.csv`, value ranges, missing-data consistency, parcel completeness): Morocco 2,987 tiles without errors; Utah only isolated off-parcel pixel flags (single-band Sentinel-2 gaps in one month, one permanent strong radar reflector). Parcels absent from the label rasters: Morocco 6 (covered by an overlapping parcel), Utah 2 (slivers below 0.13 ha whose pixels collide with a neighbouring parcel).
+- Utah 2023/24 Sentinel-1 is descending only (ascending data in 273 of 2,720 tiles, median 0 months), a consequence of the Sentinel-1A-only acquisition plan after the loss of Sentinel-1B; the Utah views have to use the descending orbit.
+
 ### 2026-11-12 (Utah: second study area, years 2024 + 2021)
 - **[D13](decisions.md#d13-utah-as-a-second-independent-study-area):** Utah is an independent second study area
   (no Morocco → Utah transfer); RQ3 temporal test in Utah: train on WRLU 2024 (`2023/24`), test on WRLU 2021

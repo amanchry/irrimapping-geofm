@@ -14,8 +14,19 @@ models?
 A first run on the 128 px tile store exists (outer 5 spatial folds, 3 folds train, next fold early stopping), in
 `results/psetae_agyear_s2s1/`. It is kept here and not reported until the next phase.
 
+## Runs (one config file each, in `configs/`)
+
+| Config | Region · views | Bands | Results |
+| --- | --- | --- | --- |
+| `morocco_s2.yaml` | Morocco · `views` (2023/24 + 2024/25) | 10 Sentinel-2 bands | `results/psetae_morocco_views_s2/` |
+| `morocco_s2s1.yaml` | Morocco · `views` | + Sentinel-1 VV, VH (ascending) | `results/psetae_morocco_views_s2s1/` |
+| `utah_s2.yaml` | Utah · `views_2023-24` | 10 Sentinel-2 bands | `results/psetae_utah_views_2023-24_s2/` |
+| `utah_s2s1.yaml` | Utah · `views_2023-24` | + Sentinel-1 VV, VH (descending) | `results/psetae_utah_views_2023-24_s2s1/` |
+
 ## How to run
 ```bash
-# experiments/run_experiment.py:  EXPERIMENT = "E04_psetae_scratch"
+# all four in a row — experiments/run_experiment.py:  EXPERIMENT = "E04_psetae_scratch"
 python experiments/run_experiment.py
+# one run (e.g. in a Slurm job), without editing a script:
+EXPERIMENT=E04_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
 ```

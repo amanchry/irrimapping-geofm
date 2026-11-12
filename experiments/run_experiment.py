@@ -11,7 +11,7 @@ takes its settings from the config file and writes into experiments/<EXPERIMENT>
   step             script                              runs
   train_evaluate   models_run/03_train_evaluate.py     once per input in "inputs"
   ltae             models_run/03c_train_ltae.py        once per input in "inputs"   (not written yet)
-  psetae           models_run/03b_train_psetae.py      once
+  psetae           models_run/03b_train_psetae.py      once, or once per file in "psetae_configs" (configs/<file>)
   compare          models_run/04_compare_models.py     once: all runs of the experiment on the same parcels
   report           experiments/make_report.py          once: tables + figures into docs/experiments/<name>/report.md
 
@@ -82,11 +82,13 @@ def main():
         script, per_input = SCRIPTS[step]
         if not script.exists():
             raise SystemExit(f"Step '{step}' needs {script.relative_to(ROOT)}, which does not exist yet.")
-        for inp in (cfg["inputs"] if per_input else [None]):
+        configs = cfg.get("psetae_configs") if step == "psetae" else None     # one run per config file
+        for inp in (cfg["inputs"] if per_input else configs or [None]):
             label = f"{step}" + (f" · {inp}" if inp else "")
             print(f"\n=== {label} {'=' * max(3, 70 - len(label))}", flush=True)
             t0 = time.time()
-            step_env = dict(env, EXPERIMENT_INPUT=inp) if inp else env
+            var = "PSETAE_CONFIG" if configs else "EXPERIMENT_INPUT"
+            step_env = dict(env, **{var: inp}) if inp else env
             done = subprocess.run([sys.executable, str(script)], cwd=ROOT, env=step_env)
             if done.returncode != 0:
                 raise SystemExit(f"Step '{label}' failed (exit code {done.returncode}); fix it and run again "

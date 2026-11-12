@@ -1,0 +1,12 @@
+# E04 · PSE-TAE trained from scratch — Morocco, 10 Sentinel-2 bands
+# One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
+# keeps the script's value. Results: experiments/E04_psetae_scratch/results/psetae_morocco_views_s2/
+REGION: morocco
+VIEWS_NAME: views          # 2023/24 + 2024/25; Sentinel-1 ascending (views_info.json)
+BANDS: s2
+
+N_PIXELS: 64                 # pixels sampled per parcel (paper: 64)
+MAX_EPOCHS: 100
+PATIENCE: 15                 # early stopping on validation macro-F1
+SEED: 42
+QUICK_TEST: false            # true = 3 epochs, 100 bootstrap draws (only to check that everything runs)

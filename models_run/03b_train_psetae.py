@@ -34,9 +34,9 @@ fold is never used for any decision. Every parcel is predicted once, by a model 
 
 Inputs
 ------
-outputs/morocco/dataset/03_tiles_128px/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
-outputs/morocco/dataset/03_tiles_128px/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
-outputs/morocco/dataset/02_folds/parcels_folds.geojson        fold and block of every parcel
+outputs/<REGION>/dataset/03_tiles_128px/agyear/<VIEWS_NAME>/pixelsets.npz    all pixels of every parcel (ml_dataset_prep/04_make_views.py, view B)
+outputs/<REGION>/dataset/03_tiles_128px/agyear/<VIEWS_NAME>/views_info.json  Sentinel-1 orbit of the views (Morocco ASC, Utah DSC; same orbit here)
+outputs/<REGION>/dataset/02_folds/parcels_folds.geojson                       fold and block of every parcel
 
 Steps
 -----
@@ -48,8 +48,8 @@ Steps
 5. Metrics on all out-of-fold predictions with 95% block-bootstrap intervals (as in 03_train_evaluate.py).
 6. Save predictions, metrics, training curves and the trained networks.
 
-Output (outputs/morocco/study/03_models/psetae_<WINDOW>_<BANDS>/)
----------------------------------------------------------
+Output (outputs/<REGION>/study/03_models/psetae_<REGION>_<VIEWS_NAME>_<BANDS>/, or experiments/<EXPERIMENT>/results/...)
+------------------------------------------------------------------------------------------------------------
 oof_predictions.csv     every parcel's out-of-fold prediction and rainfed probability (read by 04_compare_models.py)
 metrics_with_ci.csv     all metrics: estimate, ci_low, ci_high
 metrics_summary.csv     headline metrics "estimate [ci_low-ci_high]"
@@ -62,6 +62,12 @@ Run (from the project folder; a GPU is recommended, a CPU works but is slow)
 ---------------------------------------------------------------------------
     python models_run/03b_train_psetae.py
 QUICK_TEST = True gives a fast check (few epochs, small bootstrap).
+
+One run per config file (thesis runs): EXPERIMENT = "E04_psetae_scratch" and CONFIG = "morocco_s2.yaml" (a file in
+experiments/E04_psetae_scratch/configs/: morocco_s2, morocco_s2s1, utah_s2, utah_s2s1). The same from the shell or a
+Slurm job, without editing the script:
+    EXPERIMENT=E04_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
+or all four in a row: experiments/run_experiment.py with EXPERIMENT = "E04_psetae_scratch".
 """
 import json
 import logging
@@ -80,11 +86,12 @@ from sklearn.metrics import (accuracy_score, average_precision_score, balanced_a
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-EXPERIMENT = None              # e.g. "E04_psetae_scratch": settings from experiments/<name>/config.yaml | None = below
+EXPERIMENT = None              # e.g. "E04_psetae_scratch": settings from experiments/<name>/ | None = below
+CONFIG = None                  # e.g. "utah_s2s1.yaml": one run's settings from experiments/<EXPERIMENT>/configs/
+                               # | None = section "psetae" of experiments/<EXPERIMENT>/config.yaml
+REGION = "morocco"             # "morocco" | "utah": dataset of ml_dataset_prep/ (outputs/<REGION>/dataset/)
 WINDOW = "agyear"
-VIEWS_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views"
-PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
-SPLIT_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
+VIEWS_NAME = "views"           # views folder of ml_dataset_prep/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
 
 BANDS = "s2s1"                 # "s2s1" = 10 Sentinel-2 bands + Sentinel-1 VV, VH | "s2" = Sentinel-2 only
 S2_BANDS = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]   # the 10 bands used in the paper
@@ -102,19 +109,35 @@ N_BOOT = 1000                  # block-bootstrap draws for the confidence interv
 SEED = 42
 QUICK_TEST = False             # True = 3 epochs, 100 bootstrap draws (only to check that everything runs)
 
-# experiment mode: experiments/run_experiment.py sets EXPERIMENT; section "psetae" of its config.yaml replaces the values above
+# experiment mode: experiments/run_experiment.py sets EXPERIMENT (and PSETAE_CONFIG for each file in "psetae_configs").
+# The config file (configs/<CONFIG>, or section "psetae" of config.yaml) replaces the values above (same names).
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
+CONFIG = os.environ.get("PSETAE_CONFIG", CONFIG)
+_SETTINGS = {"REGION", "WINDOW", "VIEWS_NAME", "BANDS", "S2_BANDS", "USE_EDGE_PIXELS", "MIN_INNER_PIXELS", "N_PIXELS",
+             "BATCH_SIZE", "MAX_EPOCHS", "PATIENCE", "LEARNING_RATE", "WEIGHT_DECAY", "EVAL_DRAWS", "N_BOOT", "SEED",
+             "QUICK_TEST"}
+CONFIG_FILE = None
+if CONFIG and not EXPERIMENT:
+    raise SystemExit("CONFIG needs EXPERIMENT: the config files are in experiments/<EXPERIMENT>/configs/")
 if EXPERIMENT:
     import yaml
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
-    for _key, _value in (_cfg.get("psetae") or {}).items():
-        if _key not in globals():
-            raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03b_train_psetae.py")
+    _exp = ROOT / "experiments" / EXPERIMENT
+    CONFIG_FILE = _exp / "configs" / CONFIG if CONFIG else _exp / "config.yaml"
+    _cfg = yaml.safe_load(CONFIG_FILE.read_text()) or {}
+    for _key, _value in (_cfg if CONFIG else (_cfg.get("psetae") or {})).items():
+        if _key not in _SETTINGS:
+            raise SystemExit(f"{CONFIG_FILE.relative_to(ROOT)}: unknown setting '{_key}' for 03b_train_psetae.py")
         globals()[_key] = _value
 
-RUN_NAME = f"psetae_{WINDOW}_{BANDS}"
-OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "morocco" / "study" / "03_models")
+# Paths follow from the settings, so they are built after the config file has been read.
+VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME   # 04_make_views.py
+PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
+SPLIT_FILE = ROOT / "outputs" / REGION / "dataset" / "02_folds" / "parcels_folds.geojson"   # 02_make_spatial_folds.py
+RUN_NAME = f"psetae_{REGION}_{VIEWS_NAME}_{BANDS}"
+OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / REGION / "study" / "03_models")
            / RUN_NAME)
+if BANDS not in ("s2", "s2s1"):
+    raise SystemExit(f"BANDS must be 's2' or 's2s1', not '{BANDS}'")
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 # ==========================================================================
 
@@ -351,12 +374,13 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S",
                         handlers=[logging.FileHandler(OUT_DIR / "run.log", mode="w"), logging.StreamHandler()])
     log = logging.getLogger()
-    log.info(f"Run {RUN_NAME} on {DEVICE}{' (QUICK_TEST)' if QUICK_TEST else ''}")
+    log.info(f"Run {RUN_NAME} on {DEVICE}{' (QUICK_TEST)' if QUICK_TEST else ''}"
+             + (f" | settings from {CONFIG_FILE.relative_to(ROOT)}" if CONFIG_FILE else "") + f"\n  pixel sets: {PIXELSET_FILE}")
 
     # 1. Data.
     pixels, idx, ids, labels, folds, blocks, channels = load_data(log)
     n_months = pixels.shape[1]
-    positions = [int(round(15 + 30.44 * k)) for k in range(n_months)]   # mid-month, days since 1 September
+    positions = [int(round(15 + 30.44 * k)) for k in range(n_months)]   # mid-month, days since the season start
 
     # 2-4. Outer spatial folds.
     parts, fold_rows, history = [], [], []
@@ -393,7 +417,8 @@ def main():
     pd.DataFrame(fold_rows).to_csv(OUT_DIR / "metrics_per_fold.csv", index=False)
     pd.DataFrame(history).to_csv(OUT_DIR / "training_history.csv", index=False)
     (OUT_DIR / "run_config.json").write_text(json.dumps({
-        "run": RUN_NAME, "model": "PSE-TAE (Garnot et al. 2020)", "channels": channels,
+        "run": RUN_NAME, "model": "PSE-TAE (Garnot et al. 2020)", "region": REGION, "views": VIEWS_NAME,
+        "config_file": str(CONFIG_FILE.relative_to(ROOT)) if CONFIG_FILE else None, "bands": BANDS, "channels": channels,
         "use_edge_pixels": USE_EDGE_PIXELS, "n_pixels": N_PIXELS, "batch_size": BATCH_SIZE,
         "max_epochs": MAX_EPOCHS, "patience": PATIENCE, "learning_rate": LEARNING_RATE,
         "weight_decay": WEIGHT_DECAY, "eval_draws": EVAL_DRAWS, "loss": "class-weighted cross-entropy",
