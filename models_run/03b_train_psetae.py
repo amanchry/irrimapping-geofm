@@ -123,7 +123,7 @@ if EXPERIMENT:
     import yaml
     _exp = ROOT / "experiments" / EXPERIMENT
     CONFIG_FILE = _exp / "configs" / CONFIG if CONFIG else _exp / "config.yaml"
-    _cfg = yaml.safe_load(CONFIG_FILE.read_text()) or {}
+    _cfg = yaml.safe_load(CONFIG_FILE.read_text(encoding="utf-8")) or {}
     for _key, _value in (_cfg if CONFIG else (_cfg.get("psetae") or {})).items():
         if _key not in _SETTINGS:
             raise SystemExit(f"{CONFIG_FILE.relative_to(ROOT)}: unknown setting '{_key}' for 03b_train_psetae.py")

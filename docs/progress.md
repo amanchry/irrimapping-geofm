@@ -99,6 +99,9 @@ Next steps
 - `experiments/run_experiment.py`: the `psetae` step runs once per file listed in `psetae_configs` of the
   experiment's `config.yaml`. E04 lists the four files; the report step is left out until `make_report.py` handles
   two regions in one experiment.
+- Config files are read as UTF-8 in `03_train_evaluate.py`, `03b_train_psetae.py`, `04_compare_models.py` and
+  `run_experiment.py`: Slurm jobs on the cluster run without a UTF-8 locale, and the first four PSE-TAE jobs stopped
+  on a non-ASCII character in a config comment.
 - Checked with `QUICK_TEST` on Morocco (s2 and s2s1, 3 epochs, then deleted) and a path check for Utah. The earlier
   E04 run (`results/psetae_agyear_s2s1`) is kept unchanged. Model, folds and metrics are unchanged.
 

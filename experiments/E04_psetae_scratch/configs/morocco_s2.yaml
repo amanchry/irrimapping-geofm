@@ -1,4 +1,4 @@
-# E04 · PSE-TAE trained from scratch — Morocco, 10 Sentinel-2 bands
+# E04 - PSE-TAE trained from scratch: Morocco, 10 Sentinel-2 bands
 # One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
 # keeps the script's value. Results: experiments/E04_psetae_scratch/results/psetae_morocco_views_s2/
 REGION: morocco

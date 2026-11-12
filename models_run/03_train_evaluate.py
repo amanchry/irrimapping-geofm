@@ -127,7 +127,7 @@ QUICK_TEST = False                    # True = fast check (100 trees, 100 bootst
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 if EXPERIMENT:
     import yaml
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
+    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     INPUT = os.environ.get("EXPERIMENT_INPUT", INPUT)
     for _key, _value in (_cfg.get("train_evaluate") or {}).items():
         if _key not in globals():

@@ -68,7 +68,7 @@ if EXPERIMENT:
     RUNS = None
     _found = sorted(f.parent.name for f in RUNS_DIR.glob("*/oof_predictions.csv"))
     BASELINE_RUN = next((r for r in _found if r.startswith("s1s2-all")), BASELINE_RUN)
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text())
+    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     for _key, _value in (_cfg.get("compare") or {}).items():
         if _key not in globals():
             raise SystemExit(f"config.yaml: unknown setting '{_key}' for 04_compare_models.py")

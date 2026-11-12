@@ -1,4 +1,4 @@
-# E04 · PSE-TAE trained from scratch — Utah, 10 Sentinel-2 bands + Sentinel-1 VV, VH
+# E04 - PSE-TAE trained from scratch: Utah, 10 Sentinel-2 bands + Sentinel-1 VV, VH
 # One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
 # keeps the script's value. Results: experiments/E04_psetae_scratch/results/psetae_utah_views_2023-24_s2s1/
 REGION: utah

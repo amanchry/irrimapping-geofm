@@ -64,7 +64,7 @@ def git_commit():
 
 def main():
     exp_dir = ROOT / "experiments" / EXPERIMENT
-    cfg = yaml.safe_load((exp_dir / "config.yaml").read_text())
+    cfg = yaml.safe_load((exp_dir / "config.yaml").read_text(encoding="utf-8"))
     steps = [s for s in cfg["steps"] if ONLY_STEPS is None or s in ONLY_STEPS]
     results = exp_dir / "results"
     results.mkdir(exist_ok=True)
