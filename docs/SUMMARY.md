@@ -6,13 +6,14 @@
 * [Foundation models](foundation_models.md)
 * Phase 1 · Data preparation
     * [Overview](phase1_data/overview.md)
-    * [ML-ready dataset (Morocco)](phase1_data/dataset.md)
+    * [Morocco training data](phase1_data/morocco.md)
+    * [Utah training data](phase1_data/utah.md)
 * Phase 2 · Model evaluation
     * [Overview](phase2_models/overview.md)
     * [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md)
     * [RQ2 · Fine-tuning](phase2_models/fine_tuning.md)
     * [Evaluation protocol](phase2_models/evaluation.md)
-* [Phase 3 · Transferability](phase3_transfer/index.md)
+* [Phase 3 · Temporal test and second region](phase3_transfer/index.md)
 * [Phase 4 · Multi-model fusion](phase4_fusion/index.md)
 * [Phase 5 · Annual maps](phase5_maps/index.md)
 * Experiments
@@ -32,6 +33,7 @@
     * [Reference papers](references/index.md)
     * [AlphaEarth for irrigated mapping](references/yang-2026-alphaearth-irrigated.md)
     * [Moroccan field survey](references/ouassanouan-2026-morocco-survey.md)
+    * [GMIA-NEXT](references/kebede-2026-gmia-next.md)
     * [PANGAEA](references/pangaea.md)
     * [PASTIS](references/pastis-utae.md)
     * [L-TAE](references/ltae.md)

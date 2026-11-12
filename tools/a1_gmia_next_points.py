@@ -30,9 +30,9 @@ Input
 -----
 data/gmia_next/GMIA-NEXT_GTPs_2024_v0_1/GMIA-NEXT_GTPs_2024_v0_1.shp   (move your GMIA-NEXT_GT folder here)
 data/gmia_next/WB_world_countries.geojson
-outputs/dataset/02_folds/parcels_folds.geojson (for B3)  and  data/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
+outputs/morocco/dataset/02_folds/parcels_folds.geojson (for B3)  and  data/worldcover/ESA_WorldCover_10m_2021.tif (for B4)
 
-Output (outputs/analysis/gmia_next/)
+Output (outputs/morocco/analysis/gmia_next/)
 ------------------------------------
 gmia_points_<ISO>.geojson, global_points_by_source.csv, global_points_by_country.csv,
 quality_checks.csv, <ISO>_*.csv and figures
@@ -58,9 +58,9 @@ ROOT = Path(__file__).resolve().parents[1]                 # project folder
 GMIA_DIR = ROOT / "data" / "gmia_next"
 POINTS_FILE = GMIA_DIR / "GMIA-NEXT_GTPs_2024_v0_1" / "GMIA-NEXT_GTPs_2024_v0_1.shp"
 COUNTRIES_FILE = GMIA_DIR / "WB_world_countries.geojson"
-SURVEY_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
+SURVEY_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
 WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
-OUT_DIR = ROOT / "outputs" / "analysis" / "gmia_next"
+OUT_DIR = ROOT / "outputs" / "morocco" / "analysis" / "gmia_next"
 
 COUNTRY_ISO = "MAR"           # Part B country (ISO 3166 alpha-3, e.g. "MAR", "TUN")
 UTM = 32629                   # metric CRS for Part B (UTM 29N for Morocco; 32632 for Tunisia)

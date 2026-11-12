@@ -37,7 +37,7 @@ checkpoints/clay/ on the first run.
 
 Output
 ------
-outputs/study/02_embeddings/clay_<WINDOW>_tiles.npz
+outputs/morocco/study/02_embeddings/clay_<WINDOW>_tiles.npz
     parcel_id [N], label [N], ag_season [N], steps [12] (month names),
     embeddings [N, 12, 1024] float16, valid [N, 12] (False = month without any clear pixel)
 
@@ -74,10 +74,10 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
 
-CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
+CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
 TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
                                          # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
+OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 

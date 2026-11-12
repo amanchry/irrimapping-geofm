@@ -26,12 +26,12 @@ Viewing in QGIS
 Drag a .vrt into QGIS. True colour: Min/Max 0-2500 (cumulative count cut works too); false colour:
 0-4500; Sentinel-1: VV about -2500 to 0, VH about -3000 to -500 (dB x 100). Labels: band 1 with
 "Paletted/Unique values" (0 = ignore, 1 = irrigated, 2 = rainfed); set 0 as transparent if wished.
-Overlay outputs/dataset/02_folds/parcels_folds.geojson to check alignment.
+Overlay outputs/morocco/dataset/02_folds/parcels_folds.geojson to check alignment.
 
 Testing in Python
 -----------------
     import rasterio
-    with rasterio.open("outputs/dataset/03_tiles_128px/agyear/vrt/2023-24_labels.vrt") as src:
+    with rasterio.open("outputs/morocco/dataset/03_tiles_128px/agyear/vrt/2023-24_labels.vrt") as src:
         lab = src.read(1, window=rasterio.windows.from_bounds(x0, y0, x1, y1, src.transform))
 
 Notes
@@ -55,7 +55,7 @@ from xml.sax.saxutils import escape
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"                                                   # as in ml_dataset_prep/03_build_tiles.py
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW
+TILE_ROOT = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW
 TILE_DIR = TILE_ROOT / "tiles"
 OUT_DIR = TILE_ROOT / "vrt"
 

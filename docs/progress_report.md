@@ -32,9 +32,9 @@ gantt
     section 4 · Fusion (optional)
     RQ5 · multi-model fusion                    :        u1, 2026-12-15, 2027-01-31
     section 3 · Transferability
-    RQ3 / RQ4 · years and transfer region       :        t1, 2027-02-01, 2027-03-15
+    RQ3 / RQ4 · temporal test, Utah             :        t1, 2027-02-01, 2027-03-15
     section 5 · Annual maps
-    Maps 2021–2025 + transfer region            :        m1, 2027-03-01, 2027-03-31
+    Maps 2021–2025                              :        m1, 2027-03-01, 2027-03-31
     section 6 · Synthesis
     Analysis and writing                        :        w1, 2027-04-01, 2027-05-31
     Submission                                  :milestone, w2, 2027-06-15, 0d
@@ -51,7 +51,7 @@ gantt
 | 2 | Parameter-efficient fine-tuning, LoRA (RQ2) | Nov – Dec 2026 | 📝  | [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 | 4 | Full fine-tuning, multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
-| 3 | Temporal and spatial transferability (RQ3, RQ4) | Feb – Mar 2027 | 📝 transfer region under review | [Phase 3](phase3_transfer/index.md) |
+| 3 | Temporal test and second region (RQ3, RQ4) | Feb – Mar 2027 | 🔄 Utah dataset in preparation ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | [Phase 3](phase3_transfer/index.md) |
 | 5 | Annual irrigated maps 2021–2025 | Mar 2027 | 📝 | [Phase 5](phase5_maps/index.md) |
 | 6 | Analysis, writing, revision | Apr – May 2027 | 📝 | |
 | 6 | Submission | Jun 2027 | 📝 | |
@@ -60,10 +60,10 @@ gantt
 
 | Area | What | Where |
 | --- | --- | --- |
-| Labels | 8,781 cropland parcels (7,585 irrigated, 1,196 rainfed), each with its own agricultural year (2023/24 or 2024/25) | [Dataset §4](phase1_data/dataset.md) |
+| Labels | 8,781 cropland parcels (7,585 irrigated, 1,196 rainfed), each with its own agricultural year (2023/24 or 2024/25) | [Dataset §4](phase1_data/morocco.md) |
 | Validation design | 5 spatial folds of 20 km blocks; PASTIS rotation (3 train / 1 validation / 1 test) | [Protocol §2](phase2_models/evaluation.md#2-spatial-splits) |
-| Image store | 2,987 non-overlapping 128 px tiles, 12 monthly composites × 19 bands (Sentinel-2 with Cloud Score+, Sentinel-1) | [Dataset §6](phase1_data/dataset.md) |
-| Model inputs | parcel features (baseline) and patch-aligned 64 px chips for the foundation models | [Dataset §7](phase1_data/dataset.md) |
+| Image store | 2,987 non-overlapping 128 px tiles, 12 monthly composites × 19 bands (Sentinel-2 with Cloud Score+, Sentinel-1) | [Dataset §6](phase1_data/morocco.md) |
+| Model inputs | parcel features (baseline) and patch-aligned 64 px chips for the foundation models | [Dataset §7](phase1_data/morocco.md) |
 | Embeddings | Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM for every parcel and month | [Models pipeline](phase2_models/frozen_encoders.md) |
 | First RQ1 result | E01: four classifiers on every input, block-bootstrap confidence intervals | [E01 report](experiments/E01_frozen_pca_nested/report.md) |
 | Reproducibility | every result from a config file; reports generated; documentation website | [Experiments](experiments/index.md) |
@@ -94,5 +94,5 @@ All results: [Results](results.md).
 | Prithvi pretrained on 30 m HLS, used at 10 m | possible handicap | state it; optional 30 m test |
 | Neighbouring fields inside a chip | mixed patches for small parcels | accuracy by parcel size; optional masked-chip test |
 | Region and year partly confounded | a "hard region" may be a "hard year" | per-year results; year test within Doukkala / El Haouz |
-| Transfer region (RQ4) | Tunisia has only 10 rainfed reference points | decide between Tunisia and US dryland regions after RQ1–RQ2 |
+| Second region (RQ4) | Tunisia has only 10 rainfed reference points | decided: Utah as an independent second study area with its own labels ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)); wording of RQ3 / RQ4 to agree with the supervisors |
 | Wall-to-wall mapping (RQ3) | parcel pooling needs polygons | segmentation head and pixel models ([D11](decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)) |

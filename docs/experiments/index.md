@@ -57,7 +57,7 @@ flowchart LR
     R --> C["<b>compare</b><br/>models_run/04<br/>same parcels · paired bootstrap"]
     C --> REP["<b>report</b><br/>make_report.py"]
     REP --> MD["docs/experiments/&lt;name&gt;/report.md<br/>experiment list · results page<br/>site menu"]
-    EMB[("outputs/study/02_embeddings<br/>shared by all experiments")] -.-> S1
+    EMB[("outputs/morocco/study/02_embeddings<br/>shared by all experiments")] -.-> S1
     EMB -.-> S2
 ```
 
@@ -65,7 +65,7 @@ flowchart LR
   experiment mode the values in `config.yaml` replace them (same names). A misspelt setting stops the run with an
   error, so a config can never be silently ignored.
 - **Embeddings are shared.** They depend only on the dataset and the model, so `models_run/02a–02d` are run once
-  and every experiment reads `outputs/study/02_embeddings/`.
+  and every experiment reads `outputs/morocco/study/02_embeddings/`.
 - **Runs that are finished are skipped**, so an interrupted experiment continues where it stopped.
   `RERUN = True` (or deleting `results/`) repeats it.
 - `results/run_info.json` keeps the config, the git commit and the dates of every run, so a result can always be

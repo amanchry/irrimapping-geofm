@@ -47,14 +47,14 @@ types and irrigation systems for North Africa, and the source of all labels in t
 
 - **Labels:** the irrigation-system attribute defines the binary target. Any irrigated system = irrigated, *rainfed*
   = rainfed; only the cropland classes (seasonal crops, trees, trees + seasonal) are kept. After cleaning,
-  8,781 parcels remain (7,585 irrigated, 1,196 rainfed) ([ML-ready dataset §4](../phase1_data/dataset.md#4-script-01--prepare_labels)).
+  8,781 parcels remain (7,585 irrigated, 1,196 rainfed) ([ML-ready dataset §4](../phase1_data/morocco.md#4-script-01--prepare_labels)).
 - **Agricultural year:** the survey date assigns each parcel to the 2023/24 or 2024/25 season, and the imagery is
   taken from that season ([D2](../decisions.md#d2-two-agricultural-years-per-parcel-season)).
 - **Spatial validation:** parcels were recorded along survey routes, so neighbouring parcels are clustered and
   usually share a class, which motivates the 20 km block cross-validation
-  ([dataset §5](../phase1_data/dataset.md#5-script-02--make_spatial_folds)).
+  ([dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds)).
 - **Imagery:** the provided 2024 Sentinel-2 averages are not used; monthly composites are computed for each
-  parcel's own agricultural year from Earth Engine ([dataset §6](../phase1_data/dataset.md#6-script-03--build_tiles)).
+  parcel's own agricultural year from Earth Engine ([dataset §6](../phase1_data/morocco.md#6-script-03--build_tiles)).
 
 ## Differences and limitations
 
@@ -67,4 +67,4 @@ types and irrigation systems for North Africa, and the source of all labels in t
   availability.
 - **Validation of the labels** is qualitative (photographs, NDVI consistency); no independent accuracy figure for
   the labels is reported. Remaining polygon overlaps were found in this research (six parcels fully covered by
-  others; [dataset §6.4](../phase1_data/dataset.md#64-label-rasters-local-no-earth-engine)).
+  others; [dataset §6.4](../phase1_data/morocco.md#64-label-rasters-local-no-earth-engine)).

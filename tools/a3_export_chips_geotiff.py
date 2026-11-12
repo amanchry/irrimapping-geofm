@@ -8,7 +8,7 @@ The chips of ml_dataset_prep/04_make_views.py are stored as compressed NumPy arr
 viewable in GIS). This script turns the chips of a few parcels back into georeferenced GeoTIFFs,
 using the UTM zone and chip corner saved in index.csv, so they overlay exactly on the parcels.
 
-For each selected parcel it writes a folder outputs/study/01_inspection/chips_geotiff/<class>_<parcel_id>/ with:
+For each selected parcel it writes a folder outputs/morocco/study/01_inspection/chips_geotiff/<class>_<parcel_id>/ with:
   m01_Sep.tif ... m12_Aug.tif   one file per month, 14 bands: B1 ... B12 (Sentinel-2 reflectance x 10000)
                                 and VV, VH (Sentinel-1 dB x 100); no-data = -32768 (cloudy month/pixel)
   ndvi_12months.tif             NDVI for the 12 months (float, one band per month) - quick seasonal view
@@ -46,9 +46,9 @@ from rasterio.transform import Affine
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 WINDOW = "agyear"                                          # as in ml_dataset_prep/03_build_tiles.py
-CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / "chips_p16"   # chips of ml_dataset_prep/04_make_views.py
-PARCELS_FILE = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"
-OUT_DIR = ROOT / "outputs" / "study" / "01_inspection" / "chips_geotiff"
+CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / "chips_p16"   # chips of ml_dataset_prep/04_make_views.py
+PARCELS_FILE = ROOT / "outputs" / "morocco" / "dataset" / "01_labels" / "parcels_labelled.geojson"
+OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "01_inspection" / "chips_geotiff"
 
 PARCEL_IDS = None             # e.g. ["1234", "5678"] for specific parcels; None = random selection
 N_PER_CLASS = 5               # random parcels per class when PARCEL_IDS is None

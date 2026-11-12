@@ -18,12 +18,12 @@ Open the page in any browser (internet is needed only for the basemap tiles).
 
 Inputs
 ------
-outputs/dataset/02_folds/parcels_folds.geojson                       polygons + class, zone, fold
-outputs/dataset/03_tiles_128px/agyear/views/parcel_features_<FEATURES>.csv  monthly values per parcel
+outputs/morocco/dataset/02_folds/parcels_folds.geojson                       polygons + class, zone, fold
+outputs/morocco/dataset/03_tiles_128px/agyear/views/parcel_features_<FEATURES>.csv  monthly values per parcel
 
 Output
 ------
-outputs/analysis/parcel_explorer.html
+outputs/morocco/analysis/parcel_explorer.html
 
 Run (from the project folder; standard Python only)
 ---------------------------------------------------
@@ -39,10 +39,10 @@ from statistics import quantiles
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 WINDOW = "agyear"
 FEATURES = "inner"                                                  # "inner" | "all" (parcel_features_<FEATURES>.csv)
-PARCELS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
-FEATURES_FILE = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"parcel_features_{FEATURES}.csv"
-TILES_INFO = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "tiles_info.json"
-OUT_FILE = ROOT / "outputs" / "analysis" / "parcel_explorer.html"
+PARCELS_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
+FEATURES_FILE = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"parcel_features_{FEATURES}.csv"
+TILES_INFO = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "tiles_info.json"
+OUT_FILE = ROOT / "outputs" / "morocco" / "analysis" / "parcel_explorer.html"
 
 VARIABLES = {                    # key in the page -> (column prefix, label, decimals)
     "NDVI": ("NDVI", "NDVI", 3),

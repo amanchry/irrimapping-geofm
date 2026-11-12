@@ -34,9 +34,9 @@ fold is never used for any decision. Every parcel is predicted once, by a model 
 
 Inputs
 ------
-outputs/dataset/03_tiles_128px/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
-outputs/dataset/03_tiles_128px/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
-outputs/dataset/02_folds/parcels_folds.geojson        fold and block of every parcel
+outputs/morocco/dataset/03_tiles_128px/agyear/views/pixelsets.npz   all pixels of every parcel (dataset/04_make_views.py, view B)
+outputs/morocco/dataset/03_tiles_128px/agyear/views/views_info.json Sentinel-1 orbit used for the chips (same orbit here)
+outputs/morocco/dataset/02_folds/parcels_folds.geojson        fold and block of every parcel
 
 Steps
 -----
@@ -48,7 +48,7 @@ Steps
 5. Metrics on all out-of-fold predictions with 95% block-bootstrap intervals (as in 03_train_evaluate.py).
 6. Save predictions, metrics, training curves and the trained networks.
 
-Output (outputs/study/03_models/psetae_<WINDOW>_<BANDS>/)
+Output (outputs/morocco/study/03_models/psetae_<WINDOW>_<BANDS>/)
 ---------------------------------------------------------
 oof_predictions.csv     every parcel's out-of-fold prediction and rainfed probability (read by 04_compare_models.py)
 metrics_with_ci.csv     all metrics: estimate, ci_low, ci_high
@@ -82,9 +82,9 @@ from sklearn.metrics import (accuracy_score, average_precision_score, balanced_a
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 EXPERIMENT = None              # e.g. "E04_psetae_scratch": settings from experiments/<name>/config.yaml | None = below
 WINDOW = "agyear"
-VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views"
+VIEWS_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views"
 PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
-SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
+SPLIT_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
 
 BANDS = "s2s1"                 # "s2s1" = 10 Sentinel-2 bands + Sentinel-1 VV, VH | "s2" = Sentinel-2 only
 S2_BANDS = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]   # the 10 bands used in the paper
@@ -113,7 +113,7 @@ if EXPERIMENT:
         globals()[_key] = _value
 
 RUN_NAME = f"psetae_{WINDOW}_{BANDS}"
-OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "study" / "03_models")
+OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "morocco" / "study" / "03_models")
            / RUN_NAME)
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 # ==========================================================================

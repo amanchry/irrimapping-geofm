@@ -19,10 +19,10 @@ Steps
    for the patch-aligned chips and for the old centred chips (shows what the alignment gains).
 5. Seasonal profiles per class from the parcel features (NDVI, NDWI, Sentinel-1 VH).
 6. Example chips: true colour and NDVI for all 12 months, for a few random parcels per class.
-7. Agreement with the legacy Earth Engine features (if outputs/legacy/03_s1s2_features exists):
+7. Agreement with the legacy Earth Engine features (if outputs/morocco/legacy/03_s1s2_features exists):
    correlation of the parcel NDVI per month between the two pipelines.
 
-Output (outputs/study/01_inspection/)
+Output (outputs/<REGION>/study/01_inspection/)
 -------------------------------------
 inventory.csv, label_qa.csv, observations_per_month.csv, purity_summary.csv, legacy_agreement.csv,
 observations_per_month.png, purity.png, seasonal_profiles.png, examples_irrigated.png, examples_rainfed.png
@@ -44,11 +44,13 @@ from matplotlib.colors import LinearSegmentedColormap
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
+REGION = "morocco"             # "morocco" | "utah": dataset of ml_dataset_prep/ (outputs/<REGION>/dataset/)
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW       # ml_dataset_prep/03_build_tiles.py
-VIEWS = TILE_ROOT / "views"                                         # ml_dataset_prep/04_make_views.py
-LEGACY_FEATURES = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"
-OUT_DIR = ROOT / "outputs" / "study" / "01_inspection"
+TILE_ROOT = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW       # ml_dataset_prep/03_build_tiles.py
+VIEWS_NAME = "views"           # views folder of ml_dataset_prep/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
+VIEWS = TILE_ROOT / VIEWS_NAME                                      # ml_dataset_prep/04_make_views.py
+LEGACY_FEATURES = ROOT / "outputs" / "morocco" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"
+OUT_DIR = ROOT / "outputs" / REGION / "study" / "01_inspection" / ("" if VIEWS_NAME == "views" else VIEWS_NAME)
 
 EXAMPLE_PATCH = 16             # which chips to draw (8 or 16)
 N_EXAMPLES = 3                 # random parcels per class in the example figures

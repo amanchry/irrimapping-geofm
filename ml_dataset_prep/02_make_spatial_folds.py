@@ -17,9 +17,9 @@ Ploton et al. 2020, Nature Communications; Kattenborn et al. 2022, ISPRS Open J.
 
 Steps
 -----
-1. Read the labelled parcels and compute their centroids in metres (UTM 29N).
-2. Class similarity by distance: for pairs of parcels at a given distance, the share with the
-   same class. Where this curve reaches the random-placement level shows how far spatial
+1. Read the labelled parcels and compute their centroids in metres (projection of the region, regions.py).
+2. Class similarity by distance: for pairs of parcels of the same agricultural year at a given
+   distance, the share with the same class. Where this curve reaches the random-placement level shows how far spatial
    dependence reaches, and so how large blocks must be.
 3. Compare block sizes: for each size, build 5 balanced folds and report (a) rainfed parcels in
    the smallest fold, (b) class share per fold, (c) leakage = test parcels with a training parcel
@@ -37,14 +37,17 @@ models_run/03_train_evaluate.py rotates the 5 folds as in PASTIS (Garnot & Landr
 and the other 3 folds train. Every parcel is tested once. The `split` column (fold 0 test, fold 1
 validation, folds 2-4 train) is round 1 of that rotation, kept for quick checks.
 
-Output (outputs/dataset/02_folds/)
---------------------------
+The same place in two agricultural years falls in the same block, so it is always in the same fold.
+
+Output (outputs/<REGION>/dataset/02_folds/)
+-------------------------------------------
 parcels_folds.geojson          all parcels + block_id, fold, random_fold, split
 fold_counts.csv                parcels per class and fold
 block_size_comparison.csv      the block-size table (step 3)
 class_similarity_by_distance.csv / .png
 leakage_check.csv              share of test parcels with a training parcel within 100 m ... 5 km
 spatial_folds.png              map of folds + parcels per fold
+spatial_folds_blocks.png       the blocks themselves, coloured by fold, with zooms on the N_ZOOMS densest areas
 train_test_distance.png        distance from test parcels to the nearest training parcel
 
 Run (from the project folder)
@@ -59,21 +62,23 @@ matplotlib.use("Agg")                       # write figures to files, no window
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 from scipy.spatial import cKDTree
 
-# ================================ SETTINGS ================================
-ROOT = Path(__file__).resolve().parents[1]                 # project folder
-INPUT = ROOT / "outputs" / "dataset" / "01_labels" / "parcels_labelled.geojson"   # from 01_prepare_labels.py
-COUNTRY_FILE = ROOT / "data"  / "admin" / "gadm41_MAR_0.json"
-OUT_DIR = ROOT / "outputs" / "dataset" / "02_folds"
+from regions import admin_boundaries, dataset_dir, settings
 
-UTM = 32629                  # metric CRS (UTM zone 29N) for distances and blocks
+# ================================ SETTINGS ================================
+REGION = "morocco"           # "morocco" | "utah" (regions.py)
+INPUT = dataset_dir(REGION) / "01_labels" / "parcels_labelled.geojson"   # from 01_prepare_labels_<Region>.py
+OUT_DIR = dataset_dir(REGION) / "02_folds"
+
+UTM = settings(REGION)["crs_epsg"]          # metric CRS for distances and blocks
 N_FOLDS = 5
-BLOCK_KM = 20                # block size; justified by steps 2-3 (see block_size_comparison.csv)
+BLOCK_KM = settings(REGION)["block_km"]     # block size; justified by steps 2-3 (see block_size_comparison.csv)
 CANDIDATE_KM = [2, 5, 10, 20, 25, 30, 50]
 TEST_FOLD, VAL_FOLD = 0, 1   # only for the quick fixed split in column `split`
 SEED = 42
+N_ZOOMS, ZOOM_BLOCKS = 2, 5 # block map: zoom panels on the densest ZOOM_BLOCKS x ZOOM_BLOCKS windows
 # ==========================================================================
 
 CLASS_NAMES = {1: "Irrigated", 2: "Rainfed"}
@@ -88,12 +93,14 @@ def save_fig(fig, name):
 
 
 # ------------------------------------------------------------ step 2
-def class_similarity(xy, labels):
-    """Share of parcel pairs with the same class, per distance band, and the random-placement level."""
+def class_similarity(xy, labels, seasons):
+    """Share of parcel pairs (same agricultural year) with the same class, per distance band, and the
+    random-placement level. Pairs across years are left out: the same field in two years is not two samples."""
     p_irr = (labels == 1).mean()
     baseline = p_irr ** 2 + (1 - p_irr) ** 2              # chance two random parcels share a class
     edges = np.array([0, 250, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000])
     pairs = cKDTree(xy).query_pairs(r=edges[-1], output_type="ndarray")   # all pairs closer than 50 km
+    pairs = pairs[seasons[pairs[:, 0]] == seasons[pairs[:, 1]]]
     dist = np.linalg.norm(xy[pairs[:, 0]] - xy[pairs[:, 1]], axis=1)
     same = labels[pairs[:, 0]] == labels[pairs[:, 1]]
     band = np.digitize(dist, edges) - 1                    # distance band of each pair
@@ -214,6 +221,75 @@ def plot_folds(parcels, country, fold_table):
     save_fig(fig, "spatial_folds.png")
 
 
+def densest_windows(bx, by, n_parcels, k=ZOOM_BLOCKS, n=N_ZOOMS):
+    """Lower-left block of the n non-overlapping k x k block windows holding the most parcels."""
+    counts = {}
+    for x0 in range(bx.min() - k + 1, bx.max() + 1):
+        for y0 in range(by.min() - k + 1, by.max() + 1):
+            inside = (bx >= x0) & (bx < x0 + k) & (by >= y0) & (by < y0 + k)
+            if inside.any():
+                counts[(x0, y0)] = n_parcels[inside].sum()
+    picked = []
+    for (x0, y0), _ in sorted(counts.items(), key=lambda kv: -kv[1]):
+        if all(abs(x0 - a) >= k or abs(y0 - b) >= k for a, b in picked):
+            picked.append((x0, y0))
+        if len(picked) == n:
+            break
+    return picked
+
+
+def plot_blocks(parcels, country):
+    """The BLOCK_KM blocks coloured by fold (fold number in each block), parcels on top, zooms on dense areas.
+    Drawn in the metric projection, so blocks are true squares."""
+    size = BLOCK_KM * 1000
+    blocks = parcels.groupby("block_id").agg(fold=("fold", "first"), n=("fold", "size"))
+    xy = blocks.index.to_series().str.split("_", expand=True).astype(int)
+    blocks["bx"], blocks["by"] = xy[0], xy[1]
+    land = country.to_crs(UTM)
+    windows = densest_windows(blocks["bx"].to_numpy(), blocks["by"].to_numpy(), blocks["n"].to_numpy())
+
+    def draw(ax, numbers, point_size):
+        land.plot(ax=ax, facecolor="#f0ebe0", edgecolor="#3a3a3a", linewidth=0.6, zorder=0)
+        for b in blocks.itertuples():
+            c = FOLD_COLORS[b.fold]
+            ax.add_patch(Rectangle((b.bx * size, b.by * size), size, size, facecolor=c, alpha=0.3,
+                                   edgecolor=c, linewidth=0.8, zorder=1))
+            if numbers:
+                ax.text((b.bx + 0.5) * size, (b.by + 0.5) * size, str(b.fold), ha="center", va="center",
+                        fontsize=9, fontweight="bold", color=c, zorder=4, clip_on=True,
+                        bbox=dict(facecolor="white", alpha=0.7, edgecolor="none", pad=1))
+        for f in range(N_FOLDS):
+            m = parcels["fold"].to_numpy() == f
+            ax.scatter(parcels["x_utm"][m], parcels["y_utm"][m], s=point_size, color=FOLD_COLORS[f],
+                       linewidths=0, zorder=3)
+        ax.set_aspect("equal")
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    fig = plt.figure(figsize=(15, 9), dpi=150)
+    grid = fig.add_gridspec(max(1, len(windows)), 2, width_ratios=[1.25, 1])
+    ax = fig.add_subplot(grid[:, 0])
+    draw(ax, numbers=False, point_size=1)
+    ax.set_xlim((blocks["bx"].min() - 1) * size, (blocks["bx"].max() + 2) * size)
+    ax.set_ylim((blocks["by"].min() - 1) * size, (blocks["by"].max() + 2) * size)
+    ax.set_title(f"All {len(blocks)} blocks of {BLOCK_KM} km, coloured by fold", fontweight="bold")
+    ax.legend(handles=[Patch(facecolor=FOLD_COLORS[f], alpha=0.5, edgecolor=FOLD_COLORS[f], label=f"Fold {f}")
+                       for f in range(N_FOLDS)], title=f"Squares = {BLOCK_KM} km blocks", loc="upper center",
+              bbox_to_anchor=(0.5, -0.01), ncol=N_FOLDS, frameon=False)
+    for k, (x0, y0) in enumerate(windows):
+        letter = "AB"[k] if k < 2 else str(k + 1)
+        ax.add_patch(Rectangle((x0 * size, y0 * size), ZOOM_BLOCKS * size, ZOOM_BLOCKS * size, fill=False,
+                               linestyle="--", linewidth=1.2, edgecolor="#222222", zorder=5))
+        ax.text(x0 * size, (y0 + ZOOM_BLOCKS) * size, f" {letter}", va="bottom", fontweight="bold", fontsize=12)
+        zax = fig.add_subplot(grid[k, 1])
+        draw(zax, numbers=True, point_size=3)
+        zax.set_xlim(x0 * size, (x0 + ZOOM_BLOCKS) * size)
+        zax.set_ylim(y0 * size, (y0 + ZOOM_BLOCKS) * size)
+        zax.set_title(f"{letter} - zoom ({ZOOM_BLOCKS} x {ZOOM_BLOCKS} blocks)", fontweight="bold")
+    fig.tight_layout()
+    save_fig(fig, "spatial_folds_blocks.png")
+
+
 def plot_distance(d_random, d_spatial):
     fig, ax = plt.subplots(figsize=(8, 4.2), dpi=150)
     bins = np.logspace(1, np.log10(max(d_spatial.max(), d_random.max())), 50)
@@ -233,7 +309,7 @@ def main():
 
     # 1. Parcels and centroids in metres.
     parcels = gpd.read_file(INPUT)
-    country = gpd.read_file(COUNTRY_FILE).to_crs(4326)
+    country = admin_boundaries(REGION)
     cent = parcels.to_crs(UTM).centroid
     parcels["x_utm"], parcels["y_utm"] = cent.x, cent.y
     xy = parcels[["x_utm", "y_utm"]].to_numpy()
@@ -241,7 +317,7 @@ def main():
     print(f"{len(parcels):,} parcels: {parcels['label'].map(CLASS_NAMES).value_counts().to_dict()}")
 
     # 2. How far does class similarity reach?
-    sim, baseline, edges = class_similarity(xy, labels)
+    sim, baseline, edges = class_similarity(xy, labels, parcels["ag_season"].to_numpy())
     sim.to_csv(OUT_DIR / "class_similarity_by_distance.csv", index=False)
     print(f"Random-placement level {baseline:.1f}% | same-class share by distance:\n{sim.to_string(index=False)}")
     plot_similarity(sim, baseline, edges)
@@ -266,6 +342,7 @@ def main():
     fold_table.to_csv(OUT_DIR / "fold_counts.csv")
     print(f"\n{parcels['block_id'].nunique()} blocks of {BLOCK_KM} km -> parcels per fold:\n{fold_table.to_string()}")
     plot_folds(parcels, country, fold_table)
+    plot_blocks(parcels, country)
 
     # Leakage check for the fixed split (test fold vs folds 2-4), spatial vs random.
     fold, rfold = parcels["fold"].to_numpy(), parcels["random_fold"].to_numpy()

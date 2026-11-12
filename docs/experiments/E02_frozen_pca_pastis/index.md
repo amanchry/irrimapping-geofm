@@ -32,7 +32,7 @@ Inputs, embeddings, temporal aggregation (concat + PCA 128), classifiers, grids 
 # experiments/run_experiment.py:  EXPERIMENT = "E02_frozen_pca_pastis"
 python experiments/run_experiment.py
 ```
-Needs the embeddings of `models_run/02a–02d` (already in `outputs/study/02_embeddings/`). Run time on the
+Needs the embeddings of `models_run/02a–02d` (already in `outputs/morocco/study/02_embeddings/`). Run time on the
 MacBook: about 2 h per foundation-model input, 30 min for the baseline (E01 timings; PASTIS tunes on one fold
 instead of four, so it should be faster).
 

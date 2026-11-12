@@ -42,7 +42,7 @@ Steps
 Compare inputs with 04_compare_models.py.
 
 Output: experiments/<EXPERIMENT>/results/<RUN_NAME>/ (experiment mode, see below)
-        or outputs/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
+        or outputs/morocco/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
 --------------------------------------
 metrics_summary.csv            headline metrics with 95% CI, one column per classifier
 metrics_with_ci.csv            all metrics: estimate, ci_low, ci_high
@@ -135,8 +135,8 @@ if EXPERIMENT:
         globals()[_key] = _value
 
 # ------------------------------------------------------------ paths (from the settings)
-SPLIT_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"
-VIEWS_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views"
+SPLIT_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
+VIEWS_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views"
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
     if S1_ORBIT == "chips" and INPUT == "s1s2":                   # orbit chosen by ml_dataset_prep/04_make_views.py for the chips
@@ -146,15 +146,15 @@ if S1S2_SOURCE == "tiles":
         S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_chips_and_pixelsets"]
     S1S2_TAG = f"tiles-{TILE_FEATURES}-{S1_ORBIT.lower()}"
 else:
-    S1S2_FILE = ROOT / "outputs" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
+    S1S2_FILE = ROOT / "outputs" / "morocco" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
     S1S2_TAG = f"{INTERVAL_DAYS}d"
 EMB_TAG = f"{WINDOW}_tiles" if EMB_SOURCE == "tiles" else WINDOW
-EMB_FILE = ROOT / "outputs" / "study" / "02_embeddings" / f"{INPUT}_{EMB_TAG}.npz"
+EMB_FILE = ROOT / "outputs" / "morocco" / "study" / "02_embeddings" / f"{INPUT}_{EMB_TAG}.npz"
 RUN_NAME = (f"s1s2-{S1S2_VARIABLES}_{WINDOW}_{S1S2_TAG}" if INPUT == "s1s2"
             else f"{INPUT}_{EMB_TAG}_{FEATURE_MODE}")
 if VALIDATION == "nested" and not EXPERIMENT:
     RUN_NAME += "_nested"                                       # keeps both designs apart (an experiment has one design)
-OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "study" / "03_models")
+OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "morocco" / "study" / "03_models")
            / RUN_NAME)
 
 # ==========================================================================

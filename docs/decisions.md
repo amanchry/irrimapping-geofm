@@ -15,9 +15,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D7](#d7-macro-f1-as-the-headline-metric) | Selection metric | mean F1 over folds ± SD | macro-F1 of the out-of-fold predictions, 95% block-bootstrap CI, per-fold mean ± SD | Oct 2026 |
 | [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | PCA pipeline now; L-TAE pipeline next | 4 Nov 2026 |
 | [D9](#d9-cloud-score-instead-of-qa60) | Cloud mask | cloud-masked composites | Cloud Score+ (cs_cdf ≥ 0.60) | Oct 2026 |
-| [D10](#d10-transfer-region-under-review) | Transfer region | Tunisia, 54 GMIA-NEXT points | under review (Tunisia or US states with dryland labels); after Morocco | 4 Nov 2026 |
+| [D10](#d10-transfer-region-under-review) | Transfer region | Tunisia, 54 GMIA-NEXT points | replaced by D13: no transfer region; Utah as a second study area | 12 Nov 2026 |
 | [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | parcel benchmark with classical heads (RQ1) + segmentation head and pixel models for the maps (RQ2–RQ4); neural baselines TempCNN and U-TAE | 6 Nov 2026 |
 | [D12](#d12-agrifm-with-its-pretrained-4-px-patch-embedding) | AgriFM encoder | not specified | pretrained 4 × 4 px patch embedding (output stride 32 px); all weights checked on loading | 6 Nov 2026 |
+| [D13](#d13-utah-as-a-second-independent-study-area) | RQ3 / RQ4: second region and temporal test | zero-shot transfer of the Morocco model to Tunisia (RQ4); temporal test within Morocco (RQ3) | Utah (WRLU) as an independent second study area, no transfer; temporal test in Utah: train on WRLU 2024, test on WRLU 2021 on held-out folds | 12 Nov 2026 |
 
 ---
 
@@ -28,7 +29,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   once by a model that never saw its block.
 - **Why:** with a random split, 79% of test parcels lie within 250 m of a training parcel (about 2% with 20 km
   blocks). Random splits overstate accuracy for mapping new areas (Roberts et al. 2017; Ploton et al. 2020).
-- **Where:** [dataset §5](phase1_data/dataset.md#5-script-02--make_spatial_folds), [protocol §2](phase2_models/evaluation.md#2-spatial-splits).
+- **Where:** [dataset §5](phase1_data/morocco.md#5-script-02--make_spatial_folds), [protocol §2](phase2_models/evaluation.md#2-spatial-splits).
 
 ## D2. Two agricultural years (per-parcel season)
 - **Proposal (§4.1):** the 2024 annual image stack.
@@ -38,7 +39,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   of the rainfed parcels. The agricultural year covers the winter rainfed cycle and the summer, when only irrigated
   fields stay green.
 - **Consequence:** region and year are partly confounded (Gharb and Tadla only 2023/24, Souss only 2024/25).
-- **Where:** [dataset §6.2](phase1_data/dataset.md#62-two-agricultural-years).
+- **Where:** [dataset §6.2](phase1_data/morocco.md#62-two-agricultural-years).
 
 ## D3. Validation: PASTIS rotation instead of nested CV
 - **Before (E01):** nested spatial CV, settings by inner CV on the 4 training folds, refit on 4.
@@ -54,7 +55,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   bands; the baseline features and the foundation-model chips are all cut from these tiles.
 - **Why:** STAC processing was too slow for the full set; with one store every input sees identical pixels,
   compositing and masks, and chips no longer overlap across folds.
-- **Where:** [dataset §6–7](phase1_data/dataset.md#6-script-03--build_tiles).
+- **Where:** [dataset §6–7](phase1_data/morocco.md#6-script-03--build_tiles).
 
 ## D5. Frozen encoder + classical classifiers
 - **Proposal (§4.2.1):** frozen encoder, train a decoder and classification head.
@@ -94,7 +95,11 @@ stating the original plan, the current approach and the rationale. Smaller metho
   Washington WSDA, Utah WRLU 2017–2025) would allow a spatial and a multi-year test with the same pipeline.
 - **Why:** 10 rainfed points are too few to measure a rainfed F1; the US data needs a check of its labels
   (see the [progress log, 4–5 Nov 2026](progress.md#change-log-newest-first)).
-- **Decision due:** after RQ1 and RQ2.
+- **Decided (12 Nov 2026): Utah (WRLU) as the second region.** Explicit rainfed class ("Dry Crop"), 13,000–17,000
+  rainfed crop fields per year, every year 2017–2025 with one method, one UTM zone. Eastern Washington was the
+  fallback: most of its dryland-wheat fields come from the NASS Cropland Data Layer (irrigation not observed).
+- **Superseded the same day by [D13](#d13-utah-as-a-second-independent-study-area):** Utah is not a transfer target
+  but an independent second study area.
 
 ## D11. Two kinds of head: parcel benchmark and mapping model
 - **Proposal (§4.2.1, §4.3):** frozen encoder with a decoder / head; annual irrigated maps 2021–2025 for Morocco.
@@ -136,3 +141,27 @@ stating the original plan, the current approach and the rationale. Smaller metho
   parcels; the patch-share weighting is unchanged. Earlier AgriFM results are void and are re-run.
 - **Where:** [`models_run/02d_embed_agrifm.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/models_run/02d_embed_agrifm.py),
   [Foundation models · inputs](foundation_models.md).
+
+## D13. Utah as a second independent study area
+- **Proposal (§3.2, RQ3, RQ4):** RQ4 applies the Morocco-trained model zero-shot to a transfer region (Tunisia,
+  54 GMIA-NEXT points); RQ3 tests temporal consistency within Morocco.
+- **Now:**
+    - **Utah is an independent second study area.** It is trained and tested on its own data (WRLU labels), with
+      the same pipeline, foundation models, classifiers and evaluation as Morocco; the two regions are reported side
+      by side. There is no Morocco → Utah transfer.
+    - **Temporal test in Utah:** train on WRLU 2024 (`2023/24`), test on WRLU 2021 (`2020/21`) on the folds held out
+      in training (same fields in both years, paired comparison). See
+      [Utah training data, section 10](phase1_data/utah.md#10-temporal-test-design).
+    - **Years:** WRLU 2024 (training) and 2021 (test). Between them 36% of the crops change but only 0.07% of the
+      fields change class; 2025 repeats 94% of the 2024 crops and is not an independent year; 2019 shows a sudden
+      jump in class changes (1.35%) that may be a revision of the mapping.
+- **Why:**
+    - A Morocco → Utah transfer mixes a change of region, climate, crop calendar (Utah is 2–3 months later), label
+      source and field size; a low score would not say which of these failed. Two independent studies show whether
+      the conclusions on the foundation models hold in a second region.
+    - Morocco cannot offer a clean temporal test (the surveyed regions differ between the two years); in Utah the
+      same places are mapped every year.
+    - Tunisia has 10 rainfed reference points, too few for a rainfed F1 (D10).
+- **Consequence:** RQ4 changes from "spatial transferability of the Morocco model" to "do the results hold in a
+  second region"; RQ3 is answered in Utah. To be agreed with the supervisors.
+- **Where:** [Utah training data](phase1_data/utah.md), `ml_dataset_prep/01_prepare_labels_Utah.py`.

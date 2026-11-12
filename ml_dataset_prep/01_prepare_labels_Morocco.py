@@ -1,6 +1,9 @@
 """
-01_prepare_labels.py  —  irrigated / rainfed reference parcels from the Moroccan field survey
-=============================================================================================
+01_prepare_labels_Morocco.py  —  irrigated / rainfed reference parcels from the Moroccan field survey
+=====================================================================================================
+
+One of two label scripts (01_prepare_labels_Morocco.py, 01_prepare_labels_Utah.py). Both write the same
+file layout, so scripts 02-04 run unchanged for either region (REGION at the top of each script).
 
 What it does
 ------------
@@ -17,7 +20,7 @@ Steps
 4. Keep cropland only (Seasonal Crop, Trees, Trees + Seasonal); bare soil, weeds and water
    are dropped, as are parcels without an irrigation value.
 5. Add attributes used later:
-     area_ha     parcel area (UTM 29N)
+     area_ha     parcel area (UTM 29N, regions.py)
      ag_season   agricultural year of the survey date, 1 Sep - 31 Aug ("2023/24", "2024/25");
                  each parcel later gets satellite data from this year
      nn_dist_m   distance to the nearest other parcel (spatial clustering)
@@ -25,8 +28,8 @@ Steps
                  and its main WorldCover class (optional, CHECK_WORLDCOVER = True)
 6. Save the parcels, a summary table and figures (map, class balance, parcel size, survey timing).
 
-Output (outputs/dataset/01_labels/)
----------------------------
+Output (outputs/morocco/dataset/01_labels/)
+-------------------------------------------
 parcels_labelled.geojson   one polygon per parcel: parcel_id, date, ag_season, label, class_name,
                            crop, zone, area_ha, nn_dist_m, wc_cropland_frac, wc_major
 summary.csv                parcels and area per class and per agricultural year
@@ -34,7 +37,7 @@ summary.csv                parcels and area per class and per agricultural year
 
 Run (from the project folder)
 -----------------------------
-    python ml_dataset_prep/01_prepare_labels.py
+    python ml_dataset_prep/01_prepare_labels_Morocco.py
 """
 from pathlib import Path
 
@@ -48,15 +51,17 @@ from matplotlib.patches import Patch
 from scipy.spatial import cKDTree
 from shapely.ops import unary_union
 
-# ================================ SETTINGS ================================
-ROOT = Path(__file__).resolve().parents[1]                 # project folder
-FIELDS_FILE = ROOT / "data" / "field_survey" / "lulc_fielddata.shp"
-COUNTRY_FILE = ROOT / "data"  / "admin" / "gadm41_MAR_0.json"
-WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
-OUT_DIR = ROOT / "outputs" / "dataset" / "01_labels"
+from regions import admin_boundaries, dataset_dir, settings
 
-UTM = 32629                                # metric CRS (UTM 29N) for areas and distances
-SEASON_START_MONTH = 9                     # agricultural year starts on 1 September
+# ================================ SETTINGS ================================
+REGION = "morocco"                         # projection, agricultural year, map boundaries: regions.py
+ROOT = Path(__file__).resolve().parents[1]                 # project folder
+FIELDS_FILE = ROOT / "data" / "Morocco_field_survey" / "lulc_fielddata.shp"
+WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
+OUT_DIR = dataset_dir(REGION) / "01_labels"
+
+UTM = settings(REGION)["crs_epsg"]                         # metric CRS (UTM 29N) for areas and distances
+SEASON_START_MONTH = settings(REGION)["start_month"]       # agricultural year starts on 1 September
 CHECK_WORLDCOVER = True                    # False = skip the WorldCover check (faster)
 CROP_KEEP = ["Seasonal Crop", "Trees", "Trees + Seasonal"]
 IRRIGATED_TEXT = ["drip irrigation", "flood irrigation", "flood irrigationflood irrigation",
@@ -213,7 +218,7 @@ def main():
     summary.to_csv(OUT_DIR / "summary.csv")
     print(f"\nParcels per agricultural year and class:\n{summary.to_string()}")
 
-    country = gpd.read_file(COUNTRY_FILE).to_crs(4326)
+    country = admin_boundaries(REGION)
     plot_map(lab, country)
     plot_balance_and_size(lab)
     plot_timing(lab)

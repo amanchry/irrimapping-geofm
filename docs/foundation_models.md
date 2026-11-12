@@ -1,6 +1,6 @@
 # Foundation models
 
-This page is the single reference for the four geospatial foundation models (GeoFMs) evaluated in this study. It
+Four geospatial foundation models (GeoFMs) are evaluated in this study. It
 summarises their design and pretraining, specifies how each model is applied to the Moroccan parcels, and lists the
 primary sources. Other pages refer to this page rather than repeating its content.
 

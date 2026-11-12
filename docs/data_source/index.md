@@ -9,9 +9,9 @@ Dataset used in this research, or planned for later phases, with its provider an
 | Dataset | Provider | Content | Period | Use here | Access | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | **Crop and irrigation ground-truth dataset for Moroccan agricultural regions** | Ouassanouan et al. (2026), *Scientific Data* | ~10,000 geolocated parcels in El Gharb, Tadla, Doukkala, El Haouz, Souss; 45 crop types, 6 irrigation systems, a photo per parcel | Dec 2023 – Jan 2025 | labels: 8,781 cropland parcels after cleaning (7,585 irrigated, 1,196 rainfed) | open, citation required · [paper](https://doi.org/10.1038/s41597-026-06993-y) | ✅ |
-| **GMIA-NEXT** reference points | Kebede et al. (2026) | 380,696 global irrigated / rainfed point labels | 2023/24 | independent test points (Morocco check; Tunisia: 54 points, 44 irrigated, 10 rainfed) | open · [maps](https://doi.org/10.5281/zenodo.17627111) · [points](https://zenodo.org/records/20732681) | 🟦 |
+| **GMIA-NEXT** reference points ([summary](../references/kebede-2026-gmia-next.md)) | Kebede et al. (2026) | 380,696 global irrigated / non-irrigated point labels (paper: 230,683 + 153,194) | 2023/24 | independent test points (Morocco check; Tunisia: 54 points, 44 irrigated, 10 rainfed) | open · [maps](https://doi.org/10.5281/zenodo.17627111) · [points](https://zenodo.org/records/20732681) | 🟦 |
 | **WSDA Agricultural Land Use** (Washington, USA) | Washington State Department of Agriculture | field polygons with crop and irrigation method; `Irrigation = None` for non-irrigated fields | 2025 (yearly) | candidate transfer region (eastern Washington) | open · [WSDA](https://agr.wa.gov/departments/land-and-water/natural-resources/agricultural-land-use) | 🔍 |
-| **Water-Related Land Use** (Utah, USA) | Utah Division of Water Resources | field polygons; `IRR_Method` incl. *Dry Crop* (rainfed) | 2017 – 2025 (yearly) | candidate transfer region, multi-year | open · [WRLU](https://dwre-utahdnr.opendata.arcgis.com/pages/wrlu-data) | 🔍 |
+| **Water-Related Land Use** (Utah, USA) | Utah Division of Water Resources | field polygons; `IRR_Method` incl. *Dry Crop* (rainfed) | 2017 – 2025 (yearly) | **second study area** and temporal test (labels of the [Utah training data](../phase1_data/utah.md): WRLU 2024 and 2021); `data/Utah_field_data/` | open · [WRLU](https://dwre-utahdnr.opendata.arcgis.com/pages/wrlu-data) | ✅ |
 | Verified irrigated agricultural lands, 2002–2017 | USGS | irrigated fields only, 14 US states | 2002 – 2017 | not usable (no rainfed class) | open · [ScienceBase](https://www.sciencebase.gov/catalog/item/5ece996d82ce30fd9808527b) | – |
 | CRDSS irrigated parcels, Division 5 (Colorado, USA) | Colorado Division of Water Resources | irrigated parcels only | 2000 – 2023 | not usable (no rainfed class) | open · [CDSS GIS](https://cdss.colorado.gov/gis-data/gis-data-by-category) | – |
 
@@ -24,7 +24,7 @@ Dataset used in this research, or planned for later phases, with its provider an
 | **Sentinel-1 GRD** | ESA Copernicus | VV, VH backscatter, ascending and descending | 10 m; 6–12-day revisit | monthly mean in linear power, stored in dB | `COPERNICUS/S1_GRD` | ✅ |
 
 Access: open (Copernicus data policy); Earth Engine account or service account needed. Processing details:
-[Dataset pipeline](../phase1_data/dataset.md).
+[Dataset pipeline](../phase1_data/morocco.md).
 
 ## Auxiliary and reference maps
 
@@ -67,7 +67,7 @@ dataset for Moroccan agricultural regions. *Scientific Data*, 13, 746.
 | El Haouz | groundwater irrigation; olives, citrus | both seasons |
 | Souss | advanced drip systems; export crops | 2024/25 survey |
 
-How the parcels were cleaned and labelled: [ML-ready dataset](../phase1_data/dataset.md). Paper summary: [Moroccan field survey](../references/ouassanouan-2026-morocco-survey.md).
+How the parcels were cleaned and labelled: [ML-ready dataset](../phase1_data/morocco.md). Paper summary: [Moroccan field survey](../references/ouassanouan-2026-morocco-survey.md).
 
 ![Irrigated vs rainfed parcels in Morocco](irrigated_vs_rainfed_morocco.png)
 

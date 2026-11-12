@@ -22,7 +22,7 @@ Steps
 5. Save the tables and a figure.
 
 Output: experiments/<EXPERIMENT>/results/comparison/ (experiment mode)
-        or outputs/study/04_comparison/ (EXPERIMENT = None)
+        or outputs/morocco/study/04_comparison/ (EXPERIMENT = None)
 -------------------------------
 metrics_all_runs.csv          run, classifier, metric, estimate, ci_low, ci_high
 differences_vs_baseline.csv   run, classifier, delta macro-F1, ci_low, ci_high, p, p_holm, differs
@@ -45,10 +45,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 EXPERIMENT = None              # e.g. "E02_frozen_pca_pastis": runs of experiments/<name>/results/ | None = settings below
 EXTRA_RUNS = []                # runs of other experiments, as "<experiment>/<run>" (experiment mode)
-RUNS_DIR = ROOT / "outputs" / "study" / "03_models"
-OUT_DIR = ROOT / "outputs" / "study" / "04_comparison"
+RUNS_DIR = ROOT / "outputs" / "morocco" / "study" / "03_models"
+OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "04_comparison"
 # Runs from the shared tile store (03_build_tiles.py + 04_make_views.py). Set the orbit tag ("asc"/"dsc")
-# to the one written in outputs/dataset/03_tiles_128px/agyear/views/views_info.json. Older runs (EE features, old chips):
+# to the one written in outputs/morocco/dataset/03_tiles_128px/agyear/views/views_info.json. Older runs (EE features, old chips):
 # BASELINE_RUN = "s1s2-all_agyear_30d" and RUNS = None.
 BASELINE_RUN = "s1s2-all_agyear_tiles-inner-asc"           # run folder of the Sentinel-1/2 baseline
 RUNS = ([BASELINE_RUN] + [f"{m}_agyear_tiles_concat" for m in ("clay", "prithvi", "terramind", "agrifm")]

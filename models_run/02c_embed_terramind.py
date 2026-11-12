@@ -33,7 +33,7 @@ Install: terratorch (already in environment.yml).
 
 Output
 ------
-outputs/study/02_embeddings/terramind_<WINDOW>_tiles.npz  (same layout as the other models)
+outputs/morocco/study/02_embeddings/terramind_<WINDOW>_tiles.npz  (same layout as the other models)
     embeddings [N, 12, 768] float16, valid [N, 12], steps = month names
 
 Run (from the project folder)
@@ -68,12 +68,12 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # 16 x 16-pixel patches (final AgriFM stride is also 16 px)
 if CHIP_SOURCE == "tiles":
-    CHIP_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
+    CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles"                                 # output name: <model>_agyear_tiles.npz
 else:
-    CHIP_DIR = ROOT / "outputs" / "legacy" / "04_chips" / WINDOW
+    CHIP_DIR = ROOT / "outputs" / "morocco" / "legacy" / "04_chips" / WINDOW
     TAG = WINDOW                                            # output name: <model>_agyear.npz (old results)
-OUT_DIR = ROOT / "outputs" / "study" / "02_embeddings"
+OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "02_embeddings"
 PART_DIR = OUT_DIR / f"_parts_{MODEL_NAME}_{TAG}"
 OUT_FILE = OUT_DIR / f"{MODEL_NAME}_{TAG}.npz"
 

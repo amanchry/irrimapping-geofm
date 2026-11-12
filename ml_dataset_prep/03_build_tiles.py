@@ -5,7 +5,8 @@
 What it does
 ------------
 Builds the single, non-overlapping image store that every model reads from. The study area is cut
-into a fixed grid of 128 x 128-pixel tiles (1.28 km at 10 m) in one projection (UTM 29N). Only
+into a fixed grid of 128 x 128-pixel tiles (1.28 km at 10 m) in one projection per region
+(regions.py: Morocco UTM 29N, Utah UTM 12N). Only
 tiles needed by the labelled parcels are built: each parcel's own tiles plus the neighbouring
 "context" tiles a 64-pixel model chip around the parcel can reach. Each tile is downloaded ONCE,
 so neighbouring parcels no longer get overlapping, duplicated chips.
@@ -19,7 +20,7 @@ label rasters and a parcel-ID raster (PASTIS, Garnot & Landrieu 2021; Sen4AgriNe
 2022), "unlabelled" pixels kept as an ignore class (Fields of The World, Kerner et al. 2025),
 and documented QA counts per tile (ClarkCGA / Prithvi crop chips).
 
-Per tile and month (12 months of the parcel's agricultural year, p01 = September)
+Per tile and month (12 months of the parcel's agricultural year; m01 = September in Morocco, October in Utah)
 -------------------------------------------------------------------------------
   B1 B2 B3 B4 B5 B6 B7 B8 B8A B9 B11 B12   Sentinel-2 L2A median of clear pixels (reflectance x 10000)
   S2_NCLEAR                                number of clear Sentinel-2 observations (Cloud Score+)
@@ -42,7 +43,7 @@ another tile (tile_id starts with the season).
 
 Steps
 -----
-1. Read the parcels with their folds (02_make_spatial_folds.py); project to UTM 29N.
+1. Read the parcels with their folds (02_make_spatial_folds.py); project to the region's UTM zone.
 2. Parcel table: index, centroid, area, perimeter, pixel counts, home tile.
 3. Tile plan: home tiles + tiles touched by the parcel outline + context for model chips.
 4. Label rasters for all planned tiles (local, fast).
@@ -52,8 +53,16 @@ Steps
 6. Tile index (GeoParquet) with folds and QA numbers.
 Re-running skips finished tiles (resumable). DOWNLOAD = False stops after step 4 (no Earth Engine).
 
-Output (outputs/dataset/03_tiles_128px/<WINDOW>/)
------------------------------------
+One year at a time
+------------------
+Steps 1-4 always cover ALL agricultural years of the parcel file (parcel numbers, label rasters and the tile
+index stay the same whichever year is downloaded). SEASONS limits only the Earth Engine download (step 5):
+e.g. SEASONS = ["2023/24"] downloads the tiles of that year; later SEASONS = ["2018/19"] adds the other year's
+tiles at the same grid positions; finished tiles are skipped. Tile names start with the year
+(2023-24_184_3383_img.tif), so each year's files are separate.
+
+Output (outputs/<REGION>/dataset/03_tiles_128px/<WINDOW>/)
+----------------------------------------------------
 tiles/<tile_id>_img.tif     int16, 12 months x 19 bands = 228 bands (descriptions "B4_m03", ...)
 tiles/<tile_id>_lab.tif     int32, 3 bands (label, parcel_idx, edge)
 tiles/<tile_id>_scenes.json scene IDs per month (S2, S1 ascending, S1 descending)
@@ -82,15 +91,19 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from shapely.geometry import box
 
+from regions import dataset_dir, settings
+
 # ================================ SETTINGS ================================
+REGION = "morocco"             # "morocco" | "utah" (regions.py)
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
 KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"      # Earth Engine key (never commit)
-PARCELS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"   # parcels + folds (ml_dataset_prep/02_make_spatial_folds.py)
+PARCELS_FILE = dataset_dir(REGION) / "02_folds" / "parcels_folds.geojson"   # parcels + folds (02_make_spatial_folds.py)
 
-START_MONTH, N_MONTHS, WINDOW = 9, 12, "agyear"    # agricultural year 1 Sep - 31 Aug
-OUT_DIR = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW
+START_MONTH = settings(REGION)["start_month"]      # agricultural year: Morocco 1 Sep - 31 Aug, Utah 1 Oct - 30 Sep
+N_MONTHS, WINDOW = 12, "agyear"
+OUT_DIR = dataset_dir(REGION) / "03_tiles_128px" / WINDOW
 
-CRS_EPSG = 32629               # one projection for the whole study area (UTM 29N; 30N parcels are resampled)
+CRS_EPSG = settings(REGION)["crs_epsg"]   # one projection per region (Morocco UTM 29N, 30N parcels resampled; Utah UTM 12N)
 GSD_M = 10                     # pixel size (m)
 TILE_PX = 128                  # tile width/height in pixels (1.28 km)
 CHIP_PX = 64                   # largest model chip cut later by 04_make_views.py (pixels)
@@ -101,6 +114,7 @@ CLOUD_COVER_PERCENTAGE = 60    # skip Sentinel-2 scenes cloudier than this (Clou
 CS_THRESHOLD = 0.60            # Cloud Score+ cs_cdf: keep pixels >= this (0.50-0.65 recommended)
 
 DOWNLOAD = True                # False = plan + label rasters only (no Earth Engine)
+SEASONS = None                 # agricultural years to download, e.g. ["2023/24"]; None = all years in the parcel file
 DOWNLOAD_WORKERS = 8           # parallel Earth Engine requests
 RETRIES = 4
 N_TEST_TILES = None            # e.g. 20 tiles per agricultural year for a quick test; None = all
@@ -407,7 +421,7 @@ def main():
     TILE_DIR.mkdir(parents=True, exist_ok=True)
     qa_file = OUT_DIR / "tiles_qa.jsonl"
     (OUT_DIR / "tiles_info.json").write_text(json.dumps({
-        "crs_epsg": CRS_EPSG, "gsd_m": GSD_M, "tile_px": TILE_PX, "grid_origin": "x = ix * tile_m, top y = (iy + 1) * tile_m",
+        "region": REGION, "crs_epsg": CRS_EPSG, "gsd_m": GSD_M, "tile_px": TILE_PX, "grid_origin": "x = ix * tile_m, top y = (iy + 1) * tile_m",
         "start_month": START_MONTH, "n_months": N_MONTHS, "window": WINDOW, "month_bands": MONTH_BANDS,
         "s2_bands": S2_BANDS, "count_bands": COUNT_BANDS, "s2_scale": "surface reflectance x 10000",
         "s1": "Sentinel-1 GRD IW, mean in linear power per orbit direction, stored as dB x 100",
@@ -458,10 +472,18 @@ def main():
     print(f"Label rasters written ({n_overlap} pixels claimed by overlapping parcels set to ignore)")
 
     # 5. Images.
+    all_seasons = sorted(tiles["ag_season"].unique())
+    if SEASONS:
+        unknown = sorted(set(SEASONS) - set(all_seasons))
+        if unknown:
+            raise ValueError(f"SEASONS {unknown} not in the parcel file (years there: {all_seasons})")
+        print(f"Download limited to {SEASONS} (years in the plan: {all_seasons})")
     if DOWNLOAD:
         ee = init_gee()
         names = band_names()
         for ag_season, group in tiles.groupby("ag_season"):
+            if SEASONS and ag_season not in SEASONS:
+                continue
             todo = group[[not (TILE_DIR / f"{t}_img.tif").exists() for t in group["tile_id"]]]
             print(f"{ag_season}: {len(group) - len(todo)} tiles done, {len(todo)} to go")
             if todo.empty:

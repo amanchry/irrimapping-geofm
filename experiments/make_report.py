@@ -34,7 +34,7 @@ import yaml
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]               # project folder
 EXPERIMENT = "E01_frozen_pca_nested"                      # folder name in experiments/ (None = only the overview pages)
-FOLDS_FILE = ROOT / "outputs" / "dataset" / "02_folds" / "parcels_folds.geojson"   # to name the regions of each fold
+FOLDS_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"   # to name the regions of each fold
 # ==========================================================================
 
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)

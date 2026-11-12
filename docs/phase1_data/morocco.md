@@ -1,6 +1,6 @@
-# ML-ready dataset (Morocco)
+# Morocco training data
 
-This page describes the construction of the **machine-learning-ready dataset**: labelled parcels, spatial
+This page describes the construction of the **machine-learning-ready dataset for Morocco**: labelled parcels, spatial
 train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and derived
 views for the different model families.
 
@@ -31,7 +31,7 @@ flowchart TD
         GEE["Google Earth Engine<br/>Sentinel-2 L2A · Cloud Score+<br/>Sentinel-1 GRD"]
     end
 
-    FS --> S01["<b>01_prepare_labels.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
+    FS --> S01["<b>01_prepare_labels_Morocco.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
     WC --> S01
     S01 -->|"parcels_labelled.geojson<br/>8,781 parcels"| S02["<b>02_make_spatial_folds.py</b><br/>20 km blocks → 5 balanced folds"]
     S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| SPLIT[["Split by agricultural year<br/>(ag_season from survey date)"]]
@@ -48,7 +48,7 @@ flowchart TD
 
 | Step | Script |  What comes out |
 | --- | --- | --- | 
-| 1 | `01_prepare_labels.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
+| 1 | `01_prepare_labels_Morocco.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
 | 2 | `02_make_spatial_folds.py` | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
 | 3 | `03_build_tiles.py` | the tile store: monthly images + label rasters + QA |
 | 4 | `04_make_views.py` | model inputs A–C (D = the tiles themselves) |
@@ -78,7 +78,7 @@ The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 20
 | Data | Use | Details |
 | --- | --- | --- |
 | Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, crop and irrigation method |
-| GADM 4.1 Morocco | maps | country outline |
+| FAO GAUL 2015 (level 0, Morocco) | maps | country outline (`data/admin_boundaries/`) |
 | ESA WorldCover 2021 (10 m) | label check | share of each parcel mapped as cropland |
 | Sentinel-2 L2A harmonised (`COPERNICUS/S2_SR_HARMONIZED`) | imagery | 12 bands, surface reflectance |
 | Cloud Score+ (`GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED`) | cloud mask | `cs_cdf` ≥ 0.60 kept |
@@ -141,7 +141,7 @@ Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed par
   <figcaption><b>Figure 1.3.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
 </figure>
 
-**Outputs** (`outputs/dataset/01_labels/`):
+**Outputs** (`outputs/morocco/dataset/01_labels/`):
 - `parcels_labelled.geojson`
 - `summary.csv`
 - `parcels_map.png`
@@ -250,7 +250,7 @@ After 5 rounds every parcel has been tested once, by a model that never saw its 
 
 For quick experiments, the column `split` gives one fixed split: fold 0 = test, fold 1 = validation, folds 2–4 = train. `random_fold` gives a stratified random split, so the optimism of random validation can be measured.
 
-**Outputs** (`outputs/dataset/02_folds/`):
+**Outputs** (`outputs/morocco/dataset/02_folds/`):
 - `parcels_folds.geojson`: parcels + `block_id`, `fold`, `random_fold`, `split`
 - `fold_counts.csv`
 - `block_size_comparison.csv`
@@ -307,7 +307,7 @@ How each part of the pipeline handles the season:
 
 | Where | How the season is handled |
 | --- | --- |
-| `01_prepare_labels.py` | `ag_season` from the survey date: 1 Sep – 31 Aug (a parcel surveyed in Jan 2024 → `2023/24`; Dec 2024 → `2024/25`) |
+| `01_prepare_labels_Morocco.py` | `ag_season` from the survey date: 1 Sep – 31 Aug (a parcel surveyed in Jan 2024 → `2023/24`; Dec 2024 → `2024/25`) |
 | Tile plan | a tile is the triple (season, ix, iy). The same 1.28 km square can exist once for each year, with the same grid position. |
 | Tile name | the season comes first: `2023-24_374_2793`, `2024-25_374_2793` |
 | Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
@@ -422,7 +422,7 @@ Only parcels of the tile's own agricultural year are burnt in.
 | `role` | home, outline or context |
 | `mixed_folds` | the tile holds parcels from more than one fold (relevant for segmentation, section 11) |
 
-**Outputs** (`outputs/dataset/03_tiles_128px/agyear/`):
+**Outputs** (`outputs/morocco/dataset/03_tiles_128px/agyear/`):
 - `tiles/<id>_img.tif`, `tiles/<id>_lab.tif`, `tiles/<id>_scenes.json`
 - `parcels.csv`
 - `parcel_overlaps.csv`
@@ -534,7 +534,7 @@ characterise the final dataset before any model is trained.
 ## 8. Output layout and file formats
 
 ```
-outputs/dataset/
+outputs/morocco/dataset/
 ├── 01_labels/
 │   ├── parcels_labelled.geojson         EPSG:4326 polygons
 │   └── summary.csv, *.png
@@ -580,7 +580,7 @@ Minimal example: read the chips.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/dataset/03_tiles_128px/agyear/views/chips_p16"
+folder = "outputs/morocco/dataset/03_tiles_128px/agyear/views/chips_p16"
 index = pd.read_csv(f"{folder}/index.csv", dtype={"parcel_id": str})
 info = json.load(open(f"{folder}/chips_info.json"))
 d = np.load(f"{folder}/{index.part.iloc[0]}")
@@ -594,24 +594,28 @@ red_june = chips[0, 9, info["bands"].index("B4")] / 10000
 
 ```bash
 conda activate condaml
-python ml_dataset_prep/01_prepare_labels.py          # minutes
+python ml_dataset_prep/01_prepare_labels_Morocco.py   # minutes
 python ml_dataset_prep/02_make_spatial_folds.py      # minutes
 python ml_dataset_prep/03_build_tiles.py             # Earth Engine; a few hours; resumable
 python ml_dataset_prep/04_make_views.py              # local
 ```
 
+Scripts 02–04 serve both study regions: set `REGION = "morocco"` at the top of each (the default). The settings
+that differ between regions (projection, agricultural year, block size, map boundaries) are in
+`ml_dataset_prep/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
+
 Run 03 first with `N_TEST_TILES = 20`, then check the result with `models_run/01_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
 
-To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
+To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/morocco/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 
 The settings sit at the top of each script:
 
 | Script | Main settings |
 | --- | --- |
-| 01 | `SEASON_START_MONTH = 9`, `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT`, `CHECK_WORLDCOVER` |
-| 02 | `N_FOLDS = 5`, `BLOCK_KM = 20`, `CANDIDATE_KM`, `SEED = 42` |
-| 03 | `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG = 32629`, `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
-| 04 | `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
+| 01 | `SEASON_START_MONTH` (= 9, from `regions.py`), `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT`, `CHECK_WORLDCOVER` |
+| 02 | `REGION`, `N_FOLDS = 5`, `BLOCK_KM` (= 20, from `regions.py`), `CANDIDATE_KM`, `SEED = 42` |
+| 03 | `REGION`, `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG` (= 32629, from `regions.py`), `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `SEASONS = None` (all years; or one year at a time), `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
+| 04 | `REGION`, `SEASONS = None` (all years → `views/`; one year → `views_<year>/`), `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
 
 Earth Engine access uses a service-account key in `secrets/`, which is never committed.
 

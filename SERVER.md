@@ -19,6 +19,11 @@ computation through `sbatch` (preferred) or `srun`.
 
 ---
 
+> **Path change (12 Nov 2026, local copy only):** outputs are now per region: `outputs/morocco/{dataset, study,
+> analysis}` and `outputs/utah/dataset`. The server copy below still has the old layout (`outputs/dataset`,
+> `outputs/study`, `outputs/analysis`); move it the same way before the next code sync, or the scripts will not
+> find their inputs.
+
 ## 1. Connecting from off campus
 
 ### 1.1 eduVPN

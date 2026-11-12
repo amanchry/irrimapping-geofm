@@ -2,7 +2,7 @@
 
 This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-1/2 feature baseline under an identical spatial validation design.
 
-It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/dataset.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
+It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -101,7 +101,7 @@ sensitivity runs that isolate the Sentinel-1 contribution are specified in
 ```mermaid
 flowchart LR
     IN["<b>Dataset files</b><br/>parcels · tiles · overlaps<br/>parcel features · chips · views_info"] --> S["<b>Seven checks</b><br/>1 · inventory per class, season, fold<br/>2 · label QA: overlaps, tiny parcels<br/>3 · observations per month (S2, S1)<br/>4 · patch purity, aligned vs centred<br/>5 · seasonal profiles per class<br/>6 · example chips, 12 months<br/>7 · agreement with the old NDVI table"]
-    S --> OUT["outputs/study/<br/>01_inspection/"]
+    S --> OUT["outputs/morocco/study/<br/>01_inspection/"]
 ```
 
 What to look for:
@@ -120,7 +120,7 @@ What to look for:
 - `examples_irrigated.png`, `examples_rainfed.png`
 - `legacy_agreement.csv`
 
-The resulting figures are shown in [Dataset preparation §7.6](../phase1_data/dataset.md#76-dataset-inspection).
+The resulting figures are shown in [Dataset preparation §7.6](../phase1_data/morocco.md#76-dataset-inspection).
 
 For a closer look in QGIS, `tools/a3_export_chips_geotiff.py` writes single chips as georeferenced GeoTIFFs to `01_inspection/chips_geotiff/`.
 
@@ -145,7 +145,7 @@ flowchart TD
     H --> O
 ```
 
-**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../phase1_data/dataset.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
+**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../phase1_data/morocco.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
 
 **Cloudy pixels.** NODATA pixels are set to 0 after normalisation, which equals the band mean. A month with no clear pixel at all is flagged `valid = False`, and script 03 fills it with the training median.
 
@@ -170,7 +170,7 @@ described in [Foundation models · Model notes](../foundation_models.md#model-no
 ### 5.2 Embedding file format
 
 ```
-outputs/study/02_embeddings/<model>_agyear_tiles.npz
+outputs/morocco/study/02_embeddings/<model>_agyear_tiles.npz
     parcel_id [N]   label [N]   ag_season [N]
     steps [T]                    month names (Sep … Aug), or ["year"] for AgriFM
     embeddings [N, T, D]         float16
@@ -283,7 +283,7 @@ flowchart LR
 4. **Seasonal profiles** (baseline): class medians per variable and month.
 5. **Final models:** refit on all parcels (`final_model_<name>.joblib`), for mapping later.
 
-**Outputs** (`experiments/<EXPERIMENT>/results/<RUN_NAME>/` in experiment mode; `outputs/study/03_models/<RUN_NAME>/` for development runs with `EXPERIMENT = None`):
+**Outputs** (`experiments/<EXPERIMENT>/results/<RUN_NAME>/` in experiment mode; `outputs/morocco/study/03_models/<RUN_NAME>/` for development runs with `EXPERIMENT = None`):
 - `metrics_summary.csv`, `metrics_with_ci.csv`, `metrics_per_fold.csv`
 - `paired_model_differences.csv`
 - `cv_random_vs_spatial.csv` / `.png`
@@ -322,12 +322,35 @@ flowchart TD
 
 `BASELINE_RUN` must match the orbit that was actually used (`views_info.json`), for example `s1s2-all_agyear_tiles-inner-asc`.
 
+### 7.1 Script 05 — `breakdown_oof` (results by region, season and purity)
+
+**Purpose:** test whether the pooled metrics reflect the irrigation signal or the region. Rainfed parcels are
+concentrated in Doukkala (94%), and Gharb, Tadla and El Haouz contain almost only irrigated parcels, so a classifier
+can score well by recognising the region (shortcut learning). The 16-px chips also mix each parcel with its
+neighbours (median purity 0.30). The script reads the out-of-fold predictions of one experiment; no model is
+trained.
+
+| Output (`experiments/<E>/results/breakdown/`) | Content |
+| --- | --- |
+| `doukkala.csv` | macro-F1 in Doukkala, the only zone with both classes, with 95% block-bootstrap CI and the paired difference to the baseline |
+| `irrigated_only_zones.csv` | share of irrigated parcels predicted rainfed in Gharb, Tadla and El Haouz, with CI |
+| `by_zone_season.csv` | rainfed recall and precision, false-rainfed rate and macro-F1 per zone and agricultural year |
+| `by_purity.csv`, `by_area.csv` | macro-F1 per 16-px patch-purity bin and per parcel-area bin |
+| `breakdown.png` | Doukkala macro-F1 and false-rainfed rate per input |
+
+First application (E01, nested CV, 8,775 parcels; AgriFM excluded): in Doukkala, no frozen GeoFM exceeds the
+baseline (baseline SVM 0.896 [0.818–0.952]; the GeoFM random forests are 0.03–0.07 lower, with intervals that
+exclude 0). In the irrigated-only zones every input labels at most 2% of the irrigated parcels as rainfed, so these
+zones contribute little to the differences between inputs. The GeoFM advantage in the hardest fold comes from
+Souss (69 rainfed parcels): rainfed recall 0.75–0.84 for Clay and Prithvi (SVM) against 0.26 for the baseline.
+GeoFM macro-F1 increases with patch purity more steeply than that of the baseline. The analysis is repeated on E02.
+
 ---
 
 ## 8. Output layout
 
 ```
-outputs/study/
+outputs/morocco/study/
 ├── 01_inspection/                    script 01 (+ chips_geotiff/ from tools/a3)
 ├── 02_embeddings/
 │   ├── clay_agyear_tiles.npz
@@ -360,7 +383,7 @@ python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
 # steps 03 + 04 + report as an experiment (set EXPERIMENT at the top of run_experiment.py):
 python experiments/run_experiment.py
-# or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/study/):
+# or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/morocco/study/):
 python models_run/03_train_evaluate.py
 python models_run/04_compare_models.py
 ```

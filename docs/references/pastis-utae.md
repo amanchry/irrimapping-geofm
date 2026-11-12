@@ -22,7 +22,7 @@
 - The **PASTIS rotation** (3 train / 1 validation / 1 test) for every model
   ([decision D3](../decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv),
   [protocol §2](../phase2_models/evaluation.md#2-spatial-splits)).
-- **Non-overlapping 128 px tiles** as the shared image store ([dataset pipeline](../phase1_data/dataset.md)).
+- **Non-overlapping 128 px tiles** as the shared image store ([dataset pipeline](../phase1_data/morocco.md)).
 - **U-TAE as a neural baseline** for wall-to-wall maps ([decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).
 
 ## Differences and limitations

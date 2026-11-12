@@ -27,15 +27,22 @@ C. Patch-aligned chips for the foundation models, one folder per patch size (CHI
    that is a multiple of the patch size split small parcels over 4 mostly-neighbour patches).
    index.csv adds `purity` (share of the pooled patches inside the parcel, the weighting used by
    the models_run/02 embedding scripts), `purity_centred` (same for the old centred chip), n_px, area_ha, fold, zone.
-D. Full tiles (segmentation models such as U-TAE): use outputs/dataset/03_tiles_128px/<WINDOW>/tiles/ directly;
+D. Full tiles (segmentation models such as U-TAE): use outputs/<REGION>/dataset/03_tiles_128px/<WINDOW>/tiles/ directly;
    the label band has 0 = ignore for unlabelled pixels.
 
 Sentinel-1 orbit for B and C: S1_ORBIT = "auto" picks, over the whole study area, the orbit
 direction with more valid parcel-months (written to views_info.json); "ASC" / "DSC" force one.
 Feature tables (A) keep both orbits as separate columns.
 
-Output (outputs/dataset/03_tiles_128px/<WINDOW>/views/)
------------------------------------------
+One year at a time
+------------------
+SEASONS = None builds the views from all agricultural years in the tile store (Morocco: both survey years
+pooled) into views/. SEASONS = ["2023/24"] uses only that year and writes to views_2023-24/, so each year has
+its own folder and a later year never overwrites an earlier one. Only parcels whose tiles are all downloaded
+are used.
+
+Output (outputs/<REGION>/dataset/03_tiles_128px/<WINDOW>/views/ or views_<year>/)
+--------------------------------------------------
 parcel_features_all.csv, parcel_features_inner.csv, pixelsets.npz, chips_p8/, chips_p16/,
 qa_purity.csv, qa_clear_obs.csv, views_info.json
 
@@ -52,11 +59,14 @@ import numpy as np
 import pandas as pd
 import rasterio
 
+from regions import dataset_dir
+
 # ================================ SETTINGS ================================
-ROOT = Path(__file__).resolve().parents[1]                         # project folder
+REGION = "morocco"             # "morocco" | "utah" (regions.py)
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / "dataset" / "03_tiles_128px" / WINDOW                  # from 03_build_tiles.py
-OUT_DIR = TILE_ROOT / "views"
+TILE_ROOT = dataset_dir(REGION) / "03_tiles_128px" / WINDOW                  # from 03_build_tiles.py
+SEASONS = None                 # agricultural years to use, e.g. ["2023/24"]; None = all (folder views/)
+OUT_DIR = TILE_ROOT / ("views" if not SEASONS else "views_" + "_".join(s.replace("/", "-") for s in SEASONS))
 
 MAKE_FEATURES = True           # view A
 MAKE_PIXELSETS = True          # view B
@@ -192,7 +202,7 @@ def choose_orbit(parcels, store):
     if S1_ORBIT in ("ASC", "DSC"):
         return S1_ORBIT
     tiles = pd.read_parquet(TILE_ROOT / "tiles.parquet")
-    tiles = tiles[tiles["role"] != "context"]
+    tiles = tiles[(tiles["role"] != "context") & tiles["ag_season"].isin(parcels["ag_season"].unique())]
     asc, dsc = tiles["s1_asc_months"].sum(), tiles["s1_dsc_months"].sum()
     print(f"Sentinel-1 orbit: ascending {asc} vs descending {dsc} valid tile-months -> "
           f"{'ASC' if asc >= dsc else 'DSC'}")
@@ -202,6 +212,12 @@ def choose_orbit(parcels, store):
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     parcels = pd.read_csv(TILE_ROOT / "parcels.csv", dtype={"parcel_id": str})
+    if SEASONS:
+        unknown = sorted(set(SEASONS) - set(parcels["ag_season"]))
+        if unknown:
+            raise ValueError(f"SEASONS {unknown} not in parcels.csv (years there: {sorted(parcels['ag_season'].unique())})")
+        parcels = parcels[parcels["ag_season"].isin(SEASONS)]
+        print(f"Views for {SEASONS} only -> {OUT_DIR.name}/")
     tiles = pd.read_parquet(TILE_ROOT / "tiles.parquet")
     have = set(tiles.loc[tiles["downloaded"], "tile_id"])
     complete = parcels["tiles_needed"].str.split(";").apply(lambda ts: all(t in have for t in ts))
@@ -311,10 +327,10 @@ def main():
         cols = [f"S2_NCLEAR_m{k + 1:02d}" for k in range(N_MONTHS)]
         obs = f.groupby(["zone", "ag_season", "class_name"])[cols].mean().round(1)
         obs.to_csv(OUT_DIR / "qa_clear_obs.csv")
-        print(f"\nMean clear Sentinel-2 observations per month (Sep..Aug):\n{obs.to_string()}")
+        print(f"\nMean clear Sentinel-2 observations per month (m01 = month {INFO['start_month']}):\n{obs.to_string()}")
     (OUT_DIR / "views_info.json").write_text(json.dumps({
         "s1_orbit_for_chips_and_pixelsets": orbit, "chip_px": CHIP_PX, "chip_patch_sizes": CHIP_PATCH_SIZES,
-        "n_parcels": len(parcels), "missing_tiles": sorted(store.missing)}, indent=2))
+        "seasons": sorted(parcels["ag_season"].unique()), "n_parcels": len(parcels), "missing_tiles": sorted(store.missing)}, indent=2))
     if store.missing:
         print(f"WARNING: {len(store.missing)} tiles were missing (chips near them are partly NODATA)")
     print(f"Saved views in {OUT_DIR}")

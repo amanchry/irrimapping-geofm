@@ -17,7 +17,7 @@ Steps
 3. Render each as a PNG through Earth Engine (getThumbURL) and download it.
 4. Draw each PNG with the country outline, a legend and axes, and save it.
 
-Output (outputs/analysis/reference_maps/)
+Output (outputs/morocco/analysis/reference_maps/)
 -----------------------------------------
 morocco_esa_cropland.png, morocco_lgrip_irrigated_rainfed.png
 
@@ -43,7 +43,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"
 BOUNDARY = ROOT / "data" / "admin" / "gadm41_MAR_0.json"
-OUT_DIR = ROOT / "outputs" / "analysis" / "reference_maps"
+OUT_DIR = ROOT / "outputs" / "morocco" / "analysis" / "reference_maps"
 PNG_WIDTH = 1400                                           # pixels of the downloaded rendering
 
 ESA_CROP_COLOR = "#f096ff"

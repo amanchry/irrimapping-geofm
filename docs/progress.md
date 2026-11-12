@@ -13,12 +13,13 @@ change log).
 | --- | --- | --- |
 | Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: 8,781 parcels (7,585 irrigated, 1,196 rainfed), 5 folds of 20 km blocks |
 | Tile store, model views | `ml_dataset_prep/03`, `04` | Done: 2,987 tiles; parcel features, pixel sets, chips p8 / p16 |
-| Dataset inspection | `models_run/01` | Done (`outputs/study/01_inspection/`) |
-| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind (`outputs/study/02_embeddings/`); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)); AgriFM scaling still to confirm |
+| Dataset inspection | `models_run/01` | Done (`outputs/morocco/study/01_inspection/`) |
+| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind (`outputs/morocco/study/02_embeddings/`); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)); AgriFM scaling still to confirm |
 | E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
 | E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca_pastis` | Ready to run (main RQ1 result) |
 | E03 · frozen + L-TAE, PASTIS | `experiments/E03_frozen_ltae_pastis` | Planned: needs `models_run/03c_train_ltae.py` |
 | E04 · PSE-TAE from scratch | `experiments/E04_psetae_scratch` | Run exists; parked for the next phase |
+| Utah training data | `ml_dataset_prep/01_prepare_labels_Utah.py`, 02, 03 | Labels, folds, tile plan done (11,804 fields); download (03) and views (04) to run |
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
@@ -59,7 +60,13 @@ Next steps
 
 ## Open points
 
-- [ ] AgriFM normalisation: config mean ~4,180 (blue) vs ~1,100 in Earth Engine S2 L2A -> confirm the pixel scale its weights expect.
+- [ ] AgriFM normalisation (examined 2026-11-12): the config statistics compress the visible/NIR bands of the
+  composites to 0.09–0.30 of unit variance; the paper does not report its normalisation. Plan: ask the authors;
+  re-embed with (a) config statistics and (b) statistics of the training chips; compare embedding health and
+  validation-fold macro-F1; report both; optionally pool the finer `features_list` maps (stride 8–16 px) instead of
+  the 32-px output.
+- [ ] Region confounding: repeat `05_breakdown_oof.py` on E02; coordinate ablation (Prithvi `USE_COORDS = False`,
+  Clay with constant time/location).
 - [x] ~~AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.~~
 - [ ] AgriFM results of E01 (and any other run before 2026-11-06) used an untrained encoder: re-run with the fixed
   `02d` embeddings ([D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
@@ -67,7 +74,9 @@ Next steps
 - [ ] Prithvi on 10 m input (pretrained on 30 m HLS): state in thesis; optional 30 m ablation.
 - [ ] Neighbouring fields inside a chip (mixed 160 m patches, transformer context): add parcel "purity" + accuracy by parcel size; optional masked-chip ablation (`MASK_OUTSIDE`).
 - [ ] Per-year results (2023/24 vs 2024/25) from the out-of-fold predictions; year-transfer test within Doukkala / El Haouz.
-- [ ] Tunisia: label source and transfer experiment (zero-shot and few-shot).
+- [x] ~~Tunisia: label source and transfer experiment~~ → replaced by Utah as a second study area ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)).
+- [ ] Utah: download WRLU 2024 tiles (`SEASONS = ["2023/24"]`), views, embeddings, RQ1 comparison; then 2021 and the temporal test (training script: train on one year, test on another).
+- [ ] Agree the new wording of RQ3 / RQ4 (D13) with the supervisors.
 - [ ] Prediction / wall-to-wall mapping step (later).
 - [ ] Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.
 - [ ] **Phase 2 (after Morocco is complete): US transfer study** - see the change-log entry of 2026-11-04 (future phase). First step: one-day data check of the original state label sources.
@@ -75,6 +84,87 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-12 (Utah: second study area, years 2024 + 2021)
+- **[D13](decisions.md#d13-utah-as-a-second-independent-study-area):** Utah is an independent second study area
+  (no Morocco → Utah transfer); RQ3 temporal test in Utah: train on WRLU 2024 (`2023/24`), test on WRLU 2021
+  (`2020/21`) on the held-out folds. D10, Phase 3, the research plan, the introduction and the progress report reworded.
+- Label change between years for all labelled crop fields of WRLU, compared with 2024
+  (`outputs/utah/dataset/01_labels/year_change_vs_2024.csv`): crops change 27–41%, class 0.01–0.07% since 2021,
+  1.35% in 2019 (sudden jump, possibly a revision of the mapping); 2025 repeats 94% of the 2024 crops.
+- `01_prepare_labels_Utah.py`: `YEARS = [2024, 2021]`. Re-run 01, 02 and 03 (plan only): 12,015 fields in 550 cells
+  (2024: 5,000 irrigated + 1,013 rainfed; 2021: 4,987 + 1,015), 183 blocks, 5,436 tiles (2,720 + 2,716). The earlier
+  2024 + 2025 label rasters were removed (`tmp_trash/`).
+- [Utah training data](phase1_data/utah.md) rewritten with the full design: study design, choice of years, the
+  label-change table, sampling algorithm (cells, strata, block cap, seed), what is labelled in a tile, why a sample,
+  one tile per place and year, temporal test (scores A, B, C), running one year at a time, limitations.
+
+### 2026-11-12 (Utah training data; one pipeline for two regions; outputs per region)
+- **Transfer region = Utah** (WRLU, Utah Division of Water Resources), see [D10](decisions.md#d10-transfer-region-under-review)
+  and [Utah training data](phase1_data/utah.md). Data copied to `data/Utah_field_data/` (WRLU 2017–2025).
+- **One pipeline for both regions.**
+  - `ml_dataset_prep/01_prepare_labels.py` renamed `01_prepare_labels_Morocco.py`; new `01_prepare_labels_Utah.py`.
+    Both write the same file layout and columns.
+  - New `ml_dataset_prep/regions.py`: the settings that differ per region (projection, first month of the
+    agricultural year, block size, map boundaries). Scripts 02–04 and `models_run/01_inspect_dataset.py` have
+    `REGION = "morocco" | "utah"` at the top.
+  - Admin boundaries now FAO GAUL (`data/admin_boundaries/`: 2015 level 0 for Morocco, 2024 level 1 for the US
+    states), replacing GADM; the region's features are cached in `outputs/<region>/dataset/admin_boundaries.geojson`.
+  - Field survey moved to `data/Morocco_field_survey/`.
+- **Outputs per region:** `outputs/morocco/{dataset, study, analysis}` (all existing outputs, moved unchanged) and
+  `outputs/utah/dataset`. Paths updated in `ml_dataset_prep/`, `models_run/`, `tools/`, `experiments/make_report.py`.
+  **The HPC copy still uses the old layout** (`outputs/dataset`, `outputs/study`); it must be moved the same way
+  before the next sync (only when asked).
+- **Morocco unchanged:** steps 01–03 (03 without download) re-run into a scratch folder give identical parcels,
+  folds, blocks and tile plan (8,781 parcels, 2,987 tiles).
+- `02_make_spatial_folds.py`: the class-similarity curve uses only pairs of the same agricultural year (the same
+  Utah field in two years is not two samples). Folds are not affected.
+- **One year at a time** (`SEASONS` setting): `03_build_tiles.py` still plans and writes label rasters for every
+  year in the parcel file (parcel numbers and tile index never change), but downloads only the years in
+  `SEASONS`; `04_make_views.py` builds views of the years in `SEASONS` into their own folder (`views_2023-24/`),
+  `views/` when `SEASONS = None` (all years, as for Morocco). `models_run/01_inspect_dataset.py`: new setting
+  `VIEWS_NAME`. Tested without download (Utah) and on 50 Moroccan parcels of 2024/25 (scratch folder).
+- `02_make_spatial_folds.py` now also draws `spatial_folds_blocks.png`: the blocks coloured by fold, with the fold
+  number in each block and zooms on the `N_ZOOMS` densest windows of `ZOOM_BLOCKS` × `ZOOM_BLOCKS` blocks. The
+  Moroccan figure of the same name was made by hand earlier; a re-run of 02 for Morocco replaces it with this one.
+- **Utah dataset** (WRLU 2024 → `2023/24`, 2025 → `2024/25`; water year 1 Oct – 30 Sep):
+  - labels: Flood / Sprinkler / Drip / Pivot / Wheel = irrigated, Dry Crop = rainfed; Sub-irrigated dropped; crop
+    groups grain/seeds, hay/turf, field crops. WRLU 2025 split *Sprinkler* into Sprinkler / Pivot / Wheel; the first
+    run missed Pivot and Wheel (20,000 fewer irrigated fields in 2025) and was corrected.
+  - sampling: 550 cells of 1.28 km (400 with rainfed, 150 irrigated only; ≤ 6 per 20 km block), all fields inside
+    → 11,804 fields (9,728 irrigated, 2,076 rainfed, 17.6%).
+  - folds: class similarity reaches the random level at 15–20 km → 20 km blocks (193 blocks).
+  - tile plan: 5,603 tiles, label rasters written; Sentinel download not yet run.
+  - only 14 of 5,850 fields change class between 2024 and 2025 → temporal tests must also hold out space.
+  - a run of 01 at 15:33 gave 11,806 fields; runs in `condaml` give 11,804 every time (one rainfed alfalfa field,
+    `UT2024_62293` / `UT2025_62293`, fewer). The difference probably comes from another GDAL / GEOS version. The
+    current files come from `condaml` (11,804); 02 and 03 (plan) were re-run from them. Run the pipeline in
+    `condaml` only.
+  - `01_prepare_labels_Utah.py` step 4b (`EXPORT_ALL_FIELDS`): all labelled crop fields before sampling
+    (2024: 107,348 irrigated + 15,276 rainfed; 2025: 108,536 + 15,186) -> `all_crop_fields.gpkg` with a column
+    `sampled`, `all_fields_summary.csv`, `all_fields_by_zone.csv` and figures (map per year, class balance and
+    size, crops). The sample holds 4.5% of the irrigated and 6.8% of the rainfed fields.
+
+### 2026-11-12 (results by region and purity; AgriFM input scale examined)
+
+- What: new script `models_run/05_breakdown_oof.py` splits the out-of-fold predictions of an experiment by zone,
+  agricultural year, 16-px patch purity and parcel area, with Doukkala-only macro-F1 and the false-rainfed rate in the
+  irrigated-only zones (block-bootstrap CIs). Run on E01; results in `experiments/E01_frozen_pca_nested/results/breakdown/`.
+  Described in [Frozen encoders §7.1](phase2_models/frozen_encoders.md#71-script-05--breakdown_oof-results-by-region-season-and-purity).
+- Why: a review of the dataset found that the class is confounded with the region (94% of the rainfed parcels in
+  Doukkala) and that 78% of the parcels have a 16-px patch purity below 0.5.
+- Finding (E01): in Doukkala no frozen GeoFM exceeds the baseline; the GeoFM advantage in the hardest fold comes from
+  the 69 rainfed parcels of Souss.
+- AgriFM: the normalisation statistics of `configs/cropland_mapping.py` do not match the Earth Engine composites
+  (blue: chips 728 ± 344, config 4,179 ± 4,042). The AgriFM paper does not report its normalisation; its pretraining
+  is supervised on GLC_FCS30D land-cover fractions, with 5-day Sentinel-2 series (16 frames per sample).
+
+### 2026-11-06 (reference summary: GMIA-NEXT)
+
+- New summary page [GMIA-NEXT · Kebede et al. (2026)](references/kebede-2026-gmia-next.md) from the preprint, the
+  Zenodo records (maps 17627111, points 20732681) and the code repository: method, reference points, accuracy per
+  continent, data records, use in this research (independent test points, comparison map) and limitations (30 m,
+  interpreted labels, 45 m clustering only, preprint). Reference row marked ★ and linked; Data sources row linked.
 
 ### 2026-11-06 (AgriFM weights were not loaded; fixed)
 

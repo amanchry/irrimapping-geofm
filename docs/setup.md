@@ -37,7 +37,7 @@ The Sentinel-1/2 imagery is not downloaded by hand. `03_build_tiles.py` fetches 
 
 ### 4. Model weights
 
-All weights are stored in **`checkpoints/<model>/`** (excluded from version control) and are **downloaded
+All weights are stored in **`checkpoints/<model>/`** and are **downloaded
 automatically** on the first run of each embedding script; later runs reuse them. Folders and sources per model:
 [Foundation models · Weights](foundation_models.md#weights).
 

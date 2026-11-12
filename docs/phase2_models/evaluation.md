@@ -20,7 +20,7 @@ the parcels present in every run (8,775: six parcels fully covered by overlappin
 
 Parcels are grouped into **20 km blocks**, and the blocks into **5 folds** with the same class balance (about
 1,530 irrigated and 240 rainfed parcels each). A block is never split. A place surveyed in both seasons stays in one
-fold. Block size and fold assignment: [dataset §5](../phase1_data/dataset.md#5-script-02--make_spatial_folds).
+fold. Block size and fold assignment: [dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds).
 
 **Main design: PASTIS rotation** (Garnot & Landrieu 2021). Five rounds; in each, 3 folds train, the next fold is
 the validation fold, one fold is the test fold:

@@ -73,10 +73,12 @@ cropland mapping.
 | El Haouz | semi-arid | groundwater irrigation; olives, citrus |
 | Souss | arid | advanced drip systems; high-value export crops |
 
-**Transfer region.** The proposal applies the best Morocco-trained model, without retraining, to **Tunisia**, which
-shares Morocco's Mediterranean to semi-arid climate, crops and irrigation types but lacks parcel-level ground truth;
-it would be validated with the GMIA-NEXT reference points (Kebede et al., 2026). The choice of transfer region is
-under review ([decision D10](decisions.md#d10-transfer-region-under-review)).
+**Second study area.** The proposal applied the best Morocco-trained model, without retraining, to **Tunisia**,
+validated with the GMIA-NEXT reference points (Kebede et al., 2026), which include only 10 rainfed points. Instead,
+**Utah (USA)** is studied as an independent second region with its own field-level labels (Water-Related Land Use,
+Utah Division of Water Resources), and it also provides the temporal test: models trained on 2024 are tested on 2021
+([decision D13](decisions.md#d13-utah-as-a-second-independent-study-area),
+[Utah training data](phase1_data/utah.md)).
 
 | Data | Use |
 | --- | --- |
