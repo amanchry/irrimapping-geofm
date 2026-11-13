@@ -1,0 +1,2884 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/decisions/">
+      
+      
+        <link rel="prev" href="../results/">
+      
+      
+        <link rel="next" href="../progress_report/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Decisions - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#decisions-and-departures-from-the-proposal" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Decisions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../foundation_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase1_data/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase1_data/morocco/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Morocco training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase1_data/utah/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utah training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/experiment_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Experiment plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/frozen_encoders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Frozen encoders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Temporal test and second region
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E01_frozen_pca_nested/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E01_frozen_pca_nested/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E02_frozen_pca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_3" id="__nav_12_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E02_frozen_pca/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E03_frozen_pca_mlp/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · PCA + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_4" id="__nav_12_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E03 · PCA + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E03_frozen_pca_mlp/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E04_frozen_ltae/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E04 · L-TAE + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_5" id="__nav_12_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E04 · L-TAE + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E04_frozen_ltae/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experiments/E05_psetae_scratch/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E05 · PSE-TAE from scratch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_6" id="__nav_12_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E05 · PSE-TAE from scratch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/E05_psetae_scratch/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#d1-spatial-folds-instead-of-a-7030-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D1. Spatial folds instead of a 70/30 split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d2-two-agricultural-years-per-parcel-season" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D2. Two agricultural years (per-parcel season)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d3-validation-pastis-rotation-instead-of-nested-cv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D3. Validation: PASTIS rotation instead of nested CV
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d4-one-shared-tile-store-for-every-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D4. One shared tile store for every input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d5-frozen-encoder--classical-classifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D5. Frozen encoder + classical classifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d6-four-classifiers-instead-of-one-random-forest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D6. Four classifiers instead of one Random Forest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d7-macro-f1-as-the-headline-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D7. Macro-F1 as the headline metric
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d8-two-temporal-aggregation-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D8. Two temporal aggregation pipelines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d9-cloud-score-instead-of-qa60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D9. Cloud Score+ instead of QA60
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d10-transfer-region-under-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D10. Transfer region under review
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D11. Two kinds of head: parcel benchmark and mapping model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d12-agrifm-with-its-pretrained-4-px-patch-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D12. AgriFM with its pretrained 4-px patch embedding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d13-utah-as-a-second-independent-study-area" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D13. Utah as a second independent study area
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d14-sentinel-2-only-for-every-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D14. Sentinel-2 only for every input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D15. AgriFM normalised with the statistics of the region's chips
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weekly/2026-W45-46/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W45–46
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weekly/2026-W43-44/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W43–44
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/kebede-2026-gmia-next/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GMIA-NEXT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong & Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#d1-spatial-folds-instead-of-a-7030-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D1. Spatial folds instead of a 70/30 split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d2-two-agricultural-years-per-parcel-season" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D2. Two agricultural years (per-parcel season)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d3-validation-pastis-rotation-instead-of-nested-cv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D3. Validation: PASTIS rotation instead of nested CV
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d4-one-shared-tile-store-for-every-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D4. One shared tile store for every input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d5-frozen-encoder--classical-classifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D5. Frozen encoder + classical classifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d6-four-classifiers-instead-of-one-random-forest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D6. Four classifiers instead of one Random Forest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d7-macro-f1-as-the-headline-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D7. Macro-F1 as the headline metric
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d8-two-temporal-aggregation-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D8. Two temporal aggregation pipelines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d9-cloud-score-instead-of-qa60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D9. Cloud Score+ instead of QA60
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d10-transfer-region-under-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D10. Transfer region under review
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D11. Two kinds of head: parcel benchmark and mapping model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d12-agrifm-with-its-pretrained-4-px-patch-embedding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D12. AgriFM with its pretrained 4-px patch embedding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d13-utah-as-a-second-independent-study-area" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D13. Utah as a second independent study area
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d14-sentinel-2-only-for-every-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D14. Sentinel-2 only for every input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D15. AgriFM normalised with the statistics of the region's chips
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="decisions-and-departures-from-the-proposal">Decisions and departures from the proposal<a class="headerlink" href="#decisions-and-departures-from-the-proposal" title="Permanent link">&para;</a></h1>
+<p>This page records every departure of the implementation from the <a href="../assets/research_proposal.pdf">research proposal</a>,
+stating the original plan, the current approach and the rationale. Smaller method choices are in the
+<a href="../progress/#method-decisions">progress log</a>.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Topic</th>
+<th>Proposal</th>
+<th>Now</th>
+<th>Since</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#d1-spatial-folds-instead-of-a-7030-split">D1</a></td>
+<td>Train / test split</td>
+<td>70 / 30 stratified + validation subset</td>
+<td>5 spatial folds of 20 km blocks</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d2-two-agricultural-years-per-parcel-season">D2</a></td>
+<td>Imagery period</td>
+<td>2024 annual stack</td>
+<td>each parcel's own agricultural year (2023/24 or 2024/25), Sep – Aug</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d3-validation-pastis-rotation-instead-of-nested-cv">D3</a></td>
+<td>Validation design</td>
+<td>validation subset from the training data</td>
+<td>PASTIS rotation: 3 train / 1 validation / 1 test</td>
+<td>4 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d4-one-shared-tile-store-for-every-input">D4</a></td>
+<td>Image preparation</td>
+<td>annual stacks via STAC / xarray</td>
+<td>one tile store from Google Earth Engine for every input</td>
+<td>27 Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d5-frozen-encoder--classical-classifiers">D5</a></td>
+<td>Frozen-encoder strategy</td>
+<td>frozen encoder + decoder / head</td>
+<td>frozen encoder → parcel embedding → four classifiers</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d6-four-classifiers-instead-of-one-random-forest">D6</a></td>
+<td>Baseline classifier</td>
+<td>Random Forest</td>
+<td>three classifiers (LogReg, RF, SVM) and an MLP head on every input; gradient boosting dropped (12 Nov 2026)</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d7-macro-f1-as-the-headline-metric">D7</a></td>
+<td>Selection metric</td>
+<td>mean F1 over folds ± SD</td>
+<td>macro-F1 of the out-of-fold predictions, 95% block-bootstrap CI, per-fold mean ± SD</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d8-two-temporal-aggregation-pipelines">D8</a></td>
+<td>Combining the months</td>
+<td>not specified</td>
+<td>PCA pipeline now; L-TAE pipeline next</td>
+<td>4 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d9-cloud-score-instead-of-qa60">D9</a></td>
+<td>Cloud mask</td>
+<td>cloud-masked composites</td>
+<td>Cloud Score+ (cs_cdf ≥ 0.60)</td>
+<td>Oct 2026</td>
+</tr>
+<tr>
+<td><a href="#d10-transfer-region-under-review">D10</a></td>
+<td>Transfer region</td>
+<td>Tunisia, 54 GMIA-NEXT points</td>
+<td>replaced by D13: no transfer region; Utah as a second study area</td>
+<td>12 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model">D11</a></td>
+<td>Classifier head and mapping</td>
+<td>frozen encoder + head; maps 2021–2025</td>
+<td>parcel benchmark with classical heads (RQ1) + segmentation head and pixel models for the maps (RQ2–RQ4); neural baselines TempCNN and U-TAE</td>
+<td>6 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12</a></td>
+<td>AgriFM encoder</td>
+<td>not specified</td>
+<td>pretrained 4 × 4 px patch embedding (output stride 32 px); all weights checked on loading</td>
+<td>6 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d13-utah-as-a-second-independent-study-area">D13</a></td>
+<td>RQ3 / RQ4: second region and temporal test</td>
+<td>zero-shot transfer of the Morocco model to Tunisia (RQ4); temporal test within Morocco (RQ3)</td>
+<td>Utah (WRLU) as an independent second study area, no transfer; temporal test in Utah: train on WRLU 2024, test on WRLU 2021 on held-out folds</td>
+<td>12 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d14-sentinel-2-only-for-every-input">D14</a></td>
+<td>Input data of the models</td>
+<td>Sentinel-1 and Sentinel-2</td>
+<td>Sentinel-2 only for every GeoFM and the baselines; Sentinel-1 as an optional ablation (Morocco)</td>
+<td>12 Nov 2026</td>
+</tr>
+<tr>
+<td><a href="#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips">D15</a></td>
+<td>AgriFM normalisation</td>
+<td>not specified</td>
+<td>per-band mean / std of the region's own chips; config statistics as sensitivity run</td>
+<td>12 Nov 2026</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="d1-spatial-folds-instead-of-a-7030-split">D1. Spatial folds instead of a 70/30 split<a class="headerlink" href="#d1-spatial-folds-instead-of-a-7030-split" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§4.1):</strong> stratified 70 / 30 split, validation subset from the training data. (§4.2.4 already asks for
+  spatial cross-validation.)</li>
+<li><strong>Now:</strong> parcels grouped into 20 km blocks, blocks into 5 folds with equal class balance; every parcel tested
+  once by a model that never saw its block.</li>
+<li><strong>Why:</strong> with a random split, 79% of test parcels lie within 250 m of a training parcel (about 2% with 20 km
+  blocks). Random splits overstate accuracy for mapping new areas (Roberts et al. 2017; Ploton et al. 2020).</li>
+<li><strong>Where:</strong> <a href="../phase1_data/morocco/#5-script-02--make_spatial_folds">dataset §5</a>, <a href="../phase2_models/evaluation/#2-spatial-splits">protocol §2</a>.</li>
+</ul>
+<h2 id="d2-two-agricultural-years-per-parcel-season">D2. Two agricultural years (per-parcel season)<a class="headerlink" href="#d2-two-agricultural-years-per-parcel-season" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§4.1):</strong> the 2024 annual image stack.</li>
+<li><strong>Now:</strong> each parcel gets the 12 months (1 Sep – 31 Aug) of the season in which it was surveyed: 2023/24 or
+  2024/25. Both seasons in one dataset, months aligned (month 1 = September).</li>
+<li><strong>Why:</strong> the survey ran Dec 2023 – Jan 2025; using only 2024 would mix seasons, and dropping 2024/25 would lose 42%
+  of the rainfed parcels. The agricultural year covers the winter rainfed cycle and the summer, when only irrigated
+  fields stay green.</li>
+<li><strong>Consequence:</strong> region and year are partly confounded (Gharb and Tadla only 2023/24, Souss only 2024/25).</li>
+<li><strong>Where:</strong> <a href="../phase1_data/morocco/#62-two-agricultural-years">dataset §6.2</a>.</li>
+</ul>
+<h2 id="d3-validation-pastis-rotation-instead-of-nested-cv">D3. Validation: PASTIS rotation instead of nested CV<a class="headerlink" href="#d3-validation-pastis-rotation-instead-of-nested-cv" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Before (E01):</strong> nested spatial CV, settings by inner CV on the 4 training folds, refit on 4.</li>
+<li><strong>Now:</strong> per round 3 folds train, the next fold chooses the settings (or stops training), 1 fold tests, as in
+  PASTIS (Garnot &amp; Landrieu 2021).</li>
+<li><strong>Why:</strong> one design for classical classifiers and neural networks (L-TAE, fine-tuning), which need a separate
+  validation fold for early stopping. It is the standard design of the PASTIS crop-mapping benchmark.</li>
+<li><strong>Where:</strong> <a href="../phase2_models/evaluation/#2-spatial-splits">protocol §2</a>; E01 is kept as the sensitivity check.</li>
+</ul>
+<h2 id="d4-one-shared-tile-store-for-every-input">D4. One shared tile store for every input<a class="headerlink" href="#d4-one-shared-tile-store-for-every-input" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal:</strong> annual Sentinel-1/2 composites via STAC and xarray.</li>
+<li><strong>Now:</strong> Google Earth Engine builds non-overlapping 128 × 128 px tiles (1.28 km) with 12 monthly composites × 19
+  bands; the baseline features and the foundation-model chips are all cut from these tiles.</li>
+<li><strong>Why:</strong> STAC processing was too slow for the full set; with one store every input sees identical pixels,
+  compositing and masks, and chips no longer overlap across folds.</li>
+<li><strong>Where:</strong> <a href="../phase1_data/morocco/#6-script-03--build_tiles">dataset §6–7</a>.</li>
+</ul>
+<h2 id="d5-frozen-encoder--classical-classifiers">D5. Frozen encoder + classical classifiers<a class="headerlink" href="#d5-frozen-encoder--classical-classifiers" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§4.2.1):</strong> frozen encoder, train a decoder and classification head.</li>
+<li><strong>Now:</strong> the task is per parcel, so the frozen encoder gives one embedding per parcel and the "head" is a
+  classifier (linear probe and three others). Fine-tuning (LoRA, RQ2) follows as planned.</li>
+<li><strong>Why:</strong> tests what the pretrained representation already contains, at equal cost for every model; the linear
+  probe is the standard test of frozen features.</li>
+</ul>
+<h2 id="d6-four-classifiers-instead-of-one-random-forest">D6. Four classifiers instead of one Random Forest<a class="headerlink" href="#d6-four-classifiers-instead-of-one-random-forest" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal:</strong> Random Forest baseline.</li>
+<li><strong>Now:</strong> logistic regression, random forest, gradient boosting and SVM on every input (RF stays the headline).</li>
+<li><strong>Why:</strong> a classifier that suits hand-built features (RF) may not suit dense embeddings (E01: RF is the weakest
+  classifier on embeddings). Reporting all four keeps the comparison from depending on one choice.</li>
+<li><strong>Update (12 Nov 2026):</strong> from E02 on, three classifiers: logistic regression (linear probe), random forest
+  (standard remote-sensing classifier, the proposal's baseline) and SVM (strongest in E01), plus a trainable <strong>MLP
+  head</strong> (E03, E04). Gradient boosting is dropped: in E01 it was never the best classifier and always within the
+  confidence interval of SVM. Plan: <a href="../phase2_models/experiment_plan/">RQ1 · Experiment plan</a>.</li>
+</ul>
+<h2 id="d7-macro-f1-as-the-headline-metric">D7. Macro-F1 as the headline metric<a class="headerlink" href="#d7-macro-f1-as-the-headline-metric" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§4.2.4):</strong> OA, precision, recall, F1; best model by mean F1 over the five folds, SD as consistency.</li>
+<li><strong>Now:</strong> macro-F1 of all out-of-fold predictions with a 95% block-bootstrap CI as headline; per-fold mean ± SD is
+  reported too, as the proposal asked.</li>
+<li><strong>Why:</strong> with 86% irrigated parcels, overall accuracy and irrigated F1 are high for any model; macro-F1 weights the
+  rainfed class equally. Paired bootstrap differences say whether a gap is real.</li>
+</ul>
+<h2 id="d8-two-temporal-aggregation-pipelines">D8. Two temporal aggregation pipelines<a class="headerlink" href="#d8-two-temporal-aggregation-pipelines" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal:</strong> not specified.</li>
+<li><strong>Now:</strong> PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E04.</li>
+<li><strong>Why:</strong> PANGAEA (Marsocci et al. 2024) found L-TAE better than linear mapping for single-date encoders; testing
+  both shows whether the conclusion depends on how the months are combined.</li>
+<li><strong>Where:</strong> <a href="../phase2_models/evaluation/#5-temporal-aggregation-two-pipelines">protocol §5</a>.</li>
+</ul>
+<h2 id="d9-cloud-score-instead-of-qa60">D9. Cloud Score+ instead of QA60<a class="headerlink" href="#d9-cloud-score-instead-of-qa60" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Now:</strong> Sentinel-2 pixels kept when Cloud Score+ cs_cdf ≥ 0.60; scenes with up to 60% cloud admitted.</li>
+<li><strong>Why:</strong> the QA60 band misses thin cloud and shadow; Cloud Score+ is the recommended mask in Earth Engine
+  (Pasquarella et al. 2023).</li>
+</ul>
+<h2 id="d10-transfer-region-under-review">D10. Transfer region under review<a class="headerlink" href="#d10-transfer-region-under-review" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§3.2):</strong> zero-shot transfer to Tunisia, validated on 54 GMIA-NEXT points (44 irrigated, 10 rainfed).</li>
+<li><strong>Now:</strong> Morocco first. As an alternative, US state datasets with both irrigated and dryland fields (eastern
+  Washington WSDA, Utah WRLU 2017–2025) would allow a spatial and a multi-year test with the same pipeline.</li>
+<li><strong>Why:</strong> 10 rainfed points are too few to measure a rainfed F1; the US data needs a check of its labels
+  (see the <a href="../progress/#change-log-newest-first">progress log, 4–5 Nov 2026</a>).</li>
+<li><strong>Decided (12 Nov 2026): Utah (WRLU) as the second region.</strong> Explicit rainfed class ("Dry Crop"), 13,000–17,000
+  rainfed crop fields per year, every year 2017–2025 with one method, one UTM zone. Eastern Washington was the
+  fallback: most of its dryland-wheat fields come from the NASS Cropland Data Layer (irrigation not observed).</li>
+<li><strong>Superseded the same day by <a href="#d13-utah-as-a-second-independent-study-area">D13</a>:</strong> Utah is not a transfer target
+  but an independent second study area.</li>
+</ul>
+<h2 id="d11-two-kinds-of-head-parcel-benchmark-and-mapping-model">D11. Two kinds of head: parcel benchmark and mapping model<a class="headerlink" href="#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§4.2.1, §4.3):</strong> frozen encoder with a decoder / head; annual irrigated maps 2021–2025 for Morocco.</li>
+<li><strong>Problem:</strong> the RQ1 pipeline pools the embeddings over the <strong>parcel polygon</strong>. Annual maps of Morocco (or of a
+  transfer region) have no polygons, and the GeoFM patches (80 m Clay, 160 m the others) are too coarse for parcels of
+  0.83 ha (median, about 90 m across).</li>
+<li><strong>Now:</strong></li>
+<li><strong>RQ1 benchmark (unchanged):</strong> frozen encoder → parcel embedding → LogReg (linear probe), RF, HGB, SVM; plus
+     L-TAE + MLP head (E04). Classical heads on frozen embeddings are common practice (Presto; WorldCereal; AlphaEarth
+     irrigated mapping, Yang et al. 2026) and the head matters little in recent comparisons (Mughees et al. 2026).</li>
+<li><strong>Mapping models (RQ2–RQ4):</strong> frozen GeoFM + <strong>UPerNet segmentation head</strong> trained on the label pixels of the
+     tiles (as in PANGAEA and Prithvi-EO-2.0), then LoRA with the same head (RQ2). Classical baseline: RF on the S1/S2
+     features of each pixel.</li>
+<li><strong>Neural baselines from scratch:</strong> <strong>TempCNN</strong> (per-pixel time series; Pelletier et al. 2019) and <strong>U-TAE</strong>
+     (tiles; Garnot &amp; Landrieu 2021). Both produce 10 m maps. PSE-TAE needs parcel polygons and stays a parcel-level
+     extra (E05).</li>
+<li><strong>Same scoring:</strong> pixel predictions are aggregated per parcel (mean probability) and scored with the same
+     folds, parcels and bootstrap as RQ1, so every number stays comparable.</li>
+<li><strong>Why:</strong> the research must end in wall-to-wall annual maps; a 1D-CNN beat RF for irrigated mapping
+  (Bazzi et al. 2019) and TempCNN-type models transferred better across regions than GeoFM embeddings
+  (Tong &amp; Wang 2025), so a neural baseline is needed next to the classical one.</li>
+<li><strong>Where:</strong> <a href="../references/heads-and-mapping/">literature notes</a>.</li>
+</ul>
+<h2 id="d12-agrifm-with-its-pretrained-4-px-patch-embedding">D12. AgriFM with its pretrained 4-px patch embedding<a class="headerlink" href="#d12-agrifm-with-its-pretrained-4-px-patch-embedding" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Before:</strong> <code>02d_embed_agrifm.py</code> built the Sentinel-2 encoder with the patch size of the repository's fine-tuning
+  configuration (<code>configs/cropland_mapping.py</code>: 4 time steps × 2 × 2 px, output stride 16 px) and loaded
+  <code>AgriFM.pth</code> through mmengine. No weight was loaded: the checkpoint names carry the prefix <code>encoder.</code>, and the
+  pretrained patch embedding (<code>S2_patch_emd</code>, kernel 128 × 10 × 4 × 4 × 4) does not fit a 2 × 2 px patch. mmengine
+  only warns about mismatched names and still reports success, so all AgriFM embeddings produced up to 6 Nov 2026
+  (local and on the cluster, including E01) came from a randomly initialised encoder.</li>
+<li><strong>Now:</strong> patch size 4 × 4 × 4 (the size of the pretrained patch embedding), output stride 32 px (320 m; 2 × 2
+  cells per 64-px chip). The weights are mapped by name in the script and every encoder tensor must load; otherwise
+  the script stops. On the cluster 349 of 349 encoder tensors load.</li>
+<li><strong>Why:</strong> the frozen-encoder comparison (D5) must use each encoder as pretrained. In the fine-tuning set-up of the
+  repository the 2 × 2 px patch embedding is trained anew; with a frozen encoder it would stay random. The alternative,
+  resizing the 4 × 4 px kernel to 2 × 2 px, keeps a finer grid but replaces the pretrained first layer by an
+  approximation.</li>
+<li><strong>Consequence:</strong> AgriFM has the coarsest grid of the four models (320 m against 80–160 m), which matters for small
+  parcels; the patch-share weighting is unchanged. Earlier AgriFM results are void and are re-run.</li>
+<li><strong>Where:</strong> <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/models_run/02d_embed_agrifm.py"><code>models_run/02d_embed_agrifm.py</code></a>,
+  <a href="../foundation_models/">Foundation models · inputs</a>.</li>
+</ul>
+<h2 id="d13-utah-as-a-second-independent-study-area">D13. Utah as a second independent study area<a class="headerlink" href="#d13-utah-as-a-second-independent-study-area" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal (§3.2, RQ3, RQ4):</strong> RQ4 applies the Morocco-trained model zero-shot to a transfer region (Tunisia,
+  54 GMIA-NEXT points); RQ3 tests temporal consistency within Morocco.</li>
+<li><strong>Now:</strong><ul>
+<li><strong>Utah is an independent second study area.</strong> It is trained and tested on its own data (WRLU labels), with
+  the same pipeline, foundation models, classifiers and evaluation as Morocco; the two regions are reported side
+  by side. There is no Morocco → Utah transfer.</li>
+<li><strong>Temporal test in Utah:</strong> train on WRLU 2024 (<code>2023/24</code>), test on WRLU 2021 (<code>2020/21</code>) on the folds held out
+  in training (same fields in both years, paired comparison). See
+  <a href="../phase1_data/utah/#10-temporal-test-design">Utah training data, section 10</a>.</li>
+<li><strong>Years:</strong> WRLU 2024 (training) and 2021 (test). Between them 36% of the crops change but only 0.07% of the
+  fields change class; 2025 repeats 94% of the 2024 crops and is not an independent year; 2019 shows a sudden
+  jump in class changes (1.35%) that may be a revision of the mapping.</li>
+</ul>
+</li>
+<li><strong>Why:</strong><ul>
+<li>A Morocco → Utah transfer mixes a change of region, climate, crop calendar (Utah is 2–3 months later), label
+  source and field size; a low score would not say which of these failed. Two independent studies show whether
+  the conclusions on the foundation models hold in a second region.</li>
+<li>Morocco cannot offer a clean temporal test (the surveyed regions differ between the two years); in Utah the
+  same places are mapped every year.</li>
+<li>Tunisia has 10 rainfed reference points, too few for a rainfed F1 (D10).</li>
+</ul>
+</li>
+<li><strong>Consequence:</strong> RQ4 changes from "spatial transferability of the Morocco model" to "do the results hold in a
+  second region"; RQ3 is answered in Utah. To be agreed with the supervisors.</li>
+<li><strong>Where:</strong> <a href="../phase1_data/utah/">Utah training data</a>, <code>ml_dataset_prep/01_prepare_labels_Utah.py</code>.</li>
+</ul>
+<h2 id="d14-sentinel-2-only-for-every-input">D14. Sentinel-2 only for every input<a class="headerlink" href="#d14-sentinel-2-only-for-every-input" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Proposal:</strong> Sentinel-1 and Sentinel-2 time series.</li>
+<li><strong>Before:</strong> the baseline used Sentinel-2 + Sentinel-1 features (one orbit), TerraMind received Sentinel-2 +
+  Sentinel-1, the other three GeoFMs Sentinel-2 only.</li>
+<li><strong>Now:</strong> every input of the model comparison uses <strong>Sentinel-2 only</strong>: the four GeoFMs (TerraMind with
+  <code>MODALITIES = ["S2L2A"]</code>), the feature baseline (<code>S1S2_VARIABLES = "s2"</code>) and PSE-TAE (<code>BANDS = "s2"</code>). No model is
+  given an input it was not pretrained on, and no fusion of embeddings with radar features is designed for the
+  optical-only models.</li>
+<li><strong>Why:</strong><ul>
+<li>Every model sees the same optical data, so a difference comes from the representation and the head, not from
+  one model having radar.</li>
+<li>Morocco and Utah are treated alike.</li>
+<li>Sentinel-1 coverage of Utah changed between the years: after Sentinel-1B failed (December 2021) only
+  Sentinel-1A covered the area in 2023/24 (only the descending orbit was usable), while the 2020/21 test year had
+  both satellites. With radar, the 2024 → 2021 temporal test (D13) would partly measure a change in radar coverage.</li>
+</ul>
+</li>
+<li><strong>Consequence:</strong> the multimodal pretraining of TerraMind is not used in the main comparison. An optional ablation
+  in Morocco (both orbits available) adds Sentinel-1 to TerraMind (<code>terramind-s1s2</code>) and to the baseline
+  (<code>S1S2_VARIABLES = "all"</code>, PSE-TAE <code>morocco_s2s1</code>). E01 (done before this decision) used Sentinel-1 in the baseline
+  and in TerraMind and is kept as it is.</li>
+<li><strong>Where:</strong> <a href="../foundation_models/#configuration-in-this-study">Foundation models · Configuration</a>,
+  <a href="../phase2_models/frozen_encoders/">Models pipeline</a>.</li>
+</ul>
+<h2 id="d15-agrifm-normalised-with-the-statistics-of-the-regions-chips">D15. AgriFM normalised with the statistics of the region's chips<a class="headerlink" href="#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Before:</strong> AgriFM inputs were normalised with the statistics of the repository's fine-tuning example
+  (<code>configs/cropland_mapping.py</code>).</li>
+<li><strong>Problem:</strong> neither the AgriFM paper (Li et al. 2025) nor the repository documents the normalisation of the
+  pretraining data. The config statistics (blue 4,179 ± 4,042) describe raw, partly cloudy time series; the
+  cloud-masked monthly composites of this study have blue 714 ± 344 (Morocco). With the config statistics the
+  visible and NIR bands use only 8–30% of the expected spread and sit about 0.8 SD below zero, so the frozen encoder
+  sees an almost constant input in these bands.</li>
+<li><strong>Now:</strong> per-band mean and standard deviation of the region's own chips (<code>NORM = "data"</code> in <code>02d_embed_agrifm.py</code>):
+  all valid pixels of 20 evenly spaced chip files, every 4th pixel; computed from imagery only (no labels), saved to
+  <code>agrifm_norm_stats_&lt;tag&gt;.json</code> and reused. For the Utah temporal test the 2023/24 statistics are reused for 2020/21
+  (<code>NORM_STATS_FILE</code>), so both years are scaled identically.</li>
+<li><strong>Why:</strong> standardising each band to zero mean and unit variance is what a z-score normalisation with the pretraining
+  statistics does on the pretraining data; when those statistics are unknown, the data's own statistics are the
+  closest equivalent.</li>
+<li><strong>Sensitivity:</strong> the config statistics are kept as a second embedding (<code>NORM = "config"</code>, <code>agrifm-cfgnorm_*.npz</code>;
+  the Morocco file made on 6 Nov 2026 is this version).</li>
+<li><strong>Where:</strong> <a href="../foundation_models/#agrifm">Foundation models · AgriFM</a>, <code>models_run/02d_embed_agrifm.py</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../results/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Results">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Results
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../progress_report/" class="md-footer__link md-footer__link--next" aria-label="Next: Progress report">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Progress report
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../assets/javascripts/mermaid.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4733 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/experiments/E03_frozen_pca_mlp/report/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../E04_frozen_ltae/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Report - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#e03--frozen-geofms--pca--mlp-head--report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../foundation_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase1_data/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase1_data/morocco/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Morocco training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase1_data/utah/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utah training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/experiment_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Experiment plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/frozen_encoders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Frozen encoders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Temporal test and second region
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../E01_frozen_pca_nested/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_2" id="__nav_12_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E01_frozen_pca_nested/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../E02_frozen_pca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_3" id="__nav_12_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E02_frozen_pca/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · PCA + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_4" id="__nav_12_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E03 · PCA + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#morocco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Morocco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Morocco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and head
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s2-baseline-headline-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S2 baseline (headline heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-input-earlier-experiments-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same input, earlier experiments' heads
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-heads-95-confidence-interval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline heads, 95% confidence interval)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-over-seeds-neural-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread over seeds (neural heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-curves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training curves
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-by-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results by zone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utah-202324" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utah 2023/24
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utah 2023/24">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-head_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and head
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s2-baseline-headline-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S2 baseline (headline heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-input-earlier-experiments-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same input, earlier experiments' heads
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-heads-95-confidence-interval_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline heads, 95% confidence interval)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-efficiency_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-over-seeds-neural-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread over seeds (neural heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-curves_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training curves
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-by-zone_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results by zone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-and-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code and settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../E04_frozen_ltae/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E04 · L-TAE + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_5" id="__nav_12_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E04 · L-TAE + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E04_frozen_ltae/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../E05_psetae_scratch/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E05 · PSE-TAE from scratch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12_6" id="__nav_12_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E05 · PSE-TAE from scratch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../E05_psetae_scratch/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../weekly/2026-W45-46/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W45–46
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../weekly/2026-W43-44/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W43–44
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/kebede-2026-gmia-next/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GMIA-NEXT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong & Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#morocco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Morocco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Morocco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and head
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s2-baseline-headline-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S2 baseline (headline heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-input-earlier-experiments-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same input, earlier experiments' heads
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-heads-95-confidence-interval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline heads, 95% confidence interval)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-efficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-over-seeds-neural-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread over seeds (neural heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-curves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training curves
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-by-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results by zone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utah-202324" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utah 2023/24
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Utah 2023/24">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-of-every-input-and-head_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 of every input and head
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#difference-from-the-s2-baseline-headline-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Difference from the S2 baseline (headline heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-input-earlier-experiments-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same input, earlier experiments' heads
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-class-metrics-headline-heads-95-confidence-interval_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-class metrics (headline heads, 95% confidence interval)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-efficiency_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label efficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spread-over-seeds-neural-heads_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread over seeds (neural heads)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-curves_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training curves
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results-by-zone_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results by zone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-f1-per-test-fold_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro-F1 per test fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-and-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code and settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<!-- Report page of an experiment: created by make_report.py as docs/experiments/<name>/report.md -->
+<h1 id="e03--frozen-geofms--pca--mlp-head--report">E03 · Frozen GeoFMs + PCA + MLP head — report<a class="headerlink" href="#e03--frozen-geofms--pca--mlp-head--report" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Answer.</strong> A trained MLP head is as good as the best classical head (SVM) for every input, but not better. It removes
+the weak-head problem (RF, LogReg) without changing the conclusion of E02. In Morocco, the S2 baseline with an MLP is
+the best single result so far (0.908), and the GeoFMs are 0.01–0.02 below it. In Utah, the GeoFMs with an MLP beat the
+S2 baseline with an MLP by 0.04–0.05, but not the baseline's random forest from E02.</p>
+</blockquote>
+<h2 id="key-findings">Key findings<a class="headerlink" href="#key-findings" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>MLP ≈ SVM for every input, in both regions.</strong> Against E02's SVM, the MLP is within ±0.01 for all 10 input–region
+  pairs, and none of these differences is significant. It is clearly better than LogReg and RF for most GeoFMs, by up to
+  +0.14 (AgriFM vs RF, Morocco).</li>
+<li><strong>Morocco: the S2 baseline is still on top.</strong> S2 + MLP scores 0.908. Clay, Prithvi and TerraMind score 0.892–0.898
+  (−0.010 to −0.016, not significant after Holm), and AgriFM is worse (−0.051).</li>
+<li><strong>Utah: the GeoFMs beat the S2 baseline with the same head.</strong> Clay (+0.042), Prithvi (+0.041) and TerraMind (+0.046)
+  are significantly better than S2 + MLP. In the focus zone, Bear River, the gap is +0.08–0.09. But S2 + MLP (0.739) is
+  below S2 + RF from E02 (0.764), so against the baseline's best head the GeoFMs gain only about 0.02.</li>
+<li><strong>E02's Souss finding came from the head, not the input.</strong> With an MLP, the S2 features find 84% of the rainfed parcels
+  in Souss (E02 SVM: 22%), more than any GeoFM (64–74%). The S2 baseline's weak fold 0 in E02 was a weakness of the
+  classical heads.</li>
+<li><strong>Label efficiency differs by region.</strong> In Morocco at 10% of the training blocks, S2 + MLP is the best input (0.827 vs
+  0.71–0.80) and the most stable (SD 0.019). In Utah, every GeoFM except AgriFM is above S2 + MLP at every fraction. With
+  25% of the blocks, Clay and Prithvi (0.735) already equal S2 + MLP with all blocks (0.733).</li>
+<li><strong>Seeds are stable.</strong> Single-seed macro-F1 varies by at most ±0.008, which is less than the differences between inputs
+  in Utah. Averaging the 3 seeds adds about +0.005 over a single seed.</li>
+</ul>
+<!-- AUTO:RESULTS:START -->
+<!-- generated by experiments/make_report.py: do not edit between these markers -->
+
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question</td>
+<td>Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?</td>
+</tr>
+<tr>
+<td>Research question</td>
+<td>RQ1</td>
+</tr>
+<tr>
+<td>Regions</td>
+<td>Morocco, Utah 2023/24</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>S2 baseline, Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM</td>
+</tr>
+<tr>
+<td>Temporal aggregation</td>
+<td>12 monthly embeddings side by side → standardise → PCA 128 (training folds only)</td>
+</tr>
+<tr>
+<td>Head</td>
+<td>MLP head 128 → 256 → 128 → 2 (batch normalisation, dropout 0.2), 3 seeds</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>5 spatial folds (20 km blocks); per round 3 folds train, the next fold chooses the hyperparameters or stops training, 1 fold tests (PASTIS rotation)</td>
+</tr>
+<tr>
+<td>Label efficiency</td>
+<td>also trained on 10%, 25%, 50% of the training blocks, 3 block draws each (same draws in every experiment)</td>
+</tr>
+<tr>
+<td>Parcels</td>
+<td>6,011 / 6,013 / 8,781 (inputs scored on the parcels common to all runs)</td>
+</tr>
+<tr>
+<td>Uncertainty</td>
+<td>95% confidence interval (CI) from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted</td>
+</tr>
+<tr>
+<td>Changed from</td>
+<td>E02: classifier LogReg / RF / SVM -&gt; MLP head (128-256-128-2), 3 seeds</td>
+</tr>
+</tbody>
+</table>
+<h2 id="morocco">Morocco<a class="headerlink" href="#morocco" title="Permanent link">&para;</a></h2>
+<h3 id="macro-f1-of-every-input-and-head">Macro-F1 of every input and head<a class="headerlink" href="#macro-f1-of-every-input-and-head" title="Permanent link">&para;</a></h3>
+<p>Out-of-fold predictions of all 5 spatial folds; <strong>bold</strong> = best input for that head. Runs marked [E0x] come from an earlier experiment, on the same parcels and bootstrap draws.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> one score per input (row) and classifier (column), between 0 and 1. Higher is better.</p>
+<p><strong>Macro-F1:</strong> F1 is computed for each class separately (irrigated, rainfed) and the two are averaged. Rainfed
+parcels are the minority, so a model that labels everything "irrigated" still gets a high overall accuracy but a
+low macro-F1. That is why macro-F1 is the main metric.</p>
+<p><strong>How:</strong> every parcel is predicted once, by the model that did <em>not</em> see its 20 km block in training (out-of-fold).
+All inputs are scored on the same parcels, so the numbers can be compared directly.</p>
+<p><strong>Read it as:</strong> about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Logistic regression (LogReg)</th>
+<th style="text-align: right;">Random forest (RF)</th>
+<th style="text-align: right;">Support vector machine (SVM)</th>
+<th style="text-align: right;">Multilayer perceptron (MLP)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;"><strong>0.908</strong></td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.869</td>
+<td style="text-align: right;">0.873</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.898</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;">0.882</td>
+<td style="text-align: right;"><strong>0.874</strong></td>
+<td style="text-align: right;"><strong>0.901</strong></td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.892</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.879</td>
+<td style="text-align: right;">0.835</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.894</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;"><strong>0.887</strong></td>
+<td style="text-align: right;">0.855</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.857</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.833</td>
+<td style="text-align: right;">0.714</td>
+<td style="text-align: right;">0.836</td>
+<td style="text-align: right;">–</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per input and head, morocco" src="../figures/morocco_macro_f1_by_input.png" /></p>
+<h3 id="difference-from-the-s2-baseline-headline-heads">Difference from the S2 baseline (headline heads)<a class="headerlink" href="#difference-from-the-s2-baseline-headline-heads" title="Permanent link">&para;</a></h3>
+<p>Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. <strong>Better / worse</strong> = the 95% confidence interval (CI) excludes 0 <strong>and</strong> the Holm-corrected p-value &lt; 0.05.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.</p>
+<ul>
+<li><strong>Difference in macro-F1 (Δ):</strong> the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+  means 0.158 lower.</li>
+<li><strong>95% confidence interval (CI), e.g. [−0.021, +0.025]:</strong> the range in which the true difference probably lies. It comes from
+  resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.<ul>
+<li>The range <strong>includes 0</strong> (one end negative, the other positive): the data cannot tell which input is
+  better.</li>
+<li>The range is <strong>entirely above 0</strong>, e.g. [+0.011, +0.049]: the input is better.</li>
+<li>The range is <strong>entirely below 0</strong>, e.g. [−0.215, −0.085]: the input is worse.</li>
+</ul>
+</li>
+<li><strong>p-value (Holm-corrected):</strong> how likely a difference this large would be if the two inputs were really equal. Many pairs are
+  tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
+  of a difference.</li>
+<li><strong>Verdict:</strong> "better" or "worse" only if the CI excludes 0 <strong>and</strong> the Holm-corrected p-value &lt; 0.05. "Higher/lower, not
+  significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.</li>
+</ul>
+<p><strong>Why paired:</strong> both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
+the inputs, not which parcels happened to be drawn.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Difference in macro-F1 (Δ)</th>
+<th style="text-align: right;">95% confidence interval (CI)</th>
+<th style="text-align: right;">p-value (Holm-corrected)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">-0.010</td>
+<td style="text-align: right;">[-0.030, +0.006]</td>
+<td style="text-align: right;">0.276</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">-0.016</td>
+<td style="text-align: right;">[-0.036, -0.001]</td>
+<td style="text-align: right;">0.114</td>
+<td>lower, not significant after Holm</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">-0.014</td>
+<td style="text-align: right;">[-0.038, +0.004]</td>
+<td style="text-align: right;">0.276</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">-0.051</td>
+<td style="text-align: right;">[-0.083, -0.026]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>worse</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="same-input-earlier-experiments-heads">Same input, earlier experiments' heads<a class="headerlink" href="#same-input-earlier-experiments-heads" title="Permanent link">&para;</a></h3>
+<p>Δ = this experiment's head minus the head of an earlier experiment on the same input, same parcels and bootstrap draws (own Holm family). E03: MLP vs the E02 classifiers; E04: L-TAE vs the E03 MLP and the E02 classifiers.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
+It shows whether the classifier, not the input, makes the difference.</p>
+<p>Δ, the 95% confidence interval and the verdict are read as in the table above: a CI that includes 0 means no clear difference.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>This experiment</th>
+<th>Earlier run</th>
+<th style="text-align: right;">Difference in macro-F1 (Δ)</th>
+<th style="text-align: right;">95% confidence interval (CI)</th>
+<th style="text-align: right;">p-value (Holm-corrected)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.039</td>
+<td style="text-align: right;">[+0.022, +0.070]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.036</td>
+<td style="text-align: right;">[-0.007, +0.082]</td>
+<td style="text-align: right;">0.564</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">+0.009</td>
+<td style="text-align: right;">[-0.011, +0.036]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.016</td>
+<td style="text-align: right;">[+0.004, +0.032]</td>
+<td style="text-align: right;">0.054</td>
+<td>higher, not significant after Holm</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.025</td>
+<td style="text-align: right;">[+0.001, +0.051]</td>
+<td style="text-align: right;">0.322</td>
+<td>higher, not significant after Holm</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">-0.003</td>
+<td style="text-align: right;">[-0.017, +0.009]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.013</td>
+<td style="text-align: right;">[+0.005, +0.025]</td>
+<td style="text-align: right;">0.022</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.058</td>
+<td style="text-align: right;">[+0.027, +0.088]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">-0.007</td>
+<td style="text-align: right;">[-0.022, +0.005]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.007</td>
+<td style="text-align: right;">[-0.005, +0.022]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.039</td>
+<td style="text-align: right;">[+0.004, +0.085]</td>
+<td style="text-align: right;">0.208</td>
+<td>higher, not significant after Holm</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">-0.004</td>
+<td style="text-align: right;">[-0.018, +0.006]</td>
+<td style="text-align: right;">1.000</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.024</td>
+<td style="text-align: right;">[+0.010, +0.044]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.143</td>
+<td style="text-align: right;">[+0.091, +0.188]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">+0.021</td>
+<td style="text-align: right;">[+0.007, +0.035]</td>
+<td style="text-align: right;">0.022</td>
+<td><strong>better</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-class-metrics-headline-heads-95-confidence-interval">Per-class metrics (headline heads, 95% confidence interval)<a class="headerlink" href="#per-class-metrics-headline-heads-95-confidence-interval" title="Permanent link">&para;</a></h3>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
+(the range the true value probably lies in).</p>
+<ul>
+<li><strong>Macro-F1:</strong> mean F1 of the two classes (main metric).</li>
+<li><strong>F1 of the rainfed class:</strong> how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+  usually the lowest number and the most informative one.</li>
+<li><strong>Balanced accuracy:</strong> mean recall of the two classes. 0.5 = guessing.</li>
+<li><strong>Overall accuracy:</strong> share of all parcels labelled correctly. It looks high even for weak models, because most
+  parcels are irrigated, so do not compare inputs on it alone.</li>
+</ul>
+<p><strong>Wide CIs</strong> (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
+rows are not meaningful.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Macro-F1</th>
+<th style="text-align: right;">F1 of the rainfed class</th>
+<th style="text-align: right;">Balanced accuracy</th>
+<th style="text-align: right;">Overall accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.908 [0.85–0.95]</td>
+<td style="text-align: right;">0.843 [0.74–0.92]</td>
+<td style="text-align: right;">0.937 [0.91–0.97]</td>
+<td style="text-align: right;">0.954 [0.93–0.98]</td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.869 [0.80–0.92]</td>
+<td style="text-align: right;">0.778 [0.64–0.86]</td>
+<td style="text-align: right;">0.906 [0.86–0.95]</td>
+<td style="text-align: right;">0.932 [0.90–0.96]</td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.873 [0.80–0.93]</td>
+<td style="text-align: right;">0.777 [0.63–0.88]</td>
+<td style="text-align: right;">0.850 [0.77–0.93]</td>
+<td style="text-align: right;">0.944 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.898 [0.85–0.94]</td>
+<td style="text-align: right;">0.825 [0.72–0.90]</td>
+<td style="text-align: right;">0.909 [0.87–0.95]</td>
+<td style="text-align: right;">0.951 [0.93–0.97]</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.882 [0.82–0.93]</td>
+<td style="text-align: right;">0.800 [0.68–0.88]</td>
+<td style="text-align: right;">0.916 [0.88–0.95]</td>
+<td style="text-align: right;">0.940 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.874 [0.81–0.93]</td>
+<td style="text-align: right;">0.779 [0.66–0.87]</td>
+<td style="text-align: right;">0.849 [0.78–0.91]</td>
+<td style="text-align: right;">0.945 [0.92–0.97]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.892 [0.84–0.94]</td>
+<td style="text-align: right;">0.816 [0.71–0.89]</td>
+<td style="text-align: right;">0.913 [0.87–0.95]</td>
+<td style="text-align: right;">0.947 [0.92–0.97]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.879 [0.81–0.93]</td>
+<td style="text-align: right;">0.795 [0.67–0.88]</td>
+<td style="text-align: right;">0.923 [0.89–0.95]</td>
+<td style="text-align: right;">0.937 [0.90–0.96]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.835 [0.78–0.88]</td>
+<td style="text-align: right;">0.713 [0.60–0.79]</td>
+<td style="text-align: right;">0.827 [0.76–0.88]</td>
+<td style="text-align: right;">0.924 [0.89–0.96]</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.894 [0.84–0.94]</td>
+<td style="text-align: right;">0.819 [0.71–0.89]</td>
+<td style="text-align: right;">0.905 [0.86–0.94]</td>
+<td style="text-align: right;">0.949 [0.92–0.97]</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.887 [0.82–0.93]</td>
+<td style="text-align: right;">0.808 [0.69–0.89]</td>
+<td style="text-align: right;">0.922 [0.89–0.96]</td>
+<td style="text-align: right;">0.942 [0.91–0.97]</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.855 [0.79–0.91]</td>
+<td style="text-align: right;">0.747 [0.61–0.84]</td>
+<td style="text-align: right;">0.837 [0.77–0.90]</td>
+<td style="text-align: right;">0.935 [0.90–0.96]</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.857 [0.80–0.90]</td>
+<td style="text-align: right;">0.755 [0.64–0.84]</td>
+<td style="text-align: right;">0.871 [0.82–0.92]</td>
+<td style="text-align: right;">0.930 [0.90–0.96]</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.833 [0.77–0.88]</td>
+<td style="text-align: right;">0.719 [0.59–0.81]</td>
+<td style="text-align: right;">0.886 [0.84–0.93]</td>
+<td style="text-align: right;">0.909 [0.88–0.94]</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.714 [0.67–0.75]</td>
+<td style="text-align: right;">0.485 [0.40–0.55]</td>
+<td style="text-align: right;">0.668 [0.63–0.70]</td>
+<td style="text-align: right;">0.898 [0.85–0.94]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="label-efficiency">Label efficiency<a class="headerlink" href="#label-efficiency" title="Permanent link">&para;</a></h3>
+<p>Macro-F1 when trained on a share of the training blocks (validation and test folds complete); mean ± SD over the 3 block draws. Draws are nested (the 10% blocks are part of the 25% and 50% blocks) and identical in every experiment. Neural heads: every point is a single-seed result (the 100% point is the mean over its 3 seeds scored one by one).</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> how the score changes when the model is trained with fewer labelled parcels.</p>
+<ul>
+<li><strong>Columns:</strong> share of the training blocks used (10%, 25%, 50%; 100% = the main result). The row <em>training
+  parcels per round</em> gives the actual number of parcels. Validation and test folds are always complete, so every
+  column is tested on the same parcels.</li>
+<li><strong>0.807 ± 0.091:</strong> the mean over 3 different random draws of blocks ± their standard deviation. A large ± means
+  the result depends on <em>which</em> blocks were drawn.</li>
+<li><strong>Read it as:</strong> an input that stays high at 10% needs fewer labels (it is "label-efficient"). If its curve rises
+  steeply, it needs many labels.</li>
+</ul>
+<p><strong>Why whole blocks:</strong> dropping single parcels would leave neighbours of every parcel in training. Dropping whole
+20 km blocks simulates having field data from fewer places.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th style="text-align: right;">10%</th>
+<th style="text-align: right;">25%</th>
+<th style="text-align: right;">50%</th>
+<th style="text-align: right;">100%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>training parcels per round</em></td>
+<td></td>
+<td style="text-align: right;">590</td>
+<td style="text-align: right;">1,266</td>
+<td style="text-align: right;">2,530</td>
+<td style="text-align: right;">all</td>
+</tr>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.827 ± 0.019</td>
+<td style="text-align: right;">0.857 ± 0.008</td>
+<td style="text-align: right;">0.873 ± 0.017</td>
+<td style="text-align: right;">0.903</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.795 ± 0.050</td>
+<td style="text-align: right;">0.856 ± 0.025</td>
+<td style="text-align: right;">0.869 ± 0.008</td>
+<td style="text-align: right;">0.892</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.774 ± 0.045</td>
+<td style="text-align: right;">0.839 ± 0.022</td>
+<td style="text-align: right;">0.846 ± 0.007</td>
+<td style="text-align: right;">0.883</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.785 ± 0.070</td>
+<td style="text-align: right;">0.853 ± 0.015</td>
+<td style="text-align: right;">0.873 ± 0.005</td>
+<td style="text-align: right;">0.888</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.709 ± 0.065</td>
+<td style="text-align: right;">0.778 ± 0.014</td>
+<td style="text-align: right;">0.817 ± 0.008</td>
+<td style="text-align: right;">0.849</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Learning curves, morocco" src="../figures/morocco_learning_curve.png" /></p>
+<h3 id="spread-over-seeds-neural-heads">Spread over seeds (neural heads)<a class="headerlink" href="#spread-over-seeds-neural-heads" title="Permanent link">&para;</a></h3>
+<p>Macro-F1 of each seed on its own; the result above is the mean probability of the seeds.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> neural networks start from random weights, so each run (seed) gives a slightly different result. The
+table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
+difference between inputs smaller than this spread is not meaningful.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th>Macro-F1 per seed</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.896, 0.911, 0.903</td>
+<td style="text-align: right;">0.903 ± 0.008</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.883, 0.896, 0.896</td>
+<td style="text-align: right;">0.892 ± 0.008</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.886, 0.877, 0.886</td>
+<td style="text-align: right;">0.883 ± 0.005</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.892, 0.884, 0.888</td>
+<td style="text-align: right;">0.888 ± 0.004</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.849, 0.853, 0.845</td>
+<td style="text-align: right;">0.849 ± 0.004</td>
+</tr>
+</tbody>
+</table>
+<h3 id="training-curves">Training curves<a class="headerlink" href="#training-curves" title="Permanent link">&para;</a></h3>
+<p>Validation macro-F1 per epoch in each round (first seed); the best epoch is kept (early stopping).</p>
+<p><img alt="Training curves, morocco" src="../figures/morocco_training_curves.png" /></p>
+<h3 id="results-by-zone">Results by zone<a class="headerlink" href="#results-by-zone" title="Permanent link">&para;</a></h3>
+<p>Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed, 26 blocks): does the input separate the classes inside one region, or does it recognise the region? Script <code>05_breakdown_oof.py</code>.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the score inside the one zone where both classes are common (the focus zone), not over the whole region.</p>
+<p><strong>Why:</strong> across a whole region, a model can score well just by learning <em>where</em> parcels are (one zone is almost all
+irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
+input separates irrigated from rainfed fields themselves.</p>
+<p><strong>Difference from the baseline [95% confidence interval]:</strong> as in the difference table. A CI that includes 0 means no clear difference.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th style="text-align: right;">Macro-F1 [95% confidence interval]</th>
+<th style="text-align: right;">Difference from the baseline [95% confidence interval]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.891 [0.82–0.94]</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.880 [0.81–0.93]</td>
+<td style="text-align: right;">-0.011 [-0.033, +0.009]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.877 [0.80–0.93]</td>
+<td style="text-align: right;">-0.014 [-0.034, +0.005]</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.876 [0.81–0.93]</td>
+<td style="text-align: right;">-0.015 [-0.040, +0.007]</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.836 [0.76–0.89]</td>
+<td style="text-align: right;">-0.055 [-0.096, -0.020]</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Results by zone, morocco" src="../figures/morocco_breakdown.png" /></p>
+<p>Tables per zone and season, patch purity and parcel area: <code>experiments/E03_frozen_pca_mlp/results/morocco/breakdown/</code>.</p>
+<h3 id="macro-f1-per-test-fold">Macro-F1 per test fold<a class="headerlink" href="#macro-f1-per-test-fold" title="Permanent link">&para;</a></h3>
+<p>Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: fold 0: Doukkala 180, Souss 59; fold 1: Doukkala 237; fold 2: Doukkala 241; fold 3: Doukkala 234; fold 4: Doukkala 230.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
+show how much the result changes from one part of the region to another.</p>
+<ul>
+<li><strong>Mean ± standard deviation (SD):</strong> average of the five folds and their spread. This can differ slightly from the main table, which
+  scores all parcels at once.</li>
+<li><strong>Read it as:</strong> a low fold points to a part of the region where the model struggles. The fold description above
+  lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.</li>
+</ul>
+</details>
+<p><strong>MLP</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td style="text-align: right;">0.854</td>
+<td style="text-align: right;">0.864</td>
+<td style="text-align: right;">0.943</td>
+<td style="text-align: right;">0.958</td>
+<td style="text-align: right;">0.927</td>
+<td style="text-align: right;">0.909 ± 0.047</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td style="text-align: right;">0.857</td>
+<td style="text-align: right;">0.847</td>
+<td style="text-align: right;">0.930</td>
+<td style="text-align: right;">0.936</td>
+<td style="text-align: right;">0.930</td>
+<td style="text-align: right;">0.900 ± 0.044</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td style="text-align: right;">0.852</td>
+<td style="text-align: right;">0.842</td>
+<td style="text-align: right;">0.919</td>
+<td style="text-align: right;">0.924</td>
+<td style="text-align: right;">0.929</td>
+<td style="text-align: right;">0.893 ± 0.042</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td style="text-align: right;">0.858</td>
+<td style="text-align: right;">0.825</td>
+<td style="text-align: right;">0.922</td>
+<td style="text-align: right;">0.940</td>
+<td style="text-align: right;">0.933</td>
+<td style="text-align: right;">0.896 ± 0.051</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td style="text-align: right;">0.803</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">0.885</td>
+<td style="text-align: right;">0.916</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.857 ± 0.055</td>
+</tr>
+</tbody>
+</table>
+<p><strong>LogReg</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.785</td>
+<td style="text-align: right;">0.834</td>
+<td style="text-align: right;">0.901</td>
+<td style="text-align: right;">0.923</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">0.869 ± 0.057</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;">0.850</td>
+<td style="text-align: right;">0.829</td>
+<td style="text-align: right;">0.935</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">0.905</td>
+<td style="text-align: right;">0.884 ± 0.043</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.837</td>
+<td style="text-align: right;">0.834</td>
+<td style="text-align: right;">0.911</td>
+<td style="text-align: right;">0.914</td>
+<td style="text-align: right;">0.904</td>
+<td style="text-align: right;">0.880 ± 0.041</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;">0.854</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">0.929</td>
+<td style="text-align: right;">0.925</td>
+<td style="text-align: right;">0.916</td>
+<td style="text-align: right;">0.889 ± 0.048</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.804</td>
+<td style="text-align: right;">0.769</td>
+<td style="text-align: right;">0.840</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.867</td>
+<td style="text-align: right;">0.833 ± 0.048</td>
+</tr>
+</tbody>
+</table>
+<p><strong>RF</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.711</td>
+<td style="text-align: right;">0.842</td>
+<td style="text-align: right;">0.922</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: right;">0.920</td>
+<td style="text-align: right;">0.867 ± 0.095</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;">0.793</td>
+<td style="text-align: right;">0.812</td>
+<td style="text-align: right;">0.913</td>
+<td style="text-align: right;">0.937</td>
+<td style="text-align: right;">0.909</td>
+<td style="text-align: right;">0.873 ± 0.065</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.799</td>
+<td style="text-align: right;">0.753</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">0.843</td>
+<td style="text-align: right;">0.884</td>
+<td style="text-align: right;">0.835 ± 0.060</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;">0.779</td>
+<td style="text-align: right;">0.822</td>
+<td style="text-align: right;">0.926</td>
+<td style="text-align: right;">0.909</td>
+<td style="text-align: right;">0.836</td>
+<td style="text-align: right;">0.855 ± 0.062</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.743</td>
+<td style="text-align: right;">0.645</td>
+<td style="text-align: right;">0.715</td>
+<td style="text-align: right;">0.751</td>
+<td style="text-align: right;">0.709</td>
+<td style="text-align: right;">0.713 ± 0.042</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per test fold, morocco" src="../figures/morocco_macro_f1_per_fold.png" /></p>
+<h3 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tables: <a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E03_frozen_pca_mlp/results/morocco/comparison"><code>experiments/E03_frozen_pca_mlp/results/morocco/comparison/</code></a> (all metrics with CI, differences vs baseline, learning curves)</li>
+<li>Per run (<a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E03_frozen_pca_mlp/results/morocco"><code>experiments/E03_frozen_pca_mlp/results/morocco/&lt;run&gt;/</code></a>): out-of-fold predictions, metrics per fold (and per seed), run settings and log</li>
+<li>Confusion matrices: –</li>
+</ul>
+<h2 id="utah-202324">Utah 2023/24<a class="headerlink" href="#utah-202324" title="Permanent link">&para;</a></h2>
+<h3 id="macro-f1-of-every-input-and-head_1">Macro-F1 of every input and head<a class="headerlink" href="#macro-f1-of-every-input-and-head_1" title="Permanent link">&para;</a></h3>
+<p>Out-of-fold predictions of all 5 spatial folds; <strong>bold</strong> = best input for that head. Runs marked [E0x] come from an earlier experiment, on the same parcels and bootstrap draws.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> one score per input (row) and classifier (column), between 0 and 1. Higher is better.</p>
+<p><strong>Macro-F1:</strong> F1 is computed for each class separately (irrigated, rainfed) and the two are averaged. Rainfed
+parcels are the minority, so a model that labels everything "irrigated" still gets a high overall accuracy but a
+low macro-F1. That is why macro-F1 is the main metric.</p>
+<p><strong>How:</strong> every parcel is predicted once, by the model that did <em>not</em> see its 20 km block in training (out-of-fold).
+All inputs are scored on the same parcels, so the numbers can be compared directly.</p>
+<p><strong>Read it as:</strong> about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Logistic regression (LogReg)</th>
+<th style="text-align: right;">Random forest (RF)</th>
+<th style="text-align: right;">Support vector machine (SVM)</th>
+<th style="text-align: right;">Multilayer perceptron (MLP)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.739</td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.722</td>
+<td style="text-align: right;"><strong>0.764</strong></td>
+<td style="text-align: right;">0.728</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.781</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;"><strong>0.753</strong></td>
+<td style="text-align: right;">0.763</td>
+<td style="text-align: right;"><strong>0.791</strong></td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.780</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.746</td>
+<td style="text-align: right;">0.715</td>
+<td style="text-align: right;">0.782</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;"><strong>0.785</strong></td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;">0.749</td>
+<td style="text-align: right;">0.745</td>
+<td style="text-align: right;">0.777</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.747</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.714</td>
+<td style="text-align: right;">0.677</td>
+<td style="text-align: right;">0.741</td>
+<td style="text-align: right;">–</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per input and head, utah" src="../figures/utah_macro_f1_by_input.png" /></p>
+<h3 id="difference-from-the-s2-baseline-headline-heads_1">Difference from the S2 baseline (headline heads)<a class="headerlink" href="#difference-from-the-s2-baseline-headline-heads_1" title="Permanent link">&para;</a></h3>
+<p>Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. <strong>Better / worse</strong> = the 95% confidence interval (CI) excludes 0 <strong>and</strong> the Holm-corrected p-value &lt; 0.05.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.</p>
+<ul>
+<li><strong>Difference in macro-F1 (Δ):</strong> the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+  means 0.158 lower.</li>
+<li><strong>95% confidence interval (CI), e.g. [−0.021, +0.025]:</strong> the range in which the true difference probably lies. It comes from
+  resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.<ul>
+<li>The range <strong>includes 0</strong> (one end negative, the other positive): the data cannot tell which input is
+  better.</li>
+<li>The range is <strong>entirely above 0</strong>, e.g. [+0.011, +0.049]: the input is better.</li>
+<li>The range is <strong>entirely below 0</strong>, e.g. [−0.215, −0.085]: the input is worse.</li>
+</ul>
+</li>
+<li><strong>p-value (Holm-corrected):</strong> how likely a difference this large would be if the two inputs were really equal. Many pairs are
+  tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
+  of a difference.</li>
+<li><strong>Verdict:</strong> "better" or "worse" only if the CI excludes 0 <strong>and</strong> the Holm-corrected p-value &lt; 0.05. "Higher/lower, not
+  significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.</li>
+</ul>
+<p><strong>Why paired:</strong> both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
+the inputs, not which parcels happened to be drawn.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Difference in macro-F1 (Δ)</th>
+<th style="text-align: right;">95% confidence interval (CI)</th>
+<th style="text-align: right;">p-value (Holm-corrected)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">+0.042</td>
+<td style="text-align: right;">[+0.015, +0.067]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">+0.041</td>
+<td style="text-align: right;">[+0.013, +0.068]</td>
+<td style="text-align: right;">0.004</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">+0.046</td>
+<td style="text-align: right;">[+0.018, +0.073]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">+0.008</td>
+<td style="text-align: right;">[-0.020, +0.034]</td>
+<td style="text-align: right;">0.646</td>
+<td>no clear difference</td>
+</tr>
+</tbody>
+</table>
+<h3 id="same-input-earlier-experiments-heads_1">Same input, earlier experiments' heads<a class="headerlink" href="#same-input-earlier-experiments-heads_1" title="Permanent link">&para;</a></h3>
+<p>Δ = this experiment's head minus the head of an earlier experiment on the same input, same parcels and bootstrap draws (own Holm family). E03: MLP vs the E02 classifiers; E04: L-TAE vs the E03 MLP and the E02 classifiers.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
+It shows whether the classifier, not the input, makes the difference.</p>
+<p>Δ, the 95% confidence interval and the verdict are read as in the table above: a CI that includes 0 means no clear difference.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>This experiment</th>
+<th>Earlier run</th>
+<th style="text-align: right;">Difference in macro-F1 (Δ)</th>
+<th style="text-align: right;">95% confidence interval (CI)</th>
+<th style="text-align: right;">p-value (Holm-corrected)</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.017</td>
+<td style="text-align: right;">[-0.003, +0.037]</td>
+<td style="text-align: right;">0.560</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">-0.025</td>
+<td style="text-align: right;">[-0.052, +0.002]</td>
+<td style="text-align: right;">0.480</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">+0.011</td>
+<td style="text-align: right;">[-0.003, +0.027]</td>
+<td style="text-align: right;">0.560</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.028</td>
+<td style="text-align: right;">[+0.015, +0.042]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.018</td>
+<td style="text-align: right;">[-0.000, +0.037]</td>
+<td style="text-align: right;">0.432</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">-0.010</td>
+<td style="text-align: right;">[-0.022, +0.001]</td>
+<td style="text-align: right;">0.432</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.034</td>
+<td style="text-align: right;">[+0.018, +0.048]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.065</td>
+<td style="text-align: right;">[+0.038, +0.093]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">-0.003</td>
+<td style="text-align: right;">[-0.016, +0.009]</td>
+<td style="text-align: right;">0.702</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.036</td>
+<td style="text-align: right;">[+0.022, +0.052]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.040</td>
+<td style="text-align: right;">[+0.020, +0.059]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">+0.007</td>
+<td style="text-align: right;">[-0.005, +0.020]</td>
+<td style="text-align: right;">0.702</td>
+<td>no clear difference</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 LogReg</td>
+<td style="text-align: right;">+0.033</td>
+<td style="text-align: right;">[+0.012, +0.050]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 RF</td>
+<td style="text-align: right;">+0.069</td>
+<td style="text-align: right;">[+0.034, +0.105]</td>
+<td style="text-align: right;">&lt; 0.001</td>
+<td><strong>better</strong></td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>E02 SVM</td>
+<td style="text-align: right;">+0.006</td>
+<td style="text-align: right;">[-0.007, +0.019]</td>
+<td style="text-align: right;">0.702</td>
+<td>no clear difference</td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-class-metrics-headline-heads-95-confidence-interval_1">Per-class metrics (headline heads, 95% confidence interval)<a class="headerlink" href="#per-class-metrics-headline-heads-95-confidence-interval_1" title="Permanent link">&para;</a></h3>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
+(the range the true value probably lies in).</p>
+<ul>
+<li><strong>Macro-F1:</strong> mean F1 of the two classes (main metric).</li>
+<li><strong>F1 of the rainfed class:</strong> how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+  usually the lowest number and the most informative one.</li>
+<li><strong>Balanced accuracy:</strong> mean recall of the two classes. 0.5 = guessing.</li>
+<li><strong>Overall accuracy:</strong> share of all parcels labelled correctly. It looks high even for weak models, because most
+  parcels are irrigated, so do not compare inputs on it alone.</li>
+</ul>
+<p><strong>Wide CIs</strong> (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
+rows are not meaningful.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Classifier</th>
+<th style="text-align: right;">Macro-F1</th>
+<th style="text-align: right;">F1 of the rainfed class</th>
+<th style="text-align: right;">Balanced accuracy</th>
+<th style="text-align: right;">Overall accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.739 [0.69–0.78]</td>
+<td style="text-align: right;">0.591 [0.51–0.67]</td>
+<td style="text-align: right;">0.797 [0.77–0.83]</td>
+<td style="text-align: right;">0.823 [0.79–0.85]</td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.722 [0.68–0.76]</td>
+<td style="text-align: right;">0.572 [0.49–0.65]</td>
+<td style="text-align: right;">0.794 [0.76–0.82]</td>
+<td style="text-align: right;">0.803 [0.77–0.83]</td>
+</tr>
+<tr>
+<td>S2 baseline [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.764 [0.72–0.80]</td>
+<td style="text-align: right;">0.604 [0.51–0.68]</td>
+<td style="text-align: right;">0.753 [0.71–0.79]</td>
+<td style="text-align: right;">0.873 [0.85–0.89]</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.781 [0.74–0.81]</td>
+<td style="text-align: right;">0.636 [0.55–0.71]</td>
+<td style="text-align: right;">0.783 [0.75–0.81]</td>
+<td style="text-align: right;">0.876 [0.86–0.89]</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.753 [0.71–0.79]</td>
+<td style="text-align: right;">0.611 [0.53–0.68]</td>
+<td style="text-align: right;">0.807 [0.77–0.83]</td>
+<td style="text-align: right;">0.836 [0.81–0.86]</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.763 [0.72–0.79]</td>
+<td style="text-align: right;">0.592 [0.50–0.66]</td>
+<td style="text-align: right;">0.729 [0.69–0.76]</td>
+<td style="text-align: right;">0.886 [0.87–0.90]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.780 [0.74–0.81]</td>
+<td style="text-align: right;">0.637 [0.56–0.70]</td>
+<td style="text-align: right;">0.791 [0.76–0.82]</td>
+<td style="text-align: right;">0.872 [0.85–0.89]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.746 [0.70–0.78]</td>
+<td style="text-align: right;">0.602 [0.52–0.68]</td>
+<td style="text-align: right;">0.805 [0.77–0.83]</td>
+<td style="text-align: right;">0.828 [0.80–0.85]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.715 [0.68–0.74]</td>
+<td style="text-align: right;">0.501 [0.42–0.56]</td>
+<td style="text-align: right;">0.674 [0.64–0.70]</td>
+<td style="text-align: right;">0.875 [0.85–0.90]</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.785 [0.74–0.82]</td>
+<td style="text-align: right;">0.645 [0.56–0.71]</td>
+<td style="text-align: right;">0.795 [0.76–0.82]</td>
+<td style="text-align: right;">0.875 [0.85–0.89]</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.749 [0.70–0.79]</td>
+<td style="text-align: right;">0.607 [0.53–0.68]</td>
+<td style="text-align: right;">0.812 [0.78–0.84]</td>
+<td style="text-align: right;">0.828 [0.80–0.85]</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.745 [0.71–0.77]</td>
+<td style="text-align: right;">0.561 [0.48–0.62]</td>
+<td style="text-align: right;">0.712 [0.68–0.74]</td>
+<td style="text-align: right;">0.878 [0.86–0.90]</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.747 [0.70–0.78]</td>
+<td style="text-align: right;">0.581 [0.49–0.65]</td>
+<td style="text-align: right;">0.752 [0.71–0.78]</td>
+<td style="text-align: right;">0.855 [0.83–0.88]</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td>Logistic regression (LogReg)</td>
+<td style="text-align: right;">0.714 [0.67–0.76]</td>
+<td style="text-align: right;">0.555 [0.47–0.63]</td>
+<td style="text-align: right;">0.774 [0.74–0.80]</td>
+<td style="text-align: right;">0.803 [0.77–0.83]</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td>Random forest (RF)</td>
+<td style="text-align: right;">0.677 [0.64–0.71]</td>
+<td style="text-align: right;">0.429 [0.35–0.49]</td>
+<td style="text-align: right;">0.639 [0.61–0.67]</td>
+<td style="text-align: right;">0.869 [0.84–0.89]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="label-efficiency_1">Label efficiency<a class="headerlink" href="#label-efficiency_1" title="Permanent link">&para;</a></h3>
+<p>Macro-F1 when trained on a share of the training blocks (validation and test folds complete); mean ± SD over the 3 block draws. Draws are nested (the 10% blocks are part of the 25% and 50% blocks) and identical in every experiment. Neural heads: every point is a single-seed result (the 100% point is the mean over its 3 seeds scored one by one).</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> how the score changes when the model is trained with fewer labelled parcels.</p>
+<ul>
+<li><strong>Columns:</strong> share of the training blocks used (10%, 25%, 50%; 100% = the main result). The row <em>training
+  parcels per round</em> gives the actual number of parcels. Validation and test folds are always complete, so every
+  column is tested on the same parcels.</li>
+<li><strong>0.807 ± 0.091:</strong> the mean over 3 different random draws of blocks ± their standard deviation. A large ± means
+  the result depends on <em>which</em> blocks were drawn.</li>
+<li><strong>Read it as:</strong> an input that stays high at 10% needs fewer labels (it is "label-efficient"). If its curve rises
+  steeply, it needs many labels.</li>
+</ul>
+<p><strong>Why whole blocks:</strong> dropping single parcels would leave neighbours of every parcel in training. Dropping whole
+20 km blocks simulates having field data from fewer places.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th style="text-align: right;">10%</th>
+<th style="text-align: right;">25%</th>
+<th style="text-align: right;">50%</th>
+<th style="text-align: right;">100%</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>training parcels per round</em></td>
+<td></td>
+<td style="text-align: right;">399</td>
+<td style="text-align: right;">862</td>
+<td style="text-align: right;">1,732</td>
+<td style="text-align: right;">all</td>
+</tr>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.649 ± 0.023</td>
+<td style="text-align: right;">0.684 ± 0.007</td>
+<td style="text-align: right;">0.698 ± 0.010</td>
+<td style="text-align: right;">0.733</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.696 ± 0.012</td>
+<td style="text-align: right;">0.735 ± 0.006</td>
+<td style="text-align: right;">0.755 ± 0.003</td>
+<td style="text-align: right;">0.772</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.692 ± 0.018</td>
+<td style="text-align: right;">0.736 ± 0.014</td>
+<td style="text-align: right;">0.757 ± 0.011</td>
+<td style="text-align: right;">0.767</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.672 ± 0.013</td>
+<td style="text-align: right;">0.731 ± 0.013</td>
+<td style="text-align: right;">0.749 ± 0.017</td>
+<td style="text-align: right;">0.773</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.653 ± 0.017</td>
+<td style="text-align: right;">0.703 ± 0.004</td>
+<td style="text-align: right;">0.712 ± 0.006</td>
+<td style="text-align: right;">0.733</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Learning curves, utah" src="../figures/utah_learning_curve.png" /></p>
+<h3 id="spread-over-seeds-neural-heads_1">Spread over seeds (neural heads)<a class="headerlink" href="#spread-over-seeds-neural-heads_1" title="Permanent link">&para;</a></h3>
+<p>Macro-F1 of each seed on its own; the result above is the mean probability of the seeds.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> neural networks start from random weights, so each run (seed) gives a slightly different result. The
+table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
+difference between inputs smaller than this spread is not meaningful.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th>Macro-F1 per seed</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.731, 0.733, 0.733</td>
+<td style="text-align: right;">0.733 ± 0.001</td>
+</tr>
+<tr>
+<td>Clay v1.5</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.770, 0.777, 0.769</td>
+<td style="text-align: right;">0.772 ± 0.004</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.765, 0.771, 0.765</td>
+<td style="text-align: right;">0.767 ± 0.004</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.774, 0.775, 0.770</td>
+<td style="text-align: right;">0.773 ± 0.003</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>Multilayer perceptron (MLP)</td>
+<td>0.727, 0.737, 0.735</td>
+<td style="text-align: right;">0.733 ± 0.005</td>
+</tr>
+</tbody>
+</table>
+<h3 id="training-curves_1">Training curves<a class="headerlink" href="#training-curves_1" title="Permanent link">&para;</a></h3>
+<p>Validation macro-F1 per epoch in each round (first seed); the best epoch is kept (early stopping).</p>
+<p><img alt="Training curves, utah" src="../figures/utah_training_curves.png" /></p>
+<h3 id="results-by-zone_1">Results by zone<a class="headerlink" href="#results-by-zone_1" title="Permanent link">&para;</a></h3>
+<p>Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 40 blocks): does the input separate the classes inside one region, or does it recognise the region? Script <code>05_breakdown_oof.py</code>.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the score inside the one zone where both classes are common (the focus zone), not over the whole region.</p>
+<p><strong>Why:</strong> across a whole region, a model can score well just by learning <em>where</em> parcels are (one zone is almost all
+irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
+input separates irrigated from rainfed fields themselves.</p>
+<p><strong>Difference from the baseline [95% confidence interval]:</strong> as in the difference table. A CI that includes 0 means no clear difference.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Head</th>
+<th style="text-align: right;">Macro-F1 [95% confidence interval]</th>
+<th style="text-align: right;">Difference from the baseline [95% confidence interval]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.707 [0.63–0.78]</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.787 [0.73–0.84]</td>
+<td style="text-align: right;">+0.080 [+0.027, +0.132]</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.793 [0.74–0.84]</td>
+<td style="text-align: right;">+0.086 [+0.037, +0.139]</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.783 [0.73–0.83]</td>
+<td style="text-align: right;">+0.076 [+0.026, +0.134]</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td>Multilayer perceptron (MLP)</td>
+<td style="text-align: right;">0.773 [0.72–0.82]</td>
+<td style="text-align: right;">+0.066 [+0.019, +0.114]</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Results by zone, utah" src="../figures/utah_breakdown.png" /></p>
+<p>Tables per zone and season, patch purity and parcel area: <code>experiments/E03_frozen_pca_mlp/results/utah/breakdown/</code>.</p>
+<h3 id="macro-f1-per-test-fold_1">Macro-F1 per test fold<a class="headerlink" href="#macro-f1-per-test-fold_1" title="Permanent link">&para;</a></h3>
+<p>Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: fold 0: Bear River 105, Southeast Colorado River 30, Sevier River 29, Weber River 14; fold 1: Bear River 144, Southeast Colorado River 29, Sevier River 12; fold 2: Bear River 118, Sevier River 28, Cedar/Beaver 10; fold 3: Bear River 116, Sevier River 54, Uintah 10, Southeast Colorado River 10; fold 4: Bear River 112, West Desert 26, Southeast Colorado River 22, Sevier River 12, Utah Lake 10.</p>
+<details class="info">
+<summary>How to read this table</summary>
+<p><strong>What:</strong> the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
+show how much the result changes from one part of the region to another.</p>
+<ul>
+<li><strong>Mean ± standard deviation (SD):</strong> average of the five folds and their spread. This can differ slightly from the main table, which
+  scores all parcels at once.</li>
+<li><strong>Read it as:</strong> a low fold points to a part of the region where the model struggles. The fold description above
+  lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.</li>
+</ul>
+</details>
+<p><strong>MLP</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline (MLP)</td>
+<td style="text-align: right;">0.766</td>
+<td style="text-align: right;">0.701</td>
+<td style="text-align: right;">0.730</td>
+<td style="text-align: right;">0.805</td>
+<td style="text-align: right;">0.705</td>
+<td style="text-align: right;">0.742 ± 0.044</td>
+</tr>
+<tr>
+<td>Clay v1.5 (MLP)</td>
+<td style="text-align: right;">0.814</td>
+<td style="text-align: right;">0.733</td>
+<td style="text-align: right;">0.796</td>
+<td style="text-align: right;">0.805</td>
+<td style="text-align: right;">0.763</td>
+<td style="text-align: right;">0.782 ± 0.034</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 (MLP)</td>
+<td style="text-align: right;">0.820</td>
+<td style="text-align: right;">0.721</td>
+<td style="text-align: right;">0.809</td>
+<td style="text-align: right;">0.793</td>
+<td style="text-align: right;">0.762</td>
+<td style="text-align: right;">0.781 ± 0.040</td>
+</tr>
+<tr>
+<td>TerraMind (MLP)</td>
+<td style="text-align: right;">0.839</td>
+<td style="text-align: right;">0.721</td>
+<td style="text-align: right;">0.786</td>
+<td style="text-align: right;">0.805</td>
+<td style="text-align: right;">0.781</td>
+<td style="text-align: right;">0.786 ± 0.043</td>
+</tr>
+<tr>
+<td>AgriFM (MLP)</td>
+<td style="text-align: right;">0.744</td>
+<td style="text-align: right;">0.724</td>
+<td style="text-align: right;">0.785</td>
+<td style="text-align: right;">0.756</td>
+<td style="text-align: right;">0.729</td>
+<td style="text-align: right;">0.748 ± 0.024</td>
+</tr>
+</tbody>
+</table>
+<p><strong>LogReg</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.766</td>
+<td style="text-align: right;">0.675</td>
+<td style="text-align: right;">0.700</td>
+<td style="text-align: right;">0.765</td>
+<td style="text-align: right;">0.712</td>
+<td style="text-align: right;">0.724 ± 0.040</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;">0.767</td>
+<td style="text-align: right;">0.692</td>
+<td style="text-align: right;">0.771</td>
+<td style="text-align: right;">0.798</td>
+<td style="text-align: right;">0.745</td>
+<td style="text-align: right;">0.755 ± 0.039</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.767</td>
+<td style="text-align: right;">0.658</td>
+<td style="text-align: right;">0.789</td>
+<td style="text-align: right;">0.798</td>
+<td style="text-align: right;">0.733</td>
+<td style="text-align: right;">0.749 ± 0.057</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;">0.784</td>
+<td style="text-align: right;">0.668</td>
+<td style="text-align: right;">0.756</td>
+<td style="text-align: right;">0.784</td>
+<td style="text-align: right;">0.760</td>
+<td style="text-align: right;">0.750 ± 0.048</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.738</td>
+<td style="text-align: right;">0.664</td>
+<td style="text-align: right;">0.733</td>
+<td style="text-align: right;">0.734</td>
+<td style="text-align: right;">0.708</td>
+<td style="text-align: right;">0.715 ± 0.031</td>
+</tr>
+</tbody>
+</table>
+<p><strong>RF</strong></p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th style="text-align: right;">Fold 0</th>
+<th style="text-align: right;">Fold 1</th>
+<th style="text-align: right;">Fold 2</th>
+<th style="text-align: right;">Fold 3</th>
+<th style="text-align: right;">Fold 4</th>
+<th style="text-align: right;">Mean ± standard deviation (SD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2 baseline [E02]</td>
+<td style="text-align: right;">0.825</td>
+<td style="text-align: right;">0.745</td>
+<td style="text-align: right;">0.748</td>
+<td style="text-align: right;">0.741</td>
+<td style="text-align: right;">0.759</td>
+<td style="text-align: right;">0.764 ± 0.035</td>
+</tr>
+<tr>
+<td>Clay v1.5 [E02]</td>
+<td style="text-align: right;">0.794</td>
+<td style="text-align: right;">0.735</td>
+<td style="text-align: right;">0.803</td>
+<td style="text-align: right;">0.725</td>
+<td style="text-align: right;">0.757</td>
+<td style="text-align: right;">0.763 ± 0.035</td>
+</tr>
+<tr>
+<td>Prithvi-EO-2.0 [E02]</td>
+<td style="text-align: right;">0.750</td>
+<td style="text-align: right;">0.718</td>
+<td style="text-align: right;">0.721</td>
+<td style="text-align: right;">0.695</td>
+<td style="text-align: right;">0.690</td>
+<td style="text-align: right;">0.715 ± 0.024</td>
+</tr>
+<tr>
+<td>TerraMind [E02]</td>
+<td style="text-align: right;">0.757</td>
+<td style="text-align: right;">0.706</td>
+<td style="text-align: right;">0.754</td>
+<td style="text-align: right;">0.757</td>
+<td style="text-align: right;">0.755</td>
+<td style="text-align: right;">0.746 ± 0.022</td>
+</tr>
+<tr>
+<td>AgriFM [E02]</td>
+<td style="text-align: right;">0.649</td>
+<td style="text-align: right;">0.688</td>
+<td style="text-align: right;">0.676</td>
+<td style="text-align: right;">0.706</td>
+<td style="text-align: right;">0.663</td>
+<td style="text-align: right;">0.676 ± 0.022</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Macro-F1 per test fold, utah" src="../figures/utah_macro_f1_per_fold.png" /></p>
+<h3 id="files_1">Files<a class="headerlink" href="#files_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tables: <a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E03_frozen_pca_mlp/results/utah/comparison"><code>experiments/E03_frozen_pca_mlp/results/utah/comparison/</code></a> (all metrics with CI, differences vs baseline, learning curves)</li>
+<li>Per run (<a href="https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E03_frozen_pca_mlp/results/utah"><code>experiments/E03_frozen_pca_mlp/results/utah/&lt;run&gt;/</code></a>): out-of-fold predictions, metrics per fold (and per seed), run settings and log</li>
+<li>Confusion matrices: –</li>
+</ul>
+<h2 id="code-and-settings">Code and settings<a class="headerlink" href="#code-and-settings" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Settings: <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_pca_mlp/config.yaml"><code>experiments/E03_frozen_pca_mlp/config.yaml</code></a></li>
+<li>Code version: <code>710f917 (with uncommitted changes)</code>, run 2026-11-13 12:46 – 2026-11-13 12:46</li>
+</ul>
+<!-- AUTO:RESULTS:END -->
+
+<h2 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h2>
+<p><strong>The head question is settled for the PCA input.</strong> E02 left open whether the GeoFMs only looked weak because of the
+classical heads. With a trained MLP, every input reaches about the level of its SVM result and no further. So E02's
+SVM column was already close to what this input can give. What remains is a real difference between inputs, not
+between heads, and it is small: none in Morocco, 0.02–0.05 in Utah depending on the comparison.</p>
+<p><strong>Morocco and Utah disagree, and the reason is probably the data.</strong> In Morocco, the rainfed parcels are concentrated
+in Doukkala and have a clear seasonal signal (winter cereals without a summer crop), which hand-crafted indices (NDVI,
+EVI, SWIR per month) capture well. A flexible head on these features is hard to beat. In Utah, rainfed and irrigated
+parcels share crop types and are spread over many zones. There, the GeoFM embeddings separate the classes better inside
+the main zone (Bear River +0.08–0.09), so they seem to carry field-level information the indices miss. Utah is
+also where the GeoFMs help with few labels: 25% of the blocks with Clay or Prithvi match all blocks with S2 + MLP.</p>
+<p><strong>The S2 baseline needs the right head.</strong> The S2 features gain most from flexible heads in Morocco (MLP +0.039 vs
+LogReg), but in Utah their best head is still the random forest (0.764 vs 0.739 for the MLP). In Utah the MLP on S2
+features predicts "rainfed" too often: highest balanced accuracy (0.797) and rainfed recall (0.86 in Bear River), but
+lower precision and overall accuracy (0.823). The fairest single comparison is therefore each input with its best head:
+Morocco S2 0.908 vs best GeoFM 0.901 (Clay SVM, E02); Utah S2 0.764 vs best GeoFM 0.791 (Clay SVM, E02).</p>
+<p><strong>Correction to E02.</strong> E02 suggested that the GeoFMs transfer better to Souss, a zone with few rainfed training
+parcels. E03 shows that this was an effect of the classical heads on the S2 features. With an MLP, the S2 baseline finds
+84% of Souss's rainfed parcels, more than any GeoFM. The E02 report now points to this.</p>
+<p><strong>AgriFM</strong> gains the most from a trained head (+0.14 over RF in Morocco), which confirms that its single pooled
+embedding needs a non-linear head. It stays the weakest input in Morocco, and in Utah it equals the S2 baseline with the
+same head.</p>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The MLP has fixed settings (no grid search), while E02's heads chose from a small grid on the validation fold. A tuned
+  MLP might do slightly better, but the MLP already equals SVM, so a large change is unlikely.</li>
+<li>The main MLP result averages 3 seeds (≈ +0.005 over a single seed); the E02 heads run once. The label-efficiency
+  table uses single seeds throughout, so its 100% column (mean of the seeds scored one by one) is slightly below the
+  main table.</li>
+<li>The Holm correction covers this experiment's own runs only: the 4 differences from the baseline, and the 15 MLP vs E02
+  comparisons, each family on its own.</li>
+<li>Confusion matrices and permutation importance are not produced for the neural heads. The per-zone tables are in
+  <code>results/&lt;region&gt;/breakdown/</code>.</li>
+<li>Per-zone results for zones with fewer than 50 rainfed parcels are indicative only.</li>
+</ul>
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>E04:</strong> L-TAE on the 12 monthly embeddings, without concatenation and PCA, with the same MLP after attention.
+  E03 → E04 isolates the effect of temporal attention. AgriFM is excluded because it has one time step.</li>
+<li><strong>E05:</strong> PSE-TAE trained from scratch on the S2 pixels, the neural baseline. Utah is the region to watch: does a
+  temporal model on raw pixels close the gap to the GeoFMs there?</li>
+<li><strong>Reporting:</strong> for the RQ1 summary, compare each input with its best head (Morocco S2 0.908 vs Clay 0.901; Utah Clay
+  0.791 vs S2 0.764) and test that comparison explicitly.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: E03 · Frozen GeoFMs + PCA + MLP head">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                E03 · Frozen GeoFMs + PCA + MLP head
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../E04_frozen_ltae/" class="md-footer__link md-footer__link--next" aria-label="Next: E04 · Frozen GeoFMs + L-TAE temporal aggregation + MLP head">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                E04 · Frozen GeoFMs + L-TAE temporal aggregation + MLP head
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../../assets/javascripts/mermaid.js"></script>
+      
+    
+  </body>
+</html>
