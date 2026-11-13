@@ -11,9 +11,12 @@ One script for every input, so all of them are evaluated in exactly the same way
   INPUT = "prithvi"    Prithvi-EO-2.0 embeddings    (02b_embed_prithvi.py)
   INPUT = "terramind"  TerraMind embeddings         (02c_embed_terramind.py)
   INPUT = "agrifm"     AgriFM embeddings            (02d_embed_agrifm.py)
-For each input, 4 classifiers are trained on top of the (frozen) features:
+For each input, 3 classifiers are trained on top of the (frozen) features (D6; gradient boosting dropped 13 Nov 2026):
   logreg  logistic regression (linear; on embeddings this is the standard "linear probe")
-  rf      random forest        hgb  histogram gradient boosting        svm  RBF support vector machine
+  rf      random forest        svm  RBF support vector machine
+Regions: REGION = "morocco" (views/) or "utah" (views_2023-24/), same code and protocol (D13).
+Label efficiency: TRAIN_FRACTION < 1 trains on that share of the training blocks of each round (draw
+FRACTION_DRAW, models_run/experiment_utils.py); validation and test folds stay complete.
 
 Steps
 -----
@@ -35,15 +38,16 @@ Steps
 3. Metrics on all out-of-fold predictions with 95% CI from a block bootstrap (whole blocks
    resampled): macro-F1 (main), F1 / precision / recall per class, balanced and overall accuracy,
    PR-AUC for rainfed, Brier score and expected calibration error.
-4. Paired comparison of the 4 classifiers on the same parcels (difference in macro-F1, 95% CI).
+4. Paired comparison of the 3 classifiers on the same parcels (difference in macro-F1, 95% CI).
 5. Spatial vs random 5-fold CV with the same hyperparameters: how much random CV overstates accuracy.
 6. Grouped permutation importance with the random forest of each outer fold:
    s1s2 by variable (NDVI, VH, ...) and by period; embeddings by step (month).
 7. Final models refit on all parcels (for mapping later); all tables and figures saved.
 Compare inputs with 04_compare_models.py.
 
-Output: experiments/<EXPERIMENT>/results/<RUN_NAME>/ (experiment mode, see below)
-        or outputs/morocco/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
+Output: experiments/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/ (experiment mode, see below)
+        or outputs/<REGION>/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
+RUN_NAME ends in _f010_d1 (10% of the training blocks, draw 1) for label-efficiency runs; these skip steps 5-7.
 --------------------------------------
 metrics_summary.csv            headline metrics with 95% CI, one column per classifier
 metrics_with_ci.csv            all metrics: estimate, ci_low, ci_high
@@ -79,7 +83,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, average_precision_score, balanced_accuracy_score, brier_score_loss,
@@ -90,17 +94,22 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
+from experiment_utils import (describe_draw, draw_table, draw_training_blocks, env_override, fraction_tag,
+                              region_paths, results_dir, start_month, views_name)
+
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 EXPERIMENT = None                     # e.g. "E02_frozen_pca": settings from experiments/<name>/config.yaml,
                                       # results to experiments/<name>/results/ | None = the settings below
+REGION = "morocco"                    # "morocco" | "utah" (ml_dataset_prep/regions.py)
+VIEWS_NAME = None                     # views folder of 04_make_views.py; None = the region's default
+                                      # (Morocco "views", Utah "views_2023-24")
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
                                       # ("terramind-s1s2" = TerraMind with Sentinel-1, ablation)
 WINDOW = "agyear"                     # time window of the dataset (ml_dataset_prep/03_build_tiles.py)
 
 # S1/S2 baseline only
 INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOURCE = 'gee'): 30 or 15
-START_MONTH = 9                       # first month of the window (labels of the periods)
 S1S2_VARIABLES = "s2"                 # "s2" (optical only; default, D14: every input sees only Sentinel-2) | "all" | "s1" (radar only)
 S1S2_SOURCE = "tiles"                 # "tiles" = parcel features cut from the tile store (04_make_views.py, view A;
                                       #           same pixels as the foundation-model chips) | "gee" = old script-03 table
@@ -117,6 +126,10 @@ PCA_DIM = 128                         # PCA components in concat mode (fitted on
 VALIDATION = "pastis"                 # "pastis" = 3 folds train / next fold validation / 1 fold test per round
                                       # (same as PASTIS and 03b_train_psetae.py) | "nested" = inner spatial CV on 4 folds
 
+# Label efficiency (Q5 of the experiment plan)
+TRAIN_FRACTION = 1.0                  # share of the training blocks of each round (1.0 = all; 0.10 / 0.25 / 0.50)
+FRACTION_DRAW = 1                     # which block draw (1, 2, 3); the same draw in every script and input
+
 SEED = 42
 RF_TREES = 500
 N_BOOT = 1000                         # block-bootstrap draws for the confidence intervals
@@ -130,15 +143,19 @@ EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 if EXPERIMENT:
     import yaml
     _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
-    INPUT = os.environ.get("EXPERIMENT_INPUT", INPUT)
     for _key, _value in (_cfg.get("train_evaluate") or {}).items():
         if _key not in globals():
             raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03_train_evaluate.py")
         globals()[_key] = _value
+INPUT = os.environ.get("EXPERIMENT_INPUT", INPUT)
+env_override(globals())                                      # region, fraction, draw from run_experiment.py / Slurm
 
 # ------------------------------------------------------------ paths (from the settings)
-SPLIT_FILE = ROOT / "outputs" / "morocco" / "dataset" / "02_folds" / "parcels_folds.geojson"
-VIEWS_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views"
+VIEWS_NAME = views_name(REGION, VIEWS_NAME)
+_P = region_paths(REGION, WINDOW, VIEWS_NAME)
+START_MONTH = start_month(REGION)                            # first month of the agricultural year (period labels)
+SPLIT_FILE = _P["split_file"]
+VIEWS_DIR = _P["views_dir"]
 if S1S2_SOURCE == "tiles":
     S1S2_FILE = VIEWS_DIR / f"parcel_features_{TILE_FEATURES}.csv"
     if S1S2_VARIABLES == "s2":
@@ -152,14 +169,17 @@ if S1S2_SOURCE == "tiles":
 else:
     S1S2_FILE = ROOT / "outputs" / "morocco" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_{INTERVAL_DAYS}d.csv"
     S1S2_TAG = f"{INTERVAL_DAYS}d"
-EMB_TAG = f"{WINDOW}_tiles" if EMB_SOURCE == "tiles" else WINDOW
-EMB_FILE = ROOT / "outputs" / "morocco" / "study" / "02_embeddings" / f"{INPUT}_{EMB_TAG}.npz"
+EMB_TAG = _P["embedding_tag"] if EMB_SOURCE == "tiles" else WINDOW
+EMB_FILE = _P["embeddings_dir"] / f"{INPUT}_{EMB_TAG}.npz"
 RUN_NAME = (f"s1s2-{S1S2_VARIABLES}_{WINDOW}_{S1S2_TAG}" if INPUT == "s1s2"
             else f"{INPUT}_{EMB_TAG}_{FEATURE_MODE}")
 if VALIDATION == "nested" and not EXPERIMENT:
     RUN_NAME += "_nested"                                       # keeps both designs apart (an experiment has one design)
-OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / "morocco" / "study" / "03_models")
-           / RUN_NAME)
+if TRAIN_FRACTION < 1 and VALIDATION != "pastis":
+    raise SystemExit("TRAIN_FRACTION < 1 needs VALIDATION = 'pastis'")
+RUN_NAME += fraction_tag(TRAIN_FRACTION, FRACTION_DRAW)
+OUT_DIR = results_dir(EXPERIMENT, REGION, RUN_NAME, _P["study_dir"] / "03_models", QUICK_TEST)   # quick runs: results_quick/
+FULL_RUN = TRAIN_FRACTION >= 1                                  # label-efficiency runs skip steps 5-7 (not needed)
 
 # ==========================================================================
 
@@ -314,15 +334,6 @@ def build_rf(max_features="sqrt", min_samples_leaf=1, class_weight=None):
                                                 n_jobs=N_JOBS, random_state=SEED))
 
 
-def build_hgb(learning_rate=0.1, max_leaf_nodes=31, class_weight=None):
-    """Histogram gradient boosting: trees added one after another, each fixing the previous errors.
-    Early stopping is off because it would hold out a RANDOM (not spatial) validation split."""
-    return make_pipeline(*preprocess(),
-                         HistGradientBoostingClassifier(learning_rate=learning_rate, max_leaf_nodes=max_leaf_nodes,
-                                                        max_iter=300, early_stopping=False,
-                                                        class_weight=class_weight, random_state=SEED))
-
-
 def build_svm(C=1.0, gamma="scale"):
     """Support vector machine with an RBF kernel (used in Gao et al. 2018; Elwan et al. 2022).
     No probability calibration (it would need a random internal split); its decision score is used for PR-AUC."""
@@ -335,8 +346,6 @@ MODELS = {
     "logreg": (build_logreg, {"C": [0.01, 0.1, 1.0, 10.0]}),
     "rf": (build_rf, {"max_features": ["sqrt", 0.3], "min_samples_leaf": [1, 5],
                       "class_weight": [None, "balanced_subsample"]}),
-    "hgb": (build_hgb, {"learning_rate": [0.05, 0.1], "max_leaf_nodes": [15, 31],
-                        "class_weight": [None, "balanced"]}),
     "svm": (build_svm, {"C": [1.0, 10.0], "gamma": ["scale", 0.01]}),
 }
 if QUICK_TEST:                                     # one setting per model
@@ -382,6 +391,10 @@ def tune_on_validation(build, grid, X_train, y_train, X_val, y_val):
     return best, best_score, scores
 
 
+SPLIT_ALL = None                      # fold table of all parcels of the region (set in main(); used for block draws)
+DRAWS = []                            # blocks kept per round (label-efficiency runs)
+
+
 def nested_spatial_cv(data, features, log):
     """Outer loop: each spatial fold is the test fold once. Hyperparameters are tuned on the other
     folds only (inner loop), the model is refit on all of them and predicts the held-out fold.
@@ -397,6 +410,12 @@ def nested_spatial_cv(data, features, log):
             val_fold = fold_ids[(k + 1) % len(fold_ids)]                 # next fold = validation fold
             val = folds == val_fold
             train = ~test & ~val
+            if TRAIN_FRACTION < 1:                                     # label efficiency: a share of the training blocks
+                train_folds = [f for f in fold_ids if f not in (outer, val_fold)]
+                keep = draw_training_blocks(SPLIT_ALL, train_folds, TRAIN_FRACTION, FRACTION_DRAW, REGION, outer)
+                train &= data["block_id"].isin(keep).to_numpy()
+                DRAWS.append({"round": k + 1, "test_fold": outer, **describe_draw(SPLIT_ALL, keep, train_folds)})
+                log.info(f"  {TRAIN_FRACTION:.0%} of the training blocks (draw {FRACTION_DRAW}): {DRAWS[-1]}")
             log.info(f"Round {k + 1}: train {train.sum():,} | validation (fold {val_fold}) {val.sum():,} | "
                      f"test (fold {outer}) {test.sum():,} parcels")
         else:
@@ -518,22 +537,23 @@ def run_protocol(data, features, out_dir, run_name, log):
     pairs = paired_differences(oof, N_BOOT, SEED)
     log.info("\n" + pairs.round(3).to_string(index=False))
 
-    log.info("4/5 Spatial vs random 5-fold CV (same hyperparameters)")
+    cv, final_params = None, {}
+    if not FULL_RUN:
+        log.info("4-5/5 skipped (label-efficiency run: spatial vs random CV and final models only for full runs)")
     rows = []
-    for name, (build, _) in MODELS.items():
+    for name, (build, _) in (MODELS.items() if FULL_RUN else []):
         params = most_common_params(selected, name)
         for scheme, col in [("spatial", "fold"), ("random", "random_fold")]:
             res = fixed_params_cv(build, params, X, y, data[col].to_numpy())
             rows.append(res.assign(model=name, cv=scheme))
             log.info(f"  {name:6s} {scheme:7s} macro-F1 {res['macro_f1'].mean():.3f} ± {res['macro_f1'].std():.3f}")
-    cv = pd.concat(rows, ignore_index=True)
-    plot_cv(cv, out_dir / "cv_random_vs_spatial.png", f"{run_name}: random vs spatial 5-fold CV")
-
-    log.info("5/5 Final models on all parcels (most often selected hyperparameters)")
-    final_params = {}
-    for name, (build, _) in MODELS.items():
-        final_params[name] = most_common_params(selected, name)
-        joblib.dump(build(**final_params[name]).fit(X, y), out_dir / f"final_model_{name}.joblib")
+    if FULL_RUN:
+        cv = pd.concat(rows, ignore_index=True)
+        plot_cv(cv, out_dir / "cv_random_vs_spatial.png", f"{run_name}: random vs spatial 5-fold CV")
+        log.info("5/5 Final models on all parcels (most often selected hyperparameters)")
+        for name, (build, _) in MODELS.items():
+            final_params[name] = most_common_params(selected, name)
+            joblib.dump(build(**final_params[name]).fit(X, y), out_dir / f"final_model_{name}.joblib")
 
     # Save everything.
     pd.concat(oof, names=["model"]).to_csv(out_dir / "oof_predictions.csv")
@@ -543,9 +563,11 @@ def run_protocol(data, features, out_dir, run_name, log):
     selected.to_csv(out_dir / "selected_hyperparameters.csv", index=False)
     inner_log.to_csv(out_dir / "inner_tuning_scores.csv", index=False)
     pairs.to_csv(out_dir / "paired_model_differences.csv", index=False)
-    cv.to_csv(out_dir / "cv_random_vs_spatial.csv", index=False)
+    if cv is not None:
+        cv.to_csv(out_dir / "cv_random_vs_spatial.csv", index=False)
     (out_dir / "run_config.json").write_text(json.dumps({
-        "run": run_name, "experiment": EXPERIMENT, "input": INPUT, "window": WINDOW,
+        "run": run_name, "experiment": EXPERIMENT, "region": REGION, "views": VIEWS_NAME, "input": INPUT,
+        "window": WINDOW, "train_fraction": TRAIN_FRACTION, "fraction_draw": FRACTION_DRAW, "block_draws": DRAWS,
         "settings": ({"source": S1S2_SOURCE, "feature_file": S1S2_FILE.name, "variables": S1S2_VARIABLES,
                       **({"tile_features": TILE_FEATURES, "s1_orbit": S1_ORBIT} if S1S2_SOURCE == "tiles"
                          else {"interval_days": INTERVAL_DAYS})} if INPUT == "s1s2"
@@ -728,7 +750,9 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     log = setup_logging(OUT_DIR / "run.log")
     t0 = time.time()
+    global SPLIT_ALL
     split = load_split(SPLIT_FILE)
+    SPLIT_ALL = draw_table(SPLIT_FILE, VIEWS_DIR)                     # parcels of the views' years (block draws)
 
     # 1. Input features joined to the folds.
     if INPUT == "s1s2":
@@ -742,12 +766,14 @@ def main():
         data, features, STEP_NAMES = load_embeddings(split)
         log.info(f"{RUN_NAME}: {len(STEP_NAMES)} steps, empty (unobserved) {data[features].isna().mean().mean():.1%}")
     N_FEATURES = len(features)
+    log.info(f"Region {REGION} ({VIEWS_NAME}) | input {INPUT} | training blocks {TRAIN_FRACTION:.0%}"
+             + ("" if FULL_RUN else f" (draw {FRACTION_DRAW})"))
     log.info(f"{RUN_NAME}: {len(data):,} parcels {data['label'].map(CLASS_NAMES).value_counts().to_dict()} | "
              f"{N_FEATURES} features" + (f" -> PCA {PCA_DIM}" if INPUT != "s1s2" and FEATURE_MODE == "concat"
                                          and N_FEATURES > PCA_DIM else ""))
 
     # 2-5, 7. Nested spatial CV, metrics, paired comparison, spatial vs random, final models.
-    FOLD_HOOK = fold_importance                                       # 6. importance inside the outer loop
+    FOLD_HOOK = fold_importance if FULL_RUN else None                 # 6. importance inside the outer loop
     run_protocol(data, features, OUT_DIR, RUN_NAME, log)
 
     if IMPORTANCE_ROWS:

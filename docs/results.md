@@ -23,7 +23,7 @@ run, is on the [Experiments](experiments/index.md) page.
 
 Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers?
 
-- **Result:** best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 input-classifier pairs better, 2 worse than the baseline (Holm).
+- **Result:** best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 pairs better, 2 worse than the baseline (Holm).
 - **Answer:** No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.906, difference within the noise); Clay and Prithvi hold up better in the hardest fold.
 - Full report: [E01 report](experiments/E01_frozen_pca_nested/report.md)
 

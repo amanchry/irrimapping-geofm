@@ -11,18 +11,18 @@ reproduces the reported result.
 
 | ID | Experiment | RQ | Status | Headline result (macro-F1) | Report |
 | --- | --- | --- | --- | --- | --- |
-| **E01** | [Frozen GeoFMs + PCA + classical classifiers (nested spatial CV)](E01_frozen_pca_nested/index.md) | RQ1 | ✅ done | best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 input-classifier pairs better, 2 worse than the baseline (Holm) | [report](E01_frozen_pca_nested/report.md) |
-| **E02** | [Frozen GeoFMs + PCA + classical classifiers](E02_frozen_pca/index.md) | RQ1 | 📝 planned | – | – |
-| **E03** | [Frozen GeoFMs + PCA + MLP head](E03_frozen_pca_mlp/index.md) | RQ1 | 📝 planned | – | – |
-| **E04** | [Frozen GeoFMs + L-TAE temporal aggregation + MLP head](E04_frozen_ltae/index.md) | RQ1 | 📝 planned | – | – |
-| **E05** | [PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)](E05_psetae_scratch/index.md) | RQ1 | 📝 planned | – | – |
-| **E06** | [Label efficiency: frozen GeoFMs vs Sentinel-2 features with fewer training labels](E06_label_efficiency/index.md) | RQ1 | 📝 planned | – | – |
+| **E01** | [Frozen GeoFMs + PCA + classical classifiers (nested spatial CV)](E01_frozen_pca_nested/index.md) | RQ1 | ✅ done | best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 pairs better, 2 worse than the baseline (Holm) | [report](E01_frozen_pca_nested/report.md) |
+| **E02** | [Frozen GeoFMs + PCA + classical classifiers](E02_frozen_pca/index.md) | RQ1 | 🟦 ready to run | – | – |
+| **E03** | [Frozen GeoFMs + PCA + MLP head](E03_frozen_pca_mlp/index.md) | RQ1 | 🟦 ready to run | – | – |
+| **E04** | [Frozen GeoFMs + L-TAE temporal aggregation + MLP head](E04_frozen_ltae/index.md) | RQ1 | 🟦 ready to run | – | – |
+| **E05** | [PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)](E05_psetae_scratch/index.md) | RQ1 | 🟦 ready to run | – | – |
 
 <!-- AUTO:INDEX:END -->
 
 The experiments of RQ1 follow the [RQ1 experiment plan](../phase2_models/experiment_plan.md): E02 (PCA + LogReg / RF /
-SVM), E03 (PCA + MLP), E04 (L-TAE + MLP), E05 (PSE-TAE from scratch) and E06 (label efficiency), each in Morocco and
-Utah. Ablations A1–A5 are short runs that change one setting of these experiments; their results appear in the report
+SVM), E03 (PCA + MLP), E04 (L-TAE + MLP) and E05 (PSE-TAE from scratch), each in Morocco and
+Utah. Every experiment E02–E05 also includes the **label-efficiency** runs (10, 25 and 50% of the training blocks),
+so its report shows a learning curve next to the main result. Ablations A1–A5 are short runs that change one setting of these experiments; their results appear in the report
 of the experiment they belong to.
 
 The table is refreshed by `make_report.py`. Status: 📝 planned → 🟦 ready to run → ⏳ running → ✅ done
@@ -40,8 +40,12 @@ experiments/E02_frozen_pca/          (run)
 ├── config.yaml        ALL settings of the experiment (the only file you edit to change a run)
 └── results/           written by the scripts
     ├── run_info.json      config, code version (git commit), start and end time of every run
-    ├── <run>/             one folder per input: out-of-fold predictions, metrics, log
-    └── comparison/        all inputs on the same parcels, differences vs the baseline
+    ├── morocco/           one folder per region
+    │   ├── <run>/             one folder per input (and per label-efficiency fraction and draw: <run>_f010_d1)
+    │   ├── comparison/        all inputs on the same parcels, differences vs the baseline, learning curves
+    │   └── breakdown/         results by zone, season and purity (E02)
+    └── utah/
+experiments/E02_frozen_pca/results_quick/   quick checks (QUICK_TEST), same layout, never used for reports
 
 docs/experiments/E02_frozen_pca/     (read: this website)
 ├── index.md           setup: question, why, what changes vs the previous experiment, how to run
@@ -60,7 +64,7 @@ flowchart LR
     CFG["<b>config.yaml</b><br/>inputs · steps · settings"] --> RUN["<b>run_experiment.py</b>"]
     RUN --> S1["<b>train_evaluate</b><br/>models_run/03 · once per input"]
     RUN --> S2["<b>ltae</b><br/>models_run/03c · once per input"]
-    S1 --> R["results/&lt;run&gt;/<br/>out-of-fold predictions"]
+    S1 --> R["results/&lt;region&gt;/&lt;run&gt;/<br/>out-of-fold predictions"]
     S2 --> R
     R --> C["<b>compare</b><br/>models_run/04<br/>same parcels · paired bootstrap"]
     C --> REP["<b>report</b><br/>make_report.py"]

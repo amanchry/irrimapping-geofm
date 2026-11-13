@@ -5,7 +5,7 @@ research questions. Both are evaluated on spatially independent areas under one 
 
 | RQ | Question | Approach | Status | Page |
 | --- | --- | --- | --- | --- |
-| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-2 feature baseline | ⏳ E01 done; E02–E06 planned ([experiment plan](experiment_plan.md)) | [RQ1 · Frozen encoders](frozen_encoders.md) |
+| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-2 feature baseline | ⏳ E01 done; E02–E05 planned (each with label efficiency) ([experiment plan](experiment_plan.md)) | [RQ1 · Frozen encoders](frozen_encoders.md) |
 | **RQ2** | To what extent does parameter-efficient fine-tuning improve on a frozen encoder? | segmentation head on frozen and LoRA-adapted encoders; neural baselines | 📝 planned | [RQ2 · Fine-tuning](fine_tuning.md) |
 
 The remainder of this page summarises the RQ1 workflow, which forms the reference for all later comparisons.

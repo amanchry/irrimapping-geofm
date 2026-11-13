@@ -89,7 +89,7 @@ flowchart LR
 
 | | PCA pipeline | L-TAE pipeline |
 | --- | --- | --- |
-| Experiments | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca/index.md) | [E04](../experiments/E04_frozen_ltae/index.md) |
+| Experiments | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca/index.md), [E03](../experiments/E03_frozen_pca_mlp/index.md) | [E04](../experiments/E04_frozen_ltae/index.md) |
 | Learns which months matter | no (PCA is unsupervised) | yes (attention weights) |
 | Keeps the order of the months | only as positions in the vector | yes (positional encoding) |
 | Classifier | the three of §4 (E02) or an MLP (E03) | its own MLP head |

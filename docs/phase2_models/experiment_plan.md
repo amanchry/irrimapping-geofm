@@ -7,7 +7,7 @@ experiments (splits, metrics, fairness) are in the [evaluation protocol](evaluat
 
 **Contents:** [1 Decisions](#1-decisions-this-plan-rests-on) · [2 Shared settings](#2-settings-shared-by-every-experiment) ·
 [3 Inputs](#3-inputs) · [4 Design](#4-design-what-is-varied) · [5 Main experiments](#5-main-experiments) ·
-[6 Label efficiency](#6-e06--label-efficiency) · [7 Ablations](#7-ablations) · [8 Analyses](#8-analyses-on-every-run) ·
+[6 Label efficiency](#6-label-efficiency-inside-e02e05) · [7 Ablations](#7-ablations) · [8 Analyses](#8-analyses-on-every-run) ·
 [9 Results pages](#9-results-pages) · [10 Order of work](#10-order-of-work) · [11 Size](#11-number-of-runs) ·
 [12 Open points](#12-open-points)
 
@@ -19,10 +19,10 @@ experiments (splits, metrics, fairness) are in the [evaluation protocol](evaluat
 | E03 | PCA + MLP head | Q2 · does the head matter? | [E03 setup](../experiments/E03_frozen_pca_mlp/index.md) |
 | E04 | L-TAE + MLP head | Q3 · does attention over the months help? | [E04 setup](../experiments/E04_frozen_ltae/index.md) |
 | E05 | PSE-TAE from scratch | Q4 · is a model trained from scratch enough? | [E05 setup](../experiments/E05_psetae_scratch/index.md) |
-| E06 | Label efficiency | Q5 · do foundation models need fewer labels? | [E06 setup](../experiments/E06_label_efficiency/index.md) |
 | E01 | PCA + classifiers, nested CV (done, before D14) | check of the validation design | [E01 setup](../experiments/E01_frozen_pca_nested/index.md) · [report](../experiments/E01_frozen_pca_nested/report.md) |
 
-All experiments: [Experiments overview](../experiments/index.md).
+Label efficiency (Q5) is part of every experiment E02–E05: each one also trains on 10, 25 and 50% of the training
+blocks ([§6](#6-label-efficiency-inside-e02e05)). All experiments: [Experiments overview](../experiments/index.md).
 
 ---
 
@@ -51,7 +51,7 @@ All experiments: [Experiments overview](../experiments/index.md).
 | Splits | 5 spatial folds of 20 km blocks; **PASTIS rotation**: per round 3 folds train, the next fold validates (settings, early stopping), 1 fold tests |
 | Tuning | grids below, chosen on the validation fold by macro-F1; same grid for every input |
 | Fitted steps | imputation, standardisation, PCA, tuning and early stopping use the training folds only |
-| Neural networks | 3 seeds (0, 1, 2) per run; mean ± SD over seeds; the out-of-fold prediction of a parcel is the mean probability of the 3 seeds |
+| Neural networks | 3 seeds (42, 1042, 2042) per run; mean ± SD over seeds; the out-of-fold prediction of a parcel is the mean probability of the 3 seeds |
 | Metrics | macro-F1 (headline), F1 / precision / recall per class, balanced and overall accuracy, PR-AUC (rainfed), Brier, ECE |
 | Uncertainty | block bootstrap, 1,000 draws, same draws for every run; paired differences; Holm over all comparisons of an experiment |
 | Comparison set | parcels present in every run of the region |
@@ -112,7 +112,7 @@ flowchart LR
 | Q2 · Does the head matter? | E02 vs E03 (classical vs MLP) | input, PCA |
 | Q3 · Does learning which months matter help? | E03 vs E04 (PCA vs L-TAE) | input, MLP head |
 | Q4 · Is a model trained from scratch on our labels enough? | E05 vs the best GeoFM setting and the best baseline setting | parcels, folds |
-| Q5 · Do foundation models need fewer labels? | E06 learning curves | everything except the training size |
+| Q5 · Do foundation models need fewer labels? | learning curves inside E02–E05 (10 / 25 / 50 / 100% of the training blocks) | everything except the training size |
 | Q6 · Do the conclusions hold in a second region? | every question in Morocco and in Utah | protocol |
 
 The S2 baseline in E04 (L-TAE on the 15 monthly variables) is the key control for Q1: if L-TAE helps the GeoFMs, the
@@ -135,7 +135,7 @@ Setup page: [E02](../experiments/E02_frozen_pca/index.md)
 | **Classifiers and grids** | `logreg` C ∈ {0.01, 0.1, 1, 10}, balanced classes · `rf` 500 trees, max_features ∈ {√p, 0.3}, min_samples_leaf ∈ {1, 5}, class_weight ∈ {none, balanced_subsample} · `svm` RBF, C ∈ {1, 10}, γ ∈ {scale, 0.01}, balanced classes |
 | **Headline** | logistic regression (linear probe) for the GeoFMs; random forest for the baseline, as in the protocol; all three reported |
 | **Runs** | 5 inputs × 2 regions = 10 runs (3 classifiers each) |
-| **Script** | `models_run/03_train_evaluate.py` (exists; HGB to be removed, region setting to be added) |
+| **Script** | `models_run/03_train_evaluate.py` |
 
 ### E03 · PCA + MLP
 
@@ -149,7 +149,7 @@ Setup page: [E03](../experiments/E03_frozen_pca_mlp/index.md)
 | **Training** | AdamW, learning rate 1e-3, weight decay 1e-4, batch 128, class-weighted cross-entropy, up to 100 epochs, early stopping on validation macro-F1 (patience 15), 3 seeds |
 | **Tuning** | none beyond early stopping (same budget for every input) |
 | **Runs** | 5 inputs × 2 regions × 3 seeds |
-| **Script** | `models_run/03c_train_ltae.py` (to be written), mode `head: mlp` on the PCA input |
+| **Script** | `models_run/03c_train_ltae.py`, `HEAD: mlp` on the PCA input |
 
 ### E04 · L-TAE + MLP
 
@@ -160,10 +160,10 @@ Setup page: [E04](../experiments/E04_frozen_ltae/index.md)
 | **Question** | Q3: does attention over the months classify better than concatenation + PCA? |
 | **Inputs** | monthly sequences: S2 baseline (12 × 15 variables), Clay (12 × 1,024), Prithvi (12 × 1,024), TerraMind (12 × 768). AgriFM excluded (one vector per year). |
 | **Pre-processing** | per-channel standardisation with training-fold statistics; months without a clear pixel are masked in the attention, not filled |
-| **Model** | L-TAE (Garnot & Landrieu 2020) with the paper's default size: 16 heads, d_k 8, d_model 256, output MLP 256-128; then a linear layer with 2 outputs; the month position (1–12) as positional encoding |
+| **Model** | L-TAE (Garnot & Landrieu 2020) with the paper's default size: 16 heads, d_k 8, d_model 256, output MLP 256-128; then a linear layer with 2 outputs; sinusoidal encoding of each month's mid-month day (days since the start of the agricultural year), as in L-TAE |
 | **Training** | as E03 (AdamW 1e-3, weight decay 1e-4, batch 128, class-weighted cross-entropy, ≤ 100 epochs, patience 15, 3 seeds) |
 | **Runs** | 4 inputs × 2 regions × 3 seeds |
-| **Script** | `models_run/03c_train_ltae.py` (to be written), mode `head: ltae` |
+| **Script** | `models_run/03c_train_ltae.py`, `HEAD: ltae` |
 | **Compared with** | the E03 run of the same input (same head, PCA instead of L-TAE) and the E02 runs |
 
 ### E05 · PSE-TAE from scratch
@@ -177,24 +177,27 @@ Setup page: [E05](../experiments/E05_psetae_scratch/index.md)
 | **Model** | PSE-TAE (Garnot et al. 2020): 64 pixels sampled per parcel and month; at prediction the mean of 5 random pixel draws |
 | **Training** | Adam 1e-3, weight decay 1e-4, batch 128, ≤ 100 epochs, early stopping on validation macro-F1 (patience 15), 3 seeds |
 | **Runs** | `morocco_s2`, `utah_s2` × 3 seeds |
-| **Script** | `models_run/03b_train_psetae.py` (exists; seeds loop to be added) |
+| **Script** | `models_run/03b_train_psetae.py` (`N_SEEDS = 3`) |
 
 ---
 
-## 6. E06 · Label efficiency
+## 6. Label efficiency (inside E02–E05)
 
-Setup page: [E06](../experiments/E06_label_efficiency/index.md)
+Label efficiency is not a separate experiment: every experiment E02–E05 also trains each input on fewer training
+blocks, and its report shows the learning curve next to the main result. The block draws are shared, so the curves of
+all experiments are directly comparable.
 
 | | |
 | --- | --- |
-| **Question** | Q5: how much training data does each input need? Foundation models are expected to gain most when labels are few. |
-| **Training size** | 10, 25, 50 and 100% of the **training blocks** of each round. Validation and test folds stay complete, so only the amount of training data changes. |
-| **Sampling** | whole blocks, drawn separately from blocks with rainfed parcels and from irrigated-only blocks, so every subset keeps rainfed parcels (in Morocco most rainfed parcels lie in a few Doukkala blocks). A draw with fewer than 20 rainfed parcels is redrawn. |
-| **Repeats** | 3 draws per fraction; the same draws for every input (paired) |
-| **Inputs and heads** | every input with the linear probe (`logreg`) and SVM; the best neural setting of each input from E04/E05; PSE-TAE for the baseline |
-| **Result** | learning curves (macro-F1 and rainfed F1 vs training fraction), mean over draws with block-bootstrap CI; the fraction at which each GeoFM reaches the full-data score of the baseline |
-| **Runs** | 3 fractions below 100% × 3 draws × (5 inputs × 3 heads + PSE-TAE) × 2 regions; 100% comes from E02–E03 |
-| **Script** | a `TRAIN_FRACTION` and `FRACTION_DRAW` setting in scripts 03, 03b and 03c |
+| **Question** | Q5: how much training data does each input and head need? Foundation models are expected to gain most when labels are few; the heads with many trained parameters (MLP, L-TAE, PSE-TAE) may lose most. |
+| **Training size** | 10, 25 and 50% of the **training blocks** of each round; 100% = the main run. Validation and test folds stay complete, so only the amount of training data changes. |
+| **Sampling** | whole blocks: rainfed and irrigated-only blocks each put in a random order (per region, round and draw), and a fraction takes the first blocks of each list, so the draws are **nested** (10% ⊂ 25% ⊂ 50%); the order is accepted only if its first 10% hold ≥ 20 rainfed parcels. No fraction below 10%. (In Morocco most rainfed parcels lie in a few Doukkala blocks.) |
+| **Repeats** | 3 draws per fraction; draw *k* is the same in every experiment, for every input and head (paired) |
+| **Seeds** | neural runs (E03–E05): 1 seed per draw (the draws give the spread); the main runs keep 3 seeds, and their 100% point on the curve is scored seed by seed, so every point is single-seed |
+| **Settings** | `label_efficiency` block in each experiment's `config.yaml`; `TRAIN_FRACTION` and `FRACTION_DRAW` in scripts 03, 03b and 03c (one shared block-drawing function) |
+| **Runs** | per region: E02 45, E03 45, E04 36, E05 9 = 135; 270 for both regions |
+| **Result** | in each report: macro-F1 and rainfed F1 vs training fraction, one line per input; in the RQ1 synthesis: all experiments together, the fraction at which each GeoFM reaches the full-data score of the baseline, and whether the best head or PCA vs L-TAE changes with fewer labels |
+| **Caveat** | tuning and early stopping still use the complete validation fold, slightly optimistic for a real low-label situation |
 
 ---
 
@@ -221,13 +224,13 @@ From the out-of-fold predictions; no new training.
 
 | Analysis | Why | Script |
 | --- | --- | --- |
-| Paired differences vs the baseline, Holm-adjusted | main test of Q1 | `04_compare_models.py` (Holm fix pending) |
+| Paired differences vs the baseline, Holm-adjusted | main test of Q1 | `04_compare_models.py` |
 | Results by zone, season, parcel size and patch purity | region shortcut (Morocco rainfed in Doukkala); small parcels inside 160 m patches | `05_breakdown_oof.py` |
-| Results by crop group (Utah: rainfed alfalfa vs grain) | where each input fails | `05_breakdown_oof.py` (extension) |
+| Results by crop group (Utah: rainfed alfalfa vs grain) | where each input fails | later: `05_breakdown_oof.py` extension (needs the crop names joined from `01_labels`) |
 | Random vs spatial CV | how much random CV overstates accuracy | `03_train_evaluate.py` |
 | Calibration (Brier, ECE) | usable probabilities for maps | `03`, `03b`, `03c` |
 | Month importance (permutation, L-TAE attention) | which part of the season separates the classes | `03`, `03c` |
-| Compute cost: parameters, embedding time, training time | practical value | run logs |
+| Compute cost: parameters, embedding time, training time | practical value | collected by hand from the run logs |
 
 ---
 
@@ -245,12 +248,11 @@ With two regions, every table and figure appears once for Morocco and once for U
 
 | Experiment | Tables | Figures |
 | --- | --- | --- |
-| **every experiment** | metrics with 95% CI per input × head; differences vs the baseline (Δ macro-F1, CI, Holm) ; per-fold macro-F1 | macro-F1 with CI per input; confusion matrices; random vs spatial CV; results by zone, season, parcel size and purity |
-| [E02](../experiments/E02_frozen_pca/index.md) · PCA + classical | the three classifiers side by side | PCA explained variance per input; month importance (permutation) |
-| [E03](../experiments/E03_frozen_pca_mlp/index.md) · PCA + MLP | MLP vs the E02 classifiers on the same input; mean ± SD over seeds | training curves (loss, validation macro-F1) |
-| [E04](../experiments/E04_frozen_ltae/index.md) · L-TAE + MLP | L-TAE vs PCA (E03) on the same input | attention weights per month and class; training curves |
-| [E05](../experiments/E05_psetae_scratch/index.md) · PSE-TAE | PSE-TAE vs the best GeoFM and the best baseline setting | training curves |
-| [E06](../experiments/E06_label_efficiency/index.md) · Label efficiency | macro-F1 and rainfed F1 per training fraction; fraction at which each GeoFM reaches the full-data baseline | learning curves per input (one panel per head) |
+| **every experiment** | metrics with 95% CI per input × head; macro-F1 per training fraction (label efficiency); differences vs the baseline (Δ macro-F1, CI, Holm) ; per-fold macro-F1 | macro-F1 with CI per input; learning curve (10–100% of the training blocks); macro-F1 per test fold; confusion matrices |
+| [E02](../experiments/E02_frozen_pca/index.md) · PCA + classical | the three classifiers side by side; results by zone (focus zone, irrigated-only zones) | month importance (permutation, random forest) per input; breakdown by zone and parcel area |
+| [E03](../experiments/E03_frozen_pca_mlp/index.md) · PCA + MLP | MLP vs the E02 classifiers on the same input; macro-F1 per seed | training curves (validation macro-F1 per epoch) |
+| [E04](../experiments/E04_frozen_ltae/index.md) · L-TAE + MLP | L-TAE vs PCA (E03) on the same input; macro-F1 per seed | attention weight per month and class; training curves |
+| [E05](../experiments/E05_psetae_scratch/index.md) · PSE-TAE | PSE-TAE vs the E02 baseline and GeoFMs; macro-F1 per seed | training curves |
 | Ablations | each ablation vs the setting it changes | one comparison figure each |
 
 The [Results](../results.md) page collects the one-line answer of every experiment; the RQ1 synthesis (step 6
@@ -263,12 +265,11 @@ One experiment at a time: implement, check on a small run, run in both regions, 
 | Step | Work | Needs |
 | --- | --- | --- |
 | 0a | ✅ AgriFM normalisation: chip statistics of each region ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)); config statistics as sensitivity run | – |
-| 0b | Code: `REGION` / `VIEWS_NAME` in scripts 02a–02d ✅; remove HGB from script 03 and add the region to scripts 03, 04, 05 (before E02) | – |
-| 0c | Embeddings, Sentinel-2 only: **Morocco** TerraMind (the old file had Sentinel-1) and AgriFM (new normalisation) again; Clay and Prithvi reused. **Utah** all four from `views_2023-24/` (cluster GPU) | 0a, 0b |
+| 0b | ✅ Code (13 Nov 2026): region in scripts 02a–05; HGB removed; seeds and label efficiency in 03 / 03b / 03c; new `03c_train_ltae.py`; Holm rule in 04; per-region reports; Slurm submitter | – |
+| 0c | ✅ Embeddings, Sentinel-2 only (12 Nov 2026): **Morocco** TerraMind and AgriFM again, Clay and Prithvi reused; **Utah** all four (cluster GPU) | 0a, 0b |
 | 1 | [**E02**](../experiments/E02_frozen_pca/index.md) Morocco + Utah; report page with tables and figures (`make_report.py` extended to two regions) | 0c |
 | 2 | Write `03c_train_ltae.py` (heads `mlp` and `ltae`); [**E03**](../experiments/E03_frozen_pca_mlp/index.md), then [**E04**](../experiments/E04_frozen_ltae/index.md); reports | 1 |
 | 3 | [**E05**](../experiments/E05_psetae_scratch/index.md) PSE-TAE (3 seeds) | – (can run any time on the cluster) |
-| 4 | [**E06**](../experiments/E06_label_efficiency/index.md) label efficiency | 1–3 (best neural setting) |
 | 5 | Ablations **A1**, **A4**, **A2** (A3, A5 if time allows) | 1 |
 | 6 | RQ1 synthesis over both regions | 1–5 |
 
@@ -282,10 +283,10 @@ One experiment at a time: implement, check on a small run, run in both regions, 
 | E03 | 5 × 3 seeds | 30 | CPU or GPU, minutes |
 | E04 | 4 × 3 seeds | 24 | GPU |
 | E05 | 1 × 3 seeds | 6 | GPU |
-| E06 | 3 fractions × 3 draws × 16 settings | 288 | mostly CPU |
+| Label efficiency (inside E02–E05) | 135 | 270 | CPU (E02) + GPU (E03–E05) |
 | Ablations A1, A2, A4 | ~15 | ~25 | CPU (+ GPU for A4 embeddings) |
 
-E06 is the largest; it reuses the code of E02–E03 and only adds the training-block subsampling.
+The label-efficiency runs are the largest part; they reuse the code of E02–E05 and only add the training-block subsampling.
 
 ---
 

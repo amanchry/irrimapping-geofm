@@ -81,6 +81,8 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from experiment_utils import describe_draw, draw_table, draw_training_blocks, env_override, fraction_tag, results_dir
 from sklearn.metrics import (accuracy_score, average_precision_score, balanced_accuracy_score, brier_score_loss,
                              f1_score, precision_score, recall_score)
 
@@ -107,6 +109,10 @@ WEIGHT_DECAY = 1e-4
 EVAL_DRAWS = 5                 # random pixel sets averaged at prediction time
 N_BOOT = 1000                  # block-bootstrap draws for the confidence intervals
 SEED = 42
+N_SEEDS = 3                    # independent trainings per fold (seeds SEED, SEED+1000, ...); the out-of-fold
+                               # prediction is their mean probability, the seed spread is saved (metrics_per_seed.csv)
+TRAIN_FRACTION = 1.0           # label efficiency: share of the training blocks of each round (1.0 = all)
+FRACTION_DRAW = 1              # block draw (1, 2, 3); the same draw as in 03_train_evaluate.py and 03c
 QUICK_TEST = False             # True = 3 epochs, 100 bootstrap draws (only to check that everything runs)
 
 # experiment mode: experiments/run_experiment.py sets EXPERIMENT (and PSETAE_CONFIG for each file in "psetae_configs").
@@ -115,7 +121,7 @@ EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 CONFIG = os.environ.get("PSETAE_CONFIG", CONFIG)
 _SETTINGS = {"REGION", "WINDOW", "VIEWS_NAME", "BANDS", "S2_BANDS", "USE_EDGE_PIXELS", "MIN_INNER_PIXELS", "N_PIXELS",
              "BATCH_SIZE", "MAX_EPOCHS", "PATIENCE", "LEARNING_RATE", "WEIGHT_DECAY", "EVAL_DRAWS", "N_BOOT", "SEED",
-             "QUICK_TEST"}
+             "N_SEEDS", "TRAIN_FRACTION", "FRACTION_DRAW", "QUICK_TEST"}
 CONFIG_FILE = None
 if CONFIG and not EXPERIMENT:
     raise SystemExit("CONFIG needs EXPERIMENT: the config files are in experiments/<EXPERIMENT>/configs/")
@@ -128,14 +134,15 @@ if EXPERIMENT:
         if _key not in _SETTINGS:
             raise SystemExit(f"{CONFIG_FILE.relative_to(ROOT)}: unknown setting '{_key}' for 03b_train_psetae.py")
         globals()[_key] = _value
+env_override(globals())        # fraction, draw, number of seeds (and region) from run_experiment.py / Slurm
 
 # Paths follow from the settings, so they are built after the config file has been read.
 VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME   # 04_make_views.py
 PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
 SPLIT_FILE = ROOT / "outputs" / REGION / "dataset" / "02_folds" / "parcels_folds.geojson"   # 02_make_spatial_folds.py
-RUN_NAME = f"psetae_{REGION}_{VIEWS_NAME}_{BANDS}"
-OUT_DIR = ((ROOT / "experiments" / EXPERIMENT / "results" if EXPERIMENT else ROOT / "outputs" / REGION / "study" / "03_models")
-           / RUN_NAME)
+RUN_NAME = f"psetae_{REGION}_{VIEWS_NAME}_{BANDS}" + fraction_tag(TRAIN_FRACTION, FRACTION_DRAW)
+OUT_DIR = results_dir(EXPERIMENT, REGION, RUN_NAME, ROOT / "outputs" / REGION / "study" / "03_models",
+                      QUICK_TEST)                                  # quick runs: results_quick/
 if BANDS not in ("s2", "s2s1"):
     raise SystemExit(f"BANDS must be 's2' or 's2s1', not '{BANDS}'")
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
@@ -296,10 +303,10 @@ def predict(model, pixels, idx, parcels, stats, channels, seed):
     return prob / EVAL_DRAWS
 
 
-def train_fold(pixels, idx, labels, train, val, channels, positions, outer, log):
+def train_fold(pixels, idx, labels, train, val, channels, positions, outer, log, seed=SEED):
     """Train on `train` parcels, early stopping on macro-F1 of `val` parcels. Returns model, stats, history."""
-    rng = np.random.default_rng(SEED + outer)
-    torch.manual_seed(SEED + outer)
+    rng = np.random.default_rng(seed + outer)
+    torch.manual_seed(seed + outer)
     stats = norm_stats(pixels, idx, train, channels, rng)              # normalisation from training pixels only
     y = (labels == 2).astype(np.int64)                                 # 0 irrigated, 1 rainfed
     w = torch.tensor(len(train) / (2 * np.bincount(y[train], minlength=2)), dtype=torch.float32, device=DEVICE)
@@ -319,8 +326,8 @@ def train_fold(pixels, idx, labels, train, val, channels, positions, outer, log)
             losses.append(loss.item())
         p_val = predict(model, pixels, idx, val, stats, channels, SEED)
         f1 = f1_score(y[val], (p_val >= 0.5).astype(int), average="macro")
-        history.append({"outer_fold": outer, "epoch": epoch, "train_loss": float(np.mean(losses)), "val_macro_f1": f1})
-        log.info(f"  fold {outer} epoch {epoch:3d}  loss {np.mean(losses):.4f}  val macro-F1 {f1:.3f}  ({time.time() - t0:.0f}s)")
+        history.append({"seed": seed, "outer_fold": outer, "epoch": epoch, "train_loss": float(np.mean(losses)), "val_macro_f1": f1})
+        log.info(f"  fold {outer} seed {seed} epoch {epoch:3d}  loss {np.mean(losses):.4f}  val macro-F1 {f1:.3f}  ({time.time() - t0:.0f}s)")
         if f1 > best:                                                  # keep the best epoch
             best, best_state, wait = f1, {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}, 0
         else:
@@ -382,27 +389,43 @@ def main():
     n_months = pixels.shape[1]
     positions = [int(round(15 + 30.44 * k)) for k in range(n_months)]   # mid-month, days since the season start
 
-    # 2-4. Outer spatial folds.
-    parts, fold_rows, history = [], [], []
+    # 2-4. Outer spatial folds (and N_SEEDS trainings per fold).
+    parts, fold_rows, history, draws, seed_parts = [], [], [], [], []
     fold_ids = sorted(np.unique(folds))
+    split_draw = draw_table(SPLIT_FILE, VIEWS_DIR) if TRAIN_FRACTION < 1 else None
+    seeds = [SEED + 1000 * s for s in range(N_SEEDS)]
     for outer in fold_ids:
         val_fold = fold_ids[(fold_ids.index(outer) + 1) % len(fold_ids)]          # next fold = early-stopping fold
         test = np.flatnonzero(folds == outer)
         val = np.flatnonzero(folds == val_fold)
         train = np.flatnonzero((folds != outer) & (folds != val_fold))
+        if TRAIN_FRACTION < 1:                                   # label efficiency: same blocks as scripts 03 and 03c
+            train_folds = [f for f in fold_ids if f not in (outer, val_fold)]
+            keep = draw_training_blocks(split_draw, train_folds, TRAIN_FRACTION, FRACTION_DRAW, REGION, outer)
+            train = train[np.isin(blocks[train], [str(b) for b in keep])]
+            draws.append({"test_fold": int(outer), **describe_draw(split_draw, keep, train_folds)})
+            log.info(f"  {TRAIN_FRACTION:.0%} of the training blocks (draw {FRACTION_DRAW}): {draws[-1]}")
         log.info(f"Outer fold {outer}: train {len(train):,} | validation (fold {val_fold}) {len(val):,} | test {len(test):,}")
-        model, stats, hist, best = train_fold(pixels, idx, labels, train, val, channels, positions, outer, log)
-        history += hist
-        p = predict(model, pixels, idx, test, stats, channels, SEED + 100 + outer)     # test fold, never seen before
+        p, best = np.zeros(len(test)), []
+        for seed in seeds:
+            model, stats, hist, b = train_fold(pixels, idx, labels, train, val, channels, positions, outer, log, seed)
+            history += hist
+            p_seed = predict(model, pixels, idx, test, stats, channels, seed + 100 + outer)   # test fold, never seen
+            seed_parts.append(pd.DataFrame({"seed": seed, "parcel_id": ids[test], "outer_fold": outer,
+                                            "y_true": labels[test], "score": p_seed, "block_id": blocks[test]}))
+            p += p_seed / len(seeds)
+            best.append(b)
+            if seed == seeds[0]:
+                torch.save({"state_dict": model.state_dict(), "mean": stats[0], "std": stats[1], "channels": channels,
+                            "positions": positions}, OUT_DIR / f"model_fold{outer}.pt")
+        best = float(np.mean(best))
         y_pred = np.where(p >= 0.5, 2, 1)
         parts.append(pd.DataFrame({"model": "psetae", "parcel_id": ids[test], "outer_fold": outer,
                                    "y_true": labels[test], "y_pred": y_pred, "score": p,
                                    "is_probability": True, "block_id": blocks[test]}))
         m = metrics(labels[test], y_pred, p)
         fold_rows.append({"outer_fold": outer, "best_val_macro_f1": best, "epochs": len(hist), **m})
-        log.info(f"Outer fold {outer}: test macro-F1 {m['macro_f1']:.3f}")
-        torch.save({"state_dict": model.state_dict(), "mean": stats[0], "std": stats[1], "channels": channels,
-                    "positions": positions}, OUT_DIR / f"model_fold{outer}.pt")
+        log.info(f"Outer fold {outer}: test macro-F1 {m['macro_f1']:.3f} (mean probability of {len(seeds)} seeds)")
 
     # 5. Metrics on all out-of-fold predictions.
     oof = pd.concat(parts, ignore_index=True)
@@ -410,8 +433,17 @@ def main():
     summary = ci.apply(lambda r: f"{r.estimate:.3f} [{r.ci_low:.3f}-{r.ci_high:.3f}]", axis=1).rename("psetae")
     log.info("Out-of-fold metrics (95% block-bootstrap CI):\n" + summary.to_string())
 
+    per_seed = pd.concat(seed_parts, ignore_index=True)
+    seed_rows = [{"seed": s, **metrics(g["y_true"].to_numpy(), np.where(g["score"] >= 0.5, 2, 1), g["score"].to_numpy())}
+                 for s, g in per_seed.groupby("seed")]
+    seed_table = pd.DataFrame(seed_rows)
+    log.info("Per seed (macro-F1): " + ", ".join(f"{r.seed}: {r.macro_f1:.3f}" for r in seed_table.itertuples())
+             + f" | mean {seed_table['macro_f1'].mean():.3f} ± {seed_table['macro_f1'].std(ddof=1) if len(seed_table) > 1 else 0:.3f}")
+
     # 6. Save.
     oof.to_csv(OUT_DIR / "oof_predictions.csv", index=False)
+    seed_table.to_csv(OUT_DIR / "metrics_per_seed.csv", index=False)
+    per_seed.assign(model="psetae").to_csv(OUT_DIR / "oof_per_seed.csv", index=False)   # single-seed scores
     pd.concat({"psetae": ci}, names=["model"]).to_csv(OUT_DIR / "metrics_with_ci.csv")
     summary.to_frame().to_csv(OUT_DIR / "metrics_summary.csv")
     pd.DataFrame(fold_rows).to_csv(OUT_DIR / "metrics_per_fold.csv", index=False)
@@ -423,8 +455,9 @@ def main():
         "max_epochs": MAX_EPOCHS, "patience": PATIENCE, "learning_rate": LEARNING_RATE,
         "weight_decay": WEIGHT_DECAY, "eval_draws": EVAL_DRAWS, "loss": "class-weighted cross-entropy",
         "validation": "outer 5 spatial folds; per outer fold 3 folds train, next fold early stopping",
-        "positions_days": positions, "n_parcels": int(len(oof)), "n_boot": N_BOOT, "seed": SEED,
-        "quick_test": QUICK_TEST, "device": DEVICE}, indent=2))
+        "positions_days": positions, "n_parcels": int(len(oof)), "n_boot": N_BOOT, "seed": SEED, "seeds": seeds,
+        "train_fraction": TRAIN_FRACTION, "fraction_draw": FRACTION_DRAW, "block_draws": draws,
+        "quick_test": QUICK_TEST, "device": DEVICE}, indent=2, default=str))
     log.info(f"Saved in {OUT_DIR}")
 
 

@@ -2,7 +2,7 @@
 id: E03
 title: "Frozen GeoFMs + PCA + MLP head"
 short_title: PCA + MLP head   # name in the site's sidebar
-status: planned
+status: ready
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
@@ -12,9 +12,15 @@ answer: ""
 
 regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
 inputs: [s1s2, clay, prithvi, terramind, agrifm]   # Sentinel-2 only (D14)
-steps: [ltae, compare, report]
+label_efficiency:          # learning curve inside this experiment (Q5 of the plan): training blocks subsampled
+  fractions: [0.10, 0.25, 0.50]   # share of the training blocks; 1.0 = the main run
+  draws: 3                        # block draws per fraction; draw k is identical in every experiment and input (paired)
+  seeds_per_draw: 1               # neural runs: one seed per draw (the main run keeps its 3 seeds)
+  min_rainfed: 20                 # fixed in models_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
 
-ltae:                      # models_run/03c_train_ltae.py (to be written; same output format as 03)
+steps: [ltae, compare, breakdown, report]
+
+ltae:                      # models_run/03c_train_ltae.py (same output format as 03)
   HEAD: mlp                # MLP on the PCA input (E04 uses HEAD: ltae)
   FEATURE_MODE: concat
   PCA_DIM: 128
@@ -30,7 +36,7 @@ ltae:                      # models_run/03c_train_ltae.py (to be written; same o
 
 compare:
   BASELINE_CLASSIFIER: rf
-  EXTRA_RUNS: []           # the E02 runs of the same inputs, added when E02 is done
+  EXTRA_RUNS: ["E02_frozen_pca/*"]   # the E02 runs (same input, classical heads) on the same parcels
 
 report:
   HEADLINE_CLASSIFIERS: [mlp, logreg, rf]

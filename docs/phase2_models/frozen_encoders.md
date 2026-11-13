@@ -31,7 +31,7 @@ flowchart TD
     C16["<b>Chips p16</b><br/>64 × 64 px, 16-px patches"]
     FO["<b>Spatial folds</b><br/>20 km blocks"]
 
-    FA --> B0["<b>S1/S2 baseline</b><br/>204 features"]
+    FA --> B0["<b>S2 baseline</b><br/>180 features"]
     C8 --> B1["<b>Clay v1.5</b><br/>12 × 1024"]
     C16 --> B2["<b>Prithvi-EO-2.0</b><br/>12 × 1024"]
     C16 --> B3["<b>TerraMind</b><br/>12 × 768"]
@@ -42,14 +42,14 @@ flowchart TD
     B3 --> POOL
     B4 --> POOL
 
-    B0 --> HUB["<b>03 · train and evaluate</b><br/>LogReg (linear probe) · RF · HGB · SVM<br/>same grids for every input"]
+    B0 --> HUB["<b>03 / 03c · train and evaluate</b><br/>LogReg (linear probe) · RF · SVM (E02)<br/>MLP (E03) · L-TAE + MLP (E04)"]
     POOL --> HUB
     HUB --> CV["<b>Spatial CV, 5 rounds</b> (PASTIS scheme)<br/>3 folds train · next fold validation · 1 fold test"]
     FO -. "folds" .-> CV
-    CV --> OOF["<b>Out-of-fold predictions</b><br/>every parcel predicted once, by a model<br/>that never saw its 20 km block<br/>5 inputs × 4 classifiers = 20 runs"]
+    CV --> OOF["<b>Out-of-fold predictions</b><br/>every parcel predicted once, by a model<br/>that never saw its 20 km block<br/>per region (Morocco, Utah)"]
     OOF --> M["<b>Metrics per run</b><br/>macro-F1 (headline) · per-class F1 · balanced accuracy<br/>PR-AUC · Brier · ECE · 95% block-bootstrap CI"]
     M --> CMP["<b>04 · compare models</b><br/>same parcels, same bootstrap samples<br/>Δ macro-F1 vs baseline · Holm-adjusted p"]
-    CMP --> ANS(["Does a foundation model beat<br/>the Sentinel-1/2 baseline?"])
+    CMP --> ANS(["Does a foundation model beat<br/>the Sentinel-2 baseline?"])
 ```
 
 Per-model bands, patches and temporal handling: [Foundation models](../foundation_models.md#configuration-in-this-study).
@@ -133,9 +133,9 @@ All four scripts follow the same pattern. Only the model, its bands and its norm
 ```mermaid
 flowchart TD
     A["Chip of one parcel<br/>12 months × 15 bands × 64 × 64 px<br/>+ parcel mask"] --> B["Select the bands the model<br/>was pretrained on"]
-    B --> C["Normalise with the model's own<br/>pretraining mean / std<br/>NODATA (cloud) → 0 = band mean"]
+    B --> C["Normalise per band: the model's pretraining<br/>mean / std (AgriFM: the region's chip statistics)<br/>NODATA (cloud) → 0 = band mean"]
     C --> D["Frozen encoder<br/>(no gradient, eval mode)"]
-    D --> E["Patch tokens on their grid<br/>8 × 8 (Clay) or 4 × 4 (others)"]
+    D --> E["Patch tokens on their grid<br/>8 × 8 (Clay), 4 × 4 (Prithvi, TerraMind), 2 × 2 (AgriFM)"]
     A -->|"mask"| W["Patch weight = share of the<br/>patch's pixels inside the parcel"]
     E --> F["Weighted mean of the patches<br/>covering the parcel"]
     W --> F
@@ -176,7 +176,80 @@ python models_run/02a_embed_clay.py                                             
 EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02a_embed_clay.py  # Utah 2023/24
 ```
 
-### 5.2 Embedding file format
+### 5.2 How each model handles the 12 months
+
+The four models treat time differently. Clay, Prithvi and TerraMind return **one embedding per month** (12 per
+parcel), and this study decides how the months are combined (PCA in E02 / E03, L-TAE in E04). AgriFM merges the
+months **inside the network** and returns **one embedding for the whole year**.
+
+| Model | Months per forward pass | Passes per parcel | Time steps out per pass | Per parcel | Months merged inside the model? |
+| --- | --- | --- | --- | --- | --- |
+| Clay v1.5 | 1 | 12 | 1 | 12 × 1,024 | no (single-date model) |
+| TerraMind | 1 | 12 | 1 | 12 × 768 | no (single-date model) |
+| Prithvi-EO-2.0 | 4 (`FRAMES_PER_PASS = 4`, as in its pretraining) | 3 | 4 | 12 × 1,024 | no: months only share context |
+| AgriFM | 12 (the whole year) | 1 | 1 | 1 × 1,024 | yes: averaged down to one time step |
+
+```mermaid
+flowchart LR
+    subgraph SD["Clay · TerraMind (single date)"]
+        direction TB
+        S1["month 1"] --> SE1["encoder"] --> SO1["embedding 1"]
+        S2["…"] --> SE2["…"] --> SO2["…"]
+        S12["month 12"] --> SE12["encoder"] --> SO12["embedding 12"]
+    end
+    subgraph PR["Prithvi (4 months per pass)"]
+        direction TB
+        P1["Sep–Dec"] --> PE1["encoder"] --> PO1["4 embeddings<br/>Sep · Oct · Nov · Dec"]
+        P2["Jan–Apr"] --> PE2["encoder"] --> PO2["4 embeddings"]
+        P3["May–Aug"] --> PE3["encoder"] --> PO3["4 embeddings"]
+    end
+    subgraph AG["AgriFM (whole year)"]
+        direction TB
+        A1["12 months"] --> AE["encoder:<br/>12 → 3 → 2 → 1 time steps"] --> AO["1 embedding<br/>for the year"]
+    end
+```
+
+**Clay and TerraMind** are single-date models: each monthly chip is encoded on its own, so every month gets its own
+embedding and the months never see each other.
+
+**Prithvi-EO-2.0** is multi-temporal, but it does not merge the months. It was pretrained on 4 dates per sample, so
+the script gives it 4 consecutive months per pass: Sep–Dec, Jan–Apr and May–Aug in Morocco (Oct–Jan, Feb–May,
+Jun–Sep in Utah). Its tokens span **1 month** × 16 × 16 px (temporal patch size 1) and no layer reduces the time
+axis, so 4 months in give 4 sets of tokens out: for a 64 px chip, 4 months × a 4 × 4 patch grid (`[B, T, n, n, D]`
+with T = 4 in `02b_embed_prithvi.py`). The only effect of passing 4 months together is attention between them: each
+month's embedding is computed with the other three as context. Three passes × 4 months = 12 embeddings. They could
+be averaged to one per pass, but they are kept monthly so that the months are combined in the same way as for Clay
+and TerraMind.
+
+**AgriFM** is built like a video model (modified Video Swin Transformer; Li et al. 2025) and compresses time inside
+the network, as it compresses space. In the encoder code (`external/AgriFM/AgriFM/models/video_swin_transformer.py`):
+
+1. The pretrained patch embedding covers **4 months × 4 × 4 px** ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)),
+   so 12 months become 3 time steps.
+2. With `mean_frame_down = True`, each downsampling stage also **averages neighbouring time steps** (padding an odd
+   count): 3 → 2 → 1.
+3. The output (`feature_fusion = "cat"`) folds any remaining time steps into the channels; with one step left this
+   gives 1,024 channels.
+
+The script receives a feature map of 1,024 channels on a 2 × 2 grid (320 m cells for a 64 px chip), pools the cells
+covering the parcel and stores it as `[N, 1, 1024]` with the single step `"year"`.
+
+**Consequences for the experiments**
+
+| | Clay · Prithvi · TerraMind | AgriFM |
+| --- | --- | --- |
+| Who combines the months | this study (PCA or L-TAE) | the pretrained network |
+| Input to PCA (E02 / E03) | 12 × D = 9,216–12,288 values → PCA 128 | 1,024 values → PCA 128 (same input size for the head) |
+| L-TAE (E04) | yes | not applicable: no sequence of months |
+| Which months matter | measurable (permutation importance in E02, attention weights in E04) | not measurable: no per-month embeddings |
+| `valid` flag | per month (clear pixels in that month) | one flag: at least one observed month |
+
+**Limitation to report.** AgriFM was pretrained on dense time series (5-day steps; its configuration uses 32 frames).
+Here it receives 12 monthly composites, so each of its time tokens spans 4 months instead of about 20 days. The
+weights load and the input shape is valid, but the model's fine temporal resolution is not used; this is reported
+next to the Prithvi limitation (pretrained on 30 m HLS, applied to 10 m Sentinel-2).
+
+### 5.3 Embedding file format
 
 ```
 outputs/<REGION>/study/02_embeddings/<model>_agyear_tiles.npz          Morocco (views/)
@@ -200,7 +273,7 @@ flowchart TD
     subgraph BASE["INPUT = s1s2 (baseline)"]
         A1["parcel_features_inner.csv"] --> A2["Drop bookkeeping and count columns<br/>keep one S1 orbit, renamed VV / VH"]
         A2 --> A3["Fill fully cloudy months by<br/>linear interpolation in time<br/>(per parcel, own values only)"]
-        A3 --> A4["204 features<br/>17 variables × 12 months"]
+        A3 --> A4["180 features<br/>15 variables × 12 months (Sentinel-2)"]
     end
     subgraph EMB["INPUT = GeoFM"]
         B1["&lt;model&gt;_agyear_tiles.npz"] --> B2{"FEATURE_MODE"}
@@ -223,10 +296,10 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | `logreg` | Logistic regression | one linear decision boundary; on frozen embeddings the standard **linear probe** (Alain & Bengio, 2016), which measures the information contained in the features | C ∈ {0.01, 0.1, 1, 10} | L2 penalty, lbfgs, `max_iter = 5000`, `class_weight = "balanced"`, standardised inputs |
 | `rf` | Random forest (Breiman, 2001) | vote of many decision trees, each grown on a bootstrap sample and random feature subsets; the usual classifier in irrigation mapping | max_features ∈ {√p, 0.3}; min_samples_leaf ∈ {1, 5}; class_weight ∈ {none, balanced_subsample} | 500 trees, no depth limit, seed 42 |
-| `hgb` | Histogram gradient boosting | small trees added sequentially, each correcting the previous errors; features binned into histograms | learning_rate ∈ {0.05, 0.1}; max_leaf_nodes ∈ {15, 31}; class_weight ∈ {none, balanced} | 300 boosting rounds; built-in early stopping off, because it would use a random rather than a spatial validation split |
 | `svm` | RBF support vector machine | maximum-margin boundary, made non-linear by the RBF kernel; used for irrigation mapping with Sentinel-1/2 (Gao et al., 2018; Elwan et al., 2022) | C ∈ {1, 10}; γ ∈ {scale, 0.01} | `class_weight = "balanced"`, standardised inputs; no probability calibration (the decision score is used for PR-AUC) |
 
-The settings selected in each round are reported per experiment
+Histogram gradient boosting was a fourth classifier in E01 and is dropped from E02 on
+([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). The settings selected in each round are reported per experiment
 ([E01](../experiments/E01_frozen_pca_nested/report.md#selected-hyperparameters)).
 
 The selection score is macro-F1, the mean of the irrigated F1 and rainfed F1. It treats the 14% rainfed class as equally important.
@@ -287,13 +360,15 @@ flowchart LR
 
 ### 6.5 Further analyses in the same run
 
-1. **Classifier comparison:** paired macro-F1 differences between the 4 classifiers on the same parcels, with block-bootstrap CIs.
+1. **Classifier comparison:** paired macro-F1 differences between the 3 classifiers on the same parcels, with block-bootstrap CIs.
 2. **Spatial vs random CV:** the same hyperparameters re-evaluated with the stratified `random_fold`. The gap shows how much random validation overstates accuracy.
 3. **Grouped permutation importance:** uses the random forest of each outer fold, on its test fold. For the baseline it is computed by variable (NDVI, VH, …) and by month; for embeddings, by month.
 4. **Seasonal profiles** (baseline): class medians per variable and month.
 5. **Final models:** refit on all parcels (`final_model_<name>.joblib`), for mapping later.
 
-**Outputs** (`experiments/<EXPERIMENT>/results/<RUN_NAME>/` in experiment mode; `outputs/morocco/study/03_models/<RUN_NAME>/` for development runs with `EXPERIMENT = None`):
+Steps 2, 3 and 5 are skipped in label-efficiency runs (§6.6), which only need the out-of-fold predictions.
+
+**Outputs** (`experiments/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/` in experiment mode; `outputs/<REGION>/study/03_models/<RUN_NAME>/` for development runs with `EXPERIMENT = None`):
 - `metrics_summary.csv`, `metrics_with_ci.csv`, `metrics_per_fold.csv`
 - `paired_model_differences.csv`
 - `cv_random_vs_spatial.csv` / `.png`
@@ -307,7 +382,63 @@ flowchart LR
 
 **Run names:**
 - Baseline: `s1s2-<variables>_agyear_tiles-<inner|all>[-<orbit>]`, e.g. `s1s2-s2_agyear_tiles-inner` (Sentinel-2 only, no orbit) or `s1s2-all_agyear_tiles-inner-asc`.
-- GeoFMs: `<model>_agyear_tiles_<concat|mean>`, e.g. `clay_agyear_tiles_concat`.
+- GeoFMs: `<model>_agyear_tiles[_2023-24]_<concat|mean>`, e.g. `clay_agyear_tiles_concat` (Morocco),
+  `clay_agyear_tiles_2023-24_concat` (Utah).
+- Label-efficiency runs end in `_f<percent>_d<draw>`, e.g. `clay_agyear_tiles_concat_f010_d1`.
+
+### 6.6 Regions and label efficiency (scripts 03, 03b, 03c)
+
+| Setting | Meaning | Set by |
+| --- | --- | --- |
+| `REGION`, `VIEWS_NAME` | study area and its views folder (Morocco `views`, Utah `views_2023-24`); folds, features and embeddings are read from `outputs/<REGION>/` | `EXPERIMENT_REGION` (run_experiment.py, Slurm) |
+| `TRAIN_FRACTION`, `FRACTION_DRAW` | share of the training blocks of each round (1.0 = all; 0.10 / 0.25 / 0.50) and the draw (1–3) | `EXPERIMENT_FRACTION`, `EXPERIMENT_DRAW` |
+| `N_SEEDS` (03b, 03c) | trainings per round; the out-of-fold probability is their mean | `EXPERIMENT_N_SEEDS` (1 in label-efficiency runs) |
+| `QUICK_TEST` | fast check of the whole chain | `EXPERIMENT_QUICK_TEST` |
+
+The block draw is one shared function (`models_run/experiment_utils.py`, `draw_training_blocks()`):
+
+1. Take the training blocks of the round, counting only parcels of the views' agricultural years (Utah's fold file
+   also holds 2021).
+2. Split them into blocks with rainfed parcels and irrigated-only blocks and put each list in a random order
+   (seed from region, round and draw only).
+3. A fraction takes the first blocks of each list (the same share of each, at least one block each). The draws are
+   therefore **nested**: the 10% blocks are part of the 25% blocks, which are part of the 50% blocks, so a learning
+   curve shows the effect of adding blocks, not of drawing different ones.
+4. The ordering is accepted only if its first 10% already hold at least 20 rainfed parcels (otherwise the next
+   sub-seed); every fraction then keeps enough rainfed parcels (checked: at least 22 in Morocco, 26 in Utah, over
+   all rounds and draws).
+5. Draw *k* selects the same blocks in scripts 03, 03b and 03c and for every input: the learning curves of all
+   experiments are paired. The validation and test folds stay complete.
+
+The blocks kept in every round are written to `run_config.json` (`block_draws`) and the run log; script 04 reports
+the mean number of training parcels per fraction.
+
+**Quick checks never mix with results.** With `QUICK_TEST` (or `QUICK = True` in `run_experiment.py` /
+`submit_slurm.py`) the scripts write to `experiments/<E>/results_quick/` and no report is written, so a later real
+run is never skipped as "already done". The runners also remove every `EXPERIMENT_*` variable left in the shell and
+set each run's variables explicitly.
+
+### 6.7 Script 03c — `train_ltae` (neural heads: E03, E04)
+
+Same parcels, folds, PASTIS rotation and output files as script 03 (`oof_predictions.csv` with `model` = `mlp` or
+`ltae`), so script 04 compares it directly with the classical classifiers.
+
+| `HEAD` | Input | Model | Experiment |
+| --- | --- | --- | --- |
+| `mlp` | the E02 input: 12 months concatenated, training-median fill, standardised, PCA 128 (baseline: the 180 standardised features) | MLP 128 → 256 → 128 → 2, batch normalisation, ReLU, dropout 0.2 | E03 |
+| `ltae` | the 12 months as a sequence, per-channel standardisation; months without a clear pixel masked in the attention | L-TAE (Garnot & Landrieu 2020): channels → d_model 256 + sinusoidal encoding of the mid-month day, 16 heads with one learned master query each (d_k 8), output MLP 256-128, linear layer → 2 | E04 |
+
+Training: AdamW (learning rate 1e-3, weight decay 1e-4), batch 128, class-weighted cross-entropy, up to 100 epochs,
+early stopping on the validation fold's macro-F1 (patience 15), best epoch kept; 3 seeds per round. AgriFM (one
+vector per year) is only used with `HEAD = "mlp"`. Extra outputs: `metrics_per_seed.csv`, `training_history.csv` and,
+for L-TAE, `attention_by_month.csv` (attention per month and class on the test folds).
+
+### 6.8 Script 03b — `train_psetae` (E05)
+
+PSE-TAE (Garnot et al. 2020) trained from scratch on the pixel sets (view B): 10 Sentinel-2 bands × 12 months, 64
+pixels sampled per parcel, the same PASTIS rotation and early stopping. Each run is one config file in
+`experiments/E05_psetae_scratch/configs/` (`morocco_s2`, `utah_s2`; `morocco_s2s1` is the Sentinel-1 ablation).
+`N_SEEDS = 3` trainings per round, averaged; `metrics_per_seed.csv` holds the spread. Label efficiency as in §6.6.
 
 ---
 
@@ -323,14 +454,34 @@ flowchart TD
     C --> E["Per GeoFM run × classifier:<br/>Δ macro-F1 vs baseline (same classifier)<br/>95% CI + bootstrap p-value"]
     E --> F["Holm adjustment over<br/>all comparisons"]
     D --> OUT["metrics_all_runs.csv<br/>comparison_macro_f1.png"]
-    F --> OUT2["differences_vs_baseline.csv<br/>differs = CI excludes 0"]
+    F --> OUT2["differences_vs_baseline.csv<br/>differs = CI excludes 0 AND Holm p < 0.05"]
+    C --> LC["Label-efficiency runs:<br/>macro-F1 per training fraction<br/>(mean over draws, same samples)"]
+    LC --> OUT3["learning_curve.csv / .png"]
 ```
 
 - **Paired:** the same bootstrap blocks are used for every run, so each difference is measured on identical resamples (Foody 2009).
-- **Multiple comparisons:** 4 GeoFMs × 4 classifiers = 16 comparisons, Holm-adjusted.
-- **Interpretation:** a GeoFM is better than the baseline only if the 95% interval of Δ macro-F1 lies entirely above 0.
+- **Multiple comparisons:** the experiment's own input × head comparisons with its baseline form one Holm family
+  (runs borrowed from other experiments are not part of it).
+- **Same input, earlier experiments' heads** (`differences_vs_earlier_experiments.csv`, own Holm family): every run
+  of this experiment against the runs of the same input in `EXTRA_RUNS`, e.g. E03 Clay + MLP vs E02 Clay + LogReg /
+  RF / SVM, E04 Clay + L-TAE vs E03 Clay + MLP. This answers Q2 (head) and Q3 (temporal aggregation) with paired tests.
+- **Interpretation:** an input is better than the baseline only if the 95% interval of Δ macro-F1 lies entirely
+  above 0 **and** the Holm-adjusted p-value is below 0.05 (column `differs`; `ci_excludes_0` keeps the interval test
+  alone). Before 13 Nov 2026 `differs` used the interval only; the report pages always applied both conditions.
+- **One region at a time** (`REGION`): results are read from `experiments/<E>/results/<REGION>/` and written to its
+  `comparison/` folder.
+- **Runs of other experiments:** `EXTRA_RUNS` lists `"<experiment>/<run>"` or `"<experiment>/*"` (all main runs of
+  that experiment in the same region), e.g. E04 compares with `"E03_frozen_pca_mlp/*"` and `"E02_frozen_pca/*"`. That
+  experiment must have finished first.
+- **Baseline:** the experiment's own Sentinel-2 baseline run (E03: the baseline with the MLP head; E04: with L-TAE);
+  E05 has none and uses the E02 baseline.
+- **Label efficiency:** for every run and head, macro-F1 and rainfed F1 at each training fraction, the mean over the
+  draws with a block-bootstrap CI on the same parcels and samples, and the mean training parcels per round
+  (`learning_curve.csv`, `learning_curve.png`). Neural label-efficiency runs use one seed per draw; their 100% point
+  is the mean over the main run's 3 seeds scored one by one (`oof_per_seed.csv`), so every point is single-seed.
+- **Missing runs fail loudly:** a borrowed experiment without finished runs, or no baseline, stops the script.
 
-`BASELINE_RUN` is the Sentinel-2 baseline `s1s2-s2_agyear_tiles-inner`; for a run with Sentinel-1 it must match the orbit that was actually used (`views_info.json`), for example `s1s2-all_agyear_tiles-inner-asc`.
+In development mode (`EXPERIMENT = None`) `BASELINE_RUN` is the Sentinel-2 baseline `s1s2-s2_agyear_tiles-inner`; for a run with Sentinel-1 it must match the orbit that was actually used (`views_info.json`), for example `s1s2-all_agyear_tiles-inner-asc`.
 
 ### 7.1 Script 05 — `breakdown_oof` (results by region, season and purity)
 
@@ -338,15 +489,17 @@ flowchart TD
 concentrated in Doukkala (94%), and Gharb, Tadla and El Haouz contain almost only irrigated parcels, so a classifier
 can score well by recognising the region (shortcut learning). The 16-px chips also mix each parcel with its
 neighbours (median purity 0.30). The script reads the out-of-fold predictions of one experiment; no model is
-trained.
+trained. It runs per region (`REGION`) on every head (LogReg, RF, SVM, MLP, L-TAE, PSE-TAE): the focus zone is Doukkala in Morocco and, in Utah, the zone with most
+rainfed parcels (found automatically; the Bear River basin holds 58% of them); irrigated-only zones are listed for
+Morocco and found automatically for Utah (≥ 100 parcels, < 2% rainfed).
 
-| Output (`experiments/<E>/results/breakdown/`) | Content |
+| Output (`experiments/<E>/results/<REGION>/breakdown/`) | Content |
 | --- | --- |
-| `doukkala.csv` | macro-F1 in Doukkala, the only zone with both classes, with 95% block-bootstrap CI and the paired difference to the baseline |
-| `irrigated_only_zones.csv` | share of irrigated parcels predicted rainfed in Gharb, Tadla and El Haouz, with CI |
+| `focus_zone.csv` | macro-F1 in the focus zone (Morocco: Doukkala, the only zone with both classes) with 95% block-bootstrap CI and the paired difference to the baseline (E01: `doukkala.csv`) |
+| `irrigated_only_zones.csv` | share of irrigated parcels predicted rainfed in the irrigated-only zones (Morocco: Gharb, Tadla, El Haouz), with CI |
 | `by_zone_season.csv` | rainfed recall and precision, false-rainfed rate and macro-F1 per zone and agricultural year |
 | `by_purity.csv`, `by_area.csv` | macro-F1 per 16-px patch-purity bin and per parcel-area bin |
-| `breakdown.png` | Doukkala macro-F1 and false-rainfed rate per input |
+| `breakdown.png` | focus-zone macro-F1 and false-rainfed rate per input |
 
 First application (E01, nested CV, 8,775 parcels; AgriFM excluded): in Doukkala, no frozen GeoFM exceeds the
 baseline (baseline SVM 0.896 [0.818–0.952]; the GeoFM random forests are 0.03–0.07 lower, with intervals that
@@ -360,22 +513,29 @@ GeoFM macro-F1 increases with patch purity more steeply than that of the baselin
 ## 8. Output layout
 
 ```
-outputs/morocco/study/
+outputs/<REGION>/study/               morocco/ and utah/
 ├── 01_inspection/                    script 01 (+ chips_geotiff/ from tools/a3)
 ├── 02_embeddings/
 │   ├── clay_agyear_tiles.npz
 │   ├── prithvi_agyear_tiles.npz
 │   ├── terramind_agyear_tiles.npz          Sentinel-2 only (terramind-s1s2_… = with Sentinel-1)
-│   ├── agrifm_agyear_tiles.npz
+│   ├── agrifm_agyear_tiles.npz             (Utah: <model>_agyear_tiles_2023-24.npz)
 │   └── _parts_<model>_agyear_tiles/  batch files (resume)
 ├── 03_models/                        development runs only (EXPERIMENT = None)
 └── 04_comparison/                    development runs only
 
 experiments/<EXPERIMENT>/results/     runs that are reported (see the Experiments pages)
-├── s1s2-s2_agyear_tiles-inner/
-├── clay_agyear_tiles_concat/
-├── …                                 one folder per run
-├── comparison/                       metrics_all_runs.csv · differences_vs_baseline.csv · comparison_macro_f1.png
+├── run_info.json                     config, code version, start and end of every run_experiment.py call
+├── morocco/
+│   ├── s1s2-s2_agyear_tiles-inner/
+│   ├── clay_agyear_tiles_concat/
+│   ├── clay_agyear_tiles_concat_f010_d1/   label-efficiency run (10% of the training blocks, draw 1)
+│   ├── …                             one folder per run
+│   ├── comparison/                   metrics_all_runs.csv · differences_vs_baseline.csv · learning_curve.csv / .png
+│   │                                 · differences_vs_earlier_experiments.csv (E03, E04, E05)
+│   └── breakdown/                    script 05
+└── utah/                             the same for Utah 2023/24
+experiments/<EXPERIMENT>/results_quick/   quick checks (QUICK_TEST), same layout, never used for reports
 ```
 
 The embeddings (`02_embeddings/`) depend only on the dataset and the model, so every experiment shares them.
@@ -391,23 +551,34 @@ python models_run/02a_embed_clay.py          # GPU recommended; resumable
 python models_run/02b_embed_prithvi.py
 python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
-# steps 03 + 04 + report as an experiment (set EXPERIMENT at the top of run_experiment.py):
+# an experiment, every region and label-efficiency run (set EXPERIMENT at the top of run_experiment.py):
 python experiments/run_experiment.py
-# or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/morocco/study/):
+# the same on the cluster, one Slurm job per run (on the server; DRY_RUN = True first):
+python experiments/submit_slurm.py
+# or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/<REGION>/study/):
 python models_run/03_train_evaluate.py
+EXPERIMENT_REGION=utah EXPERIMENT_INPUT=clay python models_run/03c_train_ltae.py
 python models_run/04_compare_models.py
 ```
 
-`QUICK_TEST = True` in script 03 gives a fast check: 100 trees, 100 bootstrap draws, one setting per classifier.
+`QUICK_TEST = True` in a script, or `QUICK = True` in `run_experiment.py` / `submit_slurm.py`, gives a fast check
+(script 03: 100 trees, 100 bootstrap draws, one setting per classifier; 03b / 03c: 3 epochs).
+
+**Order on the cluster:** E02 first (E03–E05 compare with its runs), then E03, then E04 (compares with E03), and E05
+at any time after E02. Each `submit_slurm.py` call submits the experiment's training jobs and one compare job per
+region that waits for them; the report is written on the Mac after copying `results/` back
+(`run_experiment.py` with `ONLY_STEPS = ["report"]`).
 
 | Script | Main settings |
 | --- | --- |
 | 01 | `EXAMPLE_PATCH = 16`, `N_EXAMPLES = 3`, `SEED = 42` |
 | 02a–02d | `CHIP_SOURCE = "tiles"`, `CHIP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
-| 03 | `INPUT`, `S1S2_VARIABLES` (s2 default / all / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
-| 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`; in experiment mode `EXTRA_RUNS` |
-| 03, 03b, 04 | `EXPERIMENT`: name of a folder in `experiments/`; its `config.yaml` replaces the settings above (same names) and the results go to that folder |
-| 03b | `REGION`, `VIEWS_NAME`, `BANDS` (s2 / s2s1); `CONFIG`: a file in `experiments/<EXPERIMENT>/configs/` with all settings of one run (E05: `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1`), also settable as the environment variable `PSETAE_CONFIG` |
+| 03 | `REGION`, `VIEWS_NAME`, `INPUT`, `S1S2_VARIABLES` (s2 default / all / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `TRAIN_FRACTION`, `FRACTION_DRAW`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
+| 03c | `REGION`, `VIEWS_NAME`, `INPUT`, `HEAD` (mlp / ltae), `PCA_DIM`, `N_HEADS`, `D_K`, `D_MODEL`, `MLP`, `DROPOUT`, `LEARNING_RATE`, `WEIGHT_DECAY`, `BATCH_SIZE`, `EPOCHS`, `PATIENCE`, `N_SEEDS = 3`, `TRAIN_FRACTION`, `FRACTION_DRAW` |
+| 04, 05 | `REGION`; 04: `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`, in experiment mode `EXTRA_RUNS`; 05: `FOCUS_ZONE`, `IRRIGATED_ONLY` per region |
+| 03, 03b, 03c, 04, 05 | `EXPERIMENT`: name of a folder in `experiments/`; its `config.yaml` replaces the settings above (same names) and the results go to `experiments/<EXPERIMENT>/results/<REGION>/` |
+| `run_experiment.py`, `submit_slurm.py` | `EXPERIMENT`, `ONLY_STEPS`, `REGIONS`, `LABEL_EFFICIENCY`, `RERUN`, `QUICK`; `submit_slurm.py` also `DRY_RUN` |
+| 03b | `REGION`, `VIEWS_NAME`, `BANDS` (s2 / s2s1), `N_SEEDS = 3`, `TRAIN_FRACTION`, `FRACTION_DRAW`; `CONFIG`: a file in `experiments/<EXPERIMENT>/configs/` with all settings of one run (E05: `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1`), also settable as the environment variable `PSETAE_CONFIG` |
 
 ---
 
@@ -428,6 +599,7 @@ python models_run/04_compare_models.py
 
 **Open points:**
 - Prithvi on 10 m instead of 30 m data.
+- AgriFM on 12 monthly composites instead of its dense (5-day) pretraining series ([§5.2](#52-how-each-model-handles-the-12-months)).
 - Results per zone, since rainfed parcels are concentrated in Doukkala.
 
 ---

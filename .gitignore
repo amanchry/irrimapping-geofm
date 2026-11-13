@@ -62,3 +62,6 @@ site/
 
 # ---------------------------------------------------------------- scratch (safe to delete)
 tmp_trash/
+
+# quick checks of the experiment chain (QUICK_TEST): never committed
+experiments/*/results_quick/

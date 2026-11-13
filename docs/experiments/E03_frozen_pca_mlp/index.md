@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 📝 planned — needs `models_run/03c_train_ltae.py` |
+| **Status** | 🟦 ready to run (after E02; code tested on both regions) |
 | **Research question** | RQ1 — Q2 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_pca_mlp/config.yaml) |
@@ -49,11 +49,34 @@ E04: E03 → E04 changes only how the months are combined (PCA → L-TAE), with 
 
 Inputs (all Sentinel-2 only): S2 baseline, Clay, Prithvi, TerraMind, AgriFM. Regions: Morocco and Utah 2023/24.
 
-## How to run (once 03c exists)
+## Label efficiency (part of this experiment)
+
+Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
+to the main result (Q5 of the [experiment plan](../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+
+| Setting | Value |
+| --- | --- |
+| Fractions | 10, 25, 50% of the training blocks of each round; 100% = the main run |
+| Sampling | whole blocks: rainfed and irrigated-only blocks each put in a random order (per region, round and draw), and a fraction takes the first blocks of each list, so the draws are **nested** (10% ⊂ 25% ⊂ 50%); the order is accepted only if its first 10% hold ≥ 20 rainfed parcels. No fraction below 10%. |
+| Draws | 3 per fraction; draw *k* is the same in E02–E05 and for every input (paired) |
+| Seeds | 1 seed per draw (the main run keeps its 3 seeds) |
+| Validation and test folds | unchanged |
+| Runs | 5 inputs × 3 fractions × 3 draws = **45** per region, for the MLP head |
+| Result | macro-F1 and rainfed F1 against the training fraction, one line per input, Morocco and Utah |
+
+## How to run
+
 ```bash
-# experiments/run_experiment.py:  EXPERIMENT = "E03_frozen_pca_mlp"
+# on the Mac (all regions, main and label-efficiency runs, compare, report):
+#   experiments/run_experiment.py:  EXPERIMENT = "E03_frozen_pca_mlp"
 python experiments/run_experiment.py
+# on the cluster: one Slurm job per run, then one compare job per region (EXPERIMENT and DRY_RUN in the script)
+python experiments/submit_slurm.py
 ```
+
+- **Order:** after E02 (compares with its runs: `EXTRA_RUNS: "E02_frozen_pca/*"`).
+- **Hardware:** GPU (CPU works). `QUICK = True` checks the whole chain in a few minutes first.
+- **Results:** `experiments/E03_frozen_pca_mlp/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
 To be filled in when the results are in.

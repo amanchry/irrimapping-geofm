@@ -187,6 +187,8 @@ jobs/
 ├── embed_prithvi.sbatch     GPU · models_run/02b_embed_prithvi.py
 ├── embed_terramind.sbatch   GPU · models_run/02c_embed_terramind.py
 ├── embed_agrifm.sbatch      GPU · models_run/02d_embed_agrifm.py
+├── step_cpu.sbatch          CPU · one experiment run (03, 04, 05), started by experiments/submit_slurm.py
+├── step_gpu.sbatch          GPU · one neural run (03c, 03b), started by experiments/submit_slurm.py
 └── logs/                    <job-name>-<job-id>.log, written by Slurm
 ```
 
@@ -254,6 +256,49 @@ file; Prithvi and TerraMind only read the same `chips_p16`), so they run in para
 Embedding scripts resume from `outputs/study/02_embeddings/_parts_<model>_agyear_tiles/`: a job stopped by its time
 limit can be resubmitted. To recompute from scratch, move that folder aside first. (The partial parts made on the
 Mac are kept as `_parts_<model>_agyear_tiles_from_mac`.)
+
+**Embeddings of both regions** (12 Nov 2026, commit b6a74a1, Sentinel-2 only, AgriFM with the region's chip
+statistics): Utah `EMBED_REGION=utah EMBED_VIEWS=views_2023-24` for all four models (2–8 min each); Morocco TerraMind
+and AgriFM again (the old files renamed to `terramind-s1s2_…` and `agrifm-cfgnorm_…`). Files:
+`outputs/<region>/study/02_embeddings/<model>_agyear_tiles[_2023-24].npz`.
+
+### 3.3b Experiments (E02–E05)
+
+`experiments/submit_slurm.py` lists every run of an experiment (regions × inputs × label-efficiency fractions and
+draws, as `run_experiment.py`) and submits one job per run with `jobs/step_cpu.sbatch` (script 03) or
+`jobs/step_gpu.sbatch` (03c, 03b), passing the run with `sbatch --export` (`EXPERIMENT`, `EXPERIMENT_REGION`,
+`EXPERIMENT_INPUT` or `PSETAE_CONFIG`, `EXPERIMENT_FRACTION`, `EXPERIMENT_DRAW`, `EXPERIMENT_N_SEEDS`). Then one CPU
+job per region waits for all of them (`--dependency=afterok`) and runs the compare (and breakdown) step.
+
+```bash
+cd ~/irrimapping-geofm
+# edit EXPERIMENT (and QUICK / DRY_RUN) at the top of experiments/submit_slurm.py, then:
+python experiments/submit_slurm.py        # DRY_RUN = True: prints the sbatch commands only
+```
+
+| Experiment | Jobs | Order |
+| --- | --- | --- |
+| E02 | 100 CPU (5 inputs × 2 regions × [main + 9 label-efficiency runs]) + 2 compare | first |
+| E03 | 100 GPU + 2 compare | after E02 |
+| E04 | 80 GPU + 2 compare | after E02 and E03 |
+| E05 | 20 GPU + 2 compare | after E02 |
+
+Runs with results are skipped, so a second `submit_slurm.py` only repeats failed runs. `QUICK = True` writes to
+`results_quick/` (never mixed with real results). E03–E05 compare with earlier experiments: their compare jobs are
+only submitted when those experiments' runs are finished (or with `WAIT_FOR` = the job ids to wait for); otherwise
+submit the compare later with `ONLY_STEPS = ["compare", "breakdown"]`. A compare job whose run failed stays pending
+(`afterok`): fix the run, submit again, and cancel the old compare job with `scancel`. Results go to
+`experiments/<E>/results/<region>/`; copy them to the Mac and write the report there:
+
+```bash
+rsync -az ut-hpc:irrimapping-geofm/experiments/E02_frozen_pca/results/ experiments/E02_frozen_pca/results/
+# experiments/run_experiment.py: EXPERIMENT = "E02_frozen_pca", ONLY_STEPS = ["report"]
+python experiments/run_experiment.py
+```
+
+The PSE-TAE runs of 12 Nov 2026 (single seed, before the renumbering) are in
+`experiments/E04_psetae_scratch/results/` on the cluster; they are preliminary and are moved to
+`tmp_trash/` before E05 runs.
 
 ### 3.4 Monitoring
 

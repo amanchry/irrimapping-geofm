@@ -25,7 +25,6 @@
     * [E03 · PCA + MLP head](experiments/E03_frozen_pca_mlp/index.md)
     * [E04 · L-TAE + MLP head](experiments/E04_frozen_ltae/index.md)
     * [E05 · PSE-TAE from scratch](experiments/E05_psetae_scratch/index.md)
-    * [E06 · Label efficiency](experiments/E06_label_efficiency/index.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

@@ -2,7 +2,7 @@
 id: E02
 title: "Frozen GeoFMs + PCA + classical classifiers"
 short_title: PCA + LogReg / RF / SVM   # name in the site's sidebar
-status: planned
+status: ready
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
@@ -12,7 +12,12 @@ answer: ""                 # filled in from REPORT.md
 
 regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
 inputs: [s1s2, clay, prithvi, terramind, agrifm]
-steps: [train_evaluate, compare, report]
+label_efficiency:          # learning curve inside this experiment (Q5 of the plan): training blocks subsampled
+  fractions: [0.10, 0.25, 0.50]   # share of the training blocks; 1.0 = the main run
+  draws: 3                        # block draws per fraction; draw k is identical in every experiment and input (paired)
+  min_rainfed: 20                 # fixed in models_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
+
+steps: [train_evaluate, compare, breakdown, report]
 
 train_evaluate:            # models_run/03_train_evaluate.py
   VALIDATION: pastis       # 3 folds train, next fold chooses the hyperparameters, 1 fold tests

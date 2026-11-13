@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 📝 planned — needs `models_run/03c_train_ltae.py` |
+| **Status** | 🟦 ready to run (after E02 and E03; code tested on both regions) |
 | **Research question** | RQ1 — Q3 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied): how the monthly embeddings are combined |
 | **Builds on** | [E03](../E03_frozen_pca_mlp/index.md) (same MLP head), [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E04_frozen_ltae/config.yaml) |
@@ -15,6 +15,8 @@ Every method choice of this experiment and the paper it comes from (full list: [
 
 | What this experiment takes | Reference |
 | --- | --- |
+| Label efficiency of foundation embeddings for cropland mapping | Mughees et al. (2026), [From foundation embeddings to cropland maps: label efficiency, temporal transferability …](https://arxiv.org/abs/2609.17138) |
+| Embeddings built for mapping from sparse labels | Brown et al. (2025), [AlphaEarth Foundations … from sparse label data](https://arxiv.org/abs/2507.22291) |
 | L-TAE: the temporal attention model and its default size | Garnot & Landrieu (2020), [L-TAE](https://arxiv.org/abs/2007.00586) · [summary](../../references/ltae.md) |
 | L-TAE to combine the per-date encodings of single-date GeoFMs; frozen encoder + trained head | Marsocci et al. (2024), [PANGAEA](https://arxiv.org/abs/2412.04204) · [summary](../../references/pangaea.md) |
 | Validation rotation; early stopping on the validation fold | Garnot & Landrieu (2021), [PASTIS / U-TAE](https://arxiv.org/abs/2107.07933) · [summary](../../references/pastis-utae.md) |
@@ -53,21 +55,48 @@ E04 is also compared with the classical classifiers of E02.
 The comparison step also reads the E03 and E02 runs (`EXTRA_RUNS`), so PCA and L-TAE are compared on the same
 parcels with the same bootstrap draws. Regions: Morocco and Utah 2023/24.
 
-## Implementation plan (`models_run/03c_train_ltae.py`)
-1. Read the same embedding files as `03_train_evaluate.py` (`<model>_agyear_tiles.npz`, 12 steps × D) or the
-   monthly Sentinel-2 features (15 variables × 12 months).
-2. Standardise per channel on the training folds; empty months are masked in the attention, not filled.
-3. L-TAE (Garnot & Landrieu 2020) with the paper's default size (16 heads, d_k 8, d_model 256, MLP 256-128),
-   then an MLP head with 2 outputs; class-weighted cross-entropy.
-4. PASTIS rotation: train on 3 folds, early stopping on the validation fold (macro-F1), test on the test fold.
-5. Write `oof_predictions.csv`, `metrics_per_fold.csv`, `metrics_with_ci.csv`, `run_config.json` in the same format
-   as script 03, with `model = "ltae"`, so `04_compare_models.py` and `make_report.py` work unchanged.
+## Implementation (`models_run/03c_train_ltae.py`, `HEAD: ltae`)
+1. Reads the same embedding files as `03_train_evaluate.py` (`<model>_agyear_tiles[_2023-24].npz`, 12 steps × D) or
+   the monthly Sentinel-2 features (15 variables × 12 months; gaps filled by interpolation in time, as in script 03).
+2. Standardises each channel with the training parcels' observed months; months without a clear pixel are masked in
+   the attention, not filled.
+3. L-TAE (Garnot & Landrieu 2020) with the paper's default size (16 heads with one learned master query each, d_k 8,
+   d_model 256, sinusoidal encoding of the mid-month day, output MLP 256-128), then a linear layer with 2 outputs;
+   class-weighted cross-entropy, AdamW.
+4. PASTIS rotation: train on 3 folds, early stopping on the validation fold (macro-F1, patience 15), test on the test
+   fold; 3 seeds per round, the out-of-fold probability is their mean.
+5. Writes `oof_predictions.csv`, `metrics_per_fold.csv`, `metrics_with_ci.csv`, `metrics_per_seed.csv`,
+   `training_history.csv`, `attention_by_month.csv` and `run_config.json` in the format of script 03
+   (`model = "ltae"`), so `04_compare_models.py` and `make_report.py` treat it like any other run.
 
-## How to run (once 03c exists)
+## Label efficiency (part of this experiment)
+
+Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
+to the main result (Q5 of the [experiment plan](../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+
+| Setting | Value |
+| --- | --- |
+| Fractions | 10, 25, 50% of the training blocks of each round; 100% = the main run |
+| Sampling | whole blocks: rainfed and irrigated-only blocks each put in a random order (per region, round and draw), and a fraction takes the first blocks of each list, so the draws are **nested** (10% ⊂ 25% ⊂ 50%); the order is accepted only if its first 10% hold ≥ 20 rainfed parcels. No fraction below 10%. |
+| Draws | 3 per fraction; draw *k* is the same in E02–E05 and for every input (paired) |
+| Seeds | 1 seed per draw (the main run keeps its 3 seeds) |
+| Validation and test folds | unchanged |
+| Runs | 4 inputs × 3 fractions × 3 draws = **36** per region, for L-TAE + MLP |
+| Result | macro-F1 and rainfed F1 against the training fraction, one line per input, Morocco and Utah |
+
+## How to run
+
 ```bash
-# experiments/run_experiment.py:  EXPERIMENT = "E04_frozen_ltae"
+# on the Mac (all regions, main and label-efficiency runs, compare, report):
+#   experiments/run_experiment.py:  EXPERIMENT = "E04_frozen_ltae"
 python experiments/run_experiment.py
+# on the cluster: one Slurm job per run, then one compare job per region (EXPERIMENT and DRY_RUN in the script)
+python experiments/submit_slurm.py
 ```
+
+- **Order:** after E02 and E03 (compares with their runs).
+- **Hardware:** GPU. `QUICK = True` checks the whole chain in a few minutes first.
+- **Results:** `experiments/E04_frozen_ltae/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
 To be filled in when the results are in.

@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 📝 planned — embeddings ready for both regions; needs the region setting in scripts 03–05 |
+| **Status** | 🟦 ready to run (code and embeddings ready for both regions) |
 | **Research question** | RQ1 — accuracy of each foundation model vs a Sentinel-based classifier |
 | **Builds on** | [E01](../E01_frozen_pca_nested/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E02_frozen_pca/config.yaml) |
@@ -63,13 +63,34 @@ neural networks), so they are trained, tuned and tested in exactly the same way
 Temporal aggregation (concat + PCA 128), grids and metrics are unchanged; see the
 [evaluation protocol](../../phase2_models/evaluation.md) and the [experiment plan](../../phase2_models/experiment_plan.md#e02--pca--classical-classifiers).
 
+## Label efficiency (part of this experiment)
+
+Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
+to the main result (Q5 of the [experiment plan](../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+
+| Setting | Value |
+| --- | --- |
+| Fractions | 10, 25, 50% of the training blocks of each round; 100% = the main run |
+| Sampling | whole blocks: rainfed and irrigated-only blocks each put in a random order (per region, round and draw), and a fraction takes the first blocks of each list, so the draws are **nested** (10% ⊂ 25% ⊂ 50%); the order is accepted only if its first 10% hold ≥ 20 rainfed parcels. No fraction below 10%. |
+| Draws | 3 per fraction; draw *k* is the same in E02–E05 and for every input (paired) |
+| Seeds | – (deterministic classifiers) |
+| Validation and test folds | unchanged |
+| Runs | 5 inputs × 3 fractions × 3 draws = **45** per region, for LogReg, RF and SVM |
+| Result | macro-F1 and rainfed F1 against the training fraction, one line per input, Morocco and Utah |
+
 ## How to run
+
 ```bash
-# experiments/run_experiment.py:  EXPERIMENT = "E02_frozen_pca"
+# on the Mac (all regions, main and label-efficiency runs, compare, report):
+#   experiments/run_experiment.py:  EXPERIMENT = "E02_frozen_pca"
 python experiments/run_experiment.py
+# on the cluster: one Slurm job per run, then one compare job per region (EXPERIMENT and DRY_RUN in the script)
+python experiments/submit_slurm.py
 ```
-Needs the embeddings of `models_run/02a–02d`, ready for both regions (`outputs/<region>/study/02_embeddings/`).
-Runs on the cluster as one CPU job per region and input.
+
+- **Order:** first of the experiments: E03–E05 compare with its runs.
+- **Hardware:** CPU. `QUICK = True` checks the whole chain in a few minutes first.
+- **Results:** `experiments/E02_frozen_pca/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
 To be filled in when the results are in.

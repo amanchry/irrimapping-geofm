@@ -7,26 +7,21 @@ change log).
 
 ---
 
-## Current status (2026-11-05)
+## Current status (2026-11-13)
 
 | Step | Where | Status |
 | --- | --- | --- |
-| Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: 8,781 parcels (7,585 irrigated, 1,196 rainfed), 5 folds of 20 km blocks |
-| Tile store, model views | `ml_dataset_prep/03`, `04` | Done: 2,987 tiles; parcel features, pixel sets, chips p8 / p16 |
-| Dataset inspection | `models_run/01` | Done (`outputs/morocco/study/01_inspection/`) |
-| Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind (`outputs/morocco/study/02_embeddings/`); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)); AgriFM scaling still to confirm |
-| E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
-| E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca` | Ready to run (main RQ1 result) |
-| E04 · frozen + L-TAE, PASTIS | `experiments/E04_frozen_ltae` | Planned: needs `models_run/03c_train_ltae.py` |
-| E05 · PSE-TAE from scratch | `experiments/E05_psetae_scratch` | Run exists; parked for the next phase |
-| Utah training data | `ml_dataset_prep/01_prepare_labels_Utah.py`, 02, 03 | Labels, folds, tile plan done (11,804 fields); download (03) and views (04) to run |
+| Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
+| Tile store, model views | `ml_dataset_prep/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
+| Embeddings (Sentinel-2 only) | `models_run/02a–02d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
+| E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done (before D14): no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
+| E02–E05 · RQ1 experiments | `experiments/E02…E05` | Code ready and tested on both regions (13 Nov 2026); ready to run on the cluster ([experiment plan](phase2_models/experiment_plan.md)) |
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Run E02 (`python experiments/run_experiment.py`, `EXPERIMENT = "E02_frozen_pca"`).
-2. Confirm the AgriFM normalisation; re-embed if needed.
-3. Write `models_run/03c_train_ltae.py`, run E04.
-4. Then RQ2 (LoRA fine-tuning).
+1. Run E02 on the cluster (`experiments/submit_slurm.py`), then E03, E04 and E05; reports on the Mac.
+2. Ablations A1, A4, A2 ([plan §7](phase2_models/experiment_plan.md#7-ablations)).
+3. RQ1 synthesis over both regions; then RQ2 (LoRA fine-tuning) and the Utah temporal test (RQ3).
 
 ---
 
@@ -82,6 +77,80 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-13 (review before running E02–E05: fixes)
+
+An independent code review (no data leakage found; draws identical across scripts; E02 and E03 inputs identical,
+checked) and a docs check led to these fixes:
+- **Quick checks** (`QUICK_TEST`, `QUICK = True`) write to `experiments/<E>/results_quick/` and write no report;
+  before, a quick run left `oof_predictions.csv` in the real folder and the real run would have been skipped.
+- **Nested label-efficiency draws:** one random order of the blocks per region, round and draw; a fraction takes
+  its first blocks (10% ⊂ 25% ⊂ 50%), accepted if the first 10% hold ≥ 20 rainfed parcels.
+- **Single-seed curve points:** 03b and 03c save `oof_per_seed.csv`; the 100% point of a neural learning curve is
+  the mean over its seeds scored one by one, like the single-seed label-efficiency runs. Training parcels per
+  fraction are reported.
+- **04:** the Holm family is the experiment's own runs only; new paired table
+  `differences_vs_earlier_experiments.csv` (same input, this experiment's head vs the earlier experiments' heads:
+  E03 vs E02, E04 vs E03 and E02); a borrowed experiment without runs or a missing baseline stops the script;
+  development-mode paths built after the region override.
+- **05:** reports every head (the filter dropped MLP / L-TAE / PSE-TAE); runs without a baseline (E05).
+- **Runners:** `run_experiment.py` and `submit_slurm.py` drop stray `EXPERIMENT_*` shell variables and set every
+  run variable explicitly; `submit_slurm.py` submits a compare job only when the borrowed experiments are finished
+  (or `WAIT_FOR`).
+- **E04 config:** `HEAD: ltae` (it would have run the MLP head); breakdown step added to E02–E05.
+- **Report:** sections for the head-vs-head table, spread over seeds, L-TAE attention per month, permutation
+  importance, training curves and results by zone.
+- **Docs:** seeds (42, 1042, 2042), L-TAE time encoding, E04 implementation section, results-page contents (PCA
+  explained variance dropped; crop-group breakdown and compute cost marked as later / by hand), status table.
+
+### 2026-11-13 (code for E02–E05 in both regions, with label efficiency)
+
+- New `models_run/experiment_utils.py`: region paths, environment overrides (`EXPERIMENT_REGION`, `_INPUT`,
+  `_FRACTION`, `_DRAW`, `_N_SEEDS`, `_QUICK_TEST`) and the label-efficiency block draw (`draw_training_blocks()`:
+  blocks with and without rainfed parcels drawn separately, ≥ 20 rainfed parcels, seed from region / round / fraction
+  / draw only, so draws are identical in scripts 03, 03b, 03c and for every input; only parcels of the views' years).
+- `03_train_evaluate.py`: `REGION` / `VIEWS_NAME` (Utah file names `_2023-24`), gradient boosting removed,
+  `TRAIN_FRACTION` / `FRACTION_DRAW` (label-efficiency runs skip random-vs-spatial CV, final models and importance),
+  results to `experiments/<E>/results/<region>/`.
+- `03b_train_psetae.py`: `N_SEEDS = 3` trainings per round (mean probability; `metrics_per_seed.csv`), label efficiency.
+- New `03c_train_ltae.py`: `HEAD = "mlp"` (E03, MLP on the PCA input) and `HEAD = "ltae"` (E04, L-TAE + MLP),
+  3 seeds, label efficiency, same output format as script 03; L-TAE attention per month and class.
+- `04_compare_models.py`: per region; `EXTRA_RUNS` may be `"<experiment>/*"`; `differs` now requires the CI to
+  exclude 0 **and** Holm p < 0.05 (protocol §8; `ci_excludes_0` kept); learning curves (`learning_curve.csv / .png`).
+- `05_breakdown_oof.py`: per region (focus zone and irrigated-only zones per region; `focus_zone.csv`).
+- `run_experiment.py`: loops over regions, inputs and label-efficiency runs (`plan_runs()`), compare / breakdown per
+  region, `QUICK` mode. New `experiments/submit_slurm.py`: one Slurm job per run (`jobs/step_cpu.sbatch`,
+  `jobs/step_gpu.sbatch`), then a compare job per region.
+- `make_report.py`: one section per region (tables, figures with the region in the file name, learning curves);
+  E01's single-region layout still read.
+- Configs: E03 / E04 / E05 compare with earlier experiments (`EXTRA_RUNS`); E05 runs both regions and has compare
+  and report steps.
+- Docs: models pipeline §6.6–6.8 (regions and label efficiency, script 03c, script 03b), §7 (Holm rule, regions,
+  learning curves), §7.1, §8, §9; experiment pages (how to run, order); `SERVER.md` §3.3b; `models_run/README.md`.
+
+### 2026-11-13 (how the models handle time)
+
+- Models pipeline §5.2 (new): how Clay, TerraMind, Prithvi (4 months per pass, one embedding per month) and AgriFM
+  (12 months merged to one time step inside the network) handle the 12 months, with the consequences for E02–E04 and
+  the AgriFM temporal-resolution limitation. File format moved to §5.3. Flowchart: AgriFM normalisation and 2 × 2 grid.
+
+### 2026-11-13 (label efficiency inside E02–E05; no separate E06)
+
+- Label efficiency is run as part of every experiment instead of a separate E06: each of E02–E05 also trains every
+  input on 10, 25 and 50% of the training blocks (3 shared block draws, 1 seed per draw for neural runs), and its
+  report shows the learning curve next to the main result. Same 270 runs in total.
+- `label_efficiency` block added to the E02–E05 configs; label-efficiency section and references (Mughees et al.
+  2026; Brown et al. 2025) added to their setup pages; plan §6 rewritten ("Label efficiency (inside E02–E05)"), §9–§11
+  updated. The E06 folders were moved to `tmp_trash/E06_label_efficiency_retired/`.
+
+### 2026-11-13 (E06 covers every experiment)
+
+- E06 label efficiency now repeats **all of E02–E05** (every input and head) with 10 / 25 / 50% of the training
+  blocks, 3 draws per fraction, the same draws for every experiment, 1 seed per draw for the neural runs: 270 runs
+  in total (before: linear probe, SVM and the best neural setting per input, 288 runs). It also shows whether the best
+  head and PCA vs L-TAE change when labels are few. Config (`repeat_experiments`, `seeds_per_draw`), setup page and
+  plan §6, §9–§11 updated.
+- Fixed ranges such as "E02–E05" that the renumbering had turned into "E02–E03" (E06 page, plan page).
 
 ### 2026-11-13 (experiments renumbered in run order; "PASTIS validation" dropped from the names)
 
