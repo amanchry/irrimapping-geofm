@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
+| **Status** | done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — accuracy of each foundation model vs a Sentinel-based classifier |
 | **Builds on** | [E01](../E01_frozen_pca_nested/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E02_frozen_pca/config.yaml) |

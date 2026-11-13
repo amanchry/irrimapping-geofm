@@ -2,7 +2,7 @@
 
 > **Answer.** No frozen foundation model classifies irrigated vs rainfed parcels better than the Sentinel-1/2
 > baseline. The best pair, Clay + SVM (macro-F1 **0.910**), is level with the baseline + SVM (**0.906**;
-> Δ +0.003, 95% CI −0.022 to +0.030). The embeddings carry about the same information as well-designed monthly
+> Δ +0.003, 95% confidence interval −0.022 to +0.030). The embeddings carry about the same information as well-designed monthly
 > S1/S2 features, and they hold up better in the hardest region.
 
 ## Key findings
@@ -30,21 +30,35 @@
 | --- | --- |
 | Question | Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-1/2 features, with the same parcels, folds and classifiers? |
 | Research question | RQ1 |
-| Inputs | S1/S2 baseline, Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM |
-| Temporal aggregation (GeoFMs) | 12 monthly embeddings side by side → standardise → PCA 128 (fitted on the training folds only) |
-| Classifiers | logistic regression (linear probe), random forest, gradient boosting (HGB), RBF SVM |
+| Regions | Morocco |
+| Inputs | S2 baseline, Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM |
+| Temporal aggregation | 12 monthly embeddings side by side → standardise → PCA 128 (fitted on the training folds only) |
+| Head | logistic regression (linear probe), random forest, gradient boosting (HGB), RBF SVM |
 | Validation | 5 spatial folds (20 km blocks); hyperparameters by inner spatial CV on the 4 training folds, model refit on all 4 (nested spatial CV) |
 | Parcels | 8,775 / 8,781 (inputs scored on the parcels common to all runs) |
-| Uncertainty | 95% CI from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
+| Uncertainty | 95% confidence interval (CI) from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
 | Changed from | first experiment on the shared 128 px tile store with patch-aligned chips |
 
-## Results
+## Morocco
 
-### Macro-F1 of every input and classifier
+### Macro-F1 of every input and head
 
-Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that classifier.
+Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that head. Runs marked [E0x] come from an earlier experiment, on the same parcels and bootstrap draws.
 
-| Input | LogReg | RF | HGB | SVM |
+??? info "How to read this table"
+
+    **What:** one score per input (row) and classifier (column), between 0 and 1. Higher is better.
+
+    **Macro-F1:** F1 is computed for each class separately (irrigated, rainfed) and the two are averaged. Rainfed
+    parcels are the minority, so a model that labels everything "irrigated" still gets a high overall accuracy but a
+    low macro-F1. That is why macro-F1 is the main metric.
+
+    **How:** every parcel is predicted once, by the model that did *not* see its 20 km block in training (out-of-fold).
+    All inputs are scored on the same parcels, so the numbers can be compared directly.
+
+    **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.
+
+| Input | Logistic regression (LogReg) | Random forest (RF) | Gradient boosting (HGB) | Support vector machine (SVM) |
 | --- | ---: | ---: | ---: | ---: |
 | S1/S2 baseline | 0.887 | **0.892** | **0.899** | 0.906 |
 | Clay v1.5 | 0.887 | 0.878 | 0.895 | **0.910** |
@@ -52,62 +66,120 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that c
 | TerraMind | **0.896** | 0.856 | 0.878 | 0.905 |
 | AgriFM | 0.865 | 0.839 | 0.868 | 0.866 |
 
-![Macro-F1 per input and classifier](figures/macro_f1_by_input.png)
+![Macro-F1 per input and head, morocco](figures/morocco_macro_f1_by_input.png)
 
-### Difference from the S1/S2 baseline (headline classifiers)
+### Difference from the S1/S2 baseline (headline heads)
 
-Δ = input minus baseline with the same classifier, on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI excludes 0 **and** the Holm-adjusted p < 0.05 (Holm corrects for testing all inputs × classifiers at once).
+Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+??? info "How to read this table"
+
+    **What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
+
+    - **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+      means 0.158 lower.
+    - **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+      resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
+        - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
+          better.
+        - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
+        - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
+    - **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+      tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
+      of a difference.
+    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
+      significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
+
+    **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
+    the inputs, not which parcels happened to be drawn.
+
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clay v1.5 | RF | -0.014 | [-0.035, +0.011] | 1.000 | no clear difference |
-| Clay v1.5 | LogReg | -0.000 | [-0.018, +0.017] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | RF | -0.039 | [-0.071, +0.006] | 0.760 | no clear difference |
-| Prithvi-EO-2.0 | LogReg | -0.008 | [-0.027, +0.013] | 1.000 | no clear difference |
-| TerraMind | RF | -0.036 | [-0.057, -0.013] | 0.056 | lower, not significant after Holm |
-| TerraMind | LogReg | +0.008 | [-0.012, +0.030] | 1.000 | no clear difference |
-| AgriFM | RF | -0.053 | [-0.084, -0.021] | < 0.001 | **worse** |
-| AgriFM | LogReg | -0.023 | [-0.045, -0.003] | 0.176 | lower, not significant after Holm |
+| Clay v1.5 | Random forest (RF) | -0.014 | [-0.035, +0.011] | 1.000 | no clear difference |
+| Clay v1.5 | Logistic regression (LogReg) | -0.000 | [-0.018, +0.017] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | Random forest (RF) | -0.039 | [-0.071, +0.006] | 0.760 | no clear difference |
+| Prithvi-EO-2.0 | Logistic regression (LogReg) | -0.008 | [-0.027, +0.013] | 1.000 | no clear difference |
+| TerraMind | Random forest (RF) | -0.036 | [-0.057, -0.013] | 0.056 | lower, not significant after Holm |
+| TerraMind | Logistic regression (LogReg) | +0.008 | [-0.012, +0.030] | 1.000 | no clear difference |
+| AgriFM | Random forest (RF) | -0.053 | [-0.084, -0.021] | < 0.001 | **worse** |
+| AgriFM | Logistic regression (LogReg) | -0.023 | [-0.045, -0.003] | 0.176 | lower, not significant after Holm |
 
-<details markdown="1"><summary>Other classifiers (robustness check)</summary>
+<details markdown="1"><summary>Other heads (robustness check)</summary>
 
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clay v1.5 | HGB | -0.003 | [-0.041, +0.033] | 1.000 | no clear difference |
-| Clay v1.5 | SVM | +0.003 | [-0.022, +0.030] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | HGB | -0.018 | [-0.056, +0.024] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | SVM | -0.001 | [-0.028, +0.030] | 1.000 | no clear difference |
-| TerraMind | HGB | -0.020 | [-0.039, -0.005] | 0.056 | lower, not significant after Holm |
-| TerraMind | SVM | -0.001 | [-0.022, +0.024] | 1.000 | no clear difference |
-| AgriFM | HGB | -0.030 | [-0.062, -0.009] | 0.056 | lower, not significant after Holm |
-| AgriFM | SVM | -0.040 | [-0.066, -0.015] | < 0.001 | **worse** |
+| Clay v1.5 | Gradient boosting (HGB) | -0.003 | [-0.041, +0.033] | 1.000 | no clear difference |
+| Clay v1.5 | Support vector machine (SVM) | +0.003 | [-0.022, +0.030] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | Gradient boosting (HGB) | -0.018 | [-0.056, +0.024] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | Support vector machine (SVM) | -0.001 | [-0.028, +0.030] | 1.000 | no clear difference |
+| TerraMind | Gradient boosting (HGB) | -0.020 | [-0.039, -0.005] | 0.056 | lower, not significant after Holm |
+| TerraMind | Support vector machine (SVM) | -0.001 | [-0.022, +0.024] | 1.000 | no clear difference |
+| AgriFM | Gradient boosting (HGB) | -0.030 | [-0.062, -0.009] | 0.056 | lower, not significant after Holm |
+| AgriFM | Support vector machine (SVM) | -0.040 | [-0.066, -0.015] | < 0.001 | **worse** |
 
 
 </details>
 
-### Per-class metrics (headline classifiers, 95% CI)
+### Per-class metrics (headline heads, 95% confidence interval)
 
-| Input | Classifier | Macro-F1 | F1 rainfed | Balanced acc. | Overall acc. |
+??? info "How to read this table"
+
+    **What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
+    (the range the true value probably lies in).
+
+    - **Macro-F1:** mean F1 of the two classes (main metric).
+    - **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+      usually the lowest number and the most informative one.
+    - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
+    - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
+      parcels are irrigated, so do not compare inputs on it alone.
+
+    **Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
+    rows are not meaningful.
+
+| Input | Classifier | Macro-F1 | F1 of the rainfed class | Balanced accuracy | Overall accuracy |
 | --- | --- | ---: | ---: | ---: | ---: |
-| S1/S2 baseline | RF | 0.892 [0.82–0.94] | 0.813 [0.69–0.90] | 0.893 [0.82–0.95] | 0.949 [0.92–0.98] |
-| S1/S2 baseline | LogReg | 0.887 [0.82–0.93] | 0.810 [0.69–0.89] | 0.931 [0.90–0.96] | 0.941 [0.91–0.97] |
-| Clay v1.5 | RF | 0.878 [0.82–0.93] | 0.787 [0.67–0.88] | 0.866 [0.81–0.92] | 0.944 [0.91–0.97] |
-| Clay v1.5 | LogReg | 0.887 [0.82–0.93] | 0.809 [0.69–0.89] | 0.926 [0.89–0.95] | 0.942 [0.91–0.97] |
-| Prithvi-EO-2.0 | RF | 0.853 [0.80–0.90] | 0.746 [0.65–0.82] | 0.848 [0.80–0.90] | 0.932 [0.90–0.96] |
-| Prithvi-EO-2.0 | LogReg | 0.880 [0.81–0.93] | 0.796 [0.68–0.88] | 0.922 [0.89–0.95] | 0.937 [0.90–0.97] |
-| TerraMind | RF | 0.856 [0.79–0.91] | 0.748 [0.62–0.84] | 0.832 [0.78–0.89] | 0.937 [0.91–0.97] |
-| TerraMind | LogReg | 0.896 [0.83–0.94] | 0.823 [0.70–0.90] | 0.929 [0.89–0.96] | 0.947 [0.92–0.97] |
-| AgriFM | RF | 0.839 [0.76–0.91] | 0.719 [0.57–0.84] | 0.821 [0.74–0.89] | 0.928 [0.89–0.96] |
-| AgriFM | LogReg | 0.865 [0.80–0.92] | 0.772 [0.64–0.86] | 0.909 [0.87–0.95] | 0.929 [0.90–0.96] |
+| S1/S2 baseline | Random forest (RF) | 0.892 [0.82–0.94] | 0.813 [0.69–0.90] | 0.893 [0.82–0.95] | 0.949 [0.92–0.98] |
+| S1/S2 baseline | Logistic regression (LogReg) | 0.887 [0.82–0.93] | 0.810 [0.69–0.89] | 0.931 [0.90–0.96] | 0.941 [0.91–0.97] |
+| Clay v1.5 | Random forest (RF) | 0.878 [0.82–0.93] | 0.787 [0.67–0.88] | 0.866 [0.81–0.92] | 0.944 [0.91–0.97] |
+| Clay v1.5 | Logistic regression (LogReg) | 0.887 [0.82–0.93] | 0.809 [0.69–0.89] | 0.926 [0.89–0.95] | 0.942 [0.91–0.97] |
+| Prithvi-EO-2.0 | Random forest (RF) | 0.853 [0.80–0.90] | 0.746 [0.65–0.82] | 0.848 [0.80–0.90] | 0.932 [0.90–0.96] |
+| Prithvi-EO-2.0 | Logistic regression (LogReg) | 0.880 [0.81–0.93] | 0.796 [0.68–0.88] | 0.922 [0.89–0.95] | 0.937 [0.90–0.97] |
+| TerraMind | Random forest (RF) | 0.856 [0.79–0.91] | 0.748 [0.62–0.84] | 0.832 [0.78–0.89] | 0.937 [0.91–0.97] |
+| TerraMind | Logistic regression (LogReg) | 0.896 [0.83–0.94] | 0.823 [0.70–0.90] | 0.929 [0.89–0.96] | 0.947 [0.92–0.97] |
+| AgriFM | Random forest (RF) | 0.839 [0.76–0.91] | 0.719 [0.57–0.84] | 0.821 [0.74–0.89] | 0.928 [0.89–0.96] |
+| AgriFM | Logistic regression (LogReg) | 0.865 [0.80–0.92] | 0.772 [0.64–0.86] | 0.909 [0.87–0.95] | 0.929 [0.90–0.96] |
+
+### Which months matter (permutation importance, random forest)
+
+Drop in macro-F1 when a month (or a baseline variable) is shuffled on the test fold: [Clay v1.5](figures/morocco_importance_clay_agyear_tiles_concat.png) · [Prithvi-EO-2.0](figures/morocco_importance_prithvi_agyear_tiles_concat.png) · [S1/S2 baseline](figures/morocco_importance_s1s2-all_agyear_tiles-inner-asc.png) · [TerraMind](figures/morocco_importance_terramind_agyear_tiles_concat.png)
+
+??? info "How to read this figure"
+
+    **What:** one month (or one variable) at a time is shuffled on the test fold, and the drop in macro-F1 is measured.
+    A large drop = the model relies on that month. Close to 0 = the model does not need it. Bars below 0 are noise.
+
+    For foundation models after PCA, importance is usually spread thinly over all months, so it says little about which
+    months the embedding encodes.
 
 ### Macro-F1 per test fold
 
 Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: fold 0: Doukkala 180, Souss 59; fold 1: Doukkala 237; fold 2: Doukkala 241; fold 3: Doukkala 234; fold 4: Doukkala 230.
 
+??? info "How to read this table"
+
+    **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
+    show how much the result changes from one part of the region to another.
+
+    - **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
+      scores all parcels at once.
+    - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
+      lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.
+
 **RF**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S1/S2 baseline | 0.804 | 0.821 | 0.967 | 0.949 | 0.921 | 0.893 ± 0.075 |
 | Clay v1.5 | 0.823 | 0.799 | 0.926 | 0.928 | 0.915 | 0.878 ± 0.062 |
@@ -117,7 +189,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **LogReg**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S1/S2 baseline | 0.829 | 0.853 | 0.923 | 0.928 | 0.909 | 0.889 ± 0.044 |
 | Clay v1.5 | 0.859 | 0.825 | 0.929 | 0.916 | 0.915 | 0.889 ± 0.045 |
@@ -127,7 +199,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **SVM**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S1/S2 baseline | 0.803 | 0.866 | 0.960 | 0.969 | 0.930 | 0.906 ± 0.070 |
 | Clay v1.5 | 0.861 | 0.844 | 0.944 | 0.958 | 0.949 | 0.911 ± 0.054 |
@@ -135,14 +207,17 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 | TerraMind | 0.802 | 0.867 | 0.944 | 0.953 | 0.948 | 0.903 ± 0.067 |
 | AgriFM | 0.703 | 0.813 | 0.933 | 0.939 | 0.924 | 0.863 ± 0.103 |
 
-![Macro-F1 per test fold](figures/macro_f1_per_fold.png)
+![Macro-F1 per test fold, morocco](figures/morocco_macro_f1_per_fold.png)
 
 ### Files
 
-- Tables: [`experiments/E01_frozen_pca_nested/results/comparison/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results/comparison) (all metrics with CI, differences vs baseline)
-- Per run ([`experiments/E01_frozen_pca_nested/results/<run>/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results)): out-of-fold predictions, metrics per fold, selected hyperparameters, run log
+- Tables: [`experiments/E01_frozen_pca_nested/results/comparison/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results/comparison) (all metrics with CI, differences vs baseline, learning curves)
+- Per run ([`experiments/E01_frozen_pca_nested/results/<run>/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E01_frozen_pca_nested/results)): out-of-fold predictions, metrics per fold (and per seed), run settings and log
+- Confusion matrices: [AgriFM](figures/morocco_confusion_agrifm_agyear_tiles_concat.png) · [Clay v1.5](figures/morocco_confusion_clay_agyear_tiles_concat.png) · [Prithvi-EO-2.0](figures/morocco_confusion_prithvi_agyear_tiles_concat.png) · [S1/S2 baseline](figures/morocco_confusion_s1s2-all_agyear_tiles-inner-asc.png) · [TerraMind](figures/morocco_confusion_terramind_agyear_tiles_concat.png)
+
+## Code and settings
+
 - Settings: [`experiments/E01_frozen_pca_nested/config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E01_frozen_pca_nested/config.yaml)
-- Confusion matrices: [AgriFM](figures/confusion_agrifm_agyear_tiles_concat.png) · [Clay v1.5](figures/confusion_clay_agyear_tiles_concat.png) · [Prithvi-EO-2.0](figures/confusion_prithvi_agyear_tiles_concat.png) · [S1/S2 baseline](figures/confusion_s1s2-all_agyear_tiles-inner-asc.png) · [TerraMind](figures/confusion_terramind_agyear_tiles_concat.png)
 - Code version: `858cb3d (with uncommitted changes)`, run 2026-11-05 17:39 – 2026-11-05 17:40
 
 <!-- AUTO:RESULTS:END -->

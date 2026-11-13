@@ -48,6 +48,10 @@ INPUT_NAMES = {"clay": "Clay v1.5", "prithvi": "Prithvi-EO-2.0", "terramind": "T
                "psetae": "PSE-TAE"}
 CLF_NAMES = {"logreg": "LogReg", "rf": "RF", "hgb": "HGB", "svm": "SVM", "mlp": "MLP", "ltae": "L-TAE",
              "psetae": "PSE-TAE"}
+CLF_FULL = {"logreg": "Logistic regression (LogReg)", "rf": "Random forest (RF)",
+            "hgb": "Gradient boosting (HGB)", "svm": "Support vector machine (SVM)",
+            "mlp": "Multilayer perceptron (MLP)", "ltae": "L-TAE + MLP (temporal attention)",
+            "psetae": "PSE-TAE (pixel-set encoder + temporal attention)"}     # names in the report tables
 COLORS = {"S2 baseline": "#6B7480", "S1/S2 baseline": "#6B7480", "Clay v1.5": "#1F5F8B", "Prithvi-EO-2.0": "#B4541A",
           "TerraMind": "#2E8B57", "AgriFM": "#7B4FA0", "PSE-TAE": "#C08A00"}
 REGION_NAMES = {"morocco": "Morocco", "utah": "Utah 2023/24"}
@@ -168,7 +172,7 @@ def figure_per_fold(per_fold, clfs, labels, path):
 def table_macro_f1(metrics, clfs):
     m = metrics[metrics["metric"] == "macro_f1"]
     best = m.groupby("classifier")["estimate"].max()
-    lines = ["| Input | " + " | ".join(CLF_NAMES[c] for c in clfs) + " |",
+    lines = ["| Input | " + " | ".join(CLF_FULL[c] for c in clfs) + " |",
              "| --- | " + " | ".join("---:" for _ in clfs) + " |"]
     for run in run_order(m["run"]):
         cells = []
@@ -194,7 +198,7 @@ def table_with_ci(metrics, clfs, metric_names):
                 cells.append("–" if r.empty else
                              f"{r['estimate'].iloc[0]:.3f} [{r['ci_low'].iloc[0]:.2f}–{r['ci_high'].iloc[0]:.2f}]")
             if any(x != "–" for x in cells):
-                lines.append(f"| {input_name(run)} | {CLF_NAMES.get(c, c)} | " + " | ".join(cells) + " |")
+                lines.append(f"| {input_name(run)} | {CLF_FULL.get(c, c)} | " + " | ".join(cells) + " |")
     return "\n".join(lines)
 
 
@@ -216,11 +220,11 @@ def table_differences(diffs, clfs):
     d = d.sort_values(["_o", "classifier"], key=lambda c: c.map(lambda v: clfs.index(v) if v in clfs else v)
                       if c.name == "classifier" else c)
     d["verdict"] = d.apply(verdict, axis=1)
-    lines = ["| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |",
+    lines = ["| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |",
              "| --- | --- | ---: | ---: | ---: | --- |"]
     for _, r in d.iterrows():
         vs = "" if r["classifier"] == r["baseline_classifier"] else f" (vs baseline {CLF_NAMES[r['baseline_classifier']]})"
-        lines.append(f"| {input_name(r['run'])} | {CLF_NAMES.get(r['classifier'], r['classifier'])}{vs} | "
+        lines.append(f"| {input_name(r['run'])} | {CLF_FULL.get(r['classifier'], r['classifier'])}{vs} | "
                      f"{r['delta_macro_f1']:+.3f} | [{r['ci_low']:+.3f}, {r['ci_high']:+.3f}] | "
                      f"{fmt_p(r['p_holm'])} | {r['verdict']} |")
     return "\n".join(lines), d
@@ -231,7 +235,7 @@ def table_per_fold(per_fold, clf):
     wide = sub.pivot_table(index="input", columns="outer_fold", values="macro_f1", sort=False)
     wide = wide.reindex(sorted(wide.index, key=lambda n: ORDER.index(base_name(n)) if base_name(n) in ORDER else len(ORDER)))
     folds = list(wide.columns)
-    lines = ["| Input | " + " | ".join(f"Fold {f}" for f in folds) + " | Mean ± SD |",
+    lines = ["| Input | " + " | ".join(f"Fold {f}" for f in folds) + " | Mean ± standard deviation (SD) |",
              "| --- | " + " | ".join("---:" for _ in folds) + " | ---: |"]
     for inp, row in wide.iterrows():
         lines.append(f"| {inp} | " + " | ".join(fmt(v) for v in row) +
@@ -276,7 +280,7 @@ def describe_setup(cfg, run_configs):
             ("Label efficiency", f"also trained on {', '.join(f'{f:.0%}' for f in le['fractions'])} of the training "
                                  f"blocks, {le['draws']} block draw{'s' if le['draws'] > 1 else ''} each (same draws in every experiment)" if le else ""),
             ("Parcels", " / ".join(f"{x:,}" for x in n) + " (inputs scored on the parcels common to all runs)" if n else ""),
-            ("Uncertainty", "95% CI from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for "
+            ("Uncertainty", "95% confidence interval (CI) from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for "
                             "every run → paired differences; p-values Holm-adjusted"),
             ("Changed from", cfg.get("changes_from", "–"))]
     return "| | |\n| --- | --- |\n" + "\n".join(f"| {k} | {v} |" for k, v in rows if v)
@@ -299,7 +303,7 @@ def table_learning_curve(curve, clfs):
                 continue
             cells = [("–" if f not in g.index else f"{g.loc[f, 'estimate']:.3f}"
                       + (f" ± {g.loc[f, 'sd_draws']:.3f}" if f < 1 and g.loc[f, 'n_draws'] > 1 else "")) for f in fracs]
-            lines.append(f"| {input_name(run)} | {CLF_NAMES.get(clf, clf)} | " + " | ".join(cells) + " |")
+            lines.append(f"| {input_name(run)} | {CLF_FULL.get(clf, clf)} | " + " | ".join(cells) + " |")
     return "\n".join(lines)
 
 
@@ -324,12 +328,12 @@ def result_dirs(exp_dir, cfg):
 
 def table_vs_earlier(pairs):
     """This experiment's head minus the earlier experiments' heads on the same input (own Holm family)."""
-    lines = ["| Input | This experiment | Earlier run | Δ macro-F1 | 95% CI | p (Holm) | Verdict |",
+    lines = ["| Input | This experiment | Earlier run | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |",
              "| --- | --- | --- | ---: | ---: | ---: | --- |"]
     pairs = pairs.copy()
     pairs["_o"] = pairs["run"].map({r: i for i, r in enumerate(run_order(pairs["run"]))})
     for _, r in pairs.sort_values(["_o", "other_run", "other_classifier"]).iterrows():
-        lines.append(f"| {base_name(input_name(r['run']))} | {CLF_NAMES.get(r['classifier'], r['classifier'])} | "
+        lines.append(f"| {base_name(input_name(r['run']))} | {CLF_FULL.get(r['classifier'], r['classifier'])} | "
                      f"{input_name(r['other_run']).split(' [')[1].rstrip(']')} {CLF_NAMES.get(r['other_classifier'], r['other_classifier'])} | "
                      f"{r['delta_macro_f1']:+.3f} | [{r['ci_low']:+.3f}, {r['ci_high']:+.3f}] | {fmt_p(r['p_holm'])} | "
                      f"{verdict(r)} |")
@@ -338,14 +342,14 @@ def table_vs_earlier(pairs):
 
 def seed_table(res, runs):
     """Macro-F1 of each seed of the neural runs (metrics_per_seed.csv)."""
-    lines = ["| Input | Head | Macro-F1 per seed | Mean ± SD |", "| --- | --- | --- | ---: |"]
+    lines = ["| Input | Head | Macro-F1 per seed | Mean ± standard deviation (SD) |", "| --- | --- | --- | ---: |"]
     for run in run_order(runs):
         f = res / run / "metrics_per_seed.csv"
         if "/" in run or not f.exists():
             continue
         s = pd.read_csv(f)
         head = run.rsplit("_", 1)[-1] if run.endswith(("_mlp", "_ltae")) else "psetae"
-        lines.append(f"| {base_name(input_name(run))} | {CLF_NAMES.get(head, head)} | "
+        lines.append(f"| {base_name(input_name(run))} | {CLF_FULL.get(head, head)} | "
                      + ", ".join(f"{v:.3f}" for v in s["macro_f1"]) +
                      f" | {s['macro_f1'].mean():.3f} ± {s['macro_f1'].std(ddof=1) if len(s) > 1 else 0:.3f} |")
     return "\n".join(lines) if len(lines) > 2 else ""
@@ -405,12 +409,12 @@ def breakdown_parts(res, figs, tag, region):
     if not (b / "focus_zone.csv").exists():
         return []
     fz = pd.read_csv(b / "focus_zone.csv")
-    lines = ["| Input | Head | Macro-F1 [95% CI] | Δ vs baseline [95% CI] |", "| --- | --- | ---: | ---: |"]
+    lines = ["| Input | Head | Macro-F1 [95% confidence interval] | Difference from the baseline [95% confidence interval] |", "| --- | --- | ---: | ---: |"]
     for run in run_order(fz["run"]):
         for _, r in fz[fz["run"] == run].iterrows():
             delta = ("–" if pd.isna(r.get("delta_vs_baseline", np.nan)) else
                      f"{r['delta_vs_baseline']:+.3f} [{r['delta_ci_low']:+.3f}, {r['delta_ci_high']:+.3f}]")
-            lines.append(f"| {input_name(run)} | {CLF_NAMES.get(r['classifier'], r['classifier'])} | "
+            lines.append(f"| {input_name(run)} | {CLF_FULL.get(r['classifier'], r['classifier'])} | "
                          f"{r['estimate']:.3f} [{r['ci_low']:.2f}–{r['ci_high']:.2f}] | {delta} |")
     first = fz.iloc[0]
     parts = ["### Results by zone",
@@ -440,20 +444,20 @@ All inputs are scored on the same parcels, so the numbers can be compared direct
 
 **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.""",
     "differences": """\
-**What:** each row compares one input with the S2 baseline, using the same classifier.
+**What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
 
-- **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+- **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
   means 0.158 lower.
-- **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+- **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
   resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
     - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
       better.
     - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
     - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
-- **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+- **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
   tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
   of a difference.
-- **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+- **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
   significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
 
 **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
@@ -462,13 +466,13 @@ the inputs, not which parcels happened to be drawn.""",
 **What:** the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
 It shows whether the classifier, not the input, makes the difference.
 
-Δ, 95% CI and verdict are read as in the table above: a CI that includes 0 means no clear difference.""",
+Δ, the 95% confidence interval and the verdict are read as in the table above: a CI that includes 0 means no clear difference.""",
     "per_class": """\
-**What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+**What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
 (the range the true value probably lies in).
 
 - **Macro-F1:** mean F1 of the two classes (main metric).
-- **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+- **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
   usually the lowest number and the most informative one.
 - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
 - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
@@ -500,12 +504,12 @@ difference between inputs smaller than this spread is not meaningful.""",
 irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
 input separates irrigated from rainfed fields themselves.
 
-**Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.""",
+**Difference from the baseline [95% confidence interval]:** as in the difference table. A CI that includes 0 means no clear difference.""",
     "per_fold": """\
 **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
 show how much the result changes from one part of the region to another.
 
-- **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+- **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
   scores all parcels at once.
 - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
   lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.""",
@@ -565,8 +569,8 @@ def region_section(exp, cfg, region, res, figs, headline):
         dtable, _ = table_differences(diffs, head)
         parts += [f"### Difference from the {base} (headline heads)",
                   "Δ = input minus baseline with the same head (runs with their own model against the baseline's "
-                  "random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI "
-                  "excludes 0 **and** the Holm-adjusted p < 0.05.",
+                  "random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence "
+                  "interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.",
                   how_to_read("differences"),
                   dtable]
         other = diffs[~diffs["classifier"].isin(head)]
@@ -580,10 +584,10 @@ def region_section(exp, cfg, region, res, figs, headline):
                   "E03 MLP and the E02 classifiers.",
                   how_to_read("vs_earlier"),
                   table_vs_earlier(pd.read_csv(comp / "differences_vs_earlier_experiments.csv"))]
-    parts += ["### Per-class metrics (headline heads, 95% CI)",
+    parts += ["### Per-class metrics (headline heads, 95% confidence interval)",
               how_to_read("per_class"),
-              table_with_ci(metrics, head, {"macro_f1": "Macro-F1", "f1_rainfed": "F1 rainfed",
-                                            "balanced_accuracy": "Balanced acc.", "overall_accuracy": "Overall acc."})]
+              table_with_ci(metrics, head, {"macro_f1": "Macro-F1", "f1_rainfed": "F1 of the rainfed class",
+                                            "balanced_accuracy": "Balanced accuracy", "overall_accuracy": "Overall accuracy"})]
     if (comp / "learning_curve.csv").exists():
         curve = pd.read_csv(comp / "learning_curve.csv")
         if (comp / "learning_curve.png").exists():
@@ -719,7 +723,7 @@ def update_overviews():
             results.append((name, cfg, result))
 
     index = DOCS / "experiments" / "index.md"
-    table = ("| ID | Experiment | RQ | Status | Headline result (macro-F1) | Report |\n"
+    table = ("| ID | Experiment | Research question (RQ) | Status | Headline result (macro-F1) | Report |\n"
              "| --- | --- | --- | --- | --- | --- |\n" + "\n".join(rows))
     index.write_text(replace_block(index.read_text(), "INDEX", table))
 
@@ -727,11 +731,13 @@ def update_overviews():
     if overview.exists():
         blocks = []
         for name, cfg, result in results:
-            blocks.append(f"#### {cfg['id']} · {cfg['title']}\n\n{cfg.get('question', '')}\n\n"
+            figs_all = sorted((DOCS / "experiments" / name / "figures").glob("*macro_f1_by_input.png"))
+            figs_region = [f for f in figs_all if f.name != "macro_f1_by_input.png"]   # per-region figures win over
+            blocks.append(f"#### {cfg['id']} · {cfg['title']}\n\n{cfg.get('question', '')}\n\n"  # the old single one
                           f"- **Result:** {result}.\n- **Answer:** {cfg.get('answer', 'see the report')}\n"
                           f"- Full report: [{cfg['id']} report](experiments/{name}/report.md)\n\n"
-                          + "\n\n".join(f"![{cfg['id']}](experiments/{name}/figures/{f.name})" for f in
-                                         sorted((DOCS / "experiments" / name / "figures").glob("*macro_f1_by_input.png"))))
+                          + "\n\n".join(f"![{cfg['id']}](experiments/{name}/figures/{f.name})"
+                                        for f in (figs_region or figs_all)))
         overview.write_text(replace_block(overview.read_text(), "RESULTS",
                                           "\n\n".join(blocks) or "_No finished experiment yet._"))
     summary = DOCS / "SUMMARY.md"                                   # site navigation: the Experiments section

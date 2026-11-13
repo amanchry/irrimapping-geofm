@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
+| **Status** | done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — Q4 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E05_psetae_scratch/config.yaml) |

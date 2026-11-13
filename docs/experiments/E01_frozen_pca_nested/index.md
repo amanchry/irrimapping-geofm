@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | ✅ done (30 Oct 2026) — superseded by [E02](../E02_frozen_pca/index.md) as the main result; kept as the sensitivity check of the validation design |
+| **Status** | done (30 Oct 2026) — superseded by [E02](../E02_frozen_pca/index.md) as the main result; kept as the sensitivity check of the validation design |
 | **Research question** | RQ1 — accuracy of each foundation model vs a Sentinel-based classifier |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E01_frozen_pca_nested/config.yaml) |
 | **Report** | **[REPORT.md](report.md)** |

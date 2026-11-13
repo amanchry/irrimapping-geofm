@@ -68,9 +68,6 @@ Washington, Utah, the IrrMap states):
   GMIA-NEXT points.
 - **Every year from 2017 to 2025**, mapped by one agency with one method, so the same pipeline also gives a
   temporal test.
-- **One UTM zone (12N).** In eastern Washington most dryland-wheat fields come from the NASS Cropland Data Layer
-  rather than the WSDA field survey (irrigation not observed), which leaves only about 1,800 surveyed rainfed
-  cereal fields.
 
 <figure markdown>
   ![WRLU crop fields per year](figures/utah/source_years.png){ width="760" }

@@ -36,7 +36,7 @@
 | Validation | 5 spatial folds (20 km blocks); per round 3 folds train, the next fold chooses the hyperparameters or stops training, 1 fold tests (PASTIS rotation) |
 | Label efficiency | also trained on 10%, 25%, 50% of the training blocks, 3 block draws each (same draws in every experiment) |
 | Parcels | 6,011 / 6,013 / 8,775 / 8,781 (inputs scored on the parcels common to all runs) |
-| Uncertainty | 95% CI from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
+| Uncertainty | 95% confidence interval (CI) from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
 | Changed from | E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel, Sentinel-2 only, 3 seeds |
 
 ## Morocco
@@ -58,7 +58,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
     **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.
 
-| Input | LogReg | RF | SVM | PSE-TAE |
+| Input | Logistic regression (LogReg) | Random forest (RF) | Support vector machine (SVM) | PSE-TAE (pixel-set encoder + temporal attention) |
 | --- | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.869 | 0.873 | 0.900 | – |
 | Clay v1.5 [E02] | 0.882 | **0.874** | **0.901** | – |
@@ -71,42 +71,42 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
 ### Difference from the S2 baseline (headline heads)
 
-Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI excludes 0 **and** the Holm-adjusted p < 0.05.
+Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.
 
 ??? info "How to read this table"
 
-    **What:** each row compares one input with the S2 baseline, using the same classifier.
+    **What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
 
-    - **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+    - **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
       means 0.158 lower.
-    - **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+    - **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
       resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
         - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
           better.
         - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
         - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
-    - **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+    - **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
       tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
       of a difference.
-    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
       significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
 
     **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
     the inputs, not which parcels happened to be drawn.
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| PSE-TAE | PSE-TAE (vs baseline RF) | +0.038 | [-0.004, +0.082] | 0.074 | no clear difference |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) (vs baseline RF) | +0.038 | [-0.004, +0.082] | 0.074 | no clear difference |
 
-### Per-class metrics (headline heads, 95% CI)
+### Per-class metrics (headline heads, 95% confidence interval)
 
 ??? info "How to read this table"
 
-    **What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+    **What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
     (the range the true value probably lies in).
 
     - **Macro-F1:** mean F1 of the two classes (main metric).
-    - **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+    - **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
       usually the lowest number and the most informative one.
     - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
     - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
@@ -115,9 +115,9 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
     rows are not meaningful.
 
-| Input | Classifier | Macro-F1 | F1 rainfed | Balanced acc. | Overall acc. |
+| Input | Classifier | Macro-F1 | F1 of the rainfed class | Balanced accuracy | Overall accuracy |
 | --- | --- | ---: | ---: | ---: | ---: |
-| PSE-TAE | PSE-TAE | 0.911 [0.86–0.95] | 0.848 [0.74–0.92] | 0.942 [0.91–0.97] | 0.955 [0.93–0.98] |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.911 [0.86–0.95] | 0.848 [0.74–0.92] | 0.942 [0.91–0.97] | 0.955 [0.93–0.98] |
 
 ### Label efficiency
 
@@ -141,7 +141,7 @@ Macro-F1 when trained on a share of the training blocks (validation and test fol
 | Input | Head | 10% | 25% | 50% | 100% |
 | --- | --- | ---: | ---: | ---: | ---: |
 | *training parcels per round* | | 590 | 1,266 | 2,530 | all |
-| PSE-TAE | PSE-TAE | 0.812 ± 0.036 | 0.834 ± 0.009 | 0.859 ± 0.025 | 0.898 |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.812 ± 0.036 | 0.834 ± 0.009 | 0.859 ± 0.025 | 0.898 |
 
 ![Learning curves, morocco](figures/morocco_learning_curve.png)
 
@@ -155,9 +155,9 @@ Macro-F1 of each seed on its own; the result above is the mean probability of th
     table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
     difference between inputs smaller than this spread is not meaningful.
 
-| Input | Head | Macro-F1 per seed | Mean ± SD |
+| Input | Head | Macro-F1 per seed | Mean ± standard deviation (SD) |
 | --- | --- | --- | ---: |
-| PSE-TAE | PSE-TAE | 0.888, 0.907, 0.900 | 0.898 ± 0.010 |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.888, 0.907, 0.900 | 0.898 ± 0.010 |
 
 ### Training curves
 
@@ -177,11 +177,11 @@ Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed,
     irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
     input separates irrigated from rainfed fields themselves.
 
-    **Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.
+    **Difference from the baseline [95% confidence interval]:** as in the difference table. A CI that includes 0 means no clear difference.
 
-| Input | Head | Macro-F1 [95% CI] | Δ vs baseline [95% CI] |
+| Input | Head | Macro-F1 [95% confidence interval] | Difference from the baseline [95% confidence interval] |
 | --- | --- | ---: | ---: |
-| PSE-TAE | PSE-TAE | 0.895 [0.83–0.94] | – |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.895 [0.83–0.94] | – |
 
 ![Results by zone, morocco](figures/morocco_breakdown.png)
 
@@ -196,20 +196,20 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
     **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
     show how much the result changes from one part of the region to another.
 
-    - **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+    - **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
       scores all parcels at once.
     - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
       lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.
 
 **PSE-TAE**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | PSE-TAE | 0.864 | 0.860 | 0.953 | 0.968 | 0.917 | 0.912 ± 0.050 |
 
 **SVM**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.766 | 0.874 | 0.959 | 0.958 | 0.931 | 0.898 ± 0.081 |
 | Clay v1.5 [E02] | 0.840 | 0.854 | 0.928 | 0.946 | 0.938 | 0.901 ± 0.050 |
@@ -244,7 +244,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
     **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.
 
-| Input | LogReg | RF | SVM | PSE-TAE |
+| Input | Logistic regression (LogReg) | Random forest (RF) | Support vector machine (SVM) | PSE-TAE (pixel-set encoder + temporal attention) |
 | --- | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.722 | **0.764** | 0.728 | – |
 | Clay v1.5 [E02] | **0.753** | 0.763 | **0.791** | – |
@@ -257,42 +257,42 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
 ### Difference from the S2 baseline (headline heads)
 
-Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI excludes 0 **and** the Holm-adjusted p < 0.05.
+Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.
 
 ??? info "How to read this table"
 
-    **What:** each row compares one input with the S2 baseline, using the same classifier.
+    **What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
 
-    - **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+    - **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
       means 0.158 lower.
-    - **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+    - **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
       resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
         - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
           better.
         - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
         - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
-    - **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+    - **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
       tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
       of a difference.
-    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
       significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
 
     **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
     the inputs, not which parcels happened to be drawn.
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| PSE-TAE | PSE-TAE (vs baseline RF) | -0.009 | [-0.028, +0.013] | 0.372 | no clear difference |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) (vs baseline RF) | -0.009 | [-0.028, +0.013] | 0.372 | no clear difference |
 
-### Per-class metrics (headline heads, 95% CI)
+### Per-class metrics (headline heads, 95% confidence interval)
 
 ??? info "How to read this table"
 
-    **What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+    **What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
     (the range the true value probably lies in).
 
     - **Macro-F1:** mean F1 of the two classes (main metric).
-    - **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+    - **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
       usually the lowest number and the most informative one.
     - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
     - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
@@ -301,9 +301,9 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
     rows are not meaningful.
 
-| Input | Classifier | Macro-F1 | F1 rainfed | Balanced acc. | Overall acc. |
+| Input | Classifier | Macro-F1 | F1 of the rainfed class | Balanced accuracy | Overall accuracy |
 | --- | --- | ---: | ---: | ---: | ---: |
-| PSE-TAE | PSE-TAE | 0.755 [0.71–0.79] | 0.614 [0.53–0.68] | 0.810 [0.78–0.83] | 0.837 [0.81–0.86] |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.755 [0.71–0.79] | 0.614 [0.53–0.68] | 0.810 [0.78–0.83] | 0.837 [0.81–0.86] |
 
 ### Label efficiency
 
@@ -327,7 +327,7 @@ Macro-F1 when trained on a share of the training blocks (validation and test fol
 | Input | Head | 10% | 25% | 50% | 100% |
 | --- | --- | ---: | ---: | ---: | ---: |
 | *training parcels per round* | | 399 | 862 | 1,732 | all |
-| PSE-TAE | PSE-TAE | 0.664 ± 0.022 | 0.709 ± 0.007 | 0.714 ± 0.002 | 0.736 |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.664 ± 0.022 | 0.709 ± 0.007 | 0.714 ± 0.002 | 0.736 |
 
 ![Learning curves, utah](figures/utah_learning_curve.png)
 
@@ -341,9 +341,9 @@ Macro-F1 of each seed on its own; the result above is the mean probability of th
     table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
     difference between inputs smaller than this spread is not meaningful.
 
-| Input | Head | Macro-F1 per seed | Mean ± SD |
+| Input | Head | Macro-F1 per seed | Mean ± standard deviation (SD) |
 | --- | --- | --- | ---: |
-| PSE-TAE | PSE-TAE | 0.743, 0.737, 0.728 | 0.736 ± 0.008 |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.743, 0.737, 0.728 | 0.736 ± 0.008 |
 
 ### Training curves
 
@@ -363,11 +363,11 @@ Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 
     irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
     input separates irrigated from rainfed fields themselves.
 
-    **Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.
+    **Difference from the baseline [95% confidence interval]:** as in the difference table. A CI that includes 0 means no clear difference.
 
-| Input | Head | Macro-F1 [95% CI] | Δ vs baseline [95% CI] |
+| Input | Head | Macro-F1 [95% confidence interval] | Difference from the baseline [95% confidence interval] |
 | --- | --- | ---: | ---: |
-| PSE-TAE | PSE-TAE | 0.752 [0.69–0.80] | – |
+| PSE-TAE | PSE-TAE (pixel-set encoder + temporal attention) | 0.752 [0.69–0.80] | – |
 
 ![Results by zone, utah](figures/utah_breakdown.png)
 
@@ -382,20 +382,20 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
     **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
     show how much the result changes from one part of the region to another.
 
-    - **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+    - **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
       scores all parcels at once.
     - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
       lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.
 
 **PSE-TAE**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | PSE-TAE | 0.793 | 0.727 | 0.733 | 0.812 | 0.721 | 0.757 ± 0.042 |
 
 **SVM**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.761 | 0.701 | 0.727 | 0.747 | 0.705 | 0.728 ± 0.026 |
 | Clay v1.5 [E02] | 0.822 | 0.742 | 0.805 | 0.820 | 0.773 | 0.792 ± 0.034 |
@@ -414,7 +414,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 ## Code and settings
 
 - Settings: [`experiments/E05_psetae_scratch/config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E05_psetae_scratch/config.yaml)
-- Code version: `da70acb (with uncommitted changes)`, run 2026-11-13 13:55 – 2026-11-13 13:55
+- Code version: `da70acb (with uncommitted changes)`, run 2026-11-13 13:57 – 2026-11-13 13:57
 
 <!-- AUTO:RESULTS:END -->
 
@@ -425,7 +425,7 @@ classifier of the comparison script. For RQ1, the relevant question is how it co
 earlier experiment. The paired differences below are computed in the same way: out-of-fold predictions on the parcels
 common to all runs, and 1,000 block-bootstrap draws of whole 20 km blocks.
 
-| Region | PSE-TAE minus … | Δ macro-F1 | 95% CI | p |
+| Region | PSE-TAE minus … | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value |
 | --- | --- | ---: | ---: | ---: |
 | Morocco | S2 + MLP (E03) | +0.003 | [−0.006, +0.011] | 0.56 |
 | Morocco | S2 + SVM (E02) | +0.011 | [−0.011, +0.044] | 0.44 |

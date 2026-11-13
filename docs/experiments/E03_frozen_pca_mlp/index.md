@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
+| **Status** | done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — Q2 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_pca_mlp/config.yaml) |
@@ -48,6 +48,55 @@ E04: E03 → E04 changes only how the months are combined (PCA → L-TAE), with 
 | Seeds | 1 | 3 (mean ± SD) |
 
 Inputs (all Sentinel-2 only): S2 baseline, Clay, Prithvi, TerraMind, AgriFM. Regions: Morocco and Utah 2023/24.
+
+## Input
+
+Each parcel enters the MLP as one row of numbers, exactly the E02 input:
+
+| Input | Per parcel (file) | Steps (fitted on the training folds of each round) | Into the MLP |
+| --- | --- | --- | --- |
+| S2 baseline | 15 variables × 12 months = 180 (`parcel_features_inner.csv`) | fill remaining gaps with the training median → standardise | 180 |
+| Clay v1.5 | 12 months × 1,024 = 12,288 (`clay_agyear_tiles[_2023-24].npz`) | fill months without a clear pixel with the training median → concatenate → standardise → PCA | 128 |
+| Prithvi-EO-2.0 | 12 × 1,024 = 12,288 | same | 128 |
+| TerraMind | 12 × 768 = 9,216 | same | 128 |
+| AgriFM | 1 × 1,024 (one vector per year) | same | 128 |
+
+- **Parcels:** Morocco 8,775–8,781 and Utah 6,011–6,013 (the parcels common to all runs are scored).
+- **Labels:** irrigated (class 1) or rainfed (class 2).
+- **No leakage:** median, standardisation and PCA are computed on the 3 training folds only, then applied to the
+  validation and test fold.
+
+## Model
+
+```mermaid
+flowchart LR
+    X["input<br/>128 numbers<br/>(baseline: 180)"] --> H1["Linear → 256<br/>BatchNorm · ReLU<br/>Dropout 0.2"]
+    H1 --> H2["Linear → 128<br/>BatchNorm · ReLU<br/>Dropout 0.2"]
+    H2 --> O["Linear → 2<br/>softmax: P(irrigated), P(rainfed)"]
+```
+
+| Setting | Value | What it does |
+| --- | --- | --- |
+| Hidden layers | 256 and 128 units (`MLP: [256, 128]`) | learn non-linear combinations of the inputs |
+| Activation | ReLU | makes the network non-linear |
+| Batch normalisation | after each hidden layer | keeps training stable |
+| Dropout | 0.2 (`DROPOUT`) | switches off 20% of the units at random during training, against overfitting |
+| Output | 2 units + softmax | probability of each class; rainfed if P(rainfed) ≥ 0.5 |
+| Trainable weights | ≈ 67,000 (baseline input: ≈ 80,000) | small compared with the ~1,200–5,000 training parcels × many epochs |
+
+## Training
+
+| Setting | Value (config `ltae:` section, script `models_run/03c_train_ltae.py`, `HEAD: mlp`) |
+| --- | --- |
+| Optimiser | AdamW, learning rate 0.001 (`LEARNING_RATE`), weight decay 0.0001 (`WEIGHT_DECAY`) |
+| Loss | cross-entropy with class weights (rainfed errors count more, as rainfed is the minority class) |
+| Batch size | 128 parcels (`BATCH_SIZE`) |
+| Epochs | at most 100 (`EPOCHS`) |
+| Early stopping | macro-F1 on the validation fold after every epoch; stop after 15 epochs without improvement (`PATIENCE`), keep the best epoch |
+| Seeds | 3 per round: 42, 1042, 2042 (`N_SEEDS`); the out-of-fold prediction of a parcel is the mean probability of the 3 seeds |
+| Tuning | none: the settings are fixed in advance, the validation fold only decides when to stop |
+| Validation | PASTIS rotation: 3 folds train, the next fold validates, 1 fold tests; 5 rounds, so every parcel is predicted once |
+| Hardware | GPU (one Slurm job per run) |
 
 ## Label efficiency (part of this experiment)
 

@@ -27,7 +27,7 @@ Do frozen foundation-model embeddings separate irrigated from rainfed parcels be
 - **Answer:** No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.906, difference within the noise); Clay and Prithvi hold up better in the hardest fold.
 - Full report: [E01 report](experiments/E01_frozen_pca_nested/report.md)
 
-![E01](experiments/E01_frozen_pca_nested/figures/macro_f1_by_input.png)
+![E01](experiments/E01_frozen_pca_nested/figures/morocco_macro_f1_by_input.png)
 
 #### E02 · Frozen GeoFMs + PCA + classical classifiers
 

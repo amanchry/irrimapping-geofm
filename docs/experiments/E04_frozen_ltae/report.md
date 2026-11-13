@@ -40,7 +40,7 @@
 | Validation | 5 spatial folds (20 km blocks); per round 3 folds train, the next fold chooses the hyperparameters or stops training, 1 fold tests (PASTIS rotation) |
 | Label efficiency | also trained on 10%, 25%, 50% of the training blocks, 3 block draws each (same draws in every experiment) |
 | Parcels | 6,011 / 6,013 / 8,781 (inputs scored on the parcels common to all runs) |
-| Uncertainty | 95% CI from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
+| Uncertainty | 95% confidence interval (CI) from a block bootstrap (1,000 draws of whole 20 km blocks), the same draws for every run → paired differences; p-values Holm-adjusted |
 | Changed from | E03: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA; same MLP head |
 
 ## Morocco
@@ -62,7 +62,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
     **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.
 
-| Input | LogReg | RF | SVM | MLP | L-TAE |
+| Input | Logistic regression (LogReg) | Random forest (RF) | Support vector machine (SVM) | Multilayer perceptron (MLP) | L-TAE + MLP (temporal attention) |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline (L-TAE) | – | – | – | – | 0.905 |
 | S2 baseline (MLP) [E03] | – | – | – | **0.908** | – |
@@ -83,34 +83,34 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
 ### Difference from the S2 baseline (headline heads)
 
-Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI excludes 0 **and** the Holm-adjusted p < 0.05.
+Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.
 
 ??? info "How to read this table"
 
-    **What:** each row compares one input with the S2 baseline, using the same classifier.
+    **What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
 
-    - **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+    - **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
       means 0.158 lower.
-    - **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+    - **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
       resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
         - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
           better.
         - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
         - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
-    - **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+    - **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
       tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
       of a difference.
-    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
       significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
 
     **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
     the inputs, not which parcels happened to be drawn.
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clay v1.5 (L-TAE) | L-TAE | +0.002 | [-0.016, +0.023] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | -0.007 | [-0.028, +0.016] | 1.000 | no clear difference |
-| TerraMind (L-TAE) | L-TAE | -0.009 | [-0.035, +0.014] | 1.000 | no clear difference |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | +0.002 | [-0.016, +0.023] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | -0.007 | [-0.028, +0.016] | 1.000 | no clear difference |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | -0.009 | [-0.035, +0.014] | 1.000 | no clear difference |
 
 ### Same input, earlier experiments' heads
 
@@ -121,36 +121,36 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **What:** the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
     It shows whether the classifier, not the input, makes the difference.
 
-    Δ, 95% CI and verdict are read as in the table above: a CI that includes 0 means no clear difference.
+    Δ, the 95% confidence interval and the verdict are read as in the table above: a CI that includes 0 means no clear difference.
 
-| Input | This experiment | Earlier run | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | This experiment | Earlier run | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | --- | ---: | ---: | ---: | --- |
-| S2 baseline | L-TAE | E02 LogReg | +0.036 | [+0.015, +0.068] | < 0.001 | **better** |
-| S2 baseline | L-TAE | E02 RF | +0.032 | [-0.003, +0.076] | 0.820 | no clear difference |
-| S2 baseline | L-TAE | E02 SVM | +0.005 | [-0.012, +0.031] | 1.000 | no clear difference |
-| S2 baseline | L-TAE | E03 MLP | -0.003 | [-0.018, +0.009] | 1.000 | no clear difference |
-| Clay v1.5 | L-TAE | E02 LogReg | +0.024 | [+0.013, +0.042] | 0.028 | **better** |
-| Clay v1.5 | L-TAE | E02 RF | +0.033 | [+0.006, +0.061] | 0.240 | higher, not significant after Holm |
-| Clay v1.5 | L-TAE | E02 SVM | +0.005 | [-0.010, +0.020] | 1.000 | no clear difference |
-| Clay v1.5 | L-TAE | E03 MLP | +0.008 | [-0.002, +0.021] | 0.882 | no clear difference |
-| Prithvi-EO-2.0 | L-TAE | E02 LogReg | +0.019 | [+0.006, +0.036] | 0.028 | **better** |
-| Prithvi-EO-2.0 | L-TAE | E02 RF | +0.064 | [+0.035, +0.096] | < 0.001 | **better** |
-| Prithvi-EO-2.0 | L-TAE | E02 SVM | -0.001 | [-0.014, +0.011] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | L-TAE | E03 MLP | +0.006 | [-0.006, +0.018] | 1.000 | no clear difference |
-| TerraMind | L-TAE | E02 LogReg | +0.009 | [-0.009, +0.028] | 1.000 | no clear difference |
-| TerraMind | L-TAE | E02 RF | +0.041 | [+0.004, +0.082] | 0.242 | higher, not significant after Holm |
-| TerraMind | L-TAE | E02 SVM | -0.003 | [-0.020, +0.010] | 1.000 | no clear difference |
-| TerraMind | L-TAE | E03 MLP | +0.001 | [-0.008, +0.009] | 1.000 | no clear difference |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 LogReg | +0.036 | [+0.015, +0.068] | < 0.001 | **better** |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 RF | +0.032 | [-0.003, +0.076] | 0.820 | no clear difference |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 SVM | +0.005 | [-0.012, +0.031] | 1.000 | no clear difference |
+| S2 baseline | L-TAE + MLP (temporal attention) | E03 MLP | -0.003 | [-0.018, +0.009] | 1.000 | no clear difference |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 LogReg | +0.024 | [+0.013, +0.042] | 0.028 | **better** |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 RF | +0.033 | [+0.006, +0.061] | 0.240 | higher, not significant after Holm |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 SVM | +0.005 | [-0.010, +0.020] | 1.000 | no clear difference |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E03 MLP | +0.008 | [-0.002, +0.021] | 0.882 | no clear difference |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 LogReg | +0.019 | [+0.006, +0.036] | 0.028 | **better** |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 RF | +0.064 | [+0.035, +0.096] | < 0.001 | **better** |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 SVM | -0.001 | [-0.014, +0.011] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E03 MLP | +0.006 | [-0.006, +0.018] | 1.000 | no clear difference |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 LogReg | +0.009 | [-0.009, +0.028] | 1.000 | no clear difference |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 RF | +0.041 | [+0.004, +0.082] | 0.242 | higher, not significant after Holm |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 SVM | -0.003 | [-0.020, +0.010] | 1.000 | no clear difference |
+| TerraMind | L-TAE + MLP (temporal attention) | E03 MLP | +0.001 | [-0.008, +0.009] | 1.000 | no clear difference |
 
-### Per-class metrics (headline heads, 95% CI)
+### Per-class metrics (headline heads, 95% confidence interval)
 
 ??? info "How to read this table"
 
-    **What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+    **What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
     (the range the true value probably lies in).
 
     - **Macro-F1:** mean F1 of the two classes (main metric).
-    - **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+    - **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
       usually the lowest number and the most informative one.
     - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
     - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
@@ -159,22 +159,22 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
     rows are not meaningful.
 
-| Input | Classifier | Macro-F1 | F1 rainfed | Balanced acc. | Overall acc. |
+| Input | Classifier | Macro-F1 | F1 of the rainfed class | Balanced accuracy | Overall accuracy |
 | --- | --- | ---: | ---: | ---: | ---: |
-| S2 baseline (L-TAE) | L-TAE | 0.905 [0.84–0.95] | 0.837 [0.72–0.92] | 0.921 [0.87–0.96] | 0.953 [0.92–0.98] |
-| S2 baseline [E02] | RF | 0.873 [0.80–0.93] | 0.777 [0.63–0.88] | 0.850 [0.77–0.93] | 0.944 [0.91–0.97] |
-| S2 baseline [E02] | LogReg | 0.869 [0.80–0.92] | 0.778 [0.64–0.86] | 0.906 [0.86–0.95] | 0.932 [0.90–0.96] |
-| Clay v1.5 (L-TAE) | L-TAE | 0.906 [0.85–0.95] | 0.840 [0.74–0.91] | 0.923 [0.89–0.95] | 0.954 [0.93–0.98] |
-| Clay v1.5 [E02] | RF | 0.874 [0.81–0.93] | 0.779 [0.66–0.87] | 0.849 [0.78–0.91] | 0.945 [0.92–0.97] |
-| Clay v1.5 [E02] | LogReg | 0.882 [0.82–0.93] | 0.800 [0.68–0.88] | 0.916 [0.88–0.95] | 0.940 [0.91–0.97] |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.898 [0.84–0.94] | 0.826 [0.72–0.90] | 0.917 [0.88–0.95] | 0.950 [0.92–0.97] |
-| Prithvi-EO-2.0 [E02] | RF | 0.835 [0.78–0.88] | 0.713 [0.60–0.79] | 0.827 [0.76–0.88] | 0.924 [0.89–0.96] |
-| Prithvi-EO-2.0 [E02] | LogReg | 0.879 [0.81–0.93] | 0.795 [0.67–0.88] | 0.923 [0.89–0.95] | 0.937 [0.90–0.96] |
-| TerraMind (L-TAE) | L-TAE | 0.896 [0.84–0.94] | 0.821 [0.71–0.90] | 0.906 [0.86–0.94] | 0.950 [0.92–0.97] |
-| TerraMind [E02] | RF | 0.855 [0.79–0.91] | 0.747 [0.61–0.84] | 0.837 [0.77–0.90] | 0.935 [0.90–0.96] |
-| TerraMind [E02] | LogReg | 0.887 [0.82–0.93] | 0.808 [0.69–0.89] | 0.922 [0.89–0.96] | 0.942 [0.91–0.97] |
-| AgriFM [E02] | RF | 0.714 [0.67–0.75] | 0.485 [0.40–0.55] | 0.668 [0.63–0.70] | 0.898 [0.85–0.94] |
-| AgriFM [E02] | LogReg | 0.833 [0.77–0.88] | 0.719 [0.59–0.81] | 0.886 [0.84–0.93] | 0.909 [0.88–0.94] |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.905 [0.84–0.95] | 0.837 [0.72–0.92] | 0.921 [0.87–0.96] | 0.953 [0.92–0.98] |
+| S2 baseline [E02] | Random forest (RF) | 0.873 [0.80–0.93] | 0.777 [0.63–0.88] | 0.850 [0.77–0.93] | 0.944 [0.91–0.97] |
+| S2 baseline [E02] | Logistic regression (LogReg) | 0.869 [0.80–0.92] | 0.778 [0.64–0.86] | 0.906 [0.86–0.95] | 0.932 [0.90–0.96] |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.906 [0.85–0.95] | 0.840 [0.74–0.91] | 0.923 [0.89–0.95] | 0.954 [0.93–0.98] |
+| Clay v1.5 [E02] | Random forest (RF) | 0.874 [0.81–0.93] | 0.779 [0.66–0.87] | 0.849 [0.78–0.91] | 0.945 [0.92–0.97] |
+| Clay v1.5 [E02] | Logistic regression (LogReg) | 0.882 [0.82–0.93] | 0.800 [0.68–0.88] | 0.916 [0.88–0.95] | 0.940 [0.91–0.97] |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.898 [0.84–0.94] | 0.826 [0.72–0.90] | 0.917 [0.88–0.95] | 0.950 [0.92–0.97] |
+| Prithvi-EO-2.0 [E02] | Random forest (RF) | 0.835 [0.78–0.88] | 0.713 [0.60–0.79] | 0.827 [0.76–0.88] | 0.924 [0.89–0.96] |
+| Prithvi-EO-2.0 [E02] | Logistic regression (LogReg) | 0.879 [0.81–0.93] | 0.795 [0.67–0.88] | 0.923 [0.89–0.95] | 0.937 [0.90–0.96] |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.896 [0.84–0.94] | 0.821 [0.71–0.90] | 0.906 [0.86–0.94] | 0.950 [0.92–0.97] |
+| TerraMind [E02] | Random forest (RF) | 0.855 [0.79–0.91] | 0.747 [0.61–0.84] | 0.837 [0.77–0.90] | 0.935 [0.90–0.96] |
+| TerraMind [E02] | Logistic regression (LogReg) | 0.887 [0.82–0.93] | 0.808 [0.69–0.89] | 0.922 [0.89–0.96] | 0.942 [0.91–0.97] |
+| AgriFM [E02] | Random forest (RF) | 0.714 [0.67–0.75] | 0.485 [0.40–0.55] | 0.668 [0.63–0.70] | 0.898 [0.85–0.94] |
+| AgriFM [E02] | Logistic regression (LogReg) | 0.833 [0.77–0.88] | 0.719 [0.59–0.81] | 0.886 [0.84–0.93] | 0.909 [0.88–0.94] |
 
 ### Label efficiency
 
@@ -198,10 +198,10 @@ Macro-F1 when trained on a share of the training blocks (validation and test fol
 | Input | Head | 10% | 25% | 50% | 100% |
 | --- | --- | ---: | ---: | ---: | ---: |
 | *training parcels per round* | | 590 | 1,266 | 2,530 | all |
-| S2 baseline (L-TAE) | L-TAE | 0.819 ± 0.040 | 0.851 ± 0.013 | 0.865 ± 0.011 | 0.898 |
-| Clay v1.5 (L-TAE) | L-TAE | 0.811 ± 0.038 | 0.858 ± 0.025 | 0.871 ± 0.007 | 0.899 |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.785 ± 0.041 | 0.831 ± 0.019 | 0.857 ± 0.012 | 0.887 |
-| TerraMind (L-TAE) | L-TAE | 0.755 ± 0.046 | 0.840 ± 0.017 | 0.871 ± 0.011 | 0.882 |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.819 ± 0.040 | 0.851 ± 0.013 | 0.865 ± 0.011 | 0.898 |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.811 ± 0.038 | 0.858 ± 0.025 | 0.871 ± 0.007 | 0.899 |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.785 ± 0.041 | 0.831 ± 0.019 | 0.857 ± 0.012 | 0.887 |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.755 ± 0.046 | 0.840 ± 0.017 | 0.871 ± 0.011 | 0.882 |
 
 ![Learning curves, morocco](figures/morocco_learning_curve.png)
 
@@ -215,12 +215,12 @@ Macro-F1 of each seed on its own; the result above is the mean probability of th
     table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
     difference between inputs smaller than this spread is not meaningful.
 
-| Input | Head | Macro-F1 per seed | Mean ± SD |
+| Input | Head | Macro-F1 per seed | Mean ± standard deviation (SD) |
 | --- | --- | --- | ---: |
-| S2 baseline | L-TAE | 0.902, 0.905, 0.888 | 0.898 ± 0.009 |
-| Clay v1.5 | L-TAE | 0.904, 0.896, 0.897 | 0.899 ± 0.004 |
-| Prithvi-EO-2.0 | L-TAE | 0.889, 0.888, 0.882 | 0.887 ± 0.004 |
-| TerraMind | L-TAE | 0.885, 0.879, 0.880 | 0.882 ± 0.003 |
+| S2 baseline | L-TAE + MLP (temporal attention) | 0.902, 0.905, 0.888 | 0.898 ± 0.009 |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | 0.904, 0.896, 0.897 | 0.899 ± 0.004 |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | 0.889, 0.888, 0.882 | 0.887 ± 0.004 |
+| TerraMind | L-TAE + MLP (temporal attention) | 0.885, 0.879, 0.880 | 0.882 ± 0.003 |
 
 ### Which months the L-TAE attends to
 
@@ -246,14 +246,14 @@ Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed,
     irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
     input separates irrigated from rainfed fields themselves.
 
-    **Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.
+    **Difference from the baseline [95% confidence interval]:** as in the difference table. A CI that includes 0 means no clear difference.
 
-| Input | Head | Macro-F1 [95% CI] | Δ vs baseline [95% CI] |
+| Input | Head | Macro-F1 [95% confidence interval] | Difference from the baseline [95% confidence interval] |
 | --- | --- | ---: | ---: |
-| S2 baseline (L-TAE) | L-TAE | 0.888 [0.80–0.95] | – |
-| Clay v1.5 (L-TAE) | L-TAE | 0.890 [0.82–0.94] | +0.003 [-0.016, +0.029] |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.879 [0.81–0.93] | -0.009 [-0.034, +0.020] |
-| TerraMind (L-TAE) | L-TAE | 0.880 [0.81–0.93] | -0.008 [-0.036, +0.022] |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.888 [0.80–0.95] | – |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.890 [0.82–0.94] | +0.003 [-0.016, +0.029] |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.879 [0.81–0.93] | -0.009 [-0.034, +0.020] |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.880 [0.81–0.93] | -0.008 [-0.036, +0.022] |
 
 ![Results by zone, morocco](figures/morocco_breakdown.png)
 
@@ -268,14 +268,14 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
     **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
     show how much the result changes from one part of the region to another.
 
-    - **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+    - **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
       scores all parcels at once.
     - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
       lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.
 
 **L-TAE**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline (L-TAE) | 0.823 | 0.857 | 0.945 | 0.967 | 0.932 | 0.905 ± 0.062 |
 | Clay v1.5 (L-TAE) | 0.870 | 0.834 | 0.954 | 0.952 | 0.932 | 0.908 ± 0.054 |
@@ -284,7 +284,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **RF**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.711 | 0.842 | 0.922 | 0.938 | 0.920 | 0.867 ± 0.095 |
 | Clay v1.5 [E02] | 0.793 | 0.812 | 0.913 | 0.937 | 0.909 | 0.873 ± 0.065 |
@@ -294,7 +294,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **LogReg**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.785 | 0.834 | 0.901 | 0.923 | 0.899 | 0.869 ± 0.057 |
 | Clay v1.5 [E02] | 0.850 | 0.829 | 0.935 | 0.899 | 0.905 | 0.884 ± 0.043 |
@@ -329,7 +329,7 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
     **Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.
 
-| Input | LogReg | RF | SVM | MLP | L-TAE |
+| Input | Logistic regression (LogReg) | Random forest (RF) | Support vector machine (SVM) | Multilayer perceptron (MLP) | L-TAE + MLP (temporal attention) |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline (L-TAE) | – | – | – | – | 0.743 |
 | S2 baseline (MLP) [E03] | – | – | – | 0.739 | – |
@@ -350,34 +350,34 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
 
 ### Difference from the S2 baseline (headline heads)
 
-Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI excludes 0 **and** the Holm-adjusted p < 0.05.
+Δ = input minus baseline with the same head (runs with their own model against the baseline's random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% confidence interval (CI) excludes 0 **and** the Holm-corrected p-value < 0.05.
 
 ??? info "How to read this table"
 
-    **What:** each row compares one input with the S2 baseline, using the same classifier.
+    **What:** each row compares one input with the baseline (the Sentinel feature classifier), using the same classifier.
 
-    - **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+    - **Difference in macro-F1 (Δ):** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
       means 0.158 lower.
-    - **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+    - **95% confidence interval (CI), e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
       resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
         - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
           better.
         - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
         - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
-    - **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+    - **p-value (Holm-corrected):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
       tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
       of a difference.
-    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+    - **Verdict:** "better" or "worse" only if the CI excludes 0 **and** the Holm-corrected p-value < 0.05. "Higher/lower, not
       significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
 
     **Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
     the inputs, not which parcels happened to be drawn.
 
-| Input | Classifier | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | Classifier | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clay v1.5 (L-TAE) | L-TAE | +0.041 | [+0.019, +0.061] | < 0.001 | **better** |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | +0.039 | [+0.013, +0.065] | 0.004 | **better** |
-| TerraMind (L-TAE) | L-TAE | +0.027 | [-0.000, +0.052] | 0.054 | no clear difference |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | +0.041 | [+0.019, +0.061] | < 0.001 | **better** |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | +0.039 | [+0.013, +0.065] | 0.004 | **better** |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | +0.027 | [-0.000, +0.052] | 0.054 | no clear difference |
 
 ### Same input, earlier experiments' heads
 
@@ -388,36 +388,36 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **What:** the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
     It shows whether the classifier, not the input, makes the difference.
 
-    Δ, 95% CI and verdict are read as in the table above: a CI that includes 0 means no clear difference.
+    Δ, the 95% confidence interval and the verdict are read as in the table above: a CI that includes 0 means no clear difference.
 
-| Input | This experiment | Earlier run | Δ macro-F1 | 95% CI | p (Holm) | Verdict |
+| Input | This experiment | Earlier run | Difference in macro-F1 (Δ) | 95% confidence interval (CI) | p-value (Holm-corrected) | Verdict |
 | --- | --- | --- | ---: | ---: | ---: | --- |
-| S2 baseline | L-TAE | E02 LogReg | +0.021 | [+0.001, +0.041] | 0.306 | higher, not significant after Holm |
-| S2 baseline | L-TAE | E02 RF | -0.021 | [-0.044, +0.003] | 0.768 | no clear difference |
-| S2 baseline | L-TAE | E02 SVM | +0.015 | [-0.003, +0.033] | 0.840 | no clear difference |
-| S2 baseline | L-TAE | E03 MLP | +0.004 | [-0.014, +0.022] | 1.000 | no clear difference |
-| Clay v1.5 | L-TAE | E02 LogReg | +0.030 | [+0.016, +0.045] | < 0.001 | **better** |
-| Clay v1.5 | L-TAE | E02 RF | +0.021 | [+0.004, +0.038] | 0.104 | higher, not significant after Holm |
-| Clay v1.5 | L-TAE | E02 SVM | -0.007 | [-0.021, +0.005] | 1.000 | no clear difference |
-| Clay v1.5 | L-TAE | E03 MLP | +0.003 | [-0.010, +0.015] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | L-TAE | E02 LogReg | +0.036 | [+0.020, +0.052] | < 0.001 | **better** |
-| Prithvi-EO-2.0 | L-TAE | E02 RF | +0.067 | [+0.039, +0.094] | < 0.001 | **better** |
-| Prithvi-EO-2.0 | L-TAE | E02 SVM | -0.000 | [-0.015, +0.014] | 1.000 | no clear difference |
-| Prithvi-EO-2.0 | L-TAE | E03 MLP | +0.002 | [-0.010, +0.015] | 1.000 | no clear difference |
-| TerraMind | L-TAE | E02 LogReg | +0.021 | [+0.003, +0.040] | 0.200 | higher, not significant after Holm |
-| TerraMind | L-TAE | E02 RF | +0.025 | [+0.007, +0.043] | 0.176 | higher, not significant after Holm |
-| TerraMind | L-TAE | E02 SVM | -0.007 | [-0.022, +0.006] | 1.000 | no clear difference |
-| TerraMind | L-TAE | E03 MLP | -0.015 | [-0.028, -0.002] | 0.104 | lower, not significant after Holm |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 LogReg | +0.021 | [+0.001, +0.041] | 0.306 | higher, not significant after Holm |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 RF | -0.021 | [-0.044, +0.003] | 0.768 | no clear difference |
+| S2 baseline | L-TAE + MLP (temporal attention) | E02 SVM | +0.015 | [-0.003, +0.033] | 0.840 | no clear difference |
+| S2 baseline | L-TAE + MLP (temporal attention) | E03 MLP | +0.004 | [-0.014, +0.022] | 1.000 | no clear difference |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 LogReg | +0.030 | [+0.016, +0.045] | < 0.001 | **better** |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 RF | +0.021 | [+0.004, +0.038] | 0.104 | higher, not significant after Holm |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E02 SVM | -0.007 | [-0.021, +0.005] | 1.000 | no clear difference |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | E03 MLP | +0.003 | [-0.010, +0.015] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 LogReg | +0.036 | [+0.020, +0.052] | < 0.001 | **better** |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 RF | +0.067 | [+0.039, +0.094] | < 0.001 | **better** |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E02 SVM | -0.000 | [-0.015, +0.014] | 1.000 | no clear difference |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | E03 MLP | +0.002 | [-0.010, +0.015] | 1.000 | no clear difference |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 LogReg | +0.021 | [+0.003, +0.040] | 0.200 | higher, not significant after Holm |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 RF | +0.025 | [+0.007, +0.043] | 0.176 | higher, not significant after Holm |
+| TerraMind | L-TAE + MLP (temporal attention) | E02 SVM | -0.007 | [-0.022, +0.006] | 1.000 | no clear difference |
+| TerraMind | L-TAE + MLP (temporal attention) | E03 MLP | -0.015 | [-0.028, -0.002] | 0.104 | lower, not significant after Holm |
 
-### Per-class metrics (headline heads, 95% CI)
+### Per-class metrics (headline heads, 95% confidence interval)
 
 ??? info "How to read this table"
 
-    **What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+    **What:** the main metric and three others for the headline classifiers, each with its 95% confidence interval in brackets
     (the range the true value probably lies in).
 
     - **Macro-F1:** mean F1 of the two classes (main metric).
-    - **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+    - **F1 of the rainfed class:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
       usually the lowest number and the most informative one.
     - **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
     - **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
@@ -426,22 +426,22 @@ Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that h
     **Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
     rows are not meaningful.
 
-| Input | Classifier | Macro-F1 | F1 rainfed | Balanced acc. | Overall acc. |
+| Input | Classifier | Macro-F1 | F1 of the rainfed class | Balanced accuracy | Overall accuracy |
 | --- | --- | ---: | ---: | ---: | ---: |
-| S2 baseline (L-TAE) | L-TAE | 0.743 [0.70–0.78] | 0.591 [0.51–0.66] | 0.787 [0.76–0.81] | 0.833 [0.81–0.86] |
-| S2 baseline [E02] | RF | 0.764 [0.72–0.80] | 0.604 [0.51–0.68] | 0.753 [0.71–0.79] | 0.873 [0.85–0.89] |
-| S2 baseline [E02] | LogReg | 0.722 [0.68–0.76] | 0.572 [0.49–0.65] | 0.794 [0.76–0.82] | 0.803 [0.77–0.83] |
-| Clay v1.5 (L-TAE) | L-TAE | 0.784 [0.75–0.81] | 0.640 [0.56–0.70] | 0.784 [0.75–0.81] | 0.879 [0.86–0.90] |
-| Clay v1.5 [E02] | RF | 0.763 [0.72–0.79] | 0.592 [0.50–0.66] | 0.729 [0.69–0.76] | 0.886 [0.87–0.90] |
-| Clay v1.5 [E02] | LogReg | 0.753 [0.71–0.79] | 0.611 [0.53–0.68] | 0.807 [0.77–0.83] | 0.836 [0.81–0.86] |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.782 [0.74–0.81] | 0.637 [0.56–0.70] | 0.779 [0.74–0.81] | 0.879 [0.86–0.90] |
-| Prithvi-EO-2.0 [E02] | RF | 0.715 [0.68–0.74] | 0.501 [0.42–0.56] | 0.674 [0.64–0.70] | 0.875 [0.85–0.90] |
-| Prithvi-EO-2.0 [E02] | LogReg | 0.746 [0.70–0.78] | 0.602 [0.52–0.68] | 0.805 [0.77–0.83] | 0.828 [0.80–0.85] |
-| TerraMind (L-TAE) | L-TAE | 0.770 [0.73–0.80] | 0.618 [0.54–0.69] | 0.773 [0.74–0.80] | 0.869 [0.85–0.89] |
-| TerraMind [E02] | RF | 0.745 [0.71–0.77] | 0.561 [0.48–0.62] | 0.712 [0.68–0.74] | 0.878 [0.86–0.90] |
-| TerraMind [E02] | LogReg | 0.749 [0.70–0.79] | 0.607 [0.53–0.68] | 0.812 [0.78–0.84] | 0.828 [0.80–0.85] |
-| AgriFM [E02] | RF | 0.677 [0.64–0.71] | 0.429 [0.35–0.49] | 0.639 [0.61–0.67] | 0.869 [0.84–0.89] |
-| AgriFM [E02] | LogReg | 0.714 [0.67–0.76] | 0.555 [0.47–0.63] | 0.774 [0.74–0.80] | 0.803 [0.77–0.83] |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.743 [0.70–0.78] | 0.591 [0.51–0.66] | 0.787 [0.76–0.81] | 0.833 [0.81–0.86] |
+| S2 baseline [E02] | Random forest (RF) | 0.764 [0.72–0.80] | 0.604 [0.51–0.68] | 0.753 [0.71–0.79] | 0.873 [0.85–0.89] |
+| S2 baseline [E02] | Logistic regression (LogReg) | 0.722 [0.68–0.76] | 0.572 [0.49–0.65] | 0.794 [0.76–0.82] | 0.803 [0.77–0.83] |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.784 [0.75–0.81] | 0.640 [0.56–0.70] | 0.784 [0.75–0.81] | 0.879 [0.86–0.90] |
+| Clay v1.5 [E02] | Random forest (RF) | 0.763 [0.72–0.79] | 0.592 [0.50–0.66] | 0.729 [0.69–0.76] | 0.886 [0.87–0.90] |
+| Clay v1.5 [E02] | Logistic regression (LogReg) | 0.753 [0.71–0.79] | 0.611 [0.53–0.68] | 0.807 [0.77–0.83] | 0.836 [0.81–0.86] |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.782 [0.74–0.81] | 0.637 [0.56–0.70] | 0.779 [0.74–0.81] | 0.879 [0.86–0.90] |
+| Prithvi-EO-2.0 [E02] | Random forest (RF) | 0.715 [0.68–0.74] | 0.501 [0.42–0.56] | 0.674 [0.64–0.70] | 0.875 [0.85–0.90] |
+| Prithvi-EO-2.0 [E02] | Logistic regression (LogReg) | 0.746 [0.70–0.78] | 0.602 [0.52–0.68] | 0.805 [0.77–0.83] | 0.828 [0.80–0.85] |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.770 [0.73–0.80] | 0.618 [0.54–0.69] | 0.773 [0.74–0.80] | 0.869 [0.85–0.89] |
+| TerraMind [E02] | Random forest (RF) | 0.745 [0.71–0.77] | 0.561 [0.48–0.62] | 0.712 [0.68–0.74] | 0.878 [0.86–0.90] |
+| TerraMind [E02] | Logistic regression (LogReg) | 0.749 [0.70–0.79] | 0.607 [0.53–0.68] | 0.812 [0.78–0.84] | 0.828 [0.80–0.85] |
+| AgriFM [E02] | Random forest (RF) | 0.677 [0.64–0.71] | 0.429 [0.35–0.49] | 0.639 [0.61–0.67] | 0.869 [0.84–0.89] |
+| AgriFM [E02] | Logistic regression (LogReg) | 0.714 [0.67–0.76] | 0.555 [0.47–0.63] | 0.774 [0.74–0.80] | 0.803 [0.77–0.83] |
 
 ### Label efficiency
 
@@ -465,10 +465,10 @@ Macro-F1 when trained on a share of the training blocks (validation and test fol
 | Input | Head | 10% | 25% | 50% | 100% |
 | --- | --- | ---: | ---: | ---: | ---: |
 | *training parcels per round* | | 399 | 862 | 1,732 | all |
-| S2 baseline (L-TAE) | L-TAE | 0.674 ± 0.013 | 0.698 ± 0.027 | 0.718 ± 0.005 | 0.728 |
-| Clay v1.5 (L-TAE) | L-TAE | 0.669 ± 0.011 | 0.730 ± 0.003 | 0.751 ± 0.009 | 0.770 |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.679 ± 0.008 | 0.733 ± 0.010 | 0.743 ± 0.006 | 0.767 |
-| TerraMind (L-TAE) | L-TAE | 0.650 ± 0.027 | 0.720 ± 0.004 | 0.744 ± 0.007 | 0.751 |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.674 ± 0.013 | 0.698 ± 0.027 | 0.718 ± 0.005 | 0.728 |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.669 ± 0.011 | 0.730 ± 0.003 | 0.751 ± 0.009 | 0.770 |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.679 ± 0.008 | 0.733 ± 0.010 | 0.743 ± 0.006 | 0.767 |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.650 ± 0.027 | 0.720 ± 0.004 | 0.744 ± 0.007 | 0.751 |
 
 ![Learning curves, utah](figures/utah_learning_curve.png)
 
@@ -482,12 +482,12 @@ Macro-F1 of each seed on its own; the result above is the mean probability of th
     table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
     difference between inputs smaller than this spread is not meaningful.
 
-| Input | Head | Macro-F1 per seed | Mean ± SD |
+| Input | Head | Macro-F1 per seed | Mean ± standard deviation (SD) |
 | --- | --- | --- | ---: |
-| S2 baseline | L-TAE | 0.733, 0.724, 0.726 | 0.728 ± 0.005 |
-| Clay v1.5 | L-TAE | 0.776, 0.756, 0.779 | 0.770 ± 0.012 |
-| Prithvi-EO-2.0 | L-TAE | 0.779, 0.753, 0.769 | 0.767 ± 0.013 |
-| TerraMind | L-TAE | 0.754, 0.751, 0.748 | 0.751 ± 0.003 |
+| S2 baseline | L-TAE + MLP (temporal attention) | 0.733, 0.724, 0.726 | 0.728 ± 0.005 |
+| Clay v1.5 | L-TAE + MLP (temporal attention) | 0.776, 0.756, 0.779 | 0.770 ± 0.012 |
+| Prithvi-EO-2.0 | L-TAE + MLP (temporal attention) | 0.779, 0.753, 0.769 | 0.767 ± 0.013 |
+| TerraMind | L-TAE + MLP (temporal attention) | 0.754, 0.751, 0.748 | 0.751 ± 0.003 |
 
 ### Which months the L-TAE attends to
 
@@ -513,14 +513,14 @@ Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 
     irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
     input separates irrigated from rainfed fields themselves.
 
-    **Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.
+    **Difference from the baseline [95% confidence interval]:** as in the difference table. A CI that includes 0 means no clear difference.
 
-| Input | Head | Macro-F1 [95% CI] | Δ vs baseline [95% CI] |
+| Input | Head | Macro-F1 [95% confidence interval] | Difference from the baseline [95% confidence interval] |
 | --- | --- | ---: | ---: |
-| S2 baseline (L-TAE) | L-TAE | 0.730 [0.67–0.78] | – |
-| Clay v1.5 (L-TAE) | L-TAE | 0.801 [0.76–0.84] | +0.070 [+0.035, +0.106] |
-| Prithvi-EO-2.0 (L-TAE) | L-TAE | 0.793 [0.75–0.84] | +0.063 [+0.018, +0.106] |
-| TerraMind (L-TAE) | L-TAE | 0.783 [0.74–0.82] | +0.052 [+0.010, +0.097] |
+| S2 baseline (L-TAE) | L-TAE + MLP (temporal attention) | 0.730 [0.67–0.78] | – |
+| Clay v1.5 (L-TAE) | L-TAE + MLP (temporal attention) | 0.801 [0.76–0.84] | +0.070 [+0.035, +0.106] |
+| Prithvi-EO-2.0 (L-TAE) | L-TAE + MLP (temporal attention) | 0.793 [0.75–0.84] | +0.063 [+0.018, +0.106] |
+| TerraMind (L-TAE) | L-TAE + MLP (temporal attention) | 0.783 [0.74–0.82] | +0.052 [+0.010, +0.097] |
 
 ![Results by zone, utah](figures/utah_breakdown.png)
 
@@ -535,14 +535,14 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
     **What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
     show how much the result changes from one part of the region to another.
 
-    - **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+    - **Mean ± standard deviation (SD):** average of the five folds and their spread. This can differ slightly from the main table, which
       scores all parcels at once.
     - **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
       lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.
 
 **L-TAE**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline (L-TAE) | 0.753 | 0.721 | 0.726 | 0.802 | 0.719 | 0.744 ± 0.035 |
 | Clay v1.5 (L-TAE) | 0.801 | 0.747 | 0.804 | 0.789 | 0.781 | 0.784 ± 0.023 |
@@ -551,7 +551,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **RF**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.825 | 0.745 | 0.748 | 0.741 | 0.759 | 0.764 ± 0.035 |
 | Clay v1.5 [E02] | 0.794 | 0.735 | 0.803 | 0.725 | 0.757 | 0.763 ± 0.035 |
@@ -561,7 +561,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 
 **LogReg**
 
-| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+| Input | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± standard deviation (SD) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S2 baseline [E02] | 0.766 | 0.675 | 0.700 | 0.765 | 0.712 | 0.724 ± 0.040 |
 | Clay v1.5 [E02] | 0.767 | 0.692 | 0.771 | 0.798 | 0.745 | 0.755 ± 0.039 |
@@ -580,7 +580,7 @@ Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test par
 ## Code and settings
 
 - Settings: [`experiments/E04_frozen_ltae/config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E04_frozen_ltae/config.yaml)
-- Code version: `cc89ede (with uncommitted changes)`, run 2026-11-13 13:17 – 2026-11-13 13:17
+- Code version: `cc89ede (with uncommitted changes)`, run 2026-11-13 13:18 – 2026-11-13 13:18
 
 <!-- AUTO:RESULTS:END -->
 
