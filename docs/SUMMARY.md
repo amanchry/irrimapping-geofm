@@ -19,10 +19,13 @@
 * [Phase 5 · Annual maps](phase5_maps/index.md)
 * Experiments
     * [Overview](experiments/index.md)
-    * [E01 · PCA pipeline · nested CV](experiments/E01_frozen_pca_nested/index.md)
+    * [E01 · PCA + classifiers · nested CV](experiments/E01_frozen_pca_nested/index.md)
         * [Report](experiments/E01_frozen_pca_nested/report.md)
-    * [E02 · PCA pipeline · PASTIS](experiments/E02_frozen_pca_pastis/index.md)
-    * [E03 · L-TAE pipeline · PASTIS](experiments/E03_frozen_ltae_pastis/index.md)
+    * [E02 · PCA + LogReg / RF / SVM](experiments/E02_frozen_pca/index.md)
+    * [E03 · PCA + MLP head](experiments/E03_frozen_pca_mlp/index.md)
+    * [E04 · L-TAE + MLP head](experiments/E04_frozen_ltae/index.md)
+    * [E05 · PSE-TAE from scratch](experiments/E05_psetae_scratch/index.md)
+    * [E06 · Label efficiency](experiments/E06_label_efficiency/index.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

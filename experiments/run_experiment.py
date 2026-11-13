@@ -36,7 +36,7 @@ import yaml
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]               # project folder
-EXPERIMENT = "E02_frozen_pca_pastis"                      # folder name in experiments/
+EXPERIMENT = "E02_frozen_pca"                      # folder name in experiments/
 ONLY_STEPS = None                                         # None = all steps of the config | e.g. ["compare", "report"]
 RERUN = False                                             # True = run again even if a run already has results
 # ==========================================================================

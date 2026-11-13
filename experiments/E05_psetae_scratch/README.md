@@ -1,8 +1,8 @@
-# E04 · PSE-TAE trained from scratch (parked)
+# E05 · PSE-TAE trained from scratch
 
 | | |
 | --- | --- |
-| **Status** | ⏸ parked — presented in the next phase; not on the overview pages yet (`listed: false`) |
+| **Status** | 📝 planned — 3 seeds per region; setup page: `docs/experiments/E05_psetae_scratch/index.md` |
 | **Config** | [`config.yaml`](config.yaml) |
 | **Script** | `models_run/03b_train_psetae.py` |
 
@@ -29,8 +29,8 @@ is kept but not run (Sentinel-1 is thin in Utah after the loss of Sentinel-1B).
 
 ## How to run
 ```bash
-# all four in a row — experiments/run_experiment.py:  EXPERIMENT = "E04_psetae_scratch"
+# all four in a row — experiments/run_experiment.py:  EXPERIMENT = "E05_psetae_scratch"
 python experiments/run_experiment.py
 # one run (e.g. in a Slurm job), without editing a script:
-EXPERIMENT=E04_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
+EXPERIMENT=E05_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
 ```

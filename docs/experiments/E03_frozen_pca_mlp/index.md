@@ -1,0 +1,59 @@
+# E03 · Frozen GeoFMs + PCA + MLP head
+
+*Exactly the E02 input (12 months → PCA 128) with a trained MLP head instead of the classical classifiers: E02 → E03 isolates the effect of the head.*
+
+| | |
+| --- | --- |
+| **Status** | 📝 planned — needs `models_run/03c_train_ltae.py` |
+| **Research question** | RQ1 — Q2 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
+| **Builds on** | [E02](../E02_frozen_pca/index.md) |
+| **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_pca_mlp/config.yaml) |
+| **Report** | written when the results are in |
+
+## What this experiment builds on
+
+Every method choice of this experiment and the paper it comes from (full list: [Reference papers](../../references/index.md)).
+
+| What this experiment takes | Reference |
+| --- | --- |
+| Frozen encoder + trained neural head (the usual GeoFM benchmark set-up) | Marsocci et al. (2024), [PANGAEA](https://arxiv.org/abs/2412.04204) · [summary](../../references/pangaea.md) |
+| Embeddings + MLP head | Feng et al. (2025), [TESSERA](https://arxiv.org/abs/2506.20380) |
+| Simple heads on embeddings matter little (tested here) | Mughees et al. (2026), [From foundation embeddings to cropland maps: label efficiency, temporal transferability …](https://arxiv.org/abs/2609.17138) |
+| Validation rotation; early stopping on the validation fold | Garnot & Landrieu (2021), [PASTIS / U-TAE](https://arxiv.org/abs/2107.07933) · [summary](../../references/pastis-utae.md) |
+| Spatial blocks (20 km) instead of random splits | Roberts et al. (2017), [Cross-validation strategies for data with … spatial … structure](https://doi.org/10.1111/ecog.02881) |
+| Why random CV overstates accuracy (shown in every run) | Ploton et al. (2020), [Spatial validation reveals poor predictive performance …](https://doi.org/10.1038/s41467-020-18321-y) |
+| Confidence intervals by resampling whole blocks | Künsch (1989), [The jackknife and the bootstrap for general stationary observations](https://doi.org/10.1214/aos/1176347265) |
+| Paired differences between inputs with CIs | Foody (2009), [Classification accuracy comparison …](https://doi.org/10.1016/j.rse.2009.03.014) |
+| Correction for testing many input × head pairs | Holm (1979), A simple sequentially rejective multiple test procedure, *Scand. J. Stat.* 6 |
+| No kappa coefficient | Pontius & Millones (2011), [Death to Kappa](https://doi.org/10.1080/01431161.2011.552923) |
+| Model compared: Clay v1.5 (10 S2 bands, date and location inputs) | Clay Foundation (2024), [Clay v1.5](https://huggingface.co/made-with-clay/Clay) |
+| Model compared: Prithvi-EO-2.0 (6 HLS bands, date and location inputs) | Szwarcman et al. (2024), [Prithvi-EO-2.0](https://arxiv.org/abs/2412.02732) |
+| Model compared: TerraMind (12 S2 bands; S1 only in ablation A5) | Jakubik et al. (2025), [TerraMind](https://arxiv.org/abs/2504.11171) |
+| Model compared: AgriFM (10 S2 bands, whole year in one pass) | Li et al. (2025), [AgriFM](https://arxiv.org/abs/2505.21357) |
+
+## Question
+Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?
+
+## Why
+GeoFM benchmarks evaluate frozen encoders with a trained neural head. E03 gives every input the same small MLP on
+exactly the E02 input, so a difference between E02 and E03 comes from the head alone. E03 is also the reference for
+E04: E03 → E04 changes only how the months are combined (PCA → L-TAE), with the same MLP head.
+
+## What changes
+| | E02 | E03 |
+| --- | --- | --- |
+| Input | 12 months concatenated → PCA 128 (baseline: 180 features) | same |
+| Head | LogReg, RF, SVM (grid on the validation fold) | MLP 128 → 256 → 128 → 2, ReLU, batch normalisation, dropout 0.2 |
+| Training | – | AdamW 1e-3, weight decay 1e-4, batch 128, class-weighted cross-entropy, ≤ 100 epochs, early stopping on validation macro-F1 (patience 15) |
+| Seeds | 1 | 3 (mean ± SD) |
+
+Inputs (all Sentinel-2 only): S2 baseline, Clay, Prithvi, TerraMind, AgriFM. Regions: Morocco and Utah 2023/24.
+
+## How to run (once 03c exists)
+```bash
+# experiments/run_experiment.py:  EXPERIMENT = "E03_frozen_pca_mlp"
+python experiments/run_experiment.py
+```
+
+## Outcome
+To be filled in when the results are in.

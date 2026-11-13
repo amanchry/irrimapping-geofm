@@ -69,7 +69,7 @@ patch centre. Bands, patch size and temporal handling per model: [Foundation mod
 **Headline classifiers:** random forest (the proposal's baseline classifier) for every input, and logistic
 regression (linear probe) for the foundation models. SVM is always reported. Histogram gradient boosting was used in
 E01 and is dropped from E02 on ([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). A trainable
-MLP head is added in E05 and E03 ([experiment plan](experiment_plan.md)).
+MLP head is added in E03 and E04 ([experiment plan](experiment_plan.md)).
 
 ## 5. Temporal aggregation: two pipelines
 
@@ -80,7 +80,7 @@ the two pipelines. Everything before (embeddings) and after (comparison, metrics
 flowchart LR
     E["<b>Monthly embeddings</b><br/>12 × D per parcel<br/>(AgriFM: 1 × D)"] --> A["<b>PCA pipeline</b><br/>fill empty months (training median)<br/>→ concat 12 months → standardise<br/>→ PCA 128, fitted on the training folds"]
     E --> B["<b>L-TAE pipeline</b><br/>standardise per channel<br/>→ L-TAE attention over the months<br/>(empty months masked)"]
-    A --> C["LogReg · RF · SVM (E02)<br/>or MLP (E05)"]
+    A --> C["LogReg · RF · SVM (E02)<br/>or MLP (E03)"]
     B --> D["MLP head, trained with the L-TAE<br/>early stopping on the validation fold<br/>3 seeds"]
     C --> O["<b>oof_predictions.csv</b><br/>same format"]
     D --> O
@@ -89,16 +89,16 @@ flowchart LR
 
 | | PCA pipeline | L-TAE pipeline |
 | --- | --- | --- |
-| Experiments | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca_pastis/index.md) | [E03](../experiments/E03_frozen_ltae_pastis/index.md) |
+| Experiments | [E01](../experiments/E01_frozen_pca_nested/index.md), [E02](../experiments/E02_frozen_pca/index.md) | [E04](../experiments/E04_frozen_ltae/index.md) |
 | Learns which months matter | no (PCA is unsupervised) | yes (attention weights) |
 | Keeps the order of the months | only as positions in the vector | yes (positional encoding) |
-| Classifier | the three of §4 (E02) or an MLP (E05) | its own MLP head |
+| Classifier | the three of §4 (E02) or an MLP (E03) | its own MLP head |
 | Applies to the baseline | yes (180 features, no PCA) | yes (15 variables × 12 months) |
 | Applies to AgriFM | yes | no (one vector per year) |
 | Reference | linear probing of frozen features | PANGAEA: single-date encoders + L-TAE (Marsocci et al. 2024); L-TAE (Garnot & Landrieu 2020) |
 
 The L-TAE pipeline is also trained on the monthly Sentinel-2 features, so that the baseline benefits from the same
-temporal model and the comparison remains balanced. Because both pipelines write the same out-of-fold predictions, E03 compares them
+temporal model and the comparison remains balanced. Because both pipelines write the same out-of-fold predictions, E04 compares them
 directly with the E02 runs on the same parcels.
 
 ## 6. Fairness rules

@@ -11,11 +11,19 @@ reproduces the reported result.
 
 | ID | Experiment | RQ | Status | Headline result (macro-F1) | Report |
 | --- | --- | --- | --- | --- | --- |
-| **E01** | [Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV)](E01_frozen_pca_nested/index.md) | RQ1 | ✅ done | best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 input-classifier pairs better, 2 worse than the baseline (Holm) | [report](E01_frozen_pca_nested/report.md) |
-| **E02** | [Frozen GeoFMs + PCA vs the S1/S2 baseline (PASTIS validation)](E02_frozen_pca_pastis/index.md) | RQ1 | 🟦 ready to run | – | – |
-| **E03** | [Frozen GeoFMs + L-TAE temporal aggregation (PASTIS validation)](E03_frozen_ltae_pastis/index.md) | RQ1 | 📝 planned | – | – |
+| **E01** | [Frozen GeoFMs + PCA + classical classifiers (nested spatial CV)](E01_frozen_pca_nested/index.md) | RQ1 | ✅ done | best Clay v1.5 + SVM 0.910; best baseline SVM 0.906; 0 of 16 input-classifier pairs better, 2 worse than the baseline (Holm) | [report](E01_frozen_pca_nested/report.md) |
+| **E02** | [Frozen GeoFMs + PCA + classical classifiers](E02_frozen_pca/index.md) | RQ1 | 📝 planned | – | – |
+| **E03** | [Frozen GeoFMs + PCA + MLP head](E03_frozen_pca_mlp/index.md) | RQ1 | 📝 planned | – | – |
+| **E04** | [Frozen GeoFMs + L-TAE temporal aggregation + MLP head](E04_frozen_ltae/index.md) | RQ1 | 📝 planned | – | – |
+| **E05** | [PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)](E05_psetae_scratch/index.md) | RQ1 | 📝 planned | – | – |
+| **E06** | [Label efficiency: frozen GeoFMs vs Sentinel-2 features with fewer training labels](E06_label_efficiency/index.md) | RQ1 | 📝 planned | – | – |
 
 <!-- AUTO:INDEX:END -->
+
+The experiments of RQ1 follow the [RQ1 experiment plan](../phase2_models/experiment_plan.md): E02 (PCA + LogReg / RF /
+SVM), E03 (PCA + MLP), E04 (L-TAE + MLP), E05 (PSE-TAE from scratch) and E06 (label efficiency), each in Morocco and
+Utah. Ablations A1–A5 are short runs that change one setting of these experiments; their results appear in the report
+of the experiment they belong to.
 
 The table is refreshed by `make_report.py`. Status: 📝 planned → 🟦 ready to run → ⏳ running → ✅ done
 (⏸ parked = kept for a later phase).
@@ -28,14 +36,14 @@ An experiment has two halves: what is **run** lives in `experiments/`, what is *
 documentation.
 
 ```
-experiments/E02_frozen_pca_pastis/          (run)
+experiments/E02_frozen_pca/          (run)
 ├── config.yaml        ALL settings of the experiment (the only file you edit to change a run)
 └── results/           written by the scripts
     ├── run_info.json      config, code version (git commit), start and end time of every run
     ├── <run>/             one folder per input: out-of-fold predictions, metrics, log
     └── comparison/        all inputs on the same parcels, differences vs the baseline
 
-docs/experiments/E02_frozen_pca_pastis/     (read: this website)
+docs/experiments/E02_frozen_pca/     (read: this website)
 ├── index.md           setup: question, why, what changes vs the previous experiment, how to run
 ├── report.md          answer first, then tables and figures (generated) and interpretation (by hand)
 └── figures/           figures of the report (written by make_report.py)
@@ -80,7 +88,7 @@ steps are shared.
 ```mermaid
 flowchart LR
     E["Monthly embeddings<br/>12 × D per parcel"] --> P1["<b>PCA pipeline</b> (E01, E02)<br/>concat 12 months → standardise → PCA 128"]
-    E --> P2["<b>L-TAE pipeline</b> (E03)<br/>attention over the 12 months (trained)"]
+    E --> P2["<b>L-TAE pipeline</b> (E04)<br/>attention over the 12 months (trained)"]
     P1 --> K["LogReg · RF · HGB · SVM"]
     P2 --> H["MLP head"]
     K --> O["out-of-fold predictions<br/>same format"]
@@ -88,7 +96,7 @@ flowchart LR
     O --> CMP["04_compare_models<br/>same parcels, same bootstrap draws"]
 ```
 
-Because both pipelines write the same `oof_predictions.csv`, the comparison and the report need no change. E03 also
+Because both pipelines write the same `oof_predictions.csv`, the comparison and the report need no change. E04 also
 lists the E02 runs under `compare: EXTRA_RUNS`, so PCA and L-TAE are compared on the same parcels and the same
 bootstrap draws. Details: [evaluation protocol §5](../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
 

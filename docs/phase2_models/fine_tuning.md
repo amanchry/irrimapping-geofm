@@ -28,4 +28,4 @@ RQ1.
 - loss and class weighting for the 14% rainfed share;
 - LoRA rank and target layers per model;
 - pixel-level and parcel-level metrics;
-- experiments (to be numbered from E05).
+- experiments (to be numbered from E03).

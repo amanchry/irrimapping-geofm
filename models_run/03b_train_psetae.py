@@ -63,11 +63,11 @@ Run (from the project folder; a GPU is recommended, a CPU works but is slow)
     python models_run/03b_train_psetae.py
 QUICK_TEST = True gives a fast check (few epochs, small bootstrap).
 
-One run per config file (thesis runs): EXPERIMENT = "E04_psetae_scratch" and CONFIG = "morocco_s2.yaml" (a file in
-experiments/E04_psetae_scratch/configs/: morocco_s2, morocco_s2s1, utah_s2, utah_s2s1). The same from the shell or a
+One run per config file (thesis runs): EXPERIMENT = "E05_psetae_scratch" and CONFIG = "morocco_s2.yaml" (a file in
+experiments/E05_psetae_scratch/configs/: morocco_s2, morocco_s2s1, utah_s2, utah_s2s1). The same from the shell or a
 Slurm job, without editing the script:
-    EXPERIMENT=E04_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
-or all four in a row: experiments/run_experiment.py with EXPERIMENT = "E04_psetae_scratch".
+    EXPERIMENT=E05_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
+or all four in a row: experiments/run_experiment.py with EXPERIMENT = "E05_psetae_scratch".
 """
 import json
 import logging
@@ -86,7 +86,7 @@ from sklearn.metrics import (accuracy_score, average_precision_score, balanced_a
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-EXPERIMENT = None              # e.g. "E04_psetae_scratch": settings from experiments/<name>/ | None = below
+EXPERIMENT = None              # e.g. "E05_psetae_scratch": settings from experiments/<name>/ | None = below
 CONFIG = None                  # e.g. "utah_s2s1.yaml": one run's settings from experiments/<EXPERIMENT>/configs/
                                # | None = section "psetae" of experiments/<EXPERIMENT>/config.yaml
 REGION = "morocco"             # "morocco" | "utah": dataset of ml_dataset_prep/ (outputs/<REGION>/dataset/)

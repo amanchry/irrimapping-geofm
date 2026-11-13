@@ -69,7 +69,7 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 | | Paper | Venue | Why it matters here | Summary |
 | --- | --- | --- | --- | --- |
 | ★ | Garnot, V. S. F., & Landrieu, L. (2021). [Panoptic segmentation of satellite image time series with convolutional temporal attention networks (PASTIS, U-TAE)](https://arxiv.org/abs/2107.07933) | ICCV 2021 | fold rotation (3 / 1 / 1); tile design; U-TAE baseline | [📄](pastis-utae.md) |
-| ★ | Garnot, V. S. F., & Landrieu, L. (2020). [Lightweight temporal self-attention for classifying satellite images time series (L-TAE)](https://arxiv.org/abs/2007.00586) | AALTD, ECML-PKDD | the L-TAE pipeline (E03) | [📄](ltae.md) |
+| ★ | Garnot, V. S. F., & Landrieu, L. (2020). [Lightweight temporal self-attention for classifying satellite images time series (L-TAE)](https://arxiv.org/abs/2007.00586) | AALTD, ECML-PKDD | the L-TAE pipeline (E04) | [📄](ltae.md) |
 | ✓ | Pelletier, C., Webb, G. I., & Petitjean, F. (2019). [Temporal convolutional neural network for the classification of satellite image time series (TempCNN)](https://doi.org/10.3390/rs11050523) | Remote Sensing 11(5) | pixel-level neural baseline | |
 | ✓ | Garnot, V. S. F., Landrieu, L., Giordano, S., & Chehata, N. (2020). [Satellite image time series classification with pixel-set encoders and temporal self-attention (PSE-TAE)](https://arxiv.org/abs/1911.07757) | CVPR 2020 | parcel-level neural baseline | |
 | ✓ | Rußwurm, M., Pelletier, C., Zollner, M., Lefèvre, S., & Körner, M. (2020). [BreizhCrops: a time series dataset for crop type mapping](https://arxiv.org/abs/1905.11893) | ISPRS Archives | benchmark of LSTM / Transformer / TempCNN | |

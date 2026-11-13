@@ -161,7 +161,7 @@ eduVPN is about 5 MB/s (≈ 40 min for 11 GB). `caffeinate` keeps the Mac awake;
 Results back to the Mac (on the Mac):
 
 ```bash
-rsync -az ut-hpc:irrimapping-geofm/experiments/E02_frozen_pca_pastis/results/ experiments/E02_frozen_pca_pastis/results/
+rsync -az ut-hpc:irrimapping-geofm/experiments/E02_frozen_pca/results/ experiments/E02_frozen_pca/results/
 ```
 
 ---
@@ -227,7 +227,7 @@ CPU job (`jobs/make_views.sbatch`): `--partition=itc-cpu,main-cpu`, no `--gres` 
 `--cpus-per-task=2 --mem=16G` (the dataset scripts use one core).
 
 New step: copy a script, change `--job-name` and the `python` line. Settings stay at the top of each project
-script (no command-line arguments), so edit the script (e.g. `EXPERIMENT = "E02_frozen_pca_pastis"`,
+script (no command-line arguments), so edit the script (e.g. `EXPERIMENT = "E02_frozen_pca"`,
 `QUICK_TEST: true` in the config) and then submit. `jobs/logs/` must exist before submitting (Slurm does not create
 it): `mkdir -p jobs/logs`.
 

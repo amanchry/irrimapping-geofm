@@ -24,7 +24,7 @@ train_evaluate:            # models_run/03_train_evaluate.py
 
 compare:                   # models_run/04_compare_models.py
   BASELINE_CLASSIFIER: rf
-  EXTRA_RUNS: []           # runs of other experiments, e.g. ["E02_frozen_pca_pastis/clay_agyear_tiles_concat"]
+  EXTRA_RUNS: []           # runs of other experiments, e.g. ["E02_frozen_pca/clay_agyear_tiles_concat"]
 
 report:                    # experiments/make_report.py
   HEADLINE_CLASSIFIERS: [rf, logreg]

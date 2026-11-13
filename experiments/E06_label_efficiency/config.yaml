@@ -1,0 +1,26 @@
+# E06: learning curves. Same inputs and heads as E02-E05, trained on 10 / 25 / 50 / 100% of the training blocks.
+id: E06
+title: "Label efficiency: frozen GeoFMs vs Sentinel-2 features with fewer training labels"
+short_title: Label efficiency   # name in the site's sidebar
+status: planned
+listed: true
+research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
+question: How much training data does each input need? Do foundation models gain most when labels are few?
+changes_from: "E02-E05: training blocks subsampled to 10 / 25 / 50% (3 draws each); validation and test folds unchanged"
+answer: ""
+
+regions: [morocco, utah]   # planned (P2 of the experiment plan)
+inputs: [s1s2, clay, prithvi, terramind, agrifm]   # Sentinel-2 only (D14)
+steps: [train_evaluate, ltae, psetae, compare, report]
+
+fractions: [0.10, 0.25, 0.50]   # share of the training blocks; 1.0 = the E02-E05 runs
+draws: 3                        # block draws per fraction, the same draws for every input (paired)
+min_rainfed: 20                 # a draw with fewer rainfed training parcels is redrawn
+heads: [logreg, svm, best_neural]   # best_neural = best of E03 / E04 per input; PSE-TAE for the pixel sets
+
+compare:
+  BASELINE_CLASSIFIER: rf
+
+report:
+  HEADLINE_CLASSIFIERS: [logreg, svm]

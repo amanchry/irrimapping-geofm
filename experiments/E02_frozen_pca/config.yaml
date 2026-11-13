@@ -1,8 +1,8 @@
 # E02: main comparison of RQ1 with the final validation design (PASTIS rotation).
 id: E02
-title: Frozen GeoFMs + PCA vs the Sentinel-2 baseline (PASTIS validation)
-short_title: PCA pipeline · PASTIS   # name in the site's sidebar
-status: ready
+title: "Frozen GeoFMs + PCA + classical classifiers"
+short_title: PCA + LogReg / RF / SVM   # name in the site's sidebar
+status: planned
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
@@ -10,6 +10,7 @@ question: Do frozen foundation-model embeddings separate irrigated from rainfed 
 changes_from: "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)"
 answer: ""                 # filled in from REPORT.md
 
+regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
 inputs: [s1s2, clay, prithvi, terramind, agrifm]
 steps: [train_evaluate, compare, report]
 

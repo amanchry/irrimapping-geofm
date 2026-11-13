@@ -45,8 +45,8 @@ Every result that goes into the thesis comes from an experiment. One experiment 
    from the generated tables, checked); `status: done` + one-line `answer:` in the config; *Outcome* on the setup
    page; run `make_report.py` again.
 
-`listed: false` keeps an experiment out of the site (currently E04 PSE-TAE: parked for the next phase — do not show
-PSE-TAE on overview pages or workflow diagrams until asked).
+`listed: false` keeps an experiment out of the site (currently none; PSE-TAE, E05, is listed since 13 Nov 2026,
+when it became part of the RQ1 experiment plan).
 
 ## 3. Writing and code style (the author's preferences)
 

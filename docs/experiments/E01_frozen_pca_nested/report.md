@@ -220,10 +220,10 @@ For RQ1, the frozen foundation models reach the accuracy of a conventional Senti
 it on average. This matches PANGAEA (Marsocci et al. 2024), where GeoFMs do not consistently beat supervised
 baselines. Where they may add value is **robustness**: in the region the baseline handles worst, Clay and Prithvi do
 better with every classifier. That points to the next questions: is this fold effect stable under the final validation
-design (E02), and does a learned temporal aggregation (E03) let the embeddings use the 12 months better than PCA?
+design (E02), and does a learned temporal aggregation (E04) let the embeddings use the 12 months better than PCA?
 
 ## Caveats
-- **Nested validation design**, replaced by the PASTIS rotation in [E02](../E02_frozen_pca_pastis/index.md); E01 is
+- **Nested validation design**, replaced by the PASTIS rotation in [E02](../E02_frozen_pca/index.md); E01 is
   kept as a sensitivity check.
 - **AgriFM normalisation** not yet confirmed (open point in [PROGRESS.md](../../progress.md)).
 - **Small rainfed class** (1,196 parcels, ~240 per fold): per-fold scores for rainfed rest on few parcels, hence the
@@ -232,6 +232,6 @@ design (E02), and does a learned temporal aggregation (E03) let the embeddings u
   differences cannot be attributed to region alone.
 
 ## Next steps
-- Run [E02](../E02_frozen_pca_pastis/index.md) (PASTIS validation): the main RQ1 result.
+- Run [E02](../E02_frozen_pca/index.md): the main RQ1 result.
 - Resolve the AgriFM normalisation and re-embed if needed.
-- Implement the L-TAE pipeline ([E03](../E03_frozen_ltae_pastis/index.md)).
+- Implement the L-TAE pipeline ([E04](../E04_frozen_ltae/index.md)).

@@ -43,7 +43,7 @@ import pandas as pd
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-EXPERIMENT = None              # e.g. "E02_frozen_pca_pastis": runs of experiments/<name>/results/ | None = settings below
+EXPERIMENT = None              # e.g. "E02_frozen_pca": runs of experiments/<name>/results/ | None = settings below
 EXTRA_RUNS = []                # runs of other experiments, as "<experiment>/<run>" (experiment mode)
 RUNS_DIR = ROOT / "outputs" / "morocco" / "study" / "03_models"
 OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "04_comparison"

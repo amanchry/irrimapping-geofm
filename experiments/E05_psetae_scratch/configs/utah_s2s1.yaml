@@ -1,9 +1,9 @@
-# E04 - PSE-TAE trained from scratch: Utah, 10 Sentinel-2 bands
+# E05 - PSE-TAE trained from scratch: Utah, 10 Sentinel-2 bands + Sentinel-1 VV, VH
 # One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
-# keeps the script's value. Results: experiments/E04_psetae_scratch/results/psetae_utah_views_2023-24_s2/
+# keeps the script's value. Results: experiments/E05_psetae_scratch/results/psetae_utah_views_2023-24_s2s1/
 REGION: utah
 VIEWS_NAME: views_2023-24  # 2023/24 only; Sentinel-1 descending (views_info.json)
-BANDS: s2
+BANDS: s2s1
 
 N_PIXELS: 64                 # pixels sampled per parcel (paper: 64)
 MAX_EPOCHS: 100

@@ -65,7 +65,7 @@ python models_run/02c_embed_terramind.py
 python models_run/02d_embed_agrifm.py
 
 # Experiments · training, comparison and report from one config file
-python experiments/run_experiment.py             # set EXPERIMENT at the top, e.g. "E02_frozen_pca_pastis"
+python experiments/run_experiment.py             # set EXPERIMENT at the top, e.g. "E02_frozen_pca"
 ```
 
 For a quick check before a full run, set `N_TEST_TILES = 20` in `03_build_tiles.py` and `QUICK_TEST: true` in the experiment's `config.yaml`. How experiments work, and how to add one: [Experiments](experiments/index.md).

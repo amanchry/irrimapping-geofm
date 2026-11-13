@@ -19,7 +19,7 @@ the series into one vector.
 ## What this research takes from it
 - The temporal model of the **L-TAE pipeline**: attention over the 12 monthly embeddings of Clay, Prithvi and
   TerraMind, and over the 12 months of the S1/S2 features, so the baseline gets the same temporal model
-  ([E03](../experiments/E03_frozen_ltae_pastis/index.md), [protocol §5](../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines)).
+  ([E04](../experiments/E04_frozen_ltae/index.md), [protocol §5](../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines)).
 - Default size from the paper (16 heads, d_k 8, d_model 256, MLP 256–128).
 - PANGAEA uses the same module to aggregate dates for single-date GeoFMs ([PANGAEA](pangaea.md)).
 

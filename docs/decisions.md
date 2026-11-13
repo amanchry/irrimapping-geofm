@@ -73,7 +73,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   classifier on embeddings). Reporting all four keeps the comparison from depending on one choice.
 - **Update (12 Nov 2026):** from E02 on, three classifiers: logistic regression (linear probe), random forest
   (standard remote-sensing classifier, the proposal's baseline) and SVM (strongest in E01), plus a trainable **MLP
-  head** (E05, E03). Gradient boosting is dropped: in E01 it was never the best classifier and always within the
+  head** (E03, E04). Gradient boosting is dropped: in E01 it was never the best classifier and always within the
   confidence interval of SVM. Plan: [RQ1 · Experiment plan](phase2_models/experiment_plan.md).
 
 ## D7. Macro-F1 as the headline metric
@@ -85,7 +85,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 
 ## D8. Two temporal aggregation pipelines
 - **Proposal:** not specified.
-- **Now:** PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E03.
+- **Now:** PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E04.
 - **Why:** PANGAEA (Marsocci et al. 2024) found L-TAE better than linear mapping for single-date encoders; testing
   both shows whether the conclusion depends on how the months are combined.
 - **Where:** [protocol §5](phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
@@ -114,14 +114,14 @@ stating the original plan, the current approach and the rationale. Smaller metho
   0.83 ha (median, about 90 m across).
 - **Now:**
   1. **RQ1 benchmark (unchanged):** frozen encoder → parcel embedding → LogReg (linear probe), RF, HGB, SVM; plus
-     L-TAE + MLP head (E03). Classical heads on frozen embeddings are common practice (Presto; WorldCereal; AlphaEarth
+     L-TAE + MLP head (E04). Classical heads on frozen embeddings are common practice (Presto; WorldCereal; AlphaEarth
      irrigated mapping, Yang et al. 2026) and the head matters little in recent comparisons (Mughees et al. 2026).
   2. **Mapping models (RQ2–RQ4):** frozen GeoFM + **UPerNet segmentation head** trained on the label pixels of the
      tiles (as in PANGAEA and Prithvi-EO-2.0), then LoRA with the same head (RQ2). Classical baseline: RF on the S1/S2
      features of each pixel.
   3. **Neural baselines from scratch:** **TempCNN** (per-pixel time series; Pelletier et al. 2019) and **U-TAE**
      (tiles; Garnot & Landrieu 2021). Both produce 10 m maps. PSE-TAE needs parcel polygons and stays a parcel-level
-     extra (E04).
+     extra (E05).
   4. **Same scoring:** pixel predictions are aggregated per parcel (mean probability) and scored with the same
      folds, parcels and bootstrap as RQ1, so every number stays comparable.
 - **Why:** the research must end in wall-to-wall annual maps; a 1D-CNN beat RF for irrigated mapping

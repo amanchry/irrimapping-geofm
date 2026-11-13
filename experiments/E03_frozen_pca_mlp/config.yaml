@@ -1,0 +1,36 @@
+# E03: same input as E02 (12 months concatenated -> PCA 128), but a trained MLP head instead of the classical classifiers.
+id: E03
+title: "Frozen GeoFMs + PCA + MLP head"
+short_title: PCA + MLP head   # name in the site's sidebar
+status: planned
+listed: true
+research_question: RQ1
+phase: 2                  # phase of the research plan (docs/research_plan.md)
+question: Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?
+changes_from: "E02: classifier LogReg / RF / SVM -> MLP head (128-256-128-2), 3 seeds"
+answer: ""
+
+regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
+inputs: [s1s2, clay, prithvi, terramind, agrifm]   # Sentinel-2 only (D14)
+steps: [ltae, compare, report]
+
+ltae:                      # models_run/03c_train_ltae.py (to be written; same output format as 03)
+  HEAD: mlp                # MLP on the PCA input (E04 uses HEAD: ltae)
+  FEATURE_MODE: concat
+  PCA_DIM: 128
+  VALIDATION: pastis
+  MLP: [256, 128]
+  DROPOUT: 0.2
+  LEARNING_RATE: 0.001
+  WEIGHT_DECAY: 0.0001
+  BATCH_SIZE: 128
+  EPOCHS: 100
+  PATIENCE: 15
+  N_SEEDS: 3
+
+compare:
+  BASELINE_CLASSIFIER: rf
+  EXTRA_RUNS: []           # the E02 runs of the same inputs, added when E02 is done
+
+report:
+  HEADLINE_CLASSIFIERS: [mlp, logreg, rf]

@@ -407,7 +407,7 @@ python models_run/04_compare_models.py
 | 03 | `INPUT`, `S1S2_VARIABLES` (s2 default / all / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
 | 04 | `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`; in experiment mode `EXTRA_RUNS` |
 | 03, 03b, 04 | `EXPERIMENT`: name of a folder in `experiments/`; its `config.yaml` replaces the settings above (same names) and the results go to that folder |
-| 03b | `REGION`, `VIEWS_NAME`, `BANDS` (s2 / s2s1); `CONFIG`: a file in `experiments/<EXPERIMENT>/configs/` with all settings of one run (E04: `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1`), also settable as the environment variable `PSETAE_CONFIG` |
+| 03b | `REGION`, `VIEWS_NAME`, `BANDS` (s2 / s2s1); `CONFIG`: a file in `experiments/<EXPERIMENT>/configs/` with all settings of one run (E05: `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1`), also settable as the environment variable `PSETAE_CONFIG` |
 
 ---
 

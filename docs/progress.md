@@ -16,16 +16,16 @@ change log).
 | Dataset inspection | `models_run/01` | Done (`outputs/morocco/study/01_inspection/`) |
 | Embeddings | `models_run/02a–02d` | Done for Clay, Prithvi, TerraMind (`outputs/morocco/study/02_embeddings/`); AgriFM re-run on 2026-11-06 with the pretrained weights (earlier AgriFM embeddings were from an untrained encoder, [D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)); AgriFM scaling still to confirm |
 | E01 · frozen + PCA, nested CV | `experiments/E01_frozen_pca_nested` | Done: no GeoFM beats the baseline (best Clay + SVM 0.910 vs 0.906) |
-| E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca_pastis` | Ready to run (main RQ1 result) |
-| E03 · frozen + L-TAE, PASTIS | `experiments/E03_frozen_ltae_pastis` | Planned: needs `models_run/03c_train_ltae.py` |
-| E04 · PSE-TAE from scratch | `experiments/E04_psetae_scratch` | Run exists; parked for the next phase |
+| E02 · frozen + PCA, PASTIS | `experiments/E02_frozen_pca` | Ready to run (main RQ1 result) |
+| E04 · frozen + L-TAE, PASTIS | `experiments/E04_frozen_ltae` | Planned: needs `models_run/03c_train_ltae.py` |
+| E05 · PSE-TAE from scratch | `experiments/E05_psetae_scratch` | Run exists; parked for the next phase |
 | Utah training data | `ml_dataset_prep/01_prepare_labels_Utah.py`, 02, 03 | Labels, folds, tile plan done (11,804 fields); download (03) and views (04) to run |
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Run E02 (`python experiments/run_experiment.py`, `EXPERIMENT = "E02_frozen_pca_pastis"`).
+1. Run E02 (`python experiments/run_experiment.py`, `EXPERIMENT = "E02_frozen_pca"`).
 2. Confirm the AgriFM normalisation; re-embed if needed.
-3. Write `models_run/03c_train_ltae.py`, run E03.
+3. Write `models_run/03c_train_ltae.py`, run E04.
 4. Then RQ2 (LoRA fine-tuning).
 
 ---
@@ -34,7 +34,7 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
-| 2026-11-05 | Results that go into the thesis are produced as **experiments** (config per experiment, `experiments/`); two temporal-aggregation pipelines: concat + PCA 128 (E01, E02) and L-TAE (E03) | Reproducibility; PANGAEA (Marsocci et al. 2024) |
+| 2026-11-05 | Results that go into the thesis are produced as **experiments** (config per experiment, `experiments/`); two temporal-aggregation pipelines: concat + PCA 128 (E01, E02) and L-TAE (E04) | Reproducibility; PANGAEA (Marsocci et al. 2024) |
 | 2026-11-04 | Validation = **PASTIS rotation** (3 folds train / next fold validation / 1 fold test); nested CV kept as sensitivity check (E01) | Garnot & Landrieu 2021; one design for classifiers and neural networks |
 | 2026-10-29 | All inputs (parcel features and foundation-model chips) cut from ONE tile store; baseline = per-pixel median of parcel pixels without edge pixels; Sentinel-1 orbit of the baseline = orbit of the chips | Identical pixels, compositing and masks for every model; tile design as in PASTIS (Garnot & Landrieu 2021), Sen4AgriNet (Sykas et al. 2022) |
 | 2026-10-15 | Foundation models compared: Clay, Prithvi-EO-2.0, TerraMind, AgriFM (AlphaEarth only a pipeline test, not in the thesis) | Thesis proposal |
@@ -83,6 +83,37 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-11-13 (experiments renumbered in run order; "PASTIS validation" dropped from the names)
+
+- Experiments are numbered in the order they run: **E02** PCA + LogReg / RF / SVM, **E03** PCA + MLP head (was E05),
+  **E04** L-TAE + MLP head (was E03), **E05** PSE-TAE from scratch (was E04), **E06** label efficiency.
+- Folders renamed: `E02_frozen_pca_pastis` → `E02_frozen_pca`, `E03_frozen_ltae_pastis` → `E04_frozen_ltae`,
+  `E04_psetae_scratch` → `E05_psetae_scratch`, `E05_frozen_pca_mlp` → `E03_frozen_pca_mlp` (in `experiments/` and
+  `docs/experiments/`); all links, configs and script comments updated. Change-log entries before 2026-11-13 and the
+  meeting notes keep the old numbers (folder links updated).
+- "(PASTIS validation)" is left out of the names: every experiment from E02 on uses the same PASTIS rotation
+  (3 folds train, 1 validation, 1 test); only E01 used nested spatial CV, which stays in its name.
+- The cluster still has the PSE-TAE results under `experiments/E04_psetae_scratch/results/`; to be moved to
+  `E05_psetae_scratch` at the next sync.
+
+### 2026-11-13 (experiment pages: titles and references)
+
+- Every experiment page (E01–E06) has a descriptive title (same as `title` in its `config.yaml`), a one-line summary
+  and a section *What this experiment builds on*: each method choice with the paper it comes from, taken from the
+  checked [reference list](references/index.md). Experiment list and site menu regenerated.
+- Config titles are quoted (the E06 title contains a colon).
+
+### 2026-11-13 (experiment pages for the RQ1 plan)
+
+- New experiments with config and setup page: **E03** PCA + MLP head and **E06** label efficiency. PSE-TAE (now
+  **E05**) is listed (status planned, 3 seeds, Sentinel-2 only) and has a setup page.
+- E02 and the L-TAE experiment (now **E04**) updated to the plan: Sentinel-2 only, LogReg / RF / SVM, AgriFM chip
+  statistics, Morocco and Utah; E04 builds on E03 (same MLP head). E02 status back to planned until scripts 03–05
+  have the region setting.
+- Configs carry `regions: [morocco, utah]`; it is read once `run_experiment.py` handles regions (P2 of the plan).
+- Experiment list, results page and site menu regenerated with `experiments/make_report.py`.
+- Embeddings of both regions are complete on the cluster and copied to the local project (Morocco TerraMind and AgriFM
+  re-embedded on the cluster with Sentinel-2 only / chip statistics; Utah views feature files copied).
 ### 2026-11-12 (embeddings for two regions; AgriFM normalisation)
 
 - Scripts `02a`–`02d`: new settings `REGION` and `VIEWS_NAME` (environment variables `EMBED_REGION`,
@@ -133,7 +164,7 @@ Next steps
   views folder and the band set (`psetae_<REGION>_<VIEWS_NAME>_<BANDS>`), so runs of the two regions no longer
   overwrite each other.
 - New setting `CONFIG` (or the environment variable `PSETAE_CONFIG`): one file in
-  `experiments/E04_psetae_scratch/configs/` holds all settings of one run. Four files define the four runs:
+  `experiments/E05_psetae_scratch/configs/` holds all settings of one run. Four files define the four runs:
   `morocco_s2`, `morocco_s2s1`, `utah_s2`, `utah_s2s1` (Sentinel-2 only vs Sentinel-2 + Sentinel-1; Morocco
   `views` with the ascending orbit, Utah `views_2023-24` with the descending orbit). Unknown setting names stop the run.
 - `experiments/run_experiment.py`: the `psetae` step runs once per file listed in `psetae_configs` of the
@@ -405,7 +436,7 @@ were not.
   `EXTRA_RUNS` adds runs of other experiments (PCA vs L-TAE); figure title names the experiment.
 - **Runs moved:** the five runs of 30 Oct (nested CV) from `outputs/study/03_models/` to
   `experiments/E01_frozen_pca_nested/results/`, compared and reported (8,775 common parcels); the PSE-TAE run to
-  `experiments/E04_psetae_scratch/results/` (parked, `listed: false`).
+  `experiments/E05_psetae_scratch/results/` (parked, `listed: false`).
 - **E01 result:** no GeoFM differs from the baseline after Holm for Clay, Prithvi, TerraMind; AgriFM worse (RF, SVM).
   Best: Clay + SVM 0.910, baseline SVM 0.906. Fold 0 (rainfed in Doukkala + Souss): baseline 0.80, Clay and Prithvi
   higher with every classifier.

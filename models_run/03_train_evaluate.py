@@ -92,7 +92,7 @@ from sklearn.svm import SVC
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-EXPERIMENT = None                     # e.g. "E02_frozen_pca_pastis": settings from experiments/<name>/config.yaml,
+EXPERIMENT = None                     # e.g. "E02_frozen_pca": settings from experiments/<name>/config.yaml,
                                       # results to experiments/<name>/results/ | None = the settings below
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
                                       # ("terramind-s1s2" = TerraMind with Sentinel-1, ablation)

@@ -27,7 +27,7 @@ gantt
     RQ1 · baseline + embeddings                 :done,   r1, 2026-10-01, 2026-11-05
     RQ1 · E01 PCA, nested CV                    :done,   r2, 2026-10-28, 2026-11-05
     RQ1 · E02 PCA, PASTIS                       :active, r3, 2026-11-06, 2026-11-20
-    RQ1 · E03 L-TAE                             :        r4, 2026-11-13, 2026-11-30
+    RQ1 · E04 L-TAE                             :        r4, 2026-11-13, 2026-11-30
     RQ2 · LoRA + segmentation head              :        f1, 2026-11-20, 2026-12-31
     section 4 · Fusion (optional)
     RQ5 · multi-model fusion                    :        u1, 2026-12-15, 2027-01-31
@@ -47,7 +47,7 @@ gantt
 | 1 | Data acquisition, ML-ready dataset | Sep 2026 | ✅ done | [Phase 1](phase1_data/overview.md) |
 | 2 | Sentinel-based baseline | Sep 2026 | ✅ done | baseline in [E01](experiments/E01_frozen_pca_nested/report.md) |
 | 2 | Foundation-model embeddings | Sep – Oct 2026 | ✅ done (AgriFM scaling to confirm) | [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md) |
-| 2 | Frozen-encoder experiments (RQ1) | Sep – Oct 2026 | ⏳ E01 done · E02 running · E03 planned | [Experiments](experiments/index.md) |
+| 2 | Frozen-encoder experiments (RQ1) | Sep – Oct 2026 | ⏳ E01 done · E02 running · E04 planned | [Experiments](experiments/index.md) |
 | 2 | Parameter-efficient fine-tuning, LoRA (RQ2) | Nov – Dec 2026 | 📝  | [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 | 4 | Full fine-tuning, multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
@@ -80,9 +80,9 @@ All results: [Results](results.md).
 
 ## Next steps
 
-1. Run [E02](experiments/E02_frozen_pca_pastis/index.md) (PASTIS validation): the main RQ1 result.
+1. Run [E02](experiments/E02_frozen_pca/index.md): the main RQ1 result.
 2. Confirm AgriFM's input normalisation; re-embed if needed.
-3. Write the L-TAE pipeline (`models_run/03c_train_ltae.py`) and run [E03](experiments/E03_frozen_ltae_pastis/index.md).
+3. Write the L-TAE pipeline (`models_run/03c_train_ltae.py`) and run [E04](experiments/E04_frozen_ltae/index.md).
 4. Results per region and per season from the out-of-fold predictions.
 5. Start RQ2: segmentation head (UPerNet) and LoRA fine-tuning; neural baselines TempCNN and U-TAE.
 

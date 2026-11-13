@@ -12,7 +12,7 @@ used, and what wall-to-wall mapping requires. Result: [decision D11](../decision
 | Neural baseline (from scratch) | Input | Gives maps | Note |
 | --- | --- | --- | --- |
 | TempCNN (Pelletier et al. 2019) | pixel time series | yes, per pixel | 1D-CNN > RF for irrigated mapping (Bazzi et al. 2019); TempCNN-type models transfer better across regions than GeoFM embeddings (Tong & Wang 2025) |
-| L-TAE (Garnot & Landrieu 2020) | pixel or parcel time series | yes | same module as the E03 pipeline |
+| L-TAE (Garnot & Landrieu 2020) | pixel or parcel time series | yes | same module as the E04 pipeline |
 | U-TAE (Garnot & Landrieu 2021) | image tiles | yes, 10 m | PASTIS baseline; counterpart of GeoFM + UPerNet |
 | PSE-TAE (Garnot et al. 2020) | parcel pixel sets | no (needs polygons) | parcel-level only |
 | LSTM, Transformer (BreizhCrops, Rußwurm et al. 2020) | pixel time series | yes | similar to TempCNN in benchmarks |

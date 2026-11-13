@@ -24,7 +24,7 @@ they do not consistently beat supervised models trained from scratch.
 ## What this research takes from it
 - Frozen-encoder evaluation with an identical head for every model as the main comparison
   ([protocol](../phase2_models/evaluation.md)).
-- The **L-TAE pipeline** next to the PCA pipeline ([E03](../experiments/E03_frozen_ltae_pastis/index.md),
+- The **L-TAE pipeline** next to the PCA pipeline ([E04](../experiments/E04_frozen_ltae/index.md),
   [decision D8](../decisions.md#d8-two-temporal-aggregation-pipelines)).
 - A result where GeoFMs only equal a strong baseline is a plausible outcome, not a failure ([E01](../experiments/E01_frozen_pca_nested/report.md)).
 - For maps: a segmentation head (UPerNet) on the frozen encoder ([decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).

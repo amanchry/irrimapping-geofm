@@ -1,7 +1,7 @@
 # E01: first full run on the 128 px tile store (October 2026), with the nested validation design.
 id: E01
-title: Frozen GeoFMs + PCA vs the S1/S2 baseline (nested spatial CV)
-short_title: PCA pipeline · nested CV   # name in the site's sidebar
+title: "Frozen GeoFMs + PCA + classical classifiers (nested spatial CV)"
+short_title: PCA + classifiers · nested CV   # name in the site's sidebar
 status: done
 listed: true
 research_question: RQ1
