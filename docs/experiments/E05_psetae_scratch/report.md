@@ -467,6 +467,39 @@ Frozen GeoFM embeddings are not better than well-built supervised models in a re
 concentrated rainfed area (Morocco). They are better, by a small but significant margin, in a region with mixed
 crops and spread-out rainfed fields (Utah). Clay is the best GeoFM in both regions.
 
+**Training behaviour: would other settings change the result?** The figure shows the training loss and the
+validation macro-F1 of every epoch, for all 5 rounds × 3 seeds of the main runs (from each run's
+`training_history.csv`).
+
+<figure markdown="span">
+  ![PSE-TAE training loss and validation macro-F1 per epoch](figures/psetae_loss_and_validation.png)
+  <figcaption>Training loss (top) and validation macro-F1 (bottom) per epoch; colour = round (test fold), line style =
+  seed, dot = best epoch (kept by early stopping).</figcaption>
+</figure>
+
+| Median over the 15 trainings | Morocco | Utah |
+| --- | ---: | ---: |
+| Training loss: epoch 1 → best epoch → last epoch | 0.32 → 0.09 → 0.06 | 0.51 → 0.29 → 0.18 |
+| Best epoch / last epoch (limit 100) | 7 / 22 | 8 / 23 |
+| Typical change per epoch: loss / validation F1 | 0.009 / 0.014 | 0.020 / 0.018 |
+
+- **The training loss falls smoothly** in every round and seed, so the learning rate is not too high. A too-high rate
+  would make the loss itself jump or stall.
+- **Validation F1 stops improving after about 7–8 epochs while the loss keeps falling** (by another third). This is
+  overfitting to the training blocks, and early stopping already keeps the best epoch. More epochs cannot help: no
+  run came close to the limit of 100.
+- **The epoch-to-epoch zigzag in validation F1 is evaluation noise:** small validation folds and the random draw of 64
+  pixels per parcel. It does not come from unstable training.
+- **The test fold matters more than the epoch.** Each round stays in its own band (Morocco: fold 1 ≈ 0.95, fold 4 ≈
+  0.80–0.85; Utah: fold 4 ≈ 0.78, fold 0 ≈ 0.68) for every seed. Some 20 km blocks are harder, whatever the
+  training.
+- **In Utah, generalisation is the limit, not optimisation:** the loss is still 0.29 when validation F1 peaks.
+
+A lower learning rate or more epochs would therefore not change the result. More regularisation targets the
+overfitting after epoch 8, and a different class weight or decision threshold targets the rainfed over-prediction in
+Utah. Each would probably gain about 0.01–0.02, less than the 0.03–0.04 gap to Clay. Testing them is a sensitivity
+check of the baseline, not part of E05.
+
 ## Caveats
 - The best-vs-best table is an extra check for this report, computed with the same block-bootstrap method but outside
   the comparison script. It uses its own bootstrap draws, and Holm applies only where stated. The experiment's own
