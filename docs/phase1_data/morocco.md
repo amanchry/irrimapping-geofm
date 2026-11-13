@@ -75,14 +75,50 @@ The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 20
 
 ## 3. Source data
 
-| Data | Use | Details |
+Providers, licences and download links of every dataset: [Data sources](../data_source/index.md).
+
+### 3.1 The field survey
+
+Ouassanouan, Y., Elfarkh, J., Grich, S., Liblab, A., & Chehbouni, A. (2026). Crop and irrigation types ground-truth
+dataset for Moroccan agricultural regions. *Scientific Data*, 13, 746.
+[doi:10.1038/s41597-026-06993-y](https://doi.org/10.1038/s41597-026-06993-y) ·
+[paper summary](../references/ouassanouan-2026-morocco-survey.md)
+
+About 10,000 geolocated parcels were surveyed with the QField mobile app between December 2023 and January 2025, in
+the five main agricultural regions of Morocco. Each record has the land use, crop (45 types), irrigation method
+(six systems, from flood irrigation to pivots) and a geo-referenced photograph. The authors checked the records against
+2024 NDVI time series.
+
+| Region | Irrigation and crops | Survey seasons used here |
 | --- | --- | --- |
-| Field survey (Ouassanouan et al. 2026, *Scientific Data*) | labels | ~10,000 parcel polygons, surveyed Dec 2023 – Jan 2025 in the Gharb, Tadla, Doukkala, El Haouz and Souss irrigation districts; land use, crop and irrigation method |
-| FAO GAUL 2015 (level 0, Morocco) | maps | country outline (`data/admin_boundaries/`) |
-| ESA WorldCover 2021 (10 m) | label check | share of each parcel mapped as cropland |
-| Sentinel-2 L2A harmonised (`COPERNICUS/S2_SR_HARMONIZED`) | imagery | 12 bands, surface reflectance |
-| Cloud Score+ (`GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED`) | cloud mask | `cs_cdf` ≥ 0.60 kept |
-| Sentinel-1 GRD (`COPERNICUS/S1_GRD`) | imagery | IW mode, VV + VH, ascending and descending kept apart |
+| El Gharb | surface-water irrigation; rice, vegetables | 2023/24 |
+| Tadla | large-scale irrigation; sugar beet, cereals | 2023/24 |
+| Doukkala | mixed irrigated and rainfed systems (most rainfed parcels) | 2023/24 and 2024/25 |
+| El Haouz | groundwater irrigation; olives, citrus | 2023/24 and 2024/25 |
+| Souss | advanced drip systems; export crops | 2024/25 |
+
+The figures below show the **raw survey**, before script 01 cleans it. That is why the counts are slightly higher than
+the 8,781 labelled parcels (e.g. 1,216 rainfed raw vs 1,196 after cleaning; the cleaned parcels are mapped in Figure 1.3). "Statte" is a small survey zone in the
+2024/25 season.
+
+<figure markdown="span">
+  ![Irrigation method of the surveyed parcels](figures/survey_irrigation_map.png)
+  <figcaption><b>Figure 1.1.</b> Surveyed parcels by irrigation method (raw survey).</figcaption>
+</figure>
+<figure markdown="span">
+  ![Irrigated vs rainfed parcels by survey zone](figures/survey_by_zone.png)
+  <figcaption><b>Figure 1.2.</b> Irrigated and rainfed parcels per survey zone (raw survey). Rainfed parcels are almost
+  all in Doukkala, with a few in Souss.</figcaption>
+</figure>
+
+### 3.2 Other inputs
+
+| Data | Used for |
+| --- | --- |
+| ESA WorldCover 2021 (10 m) | label check: share of each parcel mapped as cropland (script 01) |
+| Sentinel-2 L2A harmonised + Cloud Score+ | monthly imagery of every model (script 03, cloud mask `cs_cdf` ≥ 0.60) |
+| Sentinel-1 GRD | monthly VV/VH in the tile store, ascending and descending kept apart; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
+| FAO GAUL 2015 (level 0) | country outline on the maps (`data/admin_boundaries/`) |
 
 ---
 
@@ -130,15 +166,15 @@ Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed par
 
 <figure markdown="span">
   ![Map of irrigated and rainfed parcels](figures/parcels_map.png)
-  <figcaption><b>Figure 1.1.</b> Spatial distribution of the 8,781 labelled cropland parcels. Rainfed parcels are concentrated in Doukkala on the Atlantic coast.</figcaption>
+  <figcaption><b>Figure 1.3.</b> Spatial distribution of the 8,781 labelled cropland parcels. Rainfed parcels are concentrated in Doukkala on the Atlantic coast.</figcaption>
 </figure>
 <figure markdown="span">
   ![Class balance and parcel size](figures/class_balance_and_size.png)
-  <figcaption><b>Figure 1.2.</b> Class balance (left; 86.4% irrigated, 13.6% rainfed) and parcel-size distribution per class (right, logarithmic axis).</figcaption>
+  <figcaption><b>Figure 1.4.</b> Class balance (left; 86.4% irrigated, 13.6% rainfed) and parcel-size distribution per class (right, logarithmic axis).</figcaption>
 </figure>
 <figure markdown="span">
   ![Parcels by survey month](figures/survey_timing.png)
-  <figcaption><b>Figure 1.3.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
+  <figcaption><b>Figure 1.5.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
 </figure>
 
 **Outputs** (`outputs/morocco/dataset/01_labels/`):
@@ -168,7 +204,7 @@ The range of spatial dependence is estimated from the proportion of parcel pairs
 
 <figure markdown="span">
   ![Class similarity by distance](figures/class_similarity_by_distance.png)
-  <figcaption><b>Figure 1.4.</b> Proportion of parcel pairs sharing a class as a function of distance. The proportion approaches the random-placement level (76%, dashed) at about 20–30 km, which motivates the 20 km block size (dotted).</figcaption>
+  <figcaption><b>Figure 1.6.</b> Proportion of parcel pairs sharing a class as a function of distance. The proportion approaches the random-placement level (76%, dashed) at about 20–30 km, which motivates the 20 km block size (dotted).</figcaption>
 </figure>
 
 Candidate block sizes, each with 5 greedy-balanced folds:
@@ -223,15 +259,15 @@ Leakage, all folds averaged:
 
 <figure markdown="span">
   ![Spatial folds and parcels per fold](figures/spatial_folds.png)
-  <figcaption><b>Figure 1.5.</b> Fold assignment of the parcels (left) and class counts per fold (right). Each fold contains about 1,530 irrigated and 240 rainfed parcels.</figcaption>
+  <figcaption><b>Figure 1.7.</b> Fold assignment of the parcels (left) and class counts per fold (right). Each fold contains about 1,530 irrigated and 240 rainfed parcels.</figcaption>
 </figure>
 <figure markdown="span">
   ![Spatial blocks and folds](figures/spatial_folds_blocks.png)
-  <figcaption><b>Figure 1.6.</b> The 20 km blocks and their folds, with enlargements of Doukkala (A) and Tadla (B). Whole blocks are assigned to a single fold.</figcaption>
+  <figcaption><b>Figure 1.8.</b> The 20 km blocks and their folds, with enlargements of Doukkala (A) and Tadla (B). Whole blocks are assigned to a single fold.</figcaption>
 </figure>
 <figure markdown="span">
   ![Train-test distance, random vs spatial split](figures/train_test_distance.png)
-  <figcaption><b>Figure 1.7.</b> Distance from each test parcel to the nearest training parcel under a random split (median 154 m) and under the 20 km spatial split (median 6.8 km).</figcaption>
+  <figcaption><b>Figure 1.9.</b> Distance from each test parcel to the nearest training parcel under a random split (median 154 m) and under the 20 km spatial split (median 6.8 km).</figcaption>
 </figure>
 
 ### 5.4 How the folds give train, validation and test
@@ -506,7 +542,7 @@ Each chip folder holds:
 
 <figure markdown="span">
   ![Patch purity of centred and aligned chips](figures/purity.png)
-  <figcaption><b>Figure 1.8.</b> Patch purity, i.e. the share of the pooled patches that lies inside the parcel, for centred chips (grey) and patch-aligned chips (blue), at 8 px (80 m, left) and 16 px (160 m, right) patch size. Alignment markedly increases purity, in particular for 8 px patches.</figcaption>
+  <figcaption><b>Figure 1.10.</b> Patch purity, i.e. the share of the pooled patches that lies inside the parcel, for centred chips (grey) and patch-aligned chips (blue), at 8 px (80 m, left) and 16 px (160 m, right) patch size. Alignment markedly increases purity, in particular for 8 px patches.</figcaption>
 </figure>
 
 ### 7.4 Sentinel-1 orbit for views B and C
@@ -526,19 +562,19 @@ characterise the final dataset before any model is trained.
 
 <figure markdown="span">
   ![Clear observations per month](figures/observations_per_month.png)
-  <figcaption><b>Figure 1.9.</b> Mean number of clear Sentinel-2 observations per parcel and month (left) and share of parcels without any clear observation (right). Winter months have the fewest clear views, yet every parcel has at least one clear observation in every month.</figcaption>
+  <figcaption><b>Figure 1.11.</b> Mean number of clear Sentinel-2 observations per parcel and month (left) and share of parcels without any clear observation (right). Winter months have the fewest clear views, yet every parcel has at least one clear observation in every month.</figcaption>
 </figure>
 <figure markdown="span">
   ![Seasonal profiles per class](figures/seasonal_profiles.png)
-  <figcaption><b>Figure 1.10.</b> Monthly parcel medians of NDVI, NDWI and Sentinel-1 VH backscatter (median and interquartile range per class). Irrigated parcels show markedly higher vegetation and moisture signals from December to April and higher backscatter throughout the year; rainfed parcels show a weak, short spring peak.</figcaption>
+  <figcaption><b>Figure 1.12.</b> Monthly parcel medians of NDVI, NDWI and Sentinel-1 VH backscatter (median and interquartile range per class). Irrigated parcels show markedly higher vegetation and moisture signals from December to April and higher backscatter throughout the year; rainfed parcels show a weak, short spring peak.</figcaption>
 </figure>
 <figure markdown="span">
   ![Example chips, irrigated](figures/examples_irrigated.jpg)
-  <figcaption><b>Figure 1.11.</b> Example irrigated parcels: 16 px-aligned chips for the 12 months of the agricultural year, in true colour and NDVI (outline = parcel).</figcaption>
+  <figcaption><b>Figure 1.13.</b> Example irrigated parcels: 16 px-aligned chips for the 12 months of the agricultural year, in true colour and NDVI (outline = parcel).</figcaption>
 </figure>
 <figure markdown="span">
   ![Example chips, rainfed](figures/examples_rainfed.jpg)
-  <figcaption><b>Figure 1.12.</b> Example rainfed parcels, displayed as in Figure 1.11.</figcaption>
+  <figcaption><b>Figure 1.14.</b> Example rainfed parcels, displayed as in Figure 1.13.</figcaption>
 </figure>
 
 ---
