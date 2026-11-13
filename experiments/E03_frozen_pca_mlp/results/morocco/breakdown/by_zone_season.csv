@@ -1,0 +1,41 @@
+run,classifier,zone,ag_season,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+agrifm_agyear_tiles_mlp,mlp,Doukkala,2023/24,1831,697,0.853,0.825,0.759,0.1
+agrifm_agyear_tiles_mlp,mlp,Doukkala,2024/25,545,425,0.79,0.762,0.764,0.183
+agrifm_agyear_tiles_mlp,mlp,El Haouz,2023/24,1146,1,,0.0,0.0,0.013
+agrifm_agyear_tiles_mlp,mlp,El Haouz,2024/25,348,0,,,0.0,0.009
+agrifm_agyear_tiles_mlp,mlp,Gharb,2023/24,1759,0,,,0.0,0.012
+agrifm_agyear_tiles_mlp,mlp,Souss,2024/25,359,69,0.827,0.638,0.786,0.033
+agrifm_agyear_tiles_mlp,mlp,Statte,2024/25,144,4,,0.5,0.182,0.062
+agrifm_agyear_tiles_mlp,mlp,Tadla,2023/24,1447,0,,,0.0,0.014
+clay_agyear_tiles_mlp,mlp,Doukkala,2023/24,1831,697,0.865,0.851,0.769,0.097
+clay_agyear_tiles_mlp,mlp,Doukkala,2024/25,545,425,0.907,0.873,0.916,0.062
+clay_agyear_tiles_mlp,mlp,El Haouz,2023/24,1146,1,,0.0,0.0,0.003
+clay_agyear_tiles_mlp,mlp,El Haouz,2024/25,348,0,,,0.0,0.006
+clay_agyear_tiles_mlp,mlp,Gharb,2023/24,1759,0,,,0.0,0.003
+clay_agyear_tiles_mlp,mlp,Souss,2024/25,359,69,0.9,0.739,0.944,0.008
+clay_agyear_tiles_mlp,mlp,Statte,2024/25,144,4,,0.5,0.25,0.042
+clay_agyear_tiles_mlp,mlp,Tadla,2023/24,1447,0,,,0.0,0.014
+prithvi_agyear_tiles_mlp,mlp,Doukkala,2023/24,1831,697,0.872,0.901,0.754,0.112
+prithvi_agyear_tiles_mlp,mlp,Doukkala,2024/25,545,425,0.884,0.84,0.895,0.077
+prithvi_agyear_tiles_mlp,mlp,El Haouz,2023/24,1146,1,,0.0,0.0,0.002
+prithvi_agyear_tiles_mlp,mlp,El Haouz,2024/25,348,0,,,0.0,0.009
+prithvi_agyear_tiles_mlp,mlp,Gharb,2023/24,1759,0,,,0.0,0.006
+prithvi_agyear_tiles_mlp,mlp,Souss,2024/25,359,69,0.885,0.71,0.925,0.011
+prithvi_agyear_tiles_mlp,mlp,Statte,2024/25,144,4,,0.5,0.333,0.028
+prithvi_agyear_tiles_mlp,mlp,Tadla,2023/24,1447,0,,,0.0,0.026
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Doukkala,2023/24,1831,697,0.873,0.917,0.749,0.117
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Doukkala,2024/25,545,425,0.926,0.927,0.908,0.073
+s1s2-s2_agyear_tiles-inner_mlp,mlp,El Haouz,2023/24,1146,1,,0.0,0.0,0.007
+s1s2-s2_agyear_tiles-inner_mlp,mlp,El Haouz,2024/25,348,0,,,0.0,0.006
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Gharb,2023/24,1759,0,,,0.0,0.003
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Souss,2024/25,359,69,0.924,0.841,0.906,0.017
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Statte,2024/25,144,4,,0.5,0.182,0.062
+s1s2-s2_agyear_tiles-inner_mlp,mlp,Tadla,2023/24,1447,0,,,0.0,0.013
+terramind_agyear_tiles_mlp,mlp,Doukkala,2023/24,1831,697,0.868,0.858,0.772,0.097
+terramind_agyear_tiles_mlp,mlp,Doukkala,2024/25,545,425,0.889,0.847,0.9,0.073
+terramind_agyear_tiles_mlp,mlp,El Haouz,2023/24,1146,1,,0.0,0.0,0.002
+terramind_agyear_tiles_mlp,mlp,El Haouz,2024/25,348,0,,,0.0,0.006
+terramind_agyear_tiles_mlp,mlp,Gharb,2023/24,1759,0,,,0.0,0.007
+terramind_agyear_tiles_mlp,mlp,Souss,2024/25,359,69,0.913,0.739,1.0,0.0
+terramind_agyear_tiles_mlp,mlp,Statte,2024/25,144,4,,0.5,0.4,0.021
+terramind_agyear_tiles_mlp,mlp,Tadla,2023/24,1447,0,,,0.0,0.018

@@ -1,0 +1,21 @@
+run,classifier,purity_bin,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+agrifm_agyear_tiles_mlp,mlp,"(-0.001, 0.25]",2991,634,0.848,0.768,0.733,0.059
+agrifm_agyear_tiles_mlp,mlp,"(0.25, 0.5]",2885,347,0.856,0.821,0.683,0.046
+agrifm_agyear_tiles_mlp,mlp,"(0.5, 0.75]",1556,194,0.876,0.814,0.749,0.034
+agrifm_agyear_tiles_mlp,mlp,"(0.75, 1.0]",147,21,0.894,0.714,0.938,0.007
+clay_agyear_tiles_mlp,mlp,"(-0.001, 0.25]",2991,634,0.879,0.819,0.784,0.048
+clay_agyear_tiles_mlp,mlp,"(0.25, 0.5]",2885,347,0.912,0.893,0.799,0.027
+clay_agyear_tiles_mlp,mlp,"(0.5, 0.75]",1556,194,0.926,0.887,0.851,0.019
+clay_agyear_tiles_mlp,mlp,"(0.75, 1.0]",147,21,0.911,0.762,0.941,0.007
+prithvi_agyear_tiles_mlp,mlp,"(-0.001, 0.25]",2991,634,0.873,0.85,0.744,0.062
+prithvi_agyear_tiles_mlp,mlp,"(0.25, 0.5]",2885,347,0.898,0.888,0.76,0.034
+prithvi_agyear_tiles_mlp,mlp,"(0.5, 0.75]",1556,194,0.93,0.876,0.876,0.015
+prithvi_agyear_tiles_mlp,mlp,"(0.75, 1.0]",147,21,0.946,0.905,0.905,0.014
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(-0.001, 0.25]",2991,634,0.892,0.89,0.768,0.057
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(0.25, 0.5]",2885,347,0.916,0.939,0.78,0.032
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(0.5, 0.75]",1556,194,0.937,0.954,0.833,0.024
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(0.75, 1.0]",147,21,0.907,0.857,0.818,0.027
+terramind_agyear_tiles_mlp,mlp,"(-0.001, 0.25]",2991,634,0.877,0.822,0.775,0.05
+terramind_agyear_tiles_mlp,mlp,"(0.25, 0.5]",2885,347,0.9,0.87,0.78,0.029
+terramind_agyear_tiles_mlp,mlp,"(0.5, 0.75]",1556,194,0.929,0.881,0.868,0.017
+terramind_agyear_tiles_mlp,mlp,"(0.75, 1.0]",147,21,0.927,0.81,0.944,0.007

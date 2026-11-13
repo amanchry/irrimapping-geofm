@@ -1,0 +1,99 @@
+{
+  "run": "clay_agyear_tiles_2023-24_concat_f050_d3",
+  "experiment": "E02_frozen_pca",
+  "region": "utah",
+  "views": "views_2023-24",
+  "input": "clay",
+  "window": "agyear",
+  "train_fraction": 0.5,
+  "fraction_draw": 3,
+  "block_draws": [
+    {
+      "round": 1,
+      "test_fold": "0",
+      "blocks": 44,
+      "blocks_available": 88,
+      "parcels": 1966,
+      "rainfed": 320
+    },
+    {
+      "round": 2,
+      "test_fold": "1",
+      "blocks": 58,
+      "blocks_available": 118,
+      "parcels": 1843,
+      "rainfed": 251
+    },
+    {
+      "round": 3,
+      "test_fold": "2",
+      "blocks": 58,
+      "blocks_available": 115,
+      "parcels": 1617,
+      "rainfed": 309
+    },
+    {
+      "round": 4,
+      "test_fold": "3",
+      "blocks": 57,
+      "blocks_available": 114,
+      "parcels": 1906,
+      "rainfed": 350
+    },
+    {
+      "round": 5,
+      "test_fold": "4",
+      "blocks": 44,
+      "blocks_available": 90,
+      "parcels": 1616,
+      "rainfed": 369
+    }
+  ],
+  "settings": {
+    "feature_mode": "concat",
+    "pca_dim": 128,
+    "embedding_file": "clay_agyear_tiles_2023-24.npz"
+  },
+  "n_parcels": 6013,
+  "n_features": 12288,
+  "validation": "5 spatial folds; per round 3 train / next fold validation / 1 test (PASTIS)",
+  "seed": 42,
+  "rf_trees": 500,
+  "n_boot": 1000,
+  "quick_test": false,
+  "grids": {
+    "logreg": {
+      "C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "rf": {
+      "max_features": [
+        "sqrt",
+        0.3
+      ],
+      "min_samples_leaf": [
+        1,
+        5
+      ],
+      "class_weight": [
+        null,
+        "balanced_subsample"
+      ]
+    },
+    "svm": {
+      "C": [
+        1.0,
+        10.0
+      ],
+      "gamma": [
+        "scale",
+        0.01
+      ]
+    }
+  },
+  "final_params": {}
+}

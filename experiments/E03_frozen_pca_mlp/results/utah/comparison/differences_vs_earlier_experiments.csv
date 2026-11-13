@@ -1,0 +1,16 @@
+run,classifier,other_run,other_classifier,delta_macro_f1,ci_low,ci_high,p,p_holm,ci_excludes_0,differs
+agrifm_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/agrifm_agyear_tiles_2023-24_concat,logreg,0.0326,0.0118,0.05,0.0,0.0,True,True
+agrifm_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/agrifm_agyear_tiles_2023-24_concat,rf,0.0694,0.0339,0.105,0.0,0.0,True,True
+agrifm_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/agrifm_agyear_tiles_2023-24_concat,svm,0.0064,-0.0066,0.0192,0.318,0.702,False,False
+clay_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,logreg,0.0275,0.0149,0.0416,0.0,0.0,True,True
+clay_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,rf,0.0182,-0.0002,0.0373,0.054,0.432,False,False
+clay_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,svm,-0.0103,-0.022,0.0006,0.058,0.432,False,False
+prithvi_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,logreg,0.0338,0.0182,0.0477,0.0,0.0,True,True
+prithvi_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,rf,0.0647,0.0377,0.093,0.0,0.0,True,True
+prithvi_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,svm,-0.0028,-0.0156,0.0095,0.648,0.702,False,False
+s1s2-s2_agyear_tiles-inner_mlp,mlp,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,logreg,0.0168,-0.0028,0.0372,0.112,0.56,False,False
+s1s2-s2_agyear_tiles-inner_mlp,mlp,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,rf,-0.0251,-0.052,0.0017,0.08,0.48,False,False
+s1s2-s2_agyear_tiles-inner_mlp,mlp,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,svm,0.0113,-0.0034,0.0267,0.126,0.56,False,False
+terramind_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,logreg,0.0363,0.0216,0.0519,0.0,0.0,True,True
+terramind_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,rf,0.0398,0.0204,0.0595,0.0,0.0,True,True
+terramind_agyear_tiles_2023-24_mlp,mlp,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,svm,0.0075,-0.0051,0.0197,0.234,0.702,False,False

@@ -1,0 +1,55 @@
+{
+  "run": "terramind_agyear_tiles_2023-24_mlp",
+  "experiment": "E03_frozen_pca_mlp",
+  "region": "utah",
+  "views": "views_2023-24",
+  "input": "terramind",
+  "head": "mlp",
+  "input_shape": [
+    6013,
+    12,
+    768
+  ],
+  "steps": [
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep"
+  ],
+  "start_month": 10,
+  "feature_mode": "concat",
+  "pca_dim": 128,
+  "ltae": null,
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42,
+    1042,
+    2042
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 1.0,
+  "fraction_draw": 1,
+  "block_draws": [],
+  "n_parcels": 6013,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

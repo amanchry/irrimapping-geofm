@@ -1,0 +1,13 @@
+run,classifier,baseline_classifier,delta_macro_f1,ci_low,ci_high,p,p_holm,ci_excludes_0,differs
+agrifm_agyear_tiles_2023-24_concat,logreg,logreg,-0.008,-0.0295,0.0128,0.444,1.0,False,False
+agrifm_agyear_tiles_2023-24_concat,rf,rf,-0.0868,-0.1305,-0.0463,0.0,0.0,True,True
+agrifm_agyear_tiles_2023-24_concat,svm,svm,0.0127,-0.0196,0.0419,0.44,1.0,False,False
+clay_agyear_tiles_2023-24_concat,logreg,logreg,0.031,0.0112,0.0488,0.0,0.0,True,True
+clay_agyear_tiles_2023-24_concat,rf,rf,-0.0016,-0.0242,0.0214,0.904,1.0,False,False
+clay_agyear_tiles_2023-24_concat,svm,svm,0.0634,0.036,0.0873,0.0,0.0,True,True
+prithvi_agyear_tiles_2023-24_concat,logreg,logreg,0.0234,0.0041,0.0423,0.016,0.08,True,False
+prithvi_agyear_tiles_2023-24_concat,rf,rf,-0.0494,-0.0784,-0.0182,0.002,0.016,True,True
+prithvi_agyear_tiles_2023-24_concat,svm,svm,0.0546,0.0262,0.0819,0.0,0.0,True,True
+terramind_agyear_tiles_2023-24_concat,logreg,logreg,0.0262,0.0055,0.0445,0.012,0.072,True,False
+terramind_agyear_tiles_2023-24_concat,rf,rf,-0.0193,-0.0423,0.0079,0.128,0.512,False,False
+terramind_agyear_tiles_2023-24_concat,svm,svm,0.0494,0.02,0.0758,0.002,0.016,True,True

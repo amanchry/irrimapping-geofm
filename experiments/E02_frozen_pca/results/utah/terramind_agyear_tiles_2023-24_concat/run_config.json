@@ -1,0 +1,71 @@
+{
+  "run": "terramind_agyear_tiles_2023-24_concat",
+  "experiment": "E02_frozen_pca",
+  "region": "utah",
+  "views": "views_2023-24",
+  "input": "terramind",
+  "window": "agyear",
+  "train_fraction": 1.0,
+  "fraction_draw": 1,
+  "block_draws": [],
+  "settings": {
+    "feature_mode": "concat",
+    "pca_dim": 128,
+    "embedding_file": "terramind_agyear_tiles_2023-24.npz"
+  },
+  "n_parcels": 6013,
+  "n_features": 9216,
+  "validation": "5 spatial folds; per round 3 train / next fold validation / 1 test (PASTIS)",
+  "seed": 42,
+  "rf_trees": 500,
+  "n_boot": 1000,
+  "quick_test": false,
+  "grids": {
+    "logreg": {
+      "C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "rf": {
+      "max_features": [
+        "sqrt",
+        0.3
+      ],
+      "min_samples_leaf": [
+        1,
+        5
+      ],
+      "class_weight": [
+        null,
+        "balanced_subsample"
+      ]
+    },
+    "svm": {
+      "C": [
+        1.0,
+        10.0
+      ],
+      "gamma": [
+        "scale",
+        0.01
+      ]
+    }
+  },
+  "final_params": {
+    "logreg": {
+      "C": 0.1
+    },
+    "rf": {
+      "class_weight": "balanced_subsample",
+      "max_features": 0.3,
+      "min_samples_leaf": 5
+    },
+    "svm": {
+      "C": 1.0,
+      "gamma": "scale"
+    }
+  }
+}

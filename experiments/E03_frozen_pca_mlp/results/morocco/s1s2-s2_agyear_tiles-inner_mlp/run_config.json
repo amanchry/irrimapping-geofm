@@ -1,0 +1,55 @@
+{
+  "run": "s1s2-s2_agyear_tiles-inner_mlp",
+  "experiment": "E03_frozen_pca_mlp",
+  "region": "morocco",
+  "views": "views",
+  "input": "s1s2",
+  "head": "mlp",
+  "input_shape": [
+    8775,
+    12,
+    15
+  ],
+  "steps": [
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug"
+  ],
+  "start_month": 9,
+  "feature_mode": "concat",
+  "pca_dim": 128,
+  "ltae": null,
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42,
+    1042,
+    2042
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 1.0,
+  "fraction_draw": 1,
+  "block_draws": [],
+  "n_parcels": 8775,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

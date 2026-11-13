@@ -1,0 +1,5 @@
+run,classifier,baseline_classifier,delta_macro_f1,ci_low,ci_high,p,p_holm,ci_excludes_0,differs
+agrifm_agyear_tiles_mlp,mlp,mlp,-0.0511,-0.0829,-0.0262,0.0,0.0,True,True
+clay_agyear_tiles_mlp,mlp,mlp,-0.0098,-0.0299,0.0061,0.216,0.276,False,False
+prithvi_agyear_tiles_mlp,mlp,mlp,-0.0158,-0.0359,-0.0006,0.038,0.114,True,False
+terramind_agyear_tiles_mlp,mlp,mlp,-0.0137,-0.0383,0.0042,0.138,0.276,False,False

@@ -1,0 +1,308 @@
+{
+  "runs": [
+    {
+      "started": "2026-11-13 11:54",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "eeadbbc (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E02",
+        "title": "Frozen GeoFMs + PCA + classical classifiers",
+        "short_title": "PCA + LogReg / RF / SVM",
+        "status": "ready",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-2 features, with the same parcels, folds and classifiers? (Sentinel-2 only for every input, D14)",
+        "changes_from": "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)",
+        "answer": "",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "train_evaluate",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "train_evaluate": {
+          "VALIDATION": "pastis",
+          "WINDOW": "agyear",
+          "S1S2_SOURCE": "tiles",
+          "TILE_FEATURES": "inner",
+          "S1_ORBIT": "chips",
+          "S1S2_VARIABLES": "s2",
+          "EMB_SOURCE": "tiles",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "RF_TREES": 500,
+          "N_BOOT": 1000,
+          "SEED": 42
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf"
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 11:54"
+    },
+    {
+      "started": "2026-11-13 11:56",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "eeadbbc (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E02",
+        "title": "Frozen GeoFMs + PCA + classical classifiers",
+        "short_title": "PCA + LogReg / RF / SVM",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-2 features, with the same parcels, folds and classifiers? (Sentinel-2 only for every input, D14)",
+        "changes_from": "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)",
+        "answer": "Morocco: GeoFMs equal the S2 baseline (about 0.90 with SVM), AgriFM worse. Utah: Clay, Prithvi, TerraMind +0.05 to +0.06 with SVM; the best GeoFM (Clay SVM 0.791) is 0.03 above the baseline best head (RF 0.764).",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "train_evaluate",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "train_evaluate": {
+          "VALIDATION": "pastis",
+          "WINDOW": "agyear",
+          "S1S2_SOURCE": "tiles",
+          "TILE_FEATURES": "inner",
+          "S1_ORBIT": "chips",
+          "S1S2_VARIABLES": "s2",
+          "EMB_SOURCE": "tiles",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "RF_TREES": 500,
+          "N_BOOT": 1000,
+          "SEED": 42
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf"
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 11:56"
+    },
+    {
+      "started": "2026-11-13 12:02",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "eeadbbc (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E02",
+        "title": "Frozen GeoFMs + PCA + classical classifiers",
+        "short_title": "PCA + LogReg / RF / SVM",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-2 features, with the same parcels, folds and classifiers? (Sentinel-2 only for every input, D14)",
+        "changes_from": "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)",
+        "answer": "Morocco: GeoFMs equal the S2 baseline (about 0.90 with SVM), AgriFM worse. Utah: Clay, Prithvi, TerraMind +0.05 to +0.06 with SVM; the best GeoFM (Clay SVM 0.791) is 0.03 above the baseline best head (RF 0.764).",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "train_evaluate",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "train_evaluate": {
+          "VALIDATION": "pastis",
+          "WINDOW": "agyear",
+          "S1S2_SOURCE": "tiles",
+          "TILE_FEATURES": "inner",
+          "S1_ORBIT": "chips",
+          "S1S2_VARIABLES": "s2",
+          "EMB_SOURCE": "tiles",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "RF_TREES": 500,
+          "N_BOOT": 1000,
+          "SEED": 42
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf"
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 12:02"
+    },
+    {
+      "started": "2026-11-13 12:03",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "eeadbbc (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E02",
+        "title": "Frozen GeoFMs + PCA + classical classifiers",
+        "short_title": "PCA + LogReg / RF / SVM",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-2 features, with the same parcels, folds and classifiers? (Sentinel-2 only for every input, D14)",
+        "changes_from": "E01: validation nested -> pastis (3 folds train, next fold validation, 1 fold test)",
+        "answer": "Morocco: GeoFMs equal the S2 baseline (about 0.90 with SVM), AgriFM worse. Utah: Clay, Prithvi, TerraMind +0.05 to +0.06 with SVM; the best GeoFM (Clay SVM 0.791) is 0.03 above the baseline best head (RF 0.764).",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "train_evaluate",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "train_evaluate": {
+          "VALIDATION": "pastis",
+          "WINDOW": "agyear",
+          "S1S2_SOURCE": "tiles",
+          "TILE_FEATURES": "inner",
+          "S1_ORBIT": "chips",
+          "S1S2_VARIABLES": "s2",
+          "EMB_SOURCE": "tiles",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "RF_TREES": 500,
+          "N_BOOT": 1000,
+          "SEED": 42
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf"
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 12:03"
+    }
+  ]
+}

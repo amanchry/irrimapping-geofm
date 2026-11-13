@@ -1,0 +1,172 @@
+{
+  "runs": [
+    {
+      "started": "2026-11-13 12:44",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "710f917 (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E03",
+        "title": "Frozen GeoFMs + PCA + MLP head",
+        "short_title": "PCA + MLP head",
+        "status": "ready",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?",
+        "changes_from": "E02: classifier LogReg / RF / SVM -> MLP head (128-256-128-2), 3 seeds",
+        "answer": "",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "ltae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "ltae": {
+          "HEAD": "mlp",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "VALIDATION": "pastis",
+          "MLP": [
+            256,
+            128
+          ],
+          "DROPOUT": 0.2,
+          "LEARNING_RATE": 0.001,
+          "WEIGHT_DECAY": 0.0001,
+          "BATCH_SIZE": 128,
+          "EPOCHS": 100,
+          "PATIENCE": 15,
+          "N_SEEDS": 3
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "mlp",
+            "logreg",
+            "rf"
+          ]
+        }
+      },
+      "finished": "2026-11-13 12:45"
+    },
+    {
+      "started": "2026-11-13 12:46",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "710f917 (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E03",
+        "title": "Frozen GeoFMs + PCA + MLP head",
+        "short_title": "PCA + MLP head",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?",
+        "changes_from": "E02: classifier LogReg / RF / SVM -> MLP head (128-256-128-2), 3 seeds",
+        "answer": "MLP head = SVM for every input, not better. Morocco: S2 + MLP best (0.908), GeoFMs 0.01-0.02 lower. Utah: GeoFMs + MLP beat S2 + MLP by 0.04-0.05, but S2 RF (E02) stays its best head.",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind",
+          "agrifm"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "ltae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "ltae": {
+          "HEAD": "mlp",
+          "FEATURE_MODE": "concat",
+          "PCA_DIM": 128,
+          "VALIDATION": "pastis",
+          "MLP": [
+            256,
+            128
+          ],
+          "DROPOUT": 0.2,
+          "LEARNING_RATE": 0.001,
+          "WEIGHT_DECAY": 0.0001,
+          "BATCH_SIZE": 128,
+          "EPOCHS": 100,
+          "PATIENCE": 15,
+          "N_SEEDS": 3
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "mlp",
+            "logreg",
+            "rf"
+          ]
+        }
+      },
+      "finished": "2026-11-13 12:46"
+    }
+  ]
+}

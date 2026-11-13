@@ -1,0 +1,94 @@
+{
+  "run": "prithvi_agyear_tiles_mlp_f010_d3",
+  "experiment": "E03_frozen_pca_mlp",
+  "region": "morocco",
+  "views": "views",
+  "input": "prithvi",
+  "head": "mlp",
+  "input_shape": [
+    8781,
+    12,
+    1024
+  ],
+  "steps": [
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug"
+  ],
+  "start_month": 9,
+  "feature_mode": "concat",
+  "pca_dim": 128,
+  "ltae": null,
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 0.1,
+  "fraction_draw": 3,
+  "block_draws": [
+    {
+      "round": 1,
+      "test_fold": 0,
+      "blocks": 6,
+      "blocks_available": 66,
+      "parcels": 301,
+      "rainfed": 91
+    },
+    {
+      "round": 2,
+      "test_fold": 1,
+      "blocks": 4,
+      "blocks_available": 36,
+      "parcels": 1104,
+      "rainfed": 150
+    },
+    {
+      "round": 3,
+      "test_fold": 2,
+      "blocks": 4,
+      "blocks_available": 38,
+      "parcels": 541,
+      "rainfed": 91
+    },
+    {
+      "round": 4,
+      "test_fold": 3,
+      "blocks": 7,
+      "blocks_available": 67,
+      "parcels": 719,
+      "rainfed": 29
+    },
+    {
+      "round": 5,
+      "test_fold": 4,
+      "blocks": 6,
+      "blocks_available": 66,
+      "parcels": 303,
+      "rainfed": 91
+    }
+  ],
+  "n_parcels": 8781,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

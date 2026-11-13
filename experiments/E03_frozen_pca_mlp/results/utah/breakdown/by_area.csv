@@ -1,0 +1,26 @@
+run,classifier,area_bin,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+agrifm_agyear_tiles_2023-24_mlp,mlp,"(0.0, 0.5]",590,167,0.712,0.485,0.604,0.09
+agrifm_agyear_tiles_2023-24_mlp,mlp,"(0.5, 1.0]",634,115,0.672,0.435,0.45,0.096
+agrifm_agyear_tiles_2023-24_mlp,mlp,"(1.0, 2.0]",917,175,0.676,0.434,0.472,0.093
+agrifm_agyear_tiles_2023-24_mlp,mlp,"(2.0, 5.0]",1559,194,0.725,0.557,0.48,0.075
+agrifm_agyear_tiles_2023-24_mlp,mlp,"(5.0, inf]",1298,362,0.82,0.796,0.668,0.11
+clay_agyear_tiles_2023-24_mlp,mlp,"(0.0, 0.5]",590,167,0.715,0.533,0.571,0.114
+clay_agyear_tiles_2023-24_mlp,mlp,"(0.5, 1.0]",634,115,0.716,0.522,0.517,0.088
+clay_agyear_tiles_2023-24_mlp,mlp,"(1.0, 2.0]",917,175,0.743,0.549,0.585,0.074
+clay_agyear_tiles_2023-24_mlp,mlp,"(2.0, 5.0]",1559,194,0.766,0.624,0.555,0.062
+clay_agyear_tiles_2023-24_mlp,mlp,"(5.0, inf]",1298,362,0.851,0.787,0.752,0.072
+prithvi_agyear_tiles_2023-24_mlp,mlp,"(0.0, 0.5]",590,167,0.711,0.545,0.552,0.125
+prithvi_agyear_tiles_2023-24_mlp,mlp,"(0.5, 1.0]",634,115,0.681,0.504,0.436,0.118
+prithvi_agyear_tiles_2023-24_mlp,mlp,"(1.0, 2.0]",917,175,0.743,0.549,0.585,0.074
+prithvi_agyear_tiles_2023-24_mlp,mlp,"(2.0, 5.0]",1559,194,0.776,0.675,0.55,0.069
+prithvi_agyear_tiles_2023-24_mlp,mlp,"(5.0, inf]",1298,362,0.855,0.831,0.731,0.086
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(0.0, 0.5]",590,167,0.649,0.647,0.406,0.268
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(0.5, 1.0]",634,115,0.69,0.696,0.402,0.188
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(1.0, 2.0]",917,175,0.727,0.72,0.465,0.158
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(2.0, 5.0]",1559,194,0.714,0.701,0.406,0.128
+s1s2-s2_agyear_tiles-inner_mlp,mlp,"(5.0, inf]",1298,362,0.814,0.876,0.619,0.15
+terramind_agyear_tiles_2023-24_mlp,mlp,"(0.0, 0.5]",590,167,0.735,0.575,0.596,0.11
+terramind_agyear_tiles_2023-24_mlp,mlp,"(0.5, 1.0]",634,115,0.696,0.496,0.479,0.098
+terramind_agyear_tiles_2023-24_mlp,mlp,"(1.0, 2.0]",917,175,0.739,0.543,0.576,0.076
+terramind_agyear_tiles_2023-24_mlp,mlp,"(2.0, 5.0]",1559,194,0.761,0.644,0.53,0.071
+terramind_agyear_tiles_2023-24_mlp,mlp,"(5.0, inf]",1298,362,0.863,0.854,0.736,0.086

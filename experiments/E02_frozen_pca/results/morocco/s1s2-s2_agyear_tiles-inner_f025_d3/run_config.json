@@ -1,0 +1,101 @@
+{
+  "run": "s1s2-s2_agyear_tiles-inner_f025_d3",
+  "experiment": "E02_frozen_pca",
+  "region": "morocco",
+  "views": "views",
+  "input": "s1s2",
+  "window": "agyear",
+  "train_fraction": 0.25,
+  "fraction_draw": 3,
+  "block_draws": [
+    {
+      "round": 1,
+      "test_fold": "0",
+      "blocks": 16,
+      "blocks_available": 66,
+      "parcels": 889,
+      "rainfed": 156
+    },
+    {
+      "round": 2,
+      "test_fold": "1",
+      "blocks": 9,
+      "blocks_available": 36,
+      "parcels": 1690,
+      "rainfed": 223
+    },
+    {
+      "round": 3,
+      "test_fold": "2",
+      "blocks": 9,
+      "blocks_available": 38,
+      "parcels": 1184,
+      "rainfed": 137
+    },
+    {
+      "round": 4,
+      "test_fold": "3",
+      "blocks": 17,
+      "blocks_available": 67,
+      "parcels": 1320,
+      "rainfed": 195
+    },
+    {
+      "round": 5,
+      "test_fold": "4",
+      "blocks": 17,
+      "blocks_available": 66,
+      "parcels": 1804,
+      "rainfed": 358
+    }
+  ],
+  "settings": {
+    "source": "tiles",
+    "feature_file": "parcel_features_inner.csv",
+    "variables": "s2",
+    "tile_features": "inner",
+    "s1_orbit": "none"
+  },
+  "n_parcels": 8775,
+  "n_features": 180,
+  "validation": "5 spatial folds; per round 3 train / next fold validation / 1 test (PASTIS)",
+  "seed": 42,
+  "rf_trees": 500,
+  "n_boot": 1000,
+  "quick_test": false,
+  "grids": {
+    "logreg": {
+      "C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "rf": {
+      "max_features": [
+        "sqrt",
+        0.3
+      ],
+      "min_samples_leaf": [
+        1,
+        5
+      ],
+      "class_weight": [
+        null,
+        "balanced_subsample"
+      ]
+    },
+    "svm": {
+      "C": [
+        1.0,
+        10.0
+      ],
+      "gamma": [
+        "scale",
+        0.01
+      ]
+    }
+  },
+  "final_params": {}
+}

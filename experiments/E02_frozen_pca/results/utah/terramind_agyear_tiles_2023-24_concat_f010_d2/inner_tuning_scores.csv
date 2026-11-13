@@ -1,0 +1,81 @@
+model,outer_fold,params,inner_macro_f1
+logreg,0,{'C': 0.01},0.6464882552296366
+logreg,0,{'C': 0.1},0.6370898708774694
+logreg,0,{'C': 1.0},0.6133959148039979
+logreg,0,{'C': 10.0},0.5804384893367944
+rf,0,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.45224083295608875
+rf,0,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.45224083295608875
+rf,0,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 1}",0.45224083295608875
+rf,0,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 5}",0.45224083295608875
+rf,0,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.46687453927690836
+rf,0,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.4716658756525866
+rf,0,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 1}",0.5075474563401671
+rf,0,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 5}",0.5221729576715853
+svm,0,"{'C': 1.0, 'gamma': 'scale'}",0.6321620825285174
+svm,0,"{'C': 1.0, 'gamma': 0.01}",0.6222255124111649
+svm,0,"{'C': 10.0, 'gamma': 'scale'}",0.5439442875615371
+svm,0,"{'C': 10.0, 'gamma': 0.01}",0.5274652599932099
+logreg,1,{'C': 0.01},0.7180511053304703
+logreg,1,{'C': 0.1},0.7031509034876651
+logreg,1,{'C': 1.0},0.6767858984358547
+logreg,1,{'C': 10.0},0.654325410024819
+rf,1,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.4556267154620311
+rf,1,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.4556267154620311
+rf,1,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 1}",0.4556267154620311
+rf,1,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 5}",0.4556267154620311
+rf,1,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.4556267154620311
+rf,1,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.46096344540280465
+rf,1,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 1}",0.49645985459268527
+rf,1,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 5}",0.49645985459268527
+svm,1,"{'C': 1.0, 'gamma': 'scale'}",0.6938389624559838
+svm,1,"{'C': 1.0, 'gamma': 0.01}",0.6525960685941656
+svm,1,"{'C': 10.0, 'gamma': 'scale'}",0.5682922454835975
+svm,1,"{'C': 10.0, 'gamma': 0.01}",0.5628251049937797
+logreg,2,{'C': 0.01},0.6696436454204556
+logreg,2,{'C': 0.1},0.6809779633992528
+logreg,2,{'C': 1.0},0.6611532385466035
+logreg,2,{'C': 10.0},0.6144616861302192
+rf,2,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.46270562770562773
+rf,2,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.4527702089009991
+rf,2,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 1}",0.4772748156363458
+rf,2,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 5}",0.4724621010524147
+rf,2,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.5404113887650064
+rf,2,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.5318484617340453
+rf,2,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 1}",0.6265458390078295
+rf,2,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 5}",0.6231537947602599
+svm,2,"{'C': 1.0, 'gamma': 'scale'}",0.7235308513567256
+svm,2,"{'C': 1.0, 'gamma': 0.01}",0.7129569040731046
+svm,2,"{'C': 10.0, 'gamma': 'scale'}",0.5804762121005707
+svm,2,"{'C': 10.0, 'gamma': 0.01}",0.5631539145213853
+logreg,3,{'C': 0.01},0.640257001273662
+logreg,3,{'C': 0.1},0.6591663478782545
+logreg,3,{'C': 1.0},0.6774240435108777
+logreg,3,{'C': 10.0},0.6503883988188162
+rf,3,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.5342874180083482
+rf,3,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.5231478334749362
+rf,3,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 1}",0.564395552356056
+rf,3,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 5}",0.5704419756648872
+rf,3,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.6033930458907757
+rf,3,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.6062806002637401
+rf,3,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 1}",0.6120074462567987
+rf,3,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 5}",0.6165282758769237
+svm,3,"{'C': 1.0, 'gamma': 'scale'}",0.6347336744929359
+svm,3,"{'C': 1.0, 'gamma': 0.01}",0.6384830917874396
+svm,3,"{'C': 10.0, 'gamma': 'scale'}",0.6782063645130183
+svm,3,"{'C': 10.0, 'gamma': 0.01}",0.6639938137496778
+logreg,4,{'C': 0.01},0.745351433755247
+logreg,4,{'C': 0.1},0.7237167405764967
+logreg,4,{'C': 1.0},0.6759851895955048
+logreg,4,{'C': 10.0},0.6571836346336822
+rf,4,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.45384265575261484
+rf,4,"{'class_weight': None, 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.45384265575261484
+rf,4,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 1}",0.49816059274575686
+rf,4,"{'class_weight': None, 'max_features': 0.3, 'min_samples_leaf': 5}",0.48379249329641727
+rf,4,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 1}",0.4690257661768087
+rf,4,"{'class_weight': 'balanced_subsample', 'max_features': 'sqrt', 'min_samples_leaf': 5}",0.48379249329641727
+rf,4,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 1}",0.5888752357151196
+rf,4,"{'class_weight': 'balanced_subsample', 'max_features': 0.3, 'min_samples_leaf': 5}",0.5928107357996657
+svm,4,"{'C': 1.0, 'gamma': 'scale'}",0.7008415241685741
+svm,4,"{'C': 1.0, 'gamma': 0.01}",0.6786984921131263
+svm,4,"{'C': 10.0, 'gamma': 'scale'}",0.599389673240736
+svm,4,"{'C': 10.0, 'gamma': 0.01}",0.599389673240736

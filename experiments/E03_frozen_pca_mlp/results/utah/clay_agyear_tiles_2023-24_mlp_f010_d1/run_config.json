@@ -1,0 +1,94 @@
+{
+  "run": "clay_agyear_tiles_2023-24_mlp_f010_d1",
+  "experiment": "E03_frozen_pca_mlp",
+  "region": "utah",
+  "views": "views_2023-24",
+  "input": "clay",
+  "head": "mlp",
+  "input_shape": [
+    6013,
+    12,
+    1024
+  ],
+  "steps": [
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep"
+  ],
+  "start_month": 10,
+  "feature_mode": "concat",
+  "pca_dim": 128,
+  "ltae": null,
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 0.1,
+  "fraction_draw": 1,
+  "block_draws": [
+    {
+      "round": 1,
+      "test_fold": 0,
+      "blocks": 9,
+      "blocks_available": 88,
+      "parcels": 414,
+      "rainfed": 88
+    },
+    {
+      "round": 2,
+      "test_fold": 1,
+      "blocks": 12,
+      "blocks_available": 118,
+      "parcels": 370,
+      "rainfed": 47
+    },
+    {
+      "round": 3,
+      "test_fold": 2,
+      "blocks": 12,
+      "blocks_available": 115,
+      "parcels": 322,
+      "rainfed": 93
+    },
+    {
+      "round": 4,
+      "test_fold": 3,
+      "blocks": 12,
+      "blocks_available": 114,
+      "parcels": 268,
+      "rainfed": 26
+    },
+    {
+      "round": 5,
+      "test_fold": 4,
+      "blocks": 9,
+      "blocks_available": 90,
+      "parcels": 328,
+      "rainfed": 42
+    }
+  ],
+  "n_parcels": 6013,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

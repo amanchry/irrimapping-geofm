@@ -1,0 +1,16 @@
+run,classifier,n_parcels,n_rainfed,n_blocks,estimate,ci_low,ci_high,delta_vs_baseline,delta_ci_low,delta_ci_high
+agrifm_agyear_tiles_concat,logreg,4701,1,54,0.0306,0.0196,0.0436,0.006,-0.0051,0.018
+agrifm_agyear_tiles_concat,rf,4701,1,54,0.003,0.0013,0.005,-0.0045,-0.0125,0.0018
+agrifm_agyear_tiles_concat,svm,4701,1,54,0.0115,0.0063,0.0177,0.0074,0.0027,0.0131
+clay_agyear_tiles_concat,logreg,4701,1,54,0.0172,0.0082,0.0269,-0.0074,-0.0179,0.0008
+clay_agyear_tiles_concat,rf,4701,1,54,0.0036,0.0004,0.0082,-0.0038,-0.0082,-0.0006
+clay_agyear_tiles_concat,svm,4701,1,54,0.003,0.0005,0.0062,-0.0011,-0.0043,0.0023
+prithvi_agyear_tiles_concat,logreg,4701,1,54,0.0185,0.0071,0.0359,-0.0062,-0.0195,0.0099
+prithvi_agyear_tiles_concat,rf,4701,1,54,0.0087,0.0042,0.0145,0.0013,-0.0036,0.0054
+prithvi_agyear_tiles_concat,svm,4701,1,54,0.0038,0.0007,0.0079,-0.0002,-0.0038,0.0038
+s1s2-s2_agyear_tiles-inner,logreg,4701,1,54,0.0247,0.0133,0.0395,,,
+s1s2-s2_agyear_tiles-inner,rf,4701,1,54,0.0074,0.0014,0.0153,,,
+s1s2-s2_agyear_tiles-inner,svm,4701,1,54,0.004,0.0018,0.0067,,,
+terramind_agyear_tiles_concat,logreg,4701,1,54,0.0147,0.0038,0.0315,-0.01,-0.0242,0.0059
+terramind_agyear_tiles_concat,rf,4701,1,54,0.0083,0.0026,0.0159,0.0009,-0.0028,0.0051
+terramind_agyear_tiles_concat,svm,4701,1,54,0.0049,0.0004,0.0107,0.0009,-0.0035,0.0067
