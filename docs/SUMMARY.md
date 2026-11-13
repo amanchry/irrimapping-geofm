@@ -26,6 +26,7 @@
     * [E03 · PCA + MLP head](experiments/E03_frozen_pca_mlp/index.md)
         * [Report](experiments/E03_frozen_pca_mlp/report.md)
     * [E04 · L-TAE + MLP head](experiments/E04_frozen_ltae/index.md)
+        * [Report](experiments/E04_frozen_ltae/report.md)
     * [E05 · PSE-TAE from scratch](experiments/E05_psetae_scratch/index.md)
 * [Results](results.md)
 * [Decisions](decisions.md)

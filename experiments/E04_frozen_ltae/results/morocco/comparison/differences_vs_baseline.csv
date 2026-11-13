@@ -1,0 +1,4 @@
+run,classifier,baseline_classifier,delta_macro_f1,ci_low,ci_high,p,p_holm,ci_excludes_0,differs
+clay_agyear_tiles_ltae,ltae,ltae,0.0017,-0.0163,0.023,0.884,1.0,False,False
+prithvi_agyear_tiles_ltae,ltae,ltae,-0.0066,-0.0284,0.0161,0.476,1.0,False,False
+terramind_agyear_tiles_ltae,ltae,ltae,-0.0091,-0.0355,0.0137,0.374,1.0,False,False

@@ -1,0 +1,98 @@
+{
+  "run": "prithvi_agyear_tiles_2023-24_ltae_f025_d1",
+  "experiment": "E04_frozen_ltae",
+  "region": "utah",
+  "views": "views_2023-24",
+  "input": "prithvi",
+  "head": "ltae",
+  "input_shape": [
+    6013,
+    12,
+    1024
+  ],
+  "steps": [
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep"
+  ],
+  "start_month": 10,
+  "feature_mode": "sequence",
+  "pca_dim": null,
+  "ltae": {
+    "n_heads": 16,
+    "d_k": 8,
+    "d_model": 256
+  },
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 0.25,
+  "fraction_draw": 1,
+  "block_draws": [
+    {
+      "round": 1,
+      "test_fold": 0,
+      "blocks": 22,
+      "blocks_available": 88,
+      "parcels": 876,
+      "rainfed": 169
+    },
+    {
+      "round": 2,
+      "test_fold": 1,
+      "blocks": 29,
+      "blocks_available": 118,
+      "parcels": 957,
+      "rainfed": 203
+    },
+    {
+      "round": 3,
+      "test_fold": 2,
+      "blocks": 29,
+      "blocks_available": 115,
+      "parcels": 637,
+      "rainfed": 167
+    },
+    {
+      "round": 4,
+      "test_fold": 3,
+      "blocks": 29,
+      "blocks_available": 114,
+      "parcels": 845,
+      "rainfed": 122
+    },
+    {
+      "round": 5,
+      "test_fold": 4,
+      "blocks": 22,
+      "blocks_available": 90,
+      "parcels": 668,
+      "rainfed": 186
+    }
+  ],
+  "n_parcels": 6013,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

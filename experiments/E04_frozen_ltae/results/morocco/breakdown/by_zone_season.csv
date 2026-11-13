@@ -1,0 +1,33 @@
+run,classifier,zone,ag_season,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+clay_agyear_tiles_ltae,ltae,Doukkala,2023/24,1831,697,0.879,0.901,0.77,0.103
+clay_agyear_tiles_ltae,ltae,Doukkala,2024/25,545,425,0.912,0.859,0.941,0.042
+clay_agyear_tiles_ltae,ltae,El Haouz,2023/24,1146,1,,0.0,0.0,0.003
+clay_agyear_tiles_ltae,ltae,El Haouz,2024/25,348,0,,,,0.0
+clay_agyear_tiles_ltae,ltae,Gharb,2023/24,1759,0,,,0.0,0.005
+clay_agyear_tiles_ltae,ltae,Souss,2024/25,359,69,0.932,0.841,0.935,0.011
+clay_agyear_tiles_ltae,ltae,Statte,2024/25,144,4,,0.5,0.5,0.014
+clay_agyear_tiles_ltae,ltae,Tadla,2023/24,1447,0,,,0.0,0.021
+prithvi_agyear_tiles_ltae,ltae,Doukkala,2023/24,1831,697,0.878,0.911,0.762,0.108
+prithvi_agyear_tiles_ltae,ltae,Doukkala,2024/25,545,425,0.875,0.816,0.897,0.073
+prithvi_agyear_tiles_ltae,ltae,El Haouz,2023/24,1146,1,,0.0,0.0,0.005
+prithvi_agyear_tiles_ltae,ltae,El Haouz,2024/25,348,0,,,0.0,0.003
+prithvi_agyear_tiles_ltae,ltae,Gharb,2023/24,1759,0,,,0.0,0.011
+prithvi_agyear_tiles_ltae,ltae,Souss,2024/25,359,69,0.95,0.87,0.968,0.006
+prithvi_agyear_tiles_ltae,ltae,Statte,2024/25,144,4,,0.5,0.5,0.014
+prithvi_agyear_tiles_ltae,ltae,Tadla,2023/24,1447,0,,,0.0,0.015
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Doukkala,2023/24,1831,697,0.868,0.865,0.767,0.1
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Doukkala,2024/25,545,425,0.925,0.911,0.919,0.062
+s1s2-s2_agyear_tiles-inner_ltae,ltae,El Haouz,2023/24,1146,1,,0.0,0.0,0.005
+s1s2-s2_agyear_tiles-inner_ltae,ltae,El Haouz,2024/25,348,0,,,,0.0
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Gharb,2023/24,1759,0,,,0.0,0.004
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Souss,2024/25,359,69,0.92,0.841,0.892,0.019
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Statte,2024/25,144,4,,0.0,0.0,0.035
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Tadla,2023/24,1447,0,,,0.0,0.013
+terramind_agyear_tiles_ltae,ltae,Doukkala,2023/24,1831,697,0.867,0.862,0.768,0.099
+terramind_agyear_tiles_ltae,ltae,Doukkala,2024/25,545,425,0.902,0.847,0.928,0.051
+terramind_agyear_tiles_ltae,ltae,El Haouz,2023/24,1146,1,,0.0,0.0,0.005
+terramind_agyear_tiles_ltae,ltae,El Haouz,2024/25,348,0,,,,0.0
+terramind_agyear_tiles_ltae,ltae,Gharb,2023/24,1759,0,,,0.0,0.01
+terramind_agyear_tiles_ltae,ltae,Souss,2024/25,359,69,0.898,0.71,0.98,0.003
+terramind_agyear_tiles_ltae,ltae,Statte,2024/25,144,4,,0.25,0.333,0.014
+terramind_agyear_tiles_ltae,ltae,Tadla,2023/24,1447,0,,,0.0,0.015

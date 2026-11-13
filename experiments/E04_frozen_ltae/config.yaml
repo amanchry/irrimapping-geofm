@@ -2,13 +2,13 @@
 id: E04
 title: "Frozen GeoFMs + L-TAE temporal aggregation + MLP head"
 short_title: L-TAE + MLP head   # name in the site's sidebar
-status: ready
+status: done
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly Sentinel-2 features? (Sentinel-2 only, D14)
 changes_from: "E03: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA; same MLP head"
-answer: ""
+answer: "L-TAE = concat + PCA with the same MLP (within 0.01), not better. Morocco: Clay 0.906 ties S2 0.905. Utah: Clay and Prithvi +0.04 over S2 with the same head; +0.02 over the S2 RF."
 
 regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
 inputs: [s1s2, clay, prithvi, terramind]   # AgriFM gives one vector per year (no months to aggregate)

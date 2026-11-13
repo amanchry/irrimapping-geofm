@@ -1,0 +1,17 @@
+run,classifier,other_run,other_classifier,delta_macro_f1,ci_low,ci_high,p,p_holm,ci_excludes_0,differs
+clay_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,logreg,0.0304,0.0157,0.0449,0.0,0.0,True,True
+clay_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,rf,0.021,0.0035,0.0385,0.008,0.104,True,False
+clay_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/clay_agyear_tiles_2023-24_concat,svm,-0.0075,-0.0208,0.0049,0.272,1.0,False,False
+clay_agyear_tiles_2023-24_ltae,ltae,E03_frozen_pca_mlp/clay_agyear_tiles_2023-24_mlp,mlp,0.0028,-0.0098,0.0145,0.66,1.0,False,False
+prithvi_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,logreg,0.0363,0.0198,0.0522,0.0,0.0,True,True
+prithvi_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,rf,0.0672,0.0391,0.0942,0.0,0.0,True,True
+prithvi_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/prithvi_agyear_tiles_2023-24_concat,svm,-0.0004,-0.0153,0.0136,0.92,1.0,False,False
+prithvi_agyear_tiles_2023-24_ltae,ltae,E03_frozen_pca_mlp/prithvi_agyear_tiles_2023-24_mlp,mlp,0.0024,-0.0102,0.0147,0.712,1.0,False,False
+s1s2-s2_agyear_tiles-inner_ltae,ltae,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,logreg,0.0207,0.0011,0.041,0.034,0.306,True,False
+s1s2-s2_agyear_tiles-inner_ltae,ltae,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,rf,-0.0212,-0.0438,0.0026,0.096,0.768,False,False
+s1s2-s2_agyear_tiles-inner_ltae,ltae,E02_frozen_pca/s1s2-s2_agyear_tiles-inner,svm,0.0152,-0.0031,0.0332,0.12,0.84,False,False
+s1s2-s2_agyear_tiles-inner_ltae,ltae,E03_frozen_pca_mlp/s1s2-s2_agyear_tiles-inner_mlp,mlp,0.004,-0.014,0.0225,0.74,1.0,False,False
+terramind_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,logreg,0.0213,0.0026,0.0398,0.02,0.2,True,False
+terramind_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,rf,0.0248,0.0066,0.0434,0.016,0.176,True,False
+terramind_agyear_tiles_2023-24_ltae,ltae,E02_frozen_pca/terramind_agyear_tiles_2023-24_concat,svm,-0.0075,-0.0217,0.0065,0.306,1.0,False,False
+terramind_agyear_tiles_2023-24_ltae,ltae,E03_frozen_pca_mlp/terramind_agyear_tiles_2023-24_mlp,mlp,-0.015,-0.0281,-0.0024,0.008,0.104,True,False

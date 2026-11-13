@@ -1,0 +1,166 @@
+{
+  "runs": [
+    {
+      "started": "2026-11-13 13:17",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "cc89ede (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E04",
+        "title": "Frozen GeoFMs + L-TAE temporal aggregation + MLP head",
+        "short_title": "L-TAE + MLP head",
+        "status": "ready",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly Sentinel-2 features? (Sentinel-2 only, D14)",
+        "changes_from": "E03: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA; same MLP head",
+        "answer": "",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "ltae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "ltae": {
+          "HEAD": "ltae",
+          "VALIDATION": "pastis",
+          "N_HEADS": 16,
+          "D_K": 8,
+          "D_MODEL": 256,
+          "MLP": [
+            256,
+            128
+          ],
+          "EPOCHS": 100,
+          "PATIENCE": 15,
+          "N_SEEDS": 3
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E03_frozen_pca_mlp/*",
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "ltae",
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 13:17"
+    },
+    {
+      "started": "2026-11-13 13:18",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "cc89ede (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E04",
+        "title": "Frozen GeoFMs + L-TAE temporal aggregation + MLP head",
+        "short_title": "L-TAE + MLP head",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly Sentinel-2 features? (Sentinel-2 only, D14)",
+        "changes_from": "E03: temporal aggregation concat + PCA 128 -> L-TAE (Garnot & Landrieu 2020), as in PANGAEA; same MLP head",
+        "answer": "L-TAE = concat + PCA with the same MLP (within 0.01), not better. Morocco: Clay 0.906 ties S2 0.905. Utah: Clay and Prithvi +0.04 over S2 with the same head; +0.02 over the S2 RF.",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [
+          "s1s2",
+          "clay",
+          "prithvi",
+          "terramind"
+        ],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "ltae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "ltae": {
+          "HEAD": "ltae",
+          "VALIDATION": "pastis",
+          "N_HEADS": 16,
+          "D_K": 8,
+          "D_MODEL": 256,
+          "MLP": [
+            256,
+            128
+          ],
+          "EPOCHS": 100,
+          "PATIENCE": 15,
+          "N_SEEDS": 3
+        },
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E03_frozen_pca_mlp/*",
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "ltae",
+            "rf",
+            "logreg"
+          ]
+        }
+      },
+      "finished": "2026-11-13 13:18"
+    }
+  ]
+}

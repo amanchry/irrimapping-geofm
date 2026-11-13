@@ -8,7 +8,7 @@ run, is on the [Experiments](experiments/index.md) page.
 
 | Phase | RQ | Question (short) | Current answer | Evidence |
 | --- | --- | --- | --- | --- |
-| 2 | RQ1 | Do frozen GeoFMs beat a Sentinel-2 classifier? | **Not in Morocco; slightly in Utah.** Each input with its best head: Morocco S2 0.908 (MLP) vs Clay 0.901 (SVM); Utah Clay 0.791 (SVM) vs S2 0.764 (RF). A trained MLP head equals SVM but does not change the ranking. No label-efficiency advantage in Morocco; in Utah the GeoFMs need fewer labels. L-TAE (E04) and PSE-TAE (E05) still to run. | [E03](experiments/E03_frozen_pca_mlp/report.md) · [E02](experiments/E02_frozen_pca/report.md) · [E01](experiments/E01_frozen_pca_nested/report.md) |
+| 2 | RQ1 | Do frozen GeoFMs beat a Sentinel-2 classifier? | **Not in Morocco; slightly in Utah.** Each input with its best configuration: Morocco S2 0.908 (MLP) vs Clay 0.906 (L-TAE); Utah Clay 0.791 (SVM) vs S2 0.764 (RF). Neither the head (E02, E03) nor the temporal aggregation (E04) changes this. No label-efficiency advantage in Morocco; in Utah the GeoFMs need fewer labels. PSE-TAE from scratch (E05) still to run. | [E04](experiments/E04_frozen_ltae/report.md) · [E03](experiments/E03_frozen_pca_mlp/report.md) · [E02](experiments/E02_frozen_pca/report.md) · [E01](experiments/E01_frozen_pca_nested/report.md) |
 | 2 | RQ2 | Does LoRA fine-tuning improve on the frozen encoders? | not started | – |
 | 3, 5 | RQ3 | Is the best model consistent across years, and do the annual maps follow national statistics? | not started | – |
 | 3, 5 | RQ4 | How far does accuracy degrade in another region? | not started | – |
@@ -52,6 +52,18 @@ Does a trainable neural head get more out of the same PCA input than logistic re
 ![E03](experiments/E03_frozen_pca_mlp/figures/morocco_macro_f1_by_input.png)
 
 ![E03](experiments/E03_frozen_pca_mlp/figures/utah_macro_f1_by_input.png)
+
+#### E04 · Frozen GeoFMs + L-TAE temporal aggregation + MLP head
+
+Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify better than concat + PCA, for the GeoFMs and for the monthly Sentinel-2 features? (Sentinel-2 only, D14)
+
+- **Result:** Morocco: best Clay v1.5 (L-TAE) + L-TAE 0.906; best baseline L-TAE 0.905; 0 of 3 pairs better, 0 worse than the baseline (Holm) · Utah 2023/24: best Clay v1.5 (L-TAE) + L-TAE 0.784; best baseline L-TAE 0.743; 2 of 3 pairs better, 0 worse than the baseline (Holm).
+- **Answer:** L-TAE = concat + PCA with the same MLP (within 0.01), not better. Morocco: Clay 0.906 ties S2 0.905. Utah: Clay and Prithvi +0.04 over S2 with the same head; +0.02 over the S2 RF.
+- Full report: [E04 report](experiments/E04_frozen_ltae/report.md)
+
+![E04](experiments/E04_frozen_ltae/figures/morocco_macro_f1_by_input.png)
+
+![E04](experiments/E04_frozen_ltae/figures/utah_macro_f1_by_input.png)
 
 <!-- AUTO:RESULTS:END -->
 

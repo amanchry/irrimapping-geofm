@@ -1,0 +1,49 @@
+run,classifier,zone,ag_season,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+clay_agyear_tiles_2023-24_ltae,ltae,Bear River,2023/24,1420,595,0.801,0.745,0.702,0.132
+clay_agyear_tiles_2023-24_ltae,ltae,Cedar/Beaver,2023/24,222,24,0.601,0.25,0.3,0.063
+clay_agyear_tiles_2023-24_ltae,ltae,Columbia River,2023/24,10,1,,1.0,0.5,0.1
+clay_agyear_tiles_2023-24_ltae,ltae,Jordan River,2023/24,2,1,,0.0,0.0,1.0
+clay_agyear_tiles_2023-24_ltae,ltae,Kanab Creek/Virgin River,2023/24,51,12,,0.333,0.4,0.118
+clay_agyear_tiles_2023-24_ltae,ltae,Sevier River,2023/24,1441,135,0.628,0.252,0.395,0.036
+clay_agyear_tiles_2023-24_ltae,ltae,Southeast Colorado River,2023/24,7,97,,0.959,0.969,0.429
+clay_agyear_tiles_2023-24_ltae,ltae,Uintah,2023/24,533,26,0.626,0.269,0.304,0.03
+clay_agyear_tiles_2023-24_ltae,ltae,Utah Lake,2023/24,292,21,0.658,0.333,0.389,0.038
+clay_agyear_tiles_2023-24_ltae,ltae,Weber River,2023/24,305,23,0.753,0.478,0.611,0.023
+clay_agyear_tiles_2023-24_ltae,ltae,West Colorado River,2023/24,587,28,0.519,0.071,0.087,0.036
+clay_agyear_tiles_2023-24_ltae,ltae,West Desert,2023/24,128,50,0.684,0.82,0.482,0.344
+prithvi_agyear_tiles_2023-24_ltae,ltae,Bear River,2023/24,1420,595,0.793,0.728,0.696,0.133
+prithvi_agyear_tiles_2023-24_ltae,ltae,Cedar/Beaver,2023/24,222,24,0.554,0.167,0.211,0.068
+prithvi_agyear_tiles_2023-24_ltae,ltae,Columbia River,2023/24,10,1,,1.0,0.5,0.1
+prithvi_agyear_tiles_2023-24_ltae,ltae,Jordan River,2023/24,2,1,,0.0,0.0,1.0
+prithvi_agyear_tiles_2023-24_ltae,ltae,Kanab Creek/Virgin River,2023/24,51,12,,0.417,0.556,0.078
+prithvi_agyear_tiles_2023-24_ltae,ltae,Sevier River,2023/24,1441,135,0.624,0.222,0.448,0.026
+prithvi_agyear_tiles_2023-24_ltae,ltae,Southeast Colorado River,2023/24,7,97,,0.948,0.989,0.143
+prithvi_agyear_tiles_2023-24_ltae,ltae,Uintah,2023/24,533,26,0.592,0.192,0.25,0.028
+prithvi_agyear_tiles_2023-24_ltae,ltae,Utah Lake,2023/24,292,21,0.719,0.476,0.476,0.038
+prithvi_agyear_tiles_2023-24_ltae,ltae,Weber River,2023/24,305,23,0.678,0.391,0.409,0.043
+prithvi_agyear_tiles_2023-24_ltae,ltae,West Colorado River,2023/24,587,28,0.546,0.143,0.129,0.046
+prithvi_agyear_tiles_2023-24_ltae,ltae,West Desert,2023/24,128,50,0.746,0.88,0.55,0.281
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Bear River,2023/24,1420,595,0.73,0.818,0.551,0.28
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Cedar/Beaver,2023/24,222,24,0.588,0.583,0.222,0.221
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Columbia River,2023/24,10,1,,0.0,,0.0
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Jordan River,2023/24,2,1,,0.0,0.0,1.0
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Kanab Creek/Virgin River,2023/24,51,12,,0.75,0.529,0.157
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Sevier River,2023/24,1441,135,0.655,0.37,0.368,0.06
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Southeast Colorado River,2023/24,7,97,,0.938,0.958,0.571
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Uintah,2023/24,533,26,0.615,0.308,0.242,0.047
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Utah Lake,2023/24,292,21,0.627,0.524,0.244,0.116
+s1s2-s2_agyear_tiles-inner_ltae,ltae,Weber River,2023/24,305,23,0.559,0.391,0.158,0.157
+s1s2-s2_agyear_tiles-inner_ltae,ltae,West Colorado River,2023/24,587,28,0.555,0.143,0.154,0.037
+s1s2-s2_agyear_tiles-inner_ltae,ltae,West Desert,2023/24,128,50,0.701,0.9,0.495,0.359
+terramind_agyear_tiles_2023-24_ltae,ltae,Bear River,2023/24,1420,595,0.783,0.724,0.674,0.146
+terramind_agyear_tiles_2023-24_ltae,ltae,Cedar/Beaver,2023/24,222,24,0.544,0.167,0.182,0.081
+terramind_agyear_tiles_2023-24_ltae,ltae,Columbia River,2023/24,10,1,,1.0,0.5,0.1
+terramind_agyear_tiles_2023-24_ltae,ltae,Jordan River,2023/24,2,1,,0.0,0.0,0.5
+terramind_agyear_tiles_2023-24_ltae,ltae,Kanab Creek/Virgin River,2023/24,51,12,,0.417,0.5,0.098
+terramind_agyear_tiles_2023-24_ltae,ltae,Sevier River,2023/24,1441,135,0.643,0.296,0.396,0.042
+terramind_agyear_tiles_2023-24_ltae,ltae,Southeast Colorado River,2023/24,7,97,,0.959,0.969,0.429
+terramind_agyear_tiles_2023-24_ltae,ltae,Uintah,2023/24,533,26,0.576,0.192,0.192,0.039
+terramind_agyear_tiles_2023-24_ltae,ltae,Utah Lake,2023/24,292,21,0.636,0.286,0.353,0.038
+terramind_agyear_tiles_2023-24_ltae,ltae,Weber River,2023/24,305,23,0.727,0.435,0.556,0.026
+terramind_agyear_tiles_2023-24_ltae,ltae,West Colorado River,2023/24,587,28,0.552,0.179,0.132,0.056
+terramind_agyear_tiles_2023-24_ltae,ltae,West Desert,2023/24,128,50,0.678,0.72,0.486,0.297

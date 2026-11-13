@@ -1,0 +1,5 @@
+run,classifier,n_parcels,n_rainfed,n_blocks,estimate,ci_low,ci_high,delta_vs_baseline,delta_ci_low,delta_ci_high
+clay_agyear_tiles_2023-24_ltae,ltae,2015,595,40,0.8007,0.7555,0.8412,0.0704,0.0353,0.106
+prithvi_agyear_tiles_2023-24_ltae,ltae,2015,595,40,0.7934,0.7462,0.8382,0.0631,0.0185,0.1064
+s1s2-s2_agyear_tiles-inner_ltae,ltae,2015,595,40,0.7303,0.6676,0.7842,,,
+terramind_agyear_tiles_2023-24_ltae,ltae,2015,595,40,0.7827,0.7373,0.8246,0.0525,0.01,0.0973

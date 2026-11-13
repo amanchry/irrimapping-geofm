@@ -1,0 +1,59 @@
+{
+  "run": "terramind_agyear_tiles_ltae",
+  "experiment": "E04_frozen_ltae",
+  "region": "morocco",
+  "views": "views",
+  "input": "terramind",
+  "head": "ltae",
+  "input_shape": [
+    8781,
+    12,
+    768
+  ],
+  "steps": [
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug"
+  ],
+  "start_month": 9,
+  "feature_mode": "sequence",
+  "pca_dim": null,
+  "ltae": {
+    "n_heads": 16,
+    "d_k": 8,
+    "d_model": 256
+  },
+  "mlp": [
+    256,
+    128
+  ],
+  "dropout": 0.2,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 100,
+  "patience": 15,
+  "seeds": [
+    42,
+    1042,
+    2042
+  ],
+  "loss": "class-weighted cross-entropy",
+  "validation": "PASTIS: 3 folds train / next fold early stopping / 1 test",
+  "train_fraction": 1.0,
+  "fraction_draw": 1,
+  "block_draws": [],
+  "n_parcels": 8781,
+  "n_boot": 1000,
+  "quick_test": false,
+  "device": "cuda"
+}

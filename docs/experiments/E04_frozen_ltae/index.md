@@ -4,10 +4,11 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟦 ready to run (after E02 and E03; code tested on both regions) |
+| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — Q3 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied): how the monthly embeddings are combined |
 | **Builds on** | [E03](../E03_frozen_pca_mlp/index.md) (same MLP head), [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E04_frozen_ltae/config.yaml) |
+| **Report** | **[REPORT.md](report.md)** |
 
 ## What this experiment builds on
 
@@ -99,4 +100,10 @@ python experiments/submit_slurm.py
 - **Results:** `experiments/E04_frozen_ltae/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
-To be filled in when the results are in.
+L-TAE attention over the 12 monthly embeddings gives the same result as concat + PCA with the same MLP head (E03): all
+differences are within ±0.01 except TerraMind in Utah (−0.015, not significant). It is also level with E02's SVM. The
+temporal aggregation therefore does not change the conclusion. **Morocco:** Clay + L-TAE (0.906) ties with S2 + L-TAE
+(0.905), and no GeoFM differs significantly from the baseline. **Utah:** Clay (+0.041) and Prithvi (+0.039) beat S2 +
+L-TAE, and the gap is +0.05–0.07 in Bear River. Against the S2 baseline's best head (E02 RF, 0.764), Clay + L-TAE (0.784)
+leads by 0.02. The attention weights are spread over the year and nearly the same for both classes. In Utah, Clay and
+Prithvi weight July–September most. Full tables, figures and interpretation are in the **[report](report.md)**.
