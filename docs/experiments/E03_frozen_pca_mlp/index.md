@@ -4,11 +4,11 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟦 ready to run (after E02; code tested on both regions) |
+| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — Q2 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_frozen_pca_mlp/config.yaml) |
-| **Report** | written when the results are in |
+| **Report** | **[REPORT.md](report.md)** |
 
 ## What this experiment builds on
 
@@ -79,4 +79,11 @@ python experiments/submit_slurm.py
 - **Results:** `experiments/E03_frozen_pca_mlp/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
-To be filled in when the results are in.
+The MLP head is as good as E02's SVM for every input (all differences within ±0.01, none significant) and clearly
+better than LogReg and RF for most GeoFMs. A trained head therefore removes the weak-head problem, but it does not
+change the ranking of the inputs. **Morocco:** the S2 baseline with an MLP is the best result so far (0.908). Clay,
+Prithvi and TerraMind are 0.01–0.02 lower (not significant), and AgriFM is worse. **Utah:** Clay, Prithvi and TerraMind
+with an MLP beat the S2 baseline with an MLP by 0.04–0.05 (significant; +0.08–0.09 in Bear River). The S2 baseline's
+best head is still E02's random forest (0.764), so the best GeoFM (Clay + SVM, 0.791) leads by about 0.03. E03 also
+corrects E02: with an MLP, the S2 features find most of the rainfed parcels in Souss (84%), so the GeoFMs' advantage
+there was a head effect. Full tables, figures and interpretation are in the **[report](report.md)**.

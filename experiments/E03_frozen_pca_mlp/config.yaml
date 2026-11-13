@@ -2,13 +2,13 @@
 id: E03
 title: "Frozen GeoFMs + PCA + MLP head"
 short_title: PCA + MLP head   # name in the site's sidebar
-status: ready
+status: done
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Does a trainable neural head get more out of the same PCA input than logistic regression, random forest and SVM?
 changes_from: "E02: classifier LogReg / RF / SVM -> MLP head (128-256-128-2), 3 seeds"
-answer: ""
+answer: "MLP head = SVM for every input, not better. Morocco: S2 + MLP best (0.908), GeoFMs 0.01-0.02 lower. Utah: GeoFMs + MLP beat S2 + MLP by 0.04-0.05, but S2 RF (E02) stays its best head."
 
 regions: [morocco, utah]   # planned (P2 of the experiment plan): one results folder per region
 inputs: [s1s2, clay, prithvi, terramind, agrifm]   # Sentinel-2 only (D14)

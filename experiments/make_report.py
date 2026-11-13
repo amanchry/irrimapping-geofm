@@ -417,12 +417,111 @@ def breakdown_parts(res, figs, tag, region):
              f"Only the focus zone, where both classes are common ({int(first['n_parcels']):,} parcels, "
              f"{int(first['n_rainfed'])} rainfed, {int(first['n_blocks'])} blocks): does the input separate the "
              "classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.",
+             how_to_read("zone"),
              "\n".join(lines)]
     if (b / "breakdown.png").exists():
         (figs / f"{tag}breakdown.png").write_bytes((b / "breakdown.png").read_bytes())
         parts.append(f"![Results by zone, {region}](figures/{tag}breakdown.png)")
     parts.append(f"Tables per zone and season, patch purity and parcel area: `{res.relative_to(ROOT).as_posix()}/breakdown/`.")
     return parts
+
+
+# Short "how to read this" notes for readers new to the tables; collapsed until clicked (pymdownx.details).
+HOW_TO_READ = {
+    "macro_f1": """\
+**What:** one score per input (row) and classifier (column), between 0 and 1. Higher is better.
+
+**Macro-F1:** F1 is computed for each class separately (irrigated, rainfed) and the two are averaged. Rainfed
+parcels are the minority, so a model that labels everything "irrigated" still gets a high overall accuracy but a
+low macro-F1. That is why macro-F1 is the main metric.
+
+**How:** every parcel is predicted once, by the model that did *not* see its 20 km block in training (out-of-fold).
+All inputs are scored on the same parcels, so the numbers can be compared directly.
+
+**Read it as:** about 0.90 = very good; 0.75 = clear errors on the rainfed class; 0.50 = no better than guessing one class.""",
+    "differences": """\
+**What:** each row compares one input with the S2 baseline, using the same classifier.
+
+- **Δ macro-F1:** the input's score minus the baseline's. +0.013 means 0.013 higher than the baseline; −0.158
+  means 0.158 lower.
+- **95% CI, e.g. [−0.021, +0.025]:** the range in which the true difference probably lies. It comes from
+  resampling whole 20 km blocks 1,000 times (block bootstrap) and recomputing Δ each time.
+    - The range **includes 0** (one end negative, the other positive): the data cannot tell which input is
+      better.
+    - The range is **entirely above 0**, e.g. [+0.011, +0.049]: the input is better.
+    - The range is **entirely below 0**, e.g. [−0.215, −0.085]: the input is worse.
+- **p (Holm):** how likely a difference this large would be if the two inputs were really equal. Many pairs are
+  tested at once, so each p-value is raised (Holm correction) to avoid false "wins" by chance. 1.000 = no evidence
+  of a difference.
+- **Verdict:** "better" or "worse" only if the CI excludes 0 **and** p (Holm) < 0.05. "Higher/lower, not
+  significant after Holm" = the CI excludes 0, but the evidence does not survive the correction.
+
+**Why paired:** both inputs are scored on the same parcels and the same bootstrap draws, so a difference reflects
+the inputs, not which parcels happened to be drawn.""",
+    "vs_earlier": """\
+**What:** the same input with two different classifiers, e.g. Clay + MLP (this experiment) minus Clay + SVM (E02).
+It shows whether the classifier, not the input, makes the difference.
+
+Δ, 95% CI and verdict are read as in the table above: a CI that includes 0 means no clear difference.""",
+    "per_class": """\
+**What:** the main metric and three others for the headline classifiers, each with its 95% CI in brackets
+(the range the true value probably lies in).
+
+- **Macro-F1:** mean F1 of the two classes (main metric).
+- **F1 rainfed:** how well the minority class is found. Precision and recall of "rainfed" are combined, so it is
+  usually the lowest number and the most informative one.
+- **Balanced accuracy:** mean recall of the two classes. 0.5 = guessing.
+- **Overall accuracy:** share of all parcels labelled correctly. It looks high even for weak models, because most
+  parcels are irrigated, so do not compare inputs on it alone.
+
+**Wide CIs** (e.g. 0.63–0.88) mean the score changes a lot from block to block, so small differences between
+rows are not meaningful.""",
+    "label_efficiency": """\
+**What:** how the score changes when the model is trained with fewer labelled parcels.
+
+- **Columns:** share of the training blocks used (10%, 25%, 50%; 100% = the main result). The row *training
+  parcels per round* gives the actual number of parcels. Validation and test folds are always complete, so every
+  column is tested on the same parcels.
+- **0.807 ± 0.091:** the mean over 3 different random draws of blocks ± their standard deviation. A large ± means
+  the result depends on *which* blocks were drawn.
+- **Read it as:** an input that stays high at 10% needs fewer labels (it is "label-efficient"). If its curve rises
+  steeply, it needs many labels.
+
+**Why whole blocks:** dropping single parcels would leave neighbours of every parcel in training. Dropping whole
+20 km blocks simulates having field data from fewer places.""",
+    "seeds": """\
+**What:** neural networks start from random weights, so each run (seed) gives a slightly different result. The
+table shows each seed on its own. Small differences between seeds (≈ 0.01) mean the result is stable, and a
+difference between inputs smaller than this spread is not meaningful.""",
+    "zone": """\
+**What:** the score inside the one zone where both classes are common (the focus zone), not over the whole region.
+
+**Why:** across a whole region, a model can score well just by learning *where* parcels are (one zone is almost all
+irrigated, another has the rainfed parcels). Inside one zone, location does not help, so this shows whether the
+input separates irrigated from rainfed fields themselves.
+
+**Δ vs baseline [95% CI]:** as in the difference table. A CI that includes 0 means no clear difference.""",
+    "per_fold": """\
+**What:** the score on each test fold separately. Each fold is a different set of 20 km blocks, so the five numbers
+show how much the result changes from one part of the region to another.
+
+- **Mean ± SD:** average of the five folds and their spread. This can differ slightly from the main table, which
+  scores all parcels at once.
+- **Read it as:** a low fold points to a part of the region where the model struggles. The fold description above
+  lists where its rainfed parcels are. An input with a smaller SD is more consistent across space.""",
+    "importance": """\
+**What:** one month (or one variable) at a time is shuffled on the test fold, and the drop in macro-F1 is measured.
+A large drop = the model relies on that month. Close to 0 = the model does not need it. Bars below 0 are noise.
+
+For foundation models after PCA, importance is usually spread thinly over all months, so it says little about which
+months the embedding encodes.""",
+}
+
+
+def how_to_read(key, what="table"):
+    """Collapsed admonition with the reading note of a table (opens on click)."""
+    body = "\n".join(("    " + line) if line else "" for line in HOW_TO_READ[key].splitlines())
+    return f'??? info "How to read this {what}"\n\n{body}'
 
 
 def region_section(exp, cfg, region, res, figs, headline):
@@ -459,6 +558,7 @@ def region_section(exp, cfg, region, res, figs, headline):
              "### Macro-F1 of every input and head",
              "Out-of-fold predictions of all 5 spatial folds; **bold** = best input for that head. Runs marked "
              "[E0x] come from an earlier experiment, on the same parcels and bootstrap draws.",
+             how_to_read("macro_f1"),
              table_macro_f1(metrics, all_clfs),
              f"![Macro-F1 per input and head, {region}](figures/{tag}macro_f1_by_input.png)"]
     if not diffs.empty:
@@ -467,6 +567,7 @@ def region_section(exp, cfg, region, res, figs, headline):
                   "Δ = input minus baseline with the same head (runs with their own model against the baseline's "
                   "random forest), on the same parcels and the same bootstrap draws. **Better / worse** = the 95% CI "
                   "excludes 0 **and** the Holm-adjusted p < 0.05.",
+                  how_to_read("differences"),
                   dtable]
         other = diffs[~diffs["classifier"].isin(head)]
         if not other.empty:
@@ -477,8 +578,10 @@ def region_section(exp, cfg, region, res, figs, headline):
                   "Δ = this experiment's head minus the head of an earlier experiment on the same input, same "
                   "parcels and bootstrap draws (own Holm family). E03: MLP vs the E02 classifiers; E04: L-TAE vs the "
                   "E03 MLP and the E02 classifiers.",
+                  how_to_read("vs_earlier"),
                   table_vs_earlier(pd.read_csv(comp / "differences_vs_earlier_experiments.csv"))]
     parts += ["### Per-class metrics (headline heads, 95% CI)",
+              how_to_read("per_class"),
               table_with_ci(metrics, head, {"macro_f1": "Macro-F1", "f1_rainfed": "F1 rainfed",
                                             "balanced_accuracy": "Balanced acc.", "overall_accuracy": "Overall acc."})]
     if (comp / "learning_curve.csv").exists():
@@ -490,12 +593,14 @@ def region_section(exp, cfg, region, res, figs, headline):
                   "± SD over the 3 block draws. Draws are nested (the 10% blocks are part of the 25% and 50% blocks) "
                   "and identical in every experiment. Neural heads: every point is a single-seed result (the 100% "
                   "point is the mean over its 3 seeds scored one by one).",
+                  how_to_read("label_efficiency"),
                   table_learning_curve(curve, head + [c for c in all_clfs if c not in head]),
                   f"![Learning curves, {region}](figures/{tag}learning_curve.png)"]
     st = seed_table(res, metrics["run"].unique())
     if st:
         parts += ["### Spread over seeds (neural heads)",
-                  "Macro-F1 of each seed on its own; the result above is the mean probability of the seeds.", st]
+                  "Macro-F1 of each seed on its own; the result above is the mean probability of the seeds.",
+                  how_to_read("seeds"), st]
     if figure_attention(res, metrics["run"].unique(), figs / f"{tag}attention_by_month.png"):
         parts += ["### Which months the L-TAE attends to",
                   "Attention weight per month (mean over heads and test folds), per class (first seed).",
@@ -509,7 +614,8 @@ def region_section(exp, cfg, region, res, figs, headline):
         imp.append(f"[{input_name(p.parent.name)}](figures/{name})")
     if imp:
         parts += ["### Which months matter (permutation importance, random forest)",
-                  "Drop in macro-F1 when a month (or a baseline variable) is shuffled on the test fold: " + " · ".join(imp)]
+                  "Drop in macro-F1 when a month (or a baseline variable) is shuffled on the test fold: " + " · ".join(imp),
+                  how_to_read("importance", "figure")]
     if figure_training_curves(res, metrics["run"].unique(), figs / f"{tag}training_curves.png"):
         parts += ["### Training curves",
                   "Validation macro-F1 per epoch in each round (first seed); the best epoch is kept (early stopping).",
@@ -519,6 +625,7 @@ def region_section(exp, cfg, region, res, figs, headline):
         parts += ["### Macro-F1 per test fold",
                   "Each fold is a set of 20 km blocks, used once as the test fold. Rainfed test parcels per fold: "
                   + "; ".join(f"fold {f}: {d}" for f, d in labels.items()) + ".",
+                  how_to_read("per_fold"),
                   *[f"**{CLF_NAMES.get(c, c)}**\n\n" + table_per_fold(per_fold, c) for c in fold_clfs],
                   f"![Macro-F1 per test fold, {region}](figures/{tag}macro_f1_per_fold.png)"]
     files = []
