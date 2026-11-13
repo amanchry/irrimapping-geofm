@@ -35,7 +35,8 @@
     * [Progress report](progress_report.md)
     * [Change log](progress.md)
     * [Meeting notes](weekly/index.md)
-    * [Week 2026-W45](weekly/2026-W45.md)
+    * [Weeks 2026-W45–46](weekly/2026-W45-46.md)
+    * [Weeks 2026-W43–44](weekly/2026-W43-44.md)
 * References
     * [Reference papers](references/index.md)
     * [AlphaEarth for irrigated mapping](references/yang-2026-alphaearth-irrigated.md)
