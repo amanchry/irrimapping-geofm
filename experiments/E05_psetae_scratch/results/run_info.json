@@ -1,0 +1,130 @@
+{
+  "runs": [
+    {
+      "started": "2026-11-13 13:55",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "da70acb (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E05",
+        "title": "PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)",
+        "short_title": "PSE-TAE from scratch",
+        "status": "ready",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?",
+        "changes_from": "E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel, Sentinel-2 only, 3 seeds",
+        "answer": "",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "psetae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "psetae_configs": [
+          "morocco_s2.yaml",
+          "utah_s2.yaml"
+        ],
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "psetae"
+          ]
+        }
+      },
+      "finished": "2026-11-13 13:55"
+    },
+    {
+      "started": "2026-11-13 13:57",
+      "steps": [
+        "report"
+      ],
+      "regions": [
+        "morocco",
+        "utah"
+      ],
+      "git_commit": "da70acb (with uncommitted changes)",
+      "python": "3.11.15",
+      "machine": "eduvpn109080.mobiel.utwente.nl",
+      "quick": false,
+      "config": {
+        "id": "E05",
+        "title": "PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)",
+        "short_title": "PSE-TAE from scratch",
+        "status": "done",
+        "listed": true,
+        "research_question": "RQ1",
+        "phase": 2,
+        "question": "Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?",
+        "changes_from": "E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel, Sentinel-2 only, 3 seeds",
+        "answer": "Morocco: PSE-TAE 0.911 ties the best S2 and GeoFM runs (within 0.01). Utah: PSE-TAE 0.755 = S2 RF, significantly below Clay (-0.03 to -0.04).",
+        "regions": [
+          "morocco",
+          "utah"
+        ],
+        "inputs": [],
+        "label_efficiency": {
+          "fractions": [
+            0.1,
+            0.25,
+            0.5
+          ],
+          "draws": 3,
+          "seeds_per_draw": 1,
+          "min_rainfed": 20
+        },
+        "steps": [
+          "psetae",
+          "compare",
+          "breakdown",
+          "report"
+        ],
+        "psetae_configs": [
+          "morocco_s2.yaml",
+          "utah_s2.yaml"
+        ],
+        "compare": {
+          "BASELINE_CLASSIFIER": "rf",
+          "EXTRA_RUNS": [
+            "E02_frozen_pca/*"
+          ]
+        },
+        "report": {
+          "HEADLINE_CLASSIFIERS": [
+            "psetae"
+          ]
+        }
+      },
+      "finished": "2026-11-13 13:57"
+    }
+  ]
+}

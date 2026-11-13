@@ -1,0 +1,9 @@
+run,classifier,fraction,metric,n_draws,estimate,sd_draws,ci_low,ci_high,train_parcels_per_round
+psetae_utah_views_2023-24_s2,psetae,0.1,macro_f1,3,0.6639,0.0222,0.6252,0.6974,399.0
+psetae_utah_views_2023-24_s2,psetae,0.1,f1_rainfed,3,0.4706,0.0277,0.3996,0.5366,399.0
+psetae_utah_views_2023-24_s2,psetae,0.25,macro_f1,3,0.7089,0.0072,0.6675,0.7436,862.0
+psetae_utah_views_2023-24_s2,psetae,0.25,f1_rainfed,3,0.5355,0.0088,0.4581,0.6059,862.0
+psetae_utah_views_2023-24_s2,psetae,0.5,macro_f1,3,0.7144,0.002,0.6724,0.7504,1732.0
+psetae_utah_views_2023-24_s2,psetae,0.5,f1_rainfed,3,0.5473,0.0016,0.4691,0.6161,1732.0
+psetae_utah_views_2023-24_s2,psetae,1.0,macro_f1,3,0.7362,0.0076,0.6961,0.769,
+psetae_utah_views_2023-24_s2,psetae,1.0,f1_rainfed,3,0.5845,0.0102,0.5074,0.6514,

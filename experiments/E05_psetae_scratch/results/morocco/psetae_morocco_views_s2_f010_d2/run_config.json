@@ -1,0 +1,91 @@
+{
+  "run": "psetae_morocco_views_s2_f010_d2",
+  "model": "PSE-TAE (Garnot et al. 2020)",
+  "region": "morocco",
+  "views": "views",
+  "config_file": "experiments/E05_psetae_scratch/configs/morocco_s2.yaml",
+  "bands": "s2",
+  "channels": [
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B8A",
+    "B11",
+    "B12"
+  ],
+  "use_edge_pixels": false,
+  "n_pixels": 64,
+  "batch_size": 128,
+  "max_epochs": 100,
+  "patience": 15,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "eval_draws": 5,
+  "loss": "class-weighted cross-entropy",
+  "validation": "outer 5 spatial folds; per outer fold 3 folds train, next fold early stopping",
+  "positions_days": [
+    15,
+    45,
+    76,
+    106,
+    137,
+    167,
+    198,
+    228,
+    259,
+    289,
+    319,
+    350
+  ],
+  "n_parcels": 8775,
+  "n_boot": 1000,
+  "seed": 42,
+  "seeds": [
+    42
+  ],
+  "train_fraction": 0.1,
+  "fraction_draw": 2,
+  "block_draws": [
+    {
+      "test_fold": 0,
+      "blocks": 6,
+      "blocks_available": 66,
+      "parcels": 614,
+      "rainfed": 28
+    },
+    {
+      "test_fold": 1,
+      "blocks": 4,
+      "blocks_available": 36,
+      "parcels": 889,
+      "rainfed": 52
+    },
+    {
+      "test_fold": 2,
+      "blocks": 4,
+      "blocks_available": 38,
+      "parcels": 610,
+      "rainfed": 146
+    },
+    {
+      "test_fold": 3,
+      "blocks": 7,
+      "blocks_available": 67,
+      "parcels": 636,
+      "rainfed": 129
+    },
+    {
+      "test_fold": 4,
+      "blocks": 6,
+      "blocks_available": 66,
+      "parcels": 301,
+      "rainfed": 190
+    }
+  ],
+  "quick_test": false,
+  "device": "cuda"
+}

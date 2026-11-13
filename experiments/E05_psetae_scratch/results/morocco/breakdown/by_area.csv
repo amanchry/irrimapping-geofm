@@ -1,0 +1,6 @@
+run,classifier,area_bin,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+psetae_morocco_views_s2,psetae,"(0.0, 0.5]",2016,470,0.897,0.904,0.777,0.061
+psetae_morocco_views_s2,psetae,"(0.5, 1.0]",2245,350,0.908,0.934,0.769,0.044
+psetae_morocco_views_s2,psetae,"(1.0, 2.0]",1723,209,0.921,0.933,0.799,0.028
+psetae_morocco_views_s2,psetae,"(2.0, 5.0]",1144,90,0.916,0.944,0.766,0.023
+psetae_morocco_views_s2,psetae,"(5.0, inf]",451,77,0.946,0.961,0.86,0.027

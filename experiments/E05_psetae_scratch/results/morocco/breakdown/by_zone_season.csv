@@ -1,0 +1,9 @@
+run,classifier,zone,ag_season,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+psetae_morocco_views_s2,psetae,Doukkala,2023/24,1831,697,0.879,0.948,0.744,0.124
+psetae_morocco_views_s2,psetae,Doukkala,2024/25,545,425,0.926,0.896,0.936,0.048
+psetae_morocco_views_s2,psetae,El Haouz,2023/24,1146,1,,0.0,0.0,0.003
+psetae_morocco_views_s2,psetae,El Haouz,2024/25,348,0,,,,0.0
+psetae_morocco_views_s2,psetae,Gharb,2023/24,1759,0,,,0.0,0.008
+psetae_morocco_views_s2,psetae,Souss,2024/25,359,69,0.948,0.899,0.925,0.014
+psetae_morocco_views_s2,psetae,Statte,2024/25,144,4,,0.5,0.286,0.035
+psetae_morocco_views_s2,psetae,Tadla,2023/24,1447,0,,,0.0,0.019

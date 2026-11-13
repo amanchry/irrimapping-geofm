@@ -1,0 +1,2 @@
+run,classifier,n_parcels,n_rainfed,n_blocks,estimate,ci_low,ci_high
+psetae_morocco_views_s2,psetae,4701,1,54,0.0094,0.0047,0.0151

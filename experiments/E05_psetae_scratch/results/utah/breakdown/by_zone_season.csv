@@ -1,0 +1,13 @@
+run,classifier,zone,ag_season,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+psetae_utah_views_2023-24_s2,psetae,Bear River,2023/24,1420,595,0.752,0.839,0.578,0.257
+psetae_utah_views_2023-24_s2,psetae,Cedar/Beaver,2023/24,222,24,0.652,0.833,0.294,0.216
+psetae_utah_views_2023-24_s2,psetae,Columbia River,2023/24,10,1,,0.0,0.0,0.1
+psetae_utah_views_2023-24_s2,psetae,Jordan River,2023/24,2,1,,0.0,0.0,1.0
+psetae_utah_views_2023-24_s2,psetae,Kanab Creek/Virgin River,2023/24,51,12,,0.583,0.438,0.176
+psetae_utah_views_2023-24_s2,psetae,Sevier River,2023/24,1441,135,0.682,0.489,0.377,0.076
+psetae_utah_views_2023-24_s2,psetae,Southeast Colorado River,2023/24,7,97,,0.969,0.959,0.571
+psetae_utah_views_2023-24_s2,psetae,Uintah,2023/24,533,26,0.633,0.462,0.24,0.071
+psetae_utah_views_2023-24_s2,psetae,Utah Lake,2023/24,292,21,0.659,0.714,0.278,0.134
+psetae_utah_views_2023-24_s2,psetae,Weber River,2023/24,305,23,0.648,0.696,0.267,0.144
+psetae_utah_views_2023-24_s2,psetae,West Colorado River,2023/24,587,28,0.553,0.179,0.135,0.055
+psetae_utah_views_2023-24_s2,psetae,West Desert,2023/24,128,50,0.654,0.9,0.45,0.43

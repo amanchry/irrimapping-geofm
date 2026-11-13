@@ -4,11 +4,11 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟦 ready to run (after E02; code tested on both regions) |
+| **Status** | ✅ done (13 Nov 2026), Morocco and Utah |
 | **Research question** | RQ1 — Q4 of the [experiment plan](../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E05_psetae_scratch/config.yaml) |
-| **Report** | written when the results are in |
+| **Report** | **[REPORT.md](report.md)** |
 
 ## What this experiment builds on
 
@@ -79,4 +79,10 @@ python experiments/submit_slurm.py
 - **Results:** `experiments/E05_psetae_scratch/results/<region>/`; the report page is written by the `report` step on the Mac.
 
 ## Outcome
-To be filled in when the results are in.
+**Morocco:** PSE-TAE trained from scratch on Sentinel-2 pixel sets reaches macro-F1 0.911, the highest number of RQ1.
+It ties with the best runs of E02–E04 (S2 + MLP 0.908, Clay + L-TAE 0.906; all differences within ±0.01, CIs include 0).
+**Utah:** PSE-TAE (0.755) equals the S2 random forest (0.764, difference not significant), but it is significantly
+below Clay (−0.036 vs Clay + SVM, −0.028 vs Clay + L-TAE). Utah is therefore the only region where a frozen GeoFM beats
+every model trained only on our labels. PSE-TAE has the highest rainfed recall of all models (e.g. Souss 0.90), at the
+cost of precision in Utah. Full tables, the best-vs-best comparison and the interpretation are in the
+**[report](report.md)**.

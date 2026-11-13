@@ -1,0 +1,12 @@
+metric,psetae
+macro_f1,0.714 [0.671-0.750]
+overall_accuracy,0.814 [0.783-0.839]
+balanced_accuracy,0.754 [0.727-0.778]
+f1_irrigated,0.883 [0.858-0.902]
+precision_irrigated,0.925 [0.906-0.941]
+recall_irrigated,0.844 [0.805-0.875]
+f1_rainfed,0.546 [0.465-0.618]
+precision_rainfed,0.463 [0.368-0.559]
+recall_rainfed,0.664 [0.602-0.716]
+pr_auc_rainfed,0.538 [0.425-0.643]
+brier,0.148 [0.128-0.172]

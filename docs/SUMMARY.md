@@ -28,6 +28,7 @@
     * [E04 · L-TAE + MLP head](experiments/E04_frozen_ltae/index.md)
         * [Report](experiments/E04_frozen_ltae/report.md)
     * [E05 · PSE-TAE from scratch](experiments/E05_psetae_scratch/index.md)
+        * [Report](experiments/E05_psetae_scratch/report.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

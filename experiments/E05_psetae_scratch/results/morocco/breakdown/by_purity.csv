@@ -1,0 +1,5 @@
+run,classifier,purity_bin,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+psetae_morocco_views_s2,psetae,"(-0.001, 0.25]",2991,634,0.902,0.915,0.78,0.055
+psetae_morocco_views_s2,psetae,"(0.25, 0.5]",2885,347,0.909,0.925,0.77,0.033
+psetae_morocco_views_s2,psetae,"(0.5, 0.75]",1556,194,0.931,0.954,0.815,0.027
+psetae_morocco_views_s2,psetae,"(0.75, 1.0]",147,21,0.924,0.952,0.8,0.034

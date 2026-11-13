@@ -2,13 +2,13 @@
 id: E05
 title: "PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)"
 short_title: PSE-TAE from scratch   # name in the site's sidebar
-status: ready
+status: done
 listed: true
 research_question: RQ1
 phase: 2                  # phase of the research plan (docs/research_plan.md)
 question: Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?
 changes_from: "E02: no pretrained encoder; PSE-TAE (Garnot et al. 2020) on 64 random pixels per parcel, Sentinel-2 only, 3 seeds"
-answer: ""
+answer: "Morocco: PSE-TAE 0.911 ties the best S2 and GeoFM runs (within 0.01). Utah: PSE-TAE 0.755 = S2 RF, significantly below Clay (-0.03 to -0.04)."
 
 regions: [morocco, utah]
 inputs: []               # PSE-TAE reads the pixel sets (psetae_configs below)

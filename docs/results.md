@@ -8,7 +8,7 @@ run, is on the [Experiments](experiments/index.md) page.
 
 | Phase | RQ | Question (short) | Current answer | Evidence |
 | --- | --- | --- | --- | --- |
-| 2 | RQ1 | Do frozen GeoFMs beat a Sentinel-2 classifier? | **Not in Morocco; slightly in Utah.** Each input with its best configuration: Morocco S2 0.908 (MLP) vs Clay 0.906 (L-TAE); Utah Clay 0.791 (SVM) vs S2 0.764 (RF). Neither the head (E02, E03) nor the temporal aggregation (E04) changes this. No label-efficiency advantage in Morocco; in Utah the GeoFMs need fewer labels. PSE-TAE from scratch (E05) still to run. | [E04](experiments/E04_frozen_ltae/report.md) · [E03](experiments/E03_frozen_pca_mlp/report.md) · [E02](experiments/E02_frozen_pca/report.md) · [E01](experiments/E01_frozen_pca_nested/report.md) |
+| 2 | RQ1 | Do frozen GeoFMs beat a Sentinel-2 classifier? | **Not in Morocco; slightly in Utah.** Best model built only on our labels vs best frozen GeoFM: Morocco 0.911 (PSE-TAE) vs 0.906 (Clay + L-TAE), a tie; Utah 0.764 (S2 + RF) vs 0.791 (Clay + SVM), and Clay is significantly above PSE-TAE (+0.036). Neither the head (E02, E03) nor the temporal aggregation (E04) changes this. No label-efficiency advantage in Morocco; in Utah the GeoFMs need fewer labels. | [E05](experiments/E05_psetae_scratch/report.md) · [E04](experiments/E04_frozen_ltae/report.md) · [E03](experiments/E03_frozen_pca_mlp/report.md) · [E02](experiments/E02_frozen_pca/report.md) |
 | 2 | RQ2 | Does LoRA fine-tuning improve on the frozen encoders? | not started | – |
 | 3, 5 | RQ3 | Is the best model consistent across years, and do the annual maps follow national statistics? | not started | – |
 | 3, 5 | RQ4 | How far does accuracy degrade in another region? | not started | – |
@@ -64,6 +64,18 @@ Does a learned temporal aggregation (L-TAE) of the monthly embeddings classify b
 ![E04](experiments/E04_frozen_ltae/figures/morocco_macro_f1_by_input.png)
 
 ![E04](experiments/E04_frozen_ltae/figures/utah_macro_f1_by_input.png)
+
+#### E05 · PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline)
+
+Does a temporal deep model trained only on our labelled parcels match the frozen foundation models?
+
+- **Result:** Morocco: best PSE-TAE + PSE-TAE 0.911; 0 of 1 pairs better, 0 worse than the baseline (Holm) · Utah 2023/24: best PSE-TAE + PSE-TAE 0.755; 0 of 1 pairs better, 0 worse than the baseline (Holm).
+- **Answer:** Morocco: PSE-TAE 0.911 ties the best S2 and GeoFM runs (within 0.01). Utah: PSE-TAE 0.755 = S2 RF, significantly below Clay (-0.03 to -0.04).
+- Full report: [E05 report](experiments/E05_psetae_scratch/report.md)
+
+![E05](experiments/E05_psetae_scratch/figures/morocco_macro_f1_by_input.png)
+
+![E05](experiments/E05_psetae_scratch/figures/utah_macro_f1_by_input.png)
 
 <!-- AUTO:RESULTS:END -->
 

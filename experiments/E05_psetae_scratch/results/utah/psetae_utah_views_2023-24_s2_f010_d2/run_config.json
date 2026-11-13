@@ -1,0 +1,91 @@
+{
+  "run": "psetae_utah_views_2023-24_s2_f010_d2",
+  "model": "PSE-TAE (Garnot et al. 2020)",
+  "region": "utah",
+  "views": "views_2023-24",
+  "config_file": "experiments/E05_psetae_scratch/configs/utah_s2.yaml",
+  "bands": "s2",
+  "channels": [
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "B8A",
+    "B11",
+    "B12"
+  ],
+  "use_edge_pixels": false,
+  "n_pixels": 64,
+  "batch_size": 128,
+  "max_epochs": 100,
+  "patience": 15,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "eval_draws": 5,
+  "loss": "class-weighted cross-entropy",
+  "validation": "outer 5 spatial folds; per outer fold 3 folds train, next fold early stopping",
+  "positions_days": [
+    15,
+    45,
+    76,
+    106,
+    137,
+    167,
+    198,
+    228,
+    259,
+    289,
+    319,
+    350
+  ],
+  "n_parcels": 6011,
+  "n_boot": 1000,
+  "seed": 42,
+  "seeds": [
+    42
+  ],
+  "train_fraction": 0.1,
+  "fraction_draw": 2,
+  "block_draws": [
+    {
+      "test_fold": 0,
+      "blocks": 9,
+      "blocks_available": 88,
+      "parcels": 543,
+      "rainfed": 51
+    },
+    {
+      "test_fold": 1,
+      "blocks": 12,
+      "blocks_available": 118,
+      "parcels": 508,
+      "rainfed": 44
+    },
+    {
+      "test_fold": 2,
+      "blocks": 12,
+      "blocks_available": 115,
+      "parcels": 198,
+      "rainfed": 27
+    },
+    {
+      "test_fold": 3,
+      "blocks": 12,
+      "blocks_available": 114,
+      "parcels": 587,
+      "rainfed": 93
+    },
+    {
+      "test_fold": 4,
+      "blocks": 9,
+      "blocks_available": 90,
+      "parcels": 324,
+      "rainfed": 61
+    }
+  ],
+  "quick_test": false,
+  "device": "cuda"
+}

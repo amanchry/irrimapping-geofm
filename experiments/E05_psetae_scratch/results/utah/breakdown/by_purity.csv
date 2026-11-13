@@ -1,0 +1,5 @@
+run,classifier,purity_bin,n_irrigated,n_rainfed,macro_f1,recall_rainfed,precision_rainfed,false_rainfed_rate
+psetae_utah_views_2023-24_s2,psetae,"(-0.001, 0.25]",953,274,0.7,0.719,0.471,0.232
+psetae_utah_views_2023-24_s2,psetae,"(0.25, 0.5]",1370,259,0.731,0.707,0.475,0.147
+psetae_utah_views_2023-24_s2,psetae,"(0.5, 0.75]",2268,345,0.766,0.794,0.497,0.122
+psetae_utah_views_2023-24_s2,psetae,"(0.75, 1.0]",407,135,0.873,0.926,0.731,0.113
