@@ -306,6 +306,7 @@ def train_round(x, mask, y01, train, val, positions, seed, outer, log):
 
 # ------------------------------------------------------------ metrics (same definitions as 03_train_evaluate.py)
 def metrics(y, yhat, p):
+    p = np.clip(p, 0.0, 1.0)                      # float rounding of averaged probabilities (> 1 by ~1e-8)
     m = {"overall_accuracy": accuracy_score(y, yhat), "balanced_accuracy": balanced_accuracy_score(y, yhat),
          "macro_f1": f1_score(y, yhat, average="macro", labels=CLASSES, zero_division=0),
          "mcc": matthews_corrcoef(y, yhat)}
@@ -401,6 +402,7 @@ def main():
                     a = att[labels[test] == c].mean(0)
                     att_rows += [{"outer_fold": outer, "class": c, "step": steps[i], "attention": float(a[i])}
                                  for i in range(len(steps))]
+        p = np.clip(p, 0.0, 1.0)                  # mean of the seeds can round to 1.00000003
         y_pred = np.where(p >= 0.5, 2, 1)
         parts.append(pd.DataFrame({"model": HEAD, "parcel_id": ids[test], "outer_fold": outer, "y_true": labels[test],
                                    "y_pred": y_pred, "score": p, "is_probability": True, "block_id": blocks[test]}))

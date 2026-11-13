@@ -340,6 +340,7 @@ def train_fold(pixels, idx, labels, train, val, channels, positions, outer, log,
 
 # ------------------------------------------------------------ metrics (same definitions as 03_train_evaluate.py)
 def metrics(y_true, y_pred, p_rainfed):
+    p_rainfed = np.clip(p_rainfed, 0.0, 1.0)      # float rounding of averaged probabilities (> 1 by ~1e-8)
     is_rf = (y_true == 2).astype(int)
     m = {"macro_f1": f1_score(y_true, y_pred, average="macro", labels=CLASSES, zero_division=0),
          "overall_accuracy": accuracy_score(y_true, y_pred),
@@ -419,6 +420,7 @@ def main():
                 torch.save({"state_dict": model.state_dict(), "mean": stats[0], "std": stats[1], "channels": channels,
                             "positions": positions}, OUT_DIR / f"model_fold{outer}.pt")
         best = float(np.mean(best))
+        p = np.clip(p, 0.0, 1.0)                  # mean of the seeds can round to 1.00000003
         y_pred = np.where(p >= 0.5, 2, 1)
         parts.append(pd.DataFrame({"model": "psetae", "parcel_id": ids[test], "outer_fold": outer,
                                    "y_true": labels[test], "y_pred": y_pred, "score": p,
