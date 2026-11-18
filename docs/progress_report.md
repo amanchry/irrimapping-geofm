@@ -45,9 +45,9 @@ gantt
 | Phase | Work package | Planned | Status | Output |
 | --- | --- | --- | --- | --- |
 | 1 | Data acquisition, ML-ready dataset | Sep 2026 | ✅ done | [Phase 1](phase1_data/overview.md) |
-| 2 | Sentinel-based baseline | Sep 2026 | ✅ done | baseline in [E01](experiments/E01_frozen_pca_nested/report.md) |
+| 2 | Sentinel-based baseline | Sep 2026 | ✅ done | baseline in [E01](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) |
 | 2 | Foundation-model embeddings | Sep – Oct 2026 | ✅ done (AgriFM scaling to confirm) | [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md) |
-| 2 | Frozen-encoder experiments (RQ1) | Sep – Oct 2026 | ⏳ E01 done · E02 running · E04 planned | [Experiments](experiments/index.md) |
+| 2 | Frozen-encoder experiments (RQ1) | Sep – Oct 2026 | ⏳ E01 done · E02 running · E04 planned | [Experiments](archive/parcel_wise_classification/index.md) |
 | 2 | Parameter-efficient fine-tuning, LoRA (RQ2) | Nov – Dec 2026 | 📝  | [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 | 4 | Full fine-tuning, multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
@@ -65,8 +65,8 @@ gantt
 | Image store | 2,987 non-overlapping 128 px tiles, 12 monthly composites × 19 bands (Sentinel-2 with Cloud Score+, Sentinel-1) | [Dataset §6](phase1_data/morocco.md) |
 | Model inputs | parcel features (baseline) and patch-aligned 64 px chips for the foundation models | [Dataset §7](phase1_data/morocco.md) |
 | Embeddings | Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM for every parcel and month | [Models pipeline](phase2_models/frozen_encoders.md) |
-| First RQ1 result | E01: four classifiers on every input, block-bootstrap confidence intervals | [E01 report](experiments/E01_frozen_pca_nested/report.md) |
-| Reproducibility | every result from a config file; reports generated; documentation website | [Experiments](experiments/index.md) |
+| First RQ1 result | E01: four classifiers on every input, block-bootstrap confidence intervals | [E01 report](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) |
+| Reproducibility | every result from a config file; reports generated; documentation website | [Experiments](archive/parcel_wise_classification/index.md) |
 | Literature | GeoFM heads, neural baselines, mapping requirements; reference list | [Reference papers](references/index.md) |
 | Transfer data | US state datasets checked: eastern Washington and Utah have irrigated and dryland fields | [Data sources](data_source/index.md) |
 
@@ -74,15 +74,15 @@ gantt
 
 | Experiment | Result |
 | --- | --- |
-| [E01](experiments/E01_frozen_pca_nested/report.md) · frozen GeoFMs + PCA, nested CV | No GeoFM beats the S1/S2 baseline after correcting for multiple tests (best Clay + SVM 0.910 vs baseline + SVM 0.906). Linear probe: TerraMind and Clay equal the baseline. AgriFM is behind. In the hardest fold (rainfed in Doukkala and Souss) the baseline drops to 0.80 while Clay and Prithvi stay higher. |
+| [E01](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) · frozen GeoFMs + PCA, nested CV | No GeoFM beats the S1/S2 baseline after correcting for multiple tests (best Clay + SVM 0.910 vs baseline + SVM 0.906). Linear probe: TerraMind and Clay equal the baseline. AgriFM is behind. In the hardest fold (rainfed in Doukkala and Souss) the baseline drops to 0.80 while Clay and Prithvi stay higher. |
 
-All results: [Results](results.md).
+All results: [Results](archive/parcel_wise_classification/results.md).
 
 ## Next steps
 
-1. Run [E02](experiments/E02_frozen_pca/index.md): the main RQ1 result.
+1. Run [E02](archive/parcel_wise_classification/E02_frozen_pca/index.md): the main RQ1 result.
 2. Confirm AgriFM's input normalisation; re-embed if needed.
-3. Write the L-TAE pipeline (`models_run/03c_train_ltae.py`) and run [E04](experiments/E04_frozen_ltae/index.md).
+3. Write the L-TAE pipeline (`models_run/03c_train_ltae.py`) and run [E04](archive/parcel_wise_classification/E04_frozen_ltae/index.md).
 4. Results per region and per season from the out-of-fold predictions.
 5. Start RQ2: segmentation head (UPerNet) and LoRA fine-tuning; neural baselines TempCNN and U-TAE.
 

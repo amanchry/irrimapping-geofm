@@ -31,7 +31,7 @@ Steps
 4. Metrics on all out-of-fold predictions with 95% block-bootstrap CI; per fold and per seed.
 5. L-TAE: attention weight of every month, averaged per class on the test folds (which months matter).
 
-Output: experiments/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/ (or outputs/<REGION>/study/03_models/<RUN_NAME>/)
+Output: experiments/parcel_wise_classification/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/ (or outputs/<REGION>/study/03_models/<RUN_NAME>/)
 -------------------------------------------------------------------------------------------------------------
 RUN_NAME = <input run>_<HEAD>[_f010_d1], e.g. clay_agyear_tiles_mlp, clay_agyear_tiles_2023-24_ltae,
 s1s2-s2_agyear_tiles-inner_ltae
@@ -42,7 +42,7 @@ attention_by_month.csv (L-TAE), run_config.json, run.log
 
 Run (from the project folder)
 -----------------------------
-    python experiments/run_experiment.py     # EXPERIMENT = "E03_frozen_pca_mlp" or "E04_frozen_ltae"
+    python experiments/parcel_wise_classification/run_experiment.py     # EXPERIMENT = "E03_frozen_pca_mlp" or "E04_frozen_ltae"
     python models_run/03c_train_ltae.py      # development mode (settings below)
 QUICK_TEST = True gives a fast check (3 epochs, 100 bootstrap draws).
 """
@@ -101,7 +101,7 @@ QUICK_TEST = False             # True = 3 epochs, 100 bootstrap draws
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 if EXPERIMENT:
     import yaml
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
+    _cfg = yaml.safe_load((ROOT / "experiments" / "parcel_wise_classification" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     for _key, _value in (_cfg.get("ltae") or {}).items():
         if _key not in globals():
             raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03c_train_ltae.py")

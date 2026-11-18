@@ -15,7 +15,7 @@ checkpoints/
 jobs/
 external/
 outputs/
-archive/
+/archive/
 *.tif
 *.tiff
 *.shp
@@ -54,8 +54,8 @@ Thumbs.db
 .claude/
 
 # ---------------------------------------------------------------- experiments: keep config, README, REPORT, tables, figures
-experiments/*/results/**/final_model_*
-experiments/*/results/**/*.pt
+experiments/**/results/**/final_model_*
+experiments/**/results/**/*.pt
 
 # ---------------------------------------------------------------- documentation website (built by mkdocs)
 site/
@@ -64,4 +64,4 @@ site/
 tmp_trash/
 
 # quick checks of the experiment chain (QUICK_TEST): never committed
-experiments/*/results_quick/
+experiments/**/results_quick/

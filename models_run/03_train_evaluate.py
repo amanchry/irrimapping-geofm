@@ -45,7 +45,7 @@ Steps
 7. Final models refit on all parcels (for mapping later); all tables and figures saved.
 Compare inputs with 04_compare_models.py.
 
-Output: experiments/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/ (experiment mode, see below)
+Output: experiments/parcel_wise_classification/<EXPERIMENT>/results/<REGION>/<RUN_NAME>/ (experiment mode, see below)
         or outputs/<REGION>/study/03_models/<RUN_NAME>/ (EXPERIMENT = None: test and development runs)
 RUN_NAME ends in _f010_d1 (10% of the training blocks, draw 1) for label-efficiency runs; these skip steps 5-7.
 --------------------------------------
@@ -60,10 +60,10 @@ seasonal_profiles.png (s1s2), gap_filling.csv (s1s2), final_model_<name>.joblib,
 
 Run (from the project folder)
 -----------------------------
-Experiment mode (results that go into the thesis): set EXPERIMENT to a folder in experiments/ and
-run experiments/run_experiment.py, which calls this script once for every input of the experiment.
+Experiment mode (results that go into the thesis): set EXPERIMENT to a folder in experiments/parcel_wise_classification/ and
+run experiments/parcel_wise_classification/run_experiment.py, which calls this script once for every input of the experiment.
 The settings in that experiment's config.yaml (section "train_evaluate") replace the values below.
-    python experiments/run_experiment.py
+    python experiments/parcel_wise_classification/run_experiment.py
 Development mode (EXPERIMENT = None): the values below are used as they are.
     python models_run/03_train_evaluate.py
 QUICK_TEST = True gives a fast check.
@@ -99,8 +99,8 @@ from experiment_utils import (describe_draw, draw_table, draw_training_blocks, e
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-EXPERIMENT = None                     # e.g. "E02_frozen_pca": settings from experiments/<name>/config.yaml,
-                                      # results to experiments/<name>/results/ | None = the settings below
+EXPERIMENT = None                     # e.g. "E02_frozen_pca": settings from experiments/parcel_wise_classification/<name>/config.yaml,
+                                      # results to experiments/parcel_wise_classification/<name>/results/ | None = the settings below
 REGION = "morocco"                    # "morocco" | "utah" (ml_dataset_prep/regions.py)
 VIEWS_NAME = None                     # views folder of 04_make_views.py; None = the region's default
                                       # (Morocco "views", Utah "views_2023-24")
@@ -137,12 +137,12 @@ N_JOBS = -1                           # CPU cores for the random forest (-1 = al
 QUICK_TEST = False                    # True = fast check (100 trees, 100 bootstraps, one setting per model)
 
 # ------------------------------------------------------------ experiment mode
-# experiments/run_experiment.py sets EXPERIMENT and EXPERIMENT_INPUT; the settings in the experiment's
+# experiments/parcel_wise_classification/run_experiment.py sets EXPERIMENT and EXPERIMENT_INPUT; the settings in the experiment's
 # config.yaml (section "train_evaluate") then replace the values above.
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 if EXPERIMENT:
     import yaml
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
+    _cfg = yaml.safe_load((ROOT / "experiments" / "parcel_wise_classification" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     for _key, _value in (_cfg.get("train_evaluate") or {}).items():
         if _key not in globals():
             raise SystemExit(f"config.yaml: unknown setting '{_key}' for 03_train_evaluate.py")

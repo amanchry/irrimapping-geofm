@@ -25,7 +25,7 @@ Steps
 6. Label efficiency: for every run and classifier, macro-F1 and rainfed F1 at each training fraction (mean over
    the block draws, with a block-bootstrap CI on the same parcels and samples), the 100% point from the main run.
 
-Output: experiments/<EXPERIMENT>/results/<REGION>/comparison/ (experiment mode)
+Output: experiments/parcel_wise_classification/<EXPERIMENT>/results/<REGION>/comparison/ (experiment mode)
         or outputs/<REGION>/study/04_comparison/ (EXPERIMENT = None)
 -------------------------------
 metrics_all_runs.csv          run, classifier, metric, estimate, ci_low, ci_high
@@ -34,7 +34,7 @@ comparison_macro_f1.png       macro-F1 with 95% CI per input and classifier
 learning_curve.csv / .png     label efficiency (if the experiment has label-efficiency runs)
 Run (from the project folder, after 03_train_evaluate.py has run for each input)
 ---------------------------------------------------------------------
-    python experiments/run_experiment.py      # experiment mode: runs this script as the "compare" step
+    python experiments/parcel_wise_classification/run_experiment.py      # experiment mode: runs this script as the "compare" step
     python models_run/04_compare_models.py      # development mode (EXPERIMENT = None)
 """
 import json
@@ -54,7 +54,7 @@ from experiment_utils import env_override, quick_from_env, results_root  # noqa:
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-EXPERIMENT = None              # e.g. "E02_frozen_pca": runs of experiments/<name>/results/ | None = settings below
+EXPERIMENT = None              # e.g. "E02_frozen_pca": runs of experiments/parcel_wise_classification/<name>/results/ | None = settings below
 REGION = "morocco"             # "morocco" | "utah": one region per comparison
 EXTRA_RUNS = []                # runs of other experiments in the same region, as "<experiment>/<run>" (experiment mode)
 RUNS_DIR = ROOT / "outputs" / REGION / "study" / "03_models"
@@ -66,11 +66,11 @@ N_BOOT = 1000
 SEED = 42
 
 # ------------------------------------------------------------ experiment mode
-# experiments/run_experiment.py sets EXPERIMENT; all runs in its results/ folder are compared, the
+# experiments/parcel_wise_classification/run_experiment.py sets EXPERIMENT; all runs in its results/ folder are compared, the
 # feature run (s1s2-..., Sentinel-2 only by default) is the baseline, and the section "compare" of config.yaml can change the settings.
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 env_override(globals())                                      # REGION from run_experiment.py
-QUICK = quick_from_env()                                     # quick check: experiments/<E>/results_quick/
+QUICK = quick_from_env()                                     # quick check: experiments/parcel_wise_classification/<E>/results_quick/
 RUNS_DIR = ROOT / "outputs" / REGION / "study" / "03_models"  # development mode (after the region override)
 OUT_DIR = ROOT / "outputs" / REGION / "study" / "04_comparison"
 if EXPERIMENT:
@@ -82,7 +82,7 @@ if EXPERIMENT:
     _main = [r for r in _found if not re.search(r"_f\d{3}_d\d+$", r)]
     BASELINE_RUN = next((r for r in _main if r.startswith("s1s2-s2")),      # this experiment's own baseline run
                         next((r for r in _main if r.startswith("s1s2-")), None))
-    _cfg = yaml.safe_load((ROOT / "experiments" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
+    _cfg = yaml.safe_load((ROOT / "experiments" / "parcel_wise_classification" / EXPERIMENT / "config.yaml").read_text(encoding="utf-8"))
     for _key, _value in (_cfg.get("compare") or {}).items():
         if _key not in globals():
             raise SystemExit(f"config.yaml: unknown setting '{_key}' for 04_compare_models.py")

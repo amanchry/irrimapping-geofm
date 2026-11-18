@@ -24,15 +24,19 @@ Steps
      ag_season   agricultural year of the survey date, 1 Sep - 31 Aug ("2023/24", "2024/25");
                  each parcel later gets satellite data from this year
      nn_dist_m   distance to the nearest other parcel (spatial clustering)
-     wc_cropland_frac, wc_major  share of the parcel that ESA WorldCover 2021 calls cropland,
-                 and its main WorldCover class (optional, CHECK_WORLDCOVER = True)
-6. Save the parcels, a summary table and figures (map, class balance, parcel size, survey timing).
+     mask_frac, mask_votes, in_mask, mask_<product>
+                 share of the parcel inside the cropland mask of its agricultural year
+                 (00_make_cropland_mask.py, run first), mean number of products that call it cropland,
+                 and the share per product (cropland_mask.py). Parcels outside the mask are KEPT and
+                 only flagged (in_mask = False): they show what the mask misses.
+6. Save the parcels, a summary table, the mask check and figures (map, class balance, parcel size, survey timing).
 
 Output (outputs/morocco/dataset/01_labels/)
 -------------------------------------------
 parcels_labelled.geojson   one polygon per parcel: parcel_id, date, ag_season, label, class_name,
-                           crop, zone, area_ha, nn_dist_m, wc_cropland_frac, wc_major
+                           crop, zone, area_ha, nn_dist_m, mask_frac, mask_votes, in_mask, mask_<product>
 summary.csv                parcels and area per class and per agricultural year
+mask_check.csv             per year and class: share of parcels inside the cropland mask and inside each product
 *.png                      figures
 
 Run (from the project folder)
@@ -51,18 +55,17 @@ from matplotlib.patches import Patch
 from scipy.spatial import cKDTree
 from shapely.ops import unary_union
 
+from cropland_mask import mask_check_table, parcel_mask_stats
 from regions import admin_boundaries, dataset_dir, settings
 
 # ================================ SETTINGS ================================
 REGION = "morocco"                         # projection, agricultural year, map boundaries: regions.py
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 FIELDS_FILE = ROOT / "data" / "Morocco_field_survey" / "lulc_fielddata.shp"
-WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021.tif"
 OUT_DIR = dataset_dir(REGION) / "01_labels"
 
 UTM = settings(REGION)["crs_epsg"]                         # metric CRS (UTM 29N) for areas and distances
 SEASON_START_MONTH = settings(REGION)["start_month"]       # agricultural year starts on 1 September
-CHECK_WORLDCOVER = True                    # False = skip the WorldCover check (faster)
 CROP_KEEP = ["Seasonal Crop", "Trees", "Trees + Seasonal"]
 IRRIGATED_TEXT = ["drip irrigation", "flood irrigation", "flood irrigationflood irrigation",
                   "sprinkler irrigation", "basin irrigation", "pivot irrigation"]
@@ -71,10 +74,6 @@ RAINFED_TEXT = ["rainfed"]
 
 CLASS_NAMES = {1: "Irrigated", 2: "Rainfed"}
 CLASS_COLORS = {"Irrigated": "#1f77b4", "Rainfed": "#d62728"}
-WC_NAMES = {10: "Tree cover", 20: "Shrubland", 30: "Grassland", 40: "Cropland", 50: "Built-up",
-            60: "Bare / sparse", 70: "Snow / ice", 80: "Water", 90: "Herbaceous wetland",
-            95: "Mangroves", 100: "Moss / lichen"}
-
 
 def save_fig(fig, name):
     fig.savefig(OUT_DIR / name, dpi=150, bbox_inches="tight")
@@ -96,29 +95,6 @@ def agricultural_season(date):
     """Survey date -> agricultural year starting on 1 September, e.g. 2024-04-25 -> '2023/24'."""
     year = date.year if date.month >= SEASON_START_MONTH else date.year - 1
     return f"{year}/{str(year + 1)[-2:]}"
-
-
-def worldcover_agreement(parcels):
-    """Share of each parcel's 10 m pixels that WorldCover 2021 calls cropland (class 40), and the main class."""
-    import rasterio
-    from rasterio.mask import mask as rio_mask
-    frac, major = [], []
-    with rasterio.open(WORLDCOVER_FILE) as src:
-        for geom in parcels.to_crs(src.crs).geometry:
-            try:
-                arr, _ = rio_mask(src, [geom], crop=True, filled=False)
-                values = arr.compressed()
-                values = values[values > 0]
-            except ValueError:                                     # parcel outside the raster
-                values = np.array([], dtype=np.uint8)
-            if values.size == 0:
-                frac.append(np.nan)
-                major.append(None)
-                continue
-            frac.append((values == 40).mean())
-            classes, counts = np.unique(values, return_counts=True)
-            major.append(WC_NAMES.get(int(classes[counts.argmax()]), str(classes[counts.argmax()])))
-    return frac, major
 
 
 # ------------------------------------------------------------ figures
@@ -207,16 +183,16 @@ def main():
     dist, _ = cKDTree(xy).query(xy, k=2)
     lab["nn_dist_m"] = dist[:, 1]                                  # nearest OTHER parcel
     lab["ag_season"] = lab["date"].apply(agricultural_season)
-    if CHECK_WORLDCOVER and WORLDCOVER_FILE.exists():
-        print("WorldCover agreement (this takes a few minutes)...")
-        lab["wc_cropland_frac"], lab["wc_major"] = worldcover_agreement(lab)
-    else:
-        lab["wc_cropland_frac"], lab["wc_major"] = np.nan, None
+    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of 00_make_cropland_mask.py
+    mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 6. Save.
     summary = lab.groupby(["ag_season", "class_name"]).agg(parcels=("label", "size"), area_ha=("area_ha", "sum")).round(1)
     summary.to_csv(OUT_DIR / "summary.csv")
     print(f"\nParcels per agricultural year and class:\n{summary.to_string()}")
+    check = mask_check_table(lab)
+    check.to_csv(OUT_DIR / "mask_check.csv", index=False)
+    print(f"\nParcels inside the cropland mask (%; kept either way):\n{check.to_string(index=False)}")
 
     country = admin_boundaries(REGION)
     plot_map(lab, country)
@@ -224,7 +200,7 @@ def main():
     plot_timing(lab)
 
     cols = ["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha",
-            "nn_dist_m", "wc_cropland_frac", "wc_major", "geometry"]
+            "nn_dist_m"] + mask_cols + ["geometry"]
     out = lab[cols].copy()
     out["parcel_id"] = out["parcel_id"].astype(str)
     out["date"] = out["date"].dt.strftime("%Y-%m-%d")

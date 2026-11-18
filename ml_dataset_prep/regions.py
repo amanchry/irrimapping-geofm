@@ -20,6 +20,10 @@ block_km       size of the spatial blocks for the folds (02_make_spatial_folds.p
 admin_file     boundary file in data/admin_boundaries/ (FAO GAUL), only for the maps
 admin_where    which features of the boundary file to draw (OGR SQL filter)
 admin_name     name column of those features
+map_file       boundary file of the area that is mapped wall-to-wall (cropland mask, continuous tiles)
+map_where      which features of map_file form that area
+               (Morocco: the country without Western Sahara, GAUL 2015, 414,905 km2; Utah: the state, GAUL 2024,
+               219,809 km2; the Utah label fields also reach into the neighbouring river basins)
 """
 import os
 from pathlib import Path
@@ -37,6 +41,8 @@ REGIONS = {
         "admin_file": "FAO_GAUL_2015_AdminL0.geojson",
         "admin_where": "ADM0_NAME = 'Morocco'",
         "admin_name": "ADM0_NAME",
+        "map_file": "FAO_GAUL_2015_AdminL0.geojson",
+        "map_where": "ADM0_NAME = 'Morocco'",
     },
     "utah": {
         "crs_epsg": 32612,
@@ -46,6 +52,8 @@ REGIONS = {
         "admin_where": "gaul0_name = 'United States of America' AND gaul1_name IN "
                        "('Utah', 'Idaho', 'Wyoming', 'Nevada', 'Colorado', 'Arizona')",
         "admin_name": "gaul1_name",
+        "map_file": "FAO_GAUL_2024_AdminL1.geojson",
+        "map_where": "gaul1_name = 'Utah'",
     },
 }
 
@@ -76,3 +84,13 @@ def admin_boundaries(region):
     cache.parent.mkdir(parents=True, exist_ok=True)
     gdf.to_file(cache, driver="GeoJSON")
     return gdf
+
+
+def map_area(region):
+    """The area mapped wall-to-wall (one polygon, region's metric CRS, not simplified)."""
+    import pyogrio
+    s = settings(region)
+    gdf = pyogrio.read_dataframe(ADMIN_DIR / s["map_file"], where=s["map_where"]).to_crs(s["crs_epsg"])
+    if gdf.empty:
+        raise ValueError(f"no feature matches {s['map_where']!r} in {s['map_file']}")
+    return gdf.geometry.union_all()

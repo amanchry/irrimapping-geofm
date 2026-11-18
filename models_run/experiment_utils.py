@@ -102,13 +102,13 @@ def fraction_tag(fraction, draw):
 
 
 def results_root(experiment, quick=False):
-    """experiments/<experiment>/results/, or results_quick/ for QUICK_TEST runs, so a quick check of the chain
+    """experiments/parcel_wise_classification/<experiment>/results/, or results_quick/ for QUICK_TEST runs, so a quick check of the chain
     never leaves files that a real run would take as "already done"."""
-    return ROOT / "experiments" / experiment / ("results_quick" if quick else "results")
+    return ROOT / "experiments" / "parcel_wise_classification" / experiment / ("results_quick" if quick else "results")
 
 
 def results_dir(experiment, region, run_name, fallback, quick=False):
-    """experiments/<experiment>/results[_quick]/<region>/<run>/ in experiment mode, else <fallback>/<run>/."""
+    """experiments/parcel_wise_classification/<experiment>/results[_quick]/<region>/<run>/ in experiment mode, else <fallback>/<run>/."""
     if experiment:
         return results_root(experiment, quick) / region / run_name
     return Path(fallback) / (run_name + ("_quick" if quick else ""))

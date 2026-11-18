@@ -151,7 +151,9 @@ flowchart LR
    - `area_ha`: area in UTM 29N.
    - `ag_season`: agricultural year of the survey date (1 Sep – 31 Aug, e.g. `2023/24`). This decides which imagery a parcel gets.
    - `nn_dist_m`: distance to the nearest other parcel.
-   - `wc_cropland_frac`, `wc_major`: optional WorldCover check (`CHECK_WORLDCOVER`).
+   - `mask_frac`, `mask_votes`, `in_mask`, `mask_<product>`: share of the parcel inside the cropland mask of its
+     agricultural year (`00_make_cropland_mask.py`, run first), and per cropland product. Parcels outside the
+     mask are kept and only flagged; `mask_check.csv` gives the share per year and class.
 6. Save the parcels, a summary table and four figures.
 
 **Result**
@@ -374,7 +376,7 @@ gantt
 | Reason | Explanation |
 | --- | --- |
 | One complete rainfed cycle | rainfed cereals are sown in November–December and harvested in May–July; a calendar year would divide the cycle |
-| The dry summer carries the signal | from June to August only irrigated fields remain green, the clearest contrast between the classes (confirmed by the permutation importance in [E01](../experiments/E01_frozen_pca_nested/report.md#what-the-baseline-relies-on)) |
+| The dry summer carries the signal | from June to August only irrigated fields remain green, the clearest contrast between the classes (confirmed by the permutation importance in [E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md#what-the-baseline-relies-on)) |
 | Irrigation status is seasonal | rainfall, reservoir allocations and fallowing change which fields are irrigated, so a label is valid for one season |
 | Consistency with existing products | LGRIP30, WorldCereal and GMIA-NEXT define irrigation for one growing season (Teluguntla et al., 2023; Van Tricht et al., 2023; Kebede et al., 2026) |
 | National convention | the Moroccan agricultural campaign, including the accounting of seasonal rainfall, starts on 1 September |

@@ -13,8 +13,8 @@ Part 2 · study: dataset inspection, embeddings, training and evaluation, compar
 | `05_breakdown_oof.py` | results by zone, season, patch purity and parcel area |
 | `experiment_utils.py` | shared helpers: region paths, environment overrides, label-efficiency block draws |
 
-Scripts 03–05 run per region (`REGION`) and are normally started by `experiments/run_experiment.py` (or
-`experiments/submit_slurm.py` on the cluster).
+Scripts 03–05 run per region (`REGION`) and are normally started by `experiments/parcel_wise_classification/run_experiment.py` (or
+`experiments/parcel_wise_classification/submit_slurm.py` on the cluster).
 
 Each script has its settings at the top and a description of what it does and writes.
 

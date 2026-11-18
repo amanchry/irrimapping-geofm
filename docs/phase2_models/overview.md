@@ -76,9 +76,9 @@ performance are attributable to the representation rather than to the input data
 **5. Temporal aggregation.** A foundation model yields up to 12 × 1,024 values per parcel. Two aggregation schemes
 are evaluated:
 
-- *PCA pipeline* ([E02](../experiments/E02_frozen_pca/index.md), [E03](../experiments/E03_frozen_pca_mlp/index.md)):
+- *PCA pipeline* ([E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md), [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md)):
   monthly embeddings are concatenated and reduced to 128 principal components, fitted on the training folds only.
-- *L-TAE pipeline* ([E04](../experiments/E04_frozen_ltae/index.md)): a lightweight temporal attention encoder learns
+- *L-TAE pipeline* ([E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md)): a lightweight temporal attention encoder learns
   the relative importance of the months, following the PANGAEA benchmark protocol.
 
 ??? info "PCA pipeline: what it does"
@@ -254,7 +254,7 @@ PSE-TAE (E05) is a complete model trained from scratch on the pixels, the neural
     - **Result (E05):** Morocco 0.911, the highest macro-F1 of RQ1, a tie with the best S2 and GeoFM runs. Utah
       0.755, equal to the S2 random forest but significantly below Clay (−0.03 to −0.04). It finds the most rainfed
       parcels of all models, but in Utah it also over-predicts them.
-      [E05 report](../experiments/E05_psetae_scratch/report.md).
+      [E05 report](../archive/parcel_wise_classification/E05_psetae_scratch/report.md).
 
 **7. Evaluation.** Five rotations are performed: three folds for training, one for hyperparameter selection and one
 for testing. Each parcel thus receives exactly one out-of-fold prediction from a model that was not trained on its

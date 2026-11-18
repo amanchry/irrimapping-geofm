@@ -51,5 +51,5 @@ are assigned to a phase here.
 | Phase pages | `docs/phase<N>_<name>/` with an `overview.md` (aim, RQs, design, status, links) and one page per component | a new component gets its own page in the phase folder |
 | Experiments | `docs/experiments/E<nn>_<name>/` (numbered across all phases) | `research_question` and `phase` in each `config.yaml` |
 | Shared references | [Foundation models](foundation_models.md), [Data sources](data_source/index.md), [Decisions](decisions.md) | one fact in one place; other pages link to it |
-| Results | [Results](results.md) per research question | updated when an experiment finishes |
+| Results | [Results](archive/parcel_wise_classification/results.md) per research question | updated when an experiment finishes |
 | Progress | [Progress report](progress_report.md), [Change log](progress.md), [Meeting notes](weekly/index.md) | updated with every change and before every meeting |

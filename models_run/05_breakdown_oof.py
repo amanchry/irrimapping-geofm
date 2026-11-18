@@ -28,7 +28,7 @@ Steps
 5. By patch purity (16-px chips) and by parcel area: macro-F1 per bin.
 6. Save tables and one figure.
 
-Output: experiments/<EXPERIMENT>/results/<REGION>/breakdown/
+Output: experiments/parcel_wise_classification/<EXPERIMENT>/results/<REGION>/breakdown/
 ------------------------------------------------------------
 by_zone_season.csv           per run x classifier x zone x agricultural year
 focus_zone.csv               macro-F1 in the focus zone with CI, and difference vs the baseline with CI
@@ -56,7 +56,7 @@ from experiment_utils import env_override, quick_from_env, results_root, views_n
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-EXPERIMENT = "E02_frozen_pca"                              # folder in experiments/ whose runs are analysed
+EXPERIMENT = "E02_frozen_pca"                              # folder in experiments/parcel_wise_classification/ whose runs are analysed
 REGION = "morocco"                                         # "morocco" | "utah"
 VIEWS_NAME = None                                          # None = the region's default views folder
 EXCLUDE_RUNS = []                                          # e.g. ["agrifm_agyear_tiles_concat"] for E01 (random AgriFM weights)

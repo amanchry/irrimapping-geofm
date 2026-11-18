@@ -2,7 +2,7 @@
 
 This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-2 feature baseline under an identical spatial validation design. Every input uses Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 
-It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../experiments/index.md), which run these scripts with the settings of a config file.
+It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../archive/parcel_wise_classification/index.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -300,7 +300,7 @@ flowchart TD
 
 Histogram gradient boosting was a fourth classifier in E01 and is dropped from E02 on
 ([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). The settings selected in each round are reported per experiment
-([E01](../experiments/E01_frozen_pca_nested/report.md#selected-hyperparameters)).
+([E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md#selected-hyperparameters)).
 
 The selection score is macro-F1, the mean of the irrigated F1 and rainfed F1. It treats the 14% rainfed class as equally important.
 

@@ -27,7 +27,7 @@ cropland, compared with Sentinel features and tested across years and regions.
   irrigated fields — attributed to different irrigation regimes, phenology and management.
 
 ## What this research takes from it
-- Several classifier heads on frozen embeddings, as in our parcel benchmark ([E01](../experiments/E01_frozen_pca_nested/report.md)).
+- Several classifier heads on frozen embeddings, as in our parcel benchmark ([E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md)).
 - A warning for RQ4: temporal transfer can be stable while spatial transfer fails; the transfer region must be close
   in irrigation practice ([decision D10](../decisions.md#d10-transfer-region-under-review)).
 

@@ -48,7 +48,7 @@ Steps
 5. Metrics on all out-of-fold predictions with 95% block-bootstrap intervals (as in 03_train_evaluate.py).
 6. Save predictions, metrics, training curves and the trained networks.
 
-Output (outputs/<REGION>/study/03_models/psetae_<REGION>_<VIEWS_NAME>_<BANDS>/, or experiments/<EXPERIMENT>/results/...)
+Output (outputs/<REGION>/study/03_models/psetae_<REGION>_<VIEWS_NAME>_<BANDS>/, or experiments/parcel_wise_classification/<EXPERIMENT>/results/...)
 ------------------------------------------------------------------------------------------------------------
 oof_predictions.csv     every parcel's out-of-fold prediction and rainfed probability (read by 04_compare_models.py)
 metrics_with_ci.csv     all metrics: estimate, ci_low, ci_high
@@ -64,10 +64,10 @@ Run (from the project folder; a GPU is recommended, a CPU works but is slow)
 QUICK_TEST = True gives a fast check (few epochs, small bootstrap).
 
 One run per config file (thesis runs): EXPERIMENT = "E05_psetae_scratch" and CONFIG = "morocco_s2.yaml" (a file in
-experiments/E05_psetae_scratch/configs/: morocco_s2, morocco_s2s1, utah_s2, utah_s2s1). The same from the shell or a
+experiments/parcel_wise_classification/E05_psetae_scratch/configs/: morocco_s2, morocco_s2s1, utah_s2, utah_s2s1). The same from the shell or a
 Slurm job, without editing the script:
     EXPERIMENT=E05_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
-or all four in a row: experiments/run_experiment.py with EXPERIMENT = "E05_psetae_scratch".
+or all four in a row: experiments/parcel_wise_classification/run_experiment.py with EXPERIMENT = "E05_psetae_scratch".
 """
 import json
 import logging
@@ -88,9 +88,9 @@ from sklearn.metrics import (accuracy_score, average_precision_score, balanced_a
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-EXPERIMENT = None              # e.g. "E05_psetae_scratch": settings from experiments/<name>/ | None = below
-CONFIG = None                  # e.g. "utah_s2s1.yaml": one run's settings from experiments/<EXPERIMENT>/configs/
-                               # | None = section "psetae" of experiments/<EXPERIMENT>/config.yaml
+EXPERIMENT = None              # e.g. "E05_psetae_scratch": settings from experiments/parcel_wise_classification/<name>/ | None = below
+CONFIG = None                  # e.g. "utah_s2s1.yaml": one run's settings from experiments/parcel_wise_classification/<EXPERIMENT>/configs/
+                               # | None = section "psetae" of experiments/parcel_wise_classification/<EXPERIMENT>/config.yaml
 REGION = "morocco"             # "morocco" | "utah": dataset of ml_dataset_prep/ (outputs/<REGION>/dataset/)
 WINDOW = "agyear"
 VIEWS_NAME = "views"           # views folder of ml_dataset_prep/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
@@ -115,7 +115,7 @@ TRAIN_FRACTION = 1.0           # label efficiency: share of the training blocks 
 FRACTION_DRAW = 1              # block draw (1, 2, 3); the same draw as in 03_train_evaluate.py and 03c
 QUICK_TEST = False             # True = 3 epochs, 100 bootstrap draws (only to check that everything runs)
 
-# experiment mode: experiments/run_experiment.py sets EXPERIMENT (and PSETAE_CONFIG for each file in "psetae_configs").
+# experiment mode: experiments/parcel_wise_classification/run_experiment.py sets EXPERIMENT (and PSETAE_CONFIG for each file in "psetae_configs").
 # The config file (configs/<CONFIG>, or section "psetae" of config.yaml) replaces the values above (same names).
 EXPERIMENT = os.environ.get("EXPERIMENT", EXPERIMENT)
 CONFIG = os.environ.get("PSETAE_CONFIG", CONFIG)
@@ -124,10 +124,10 @@ _SETTINGS = {"REGION", "WINDOW", "VIEWS_NAME", "BANDS", "S2_BANDS", "USE_EDGE_PI
              "N_SEEDS", "TRAIN_FRACTION", "FRACTION_DRAW", "QUICK_TEST"}
 CONFIG_FILE = None
 if CONFIG and not EXPERIMENT:
-    raise SystemExit("CONFIG needs EXPERIMENT: the config files are in experiments/<EXPERIMENT>/configs/")
+    raise SystemExit("CONFIG needs EXPERIMENT: the config files are in experiments/parcel_wise_classification/<EXPERIMENT>/configs/")
 if EXPERIMENT:
     import yaml
-    _exp = ROOT / "experiments" / EXPERIMENT
+    _exp = ROOT / "experiments" / "parcel_wise_classification" / EXPERIMENT
     CONFIG_FILE = _exp / "configs" / CONFIG if CONFIG else _exp / "config.yaml"
     _cfg = yaml.safe_load(CONFIG_FILE.read_text(encoding="utf-8")) or {}
     for _key, _value in (_cfg if CONFIG else (_cfg.get("psetae") or {})).items():

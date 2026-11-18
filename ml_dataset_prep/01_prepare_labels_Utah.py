@@ -36,10 +36,11 @@ Steps
    MAX_CELLS_PER_BLOCK per spatial block of 02_make_spatial_folds.py so the sample is spread over the
    region. The same cells are used in every year (temporal comparisons see the same places).
 6. Attributes (same names as Morocco): parcel_id, ag_season, label, class_name, crop, zone (= river basin),
-   area_ha, nn_dist_m (nearest other field of the same year), wc_cropland_frac / wc_major (optional:
-   needs a WorldCover raster covering Utah in WORLDCOVER_FILE). Extra: year, state, county, crop_group,
-   irr_method, cell_id.
-7. Save the fields, summary tables and figures.
+   area_ha, nn_dist_m (nearest other field of the same year), mask_frac, mask_votes, in_mask,
+   mask_<product> (share inside the cropland mask of 00_make_cropland_mask.py, run first; cropland_mask.py;
+   fields outside the mask are KEPT and only flagged; fields outside Utah, the mapping area, get NaN).
+   Extra: year, state, county, crop_group, irr_method, cell_id.
+7. Save the fields, summary tables, the mask check (mask_check.csv) and figures.
 
 Agricultural year
 -----------------
@@ -84,6 +85,7 @@ import pyogrio
 from scipy.spatial import cKDTree
 from shapely.ops import unary_union
 
+from cropland_mask import mask_check_table, parcel_mask_stats
 from regions import admin_boundaries, dataset_dir, settings
 
 # ================================ SETTINGS ================================
@@ -103,8 +105,6 @@ FILES = {                                  # WRLU layer per year (as downloaded)
 }
 YEARS = [2024, 2021]                       # 2024 = training year ("2023/24"); 2021 = temporal test year ("2020/21")
 INSPECT_ALL_YEARS = True                   # step 1 for every year in FILES (~10 s per year)
-WORLDCOVER_FILE = ROOT / "data" / "worldcover" / "ESA_WorldCover_10m_2021_Utah.tif"   # optional; skipped if missing
-CHECK_WORLDCOVER = True
 EXPORT_ALL_FIELDS = True                  # step 4b: GeoPackage + figures of all labelled crop fields (~1 min)
 
 CROP_GROUPS = ["Grain/Seeds", "Hay/Turf", "Field Crops"]   # cropped fields (see step 4)
@@ -127,9 +127,6 @@ BLOCK_M = settings(REGION)["block_km"] * 1000
 OUT_DIR = dataset_dir(REGION) / "01_labels"
 CLASS_NAMES = {1: "Irrigated", 2: "Rainfed"}
 CLASS_COLORS = {"Irrigated": "#1f77b4", "Rainfed": "#d62728"}
-WC_NAMES = {10: "Tree cover", 20: "Shrubland", 30: "Grassland", 40: "Cropland", 50: "Built-up",
-            60: "Bare / sparse", 70: "Snow / ice", 80: "Water", 90: "Herbaceous wetland",
-            95: "Mangroves", 100: "Moss / lichen"}
 READ_COLS = ["Landuse", "CropGroup", "Descriptio", "IRR_Method", "State", "County", "Basin"]
 
 
@@ -163,29 +160,6 @@ def read_year(year, geometry=True):
 
 def label_of(method):
     return np.select([method.isin(IRRIGATED_METHODS), method.isin(RAINFED_METHODS)], [1, 2], default=0)
-
-
-def worldcover_agreement(parcels):
-    """Share of each field's 10 m pixels that WorldCover 2021 calls cropland (class 40), and the main class."""
-    import rasterio
-    from rasterio.mask import mask as rio_mask
-    frac, major = [], []
-    with rasterio.open(WORLDCOVER_FILE) as src:
-        for geom in parcels.to_crs(src.crs).geometry:
-            try:
-                arr, _ = rio_mask(src, [geom], crop=True, filled=False)
-                values = arr.compressed()
-                values = values[values > 0]
-            except ValueError:                                     # field outside the raster
-                values = np.array([], dtype=np.uint8)
-            if values.size == 0:
-                frac.append(np.nan)
-                major.append(None)
-                continue
-            frac.append((values == 40).mean())
-            classes, counts = np.unique(values, return_counts=True)
-            major.append(WC_NAMES.get(int(classes[counts.argmax()]), str(classes[counts.argmax()])))
-    return frac, major
 
 
 # ------------------------------------------------------------ step 1: source inspection
@@ -428,13 +402,8 @@ def main():
     lab = lab.rename(columns={"Descriptio": "crop", "Basin": "zone", "State": "state", "County": "county",
                               "CropGroup": "crop_group", "IRR_Method": "irr_method"})
     lab = lab.to_crs(4326)
-    if CHECK_WORLDCOVER and WORLDCOVER_FILE.exists():
-        print("WorldCover agreement (this takes a few minutes)...")
-        lab["wc_cropland_frac"], lab["wc_major"] = worldcover_agreement(lab)
-    else:
-        if CHECK_WORLDCOVER:
-            print(f"WorldCover check skipped: {WORLDCOVER_FILE.name} not found")
-        lab["wc_cropland_frac"], lab["wc_major"] = np.nan, None
+    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of 00_make_cropland_mask.py
+    mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 7. Save.
     summary = lab.groupby(["ag_season", "class_name"]).agg(fields=("label", "size"), area_ha=("area_ha", "sum"),
@@ -443,13 +412,16 @@ def main():
     print(f"\nFields per agricultural year and class:\n{summary.to_string()}")
     by_zone = pd.crosstab([lab["zone"], lab["ag_season"]], lab["class_name"])
     by_zone.to_csv(OUT_DIR / "summary_by_zone.csv")
+    check = mask_check_table(lab)
+    check.to_csv(OUT_DIR / "mask_check.csv", index=False)
+    print(f"\nFields inside the cropland mask (%; kept either way; Utah only):\n{check.to_string(index=False)}")
 
     plot_map(lab, admin)
     plot_balance_and_size(lab)
     plot_crops(lab)
 
-    cols = ["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha", "nn_dist_m",
-            "wc_cropland_frac", "wc_major", "year", "state", "county", "crop_group", "irr_method", "cell_id", "geometry"]
+    cols = (["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha", "nn_dist_m"] + mask_cols
+            + ["year", "state", "county", "crop_group", "irr_method", "cell_id", "geometry"])
     lab["date"] = None                                              # WRLU has no survey date per field
     out = lab[cols].reset_index(drop=True)
     (OUT_DIR / "parcels_labelled.geojson").write_text(out.to_json(drop_id=True))
