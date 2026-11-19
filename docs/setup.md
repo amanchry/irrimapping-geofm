@@ -24,7 +24,7 @@ A GPU (CUDA or Apple Silicon) is recommended for the embedding scripts. Everythi
 
 ### 2. Earth Engine
 
-Only `ml_dataset_prep/03_build_tiles.py` uses Earth Engine. Put the service-account key in `secrets/` (path set at the top of the script), or run `earthengine authenticate` once.
+Only `pixelwise_run/03_build_tiles.py` uses Earth Engine. Put the service-account key in `secrets/` (path set at the top of the script), or run `earthengine authenticate` once.
 
 ### 3. Input data
 
@@ -42,7 +42,7 @@ automatically** on the first run of each embedding script; later runs reuse them
 [Foundation models · Weights](foundation_models.md#weights).
 
 Only the Clay code needs installing by hand (`pip install --no-deps git+https://github.com/Clay-foundation/model.git`,
-see *Environment* above); TerraTorch (Prithvi, TerraMind) and mmengine (AgriFM) come with `environment.yml`.
+see *Environment* above); TerraTorch (Prithvi, TerraMind) and mmengine (AgriFM) come with `environment.yml`. Presto and TESSERA need no package: their code is cloned into `external/presto` and `external/tessera` on first use.
 
 ---
 
@@ -50,25 +50,26 @@ see *Environment* above); TerraTorch (Prithvi, TerraMind) and mmengine (AgriFM) 
 
 Run every script from the project folder. Each script has its **settings at the top**. A description at the top of each script explains what it does and what it writes.
 
+Two independent pipelines, each in its own folder with the scripts numbered in run order: `pixelwise_run/`
+(current) and `parcelwise_run/` (archive). Steps 01–03 are the same scripts in both.
+
 ```bash
-# Phase 1 · dataset
-python ml_dataset_prep/01_prepare_labels.py
-python ml_dataset_prep/02_make_spatial_folds.py
-python ml_dataset_prep/03_build_tiles.py       
-python ml_dataset_prep/04_make_views.py
-
-# Phase 2 · model evaluation
-python models_run/01_inspect_dataset.py          # check the data before training
-python models_run/02a_embed_clay.py              # 02a–02d: GPU recommended, resumable
-python models_run/02b_embed_prithvi.py
-python models_run/02c_embed_terramind.py
-python models_run/02d_embed_agrifm.py
-
-# Experiments · training, comparison and report from one config file
-python experiments/run_experiment.py             # set EXPERIMENT at the top, e.g. "E02_frozen_pca"
+# Pixel-wise pipeline (pixelwise_run/; step table in pixelwise_run/README.md)
+python cropland_extent/make_cropland_mask.py           # 0  cropland mask per region and year
+python pixelwise_run/01_prepare_labels_Morocco.py      # 01 labels (01_prepare_labels_Utah.py for Utah)
+python pixelwise_run/02_make_spatial_folds.py          # 02 spatial folds
+python pixelwise_run/03_build_tiles.py                 # 03 tile store (Earth Engine)
+python pixelwise_run/04_make_pixel_samples.py          # 04 labelled pixels
+python experiments/E01_s2_pixel_baseline/run.py        # experiments, one at a time: E01, E02, E04, E03, E05
+python pixelwise_run/05_compare_experiments.py         # 05 comparison table and paired tests
+python pixelwise_run/06_build_cropland_tiles.py        # 06 later, for the maps: wall-to-wall tiles
 ```
 
-For a quick check before a full run, set `N_TEST_TILES = 20` in `03_build_tiles.py` and `QUICK_TEST: true` in the experiment's `config.yaml`. How experiments work, and how to add one: [Experiments](archive/parcel_wise_classification/index.md).
+On the cluster each run is a Slurm job (`jobs/step_cpu.sbatch` / `jobs/step_gpu.sbatch` with `SCRIPT=<script>`;
+commands on each experiment page). `EXPERIMENT_QUICK_TEST=1` checks a whole experiment on a small subset first.
+The archived parcel-wise pipeline (`parcelwise_run/`, steps 01–09; experiments in
+`experiments/parcel_wise_classification/`) is described in `parcelwise_run/README.md` and the
+[Archive](archive/index.md).
 
 ## Project structure
 
@@ -85,16 +86,15 @@ irrigated_area_mapping_code/
 │   ├── weekly/                  one page per review meeting
 │   ├── results.md · progress.md results overview · change log
 │   └── assets/                  style sheet and diagram script of the website
-├── ml_dataset_prep/         PART 1 · dataset scripts 01–04
-├── models_run/              PART 2 · study scripts 01–04
-├── experiments/             one folder per experiment: config.yaml + results/ (written by the scripts)
-│   ├── run_experiment.py        runs an experiment from its config
-│   ├── make_report.py           tables + figures into docs/experiments/<name>/report.md
-│   └── _template/               config, setup page and report page to start a new experiment
+├── cropland_extent/         cropland mask (step 0) and reference layers (WorldCover, LGRIP30)
+├── pixelwise_run/           pixel-wise pipeline, steps 01–06 + shared code (six encoders, models, metrics)
+├── experiments/             E01–E04: one folder per experiment with run.py + results/
+│   └── parcel_wise_classification/   archived parcel-wise experiments (configs, run_experiment.py, results)
+├── parcelwise_run/          archived parcel-wise pipeline, steps 01–09 (labels to comparison)
 ├── tools/                   extra scripts (viewing, side checks)
 ├── data/                    input data                          (not in git)
 ├── checkpoints/             model weights                       (not in git)
-├── external/                third-party code: AgriFM            (not in git)
+├── external/                third-party code: AgriFM, Presto, TESSERA (not in git)
 ├── secrets/                 Earth Engine service-account key    (never commit)
 └── outputs/                 dataset and embeddings written by the scripts (not in git)
     ├── dataset/                 01_labels · 02_folds · 03_tiles_128px/agyear

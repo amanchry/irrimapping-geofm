@@ -15,11 +15,11 @@ inputs: [s1s2, clay, prithvi, terramind, agrifm]
 label_efficiency:          # learning curve inside this experiment (Q5 of the plan): training blocks subsampled
   fractions: [0.10, 0.25, 0.50]   # share of the training blocks; 1.0 = the main run
   draws: 3                        # block draws per fraction; draw k is identical in every experiment and input (paired)
-  min_rainfed: 20                 # fixed in models_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
+  min_rainfed: 20                 # fixed in parcelwise_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
 
 steps: [train_evaluate, compare, breakdown, report]
 
-train_evaluate:            # models_run/03_train_evaluate.py
+train_evaluate:            # parcelwise_run/07_train_evaluate.py
   VALIDATION: pastis       # 3 folds train, next fold chooses the hyperparameters, 1 fold tests
   WINDOW: agyear
   S1S2_SOURCE: tiles
@@ -33,7 +33,7 @@ train_evaluate:            # models_run/03_train_evaluate.py
   N_BOOT: 1000
   SEED: 42
 
-compare:                   # models_run/04_compare_models.py
+compare:                   # parcelwise_run/08_compare_models.py
   BASELINE_CLASSIFIER: rf
 
 report:

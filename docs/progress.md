@@ -12,19 +12,20 @@ change log).
 | Step | Where | Status |
 | --- | --- | --- |
 | Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
-| Pixel samples | `ml_dataset_prep/04c_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Pixel-wise experiments P01–P06 | `experiments/` | planned ([plan](experiments/plan.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); P01 next |
-| Labels, spatial folds | `ml_dataset_prep/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
-| Tile store, model views | `ml_dataset_prep/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
-| Embeddings (Sentinel-2 only) | `models_run/02a–02d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
+| Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
+| Experiments E01–E05 (pixel-wise) | `experiments/` | scripts ready and checked on subsets ([plan](experiments/plan.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); E01 next on the cluster |
+| Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
+| Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
+| Embeddings (Sentinel-2 only) | `parcelwise_run/06a–06d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
 | E01–E05 · parcel-wise RQ1 experiments | `experiments/parcel_wise_classification/` | Done and archived ([Archive](archive/index.md)): Morocco a tie at about 0.91 macro-F1; Utah Clay + SVM 0.791 vs S2 + RF 0.764 |
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04c` for every region and year; copy
+1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. Write and run P01 (Sentinel-2 pixel baseline), then P02–P06 one at a time ([plan](experiments/plan.md)).
-3. Maps (Phase 5): wall-to-wall tiles (`03c`), map of the best model, map accuracy sample.
+2. Run E01 (Sentinel-2 pixel baseline) on the cluster, then E02, E04, E03, E05 one at a time ([plan](experiments/plan.md)).
+3. Maps (Phase 5): wall-to-wall composites from STAC (parity check against the Earth Engine tiles first), map of
+   the best model, map accuracy sample.
 
 ---
 
@@ -32,7 +33,9 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
-| 2026-11-19 | Pixel-wise experiments P01–P06 on the same out-of-fold pixels; headline = macro-F1 of irrigated and rainfed on parcel pixels; 3-class and parcel-level (majority) F1 also reported | [Experiment plan](experiments/plan.md) |
+| 2026-11-19 | Six foundation models: Prithvi, Clay, TerraMind, AgriFM (image patches) + Presto, TESSERA (pixel time series), same decoder and training in E03 / E05 | The pixel-wise target needs a pretrained model that works at 10 m; [Foundation models](foundation_models.md) |
+| 2026-11-19 | Experiments run on the existing Earth Engine tiles; wall-to-wall composites for the maps planned from STAC per 10.24 km block, after a parity check against the Earth Engine tiles | Earth Engine 48 MB request limit, about 40 h per year for Morocco's 132,616 tiles on one stream; [plan](experiments/plan.md#3-after-the-experiments) |
+| 2026-11-19 | Pixel-wise experiments E01–E05 on the same out-of-fold pixels; headline = macro-F1 of irrigated and rainfed on parcel pixels; 3-class macro-F1 also reported; no comparison with the archived parcel-wise results | [Experiment plan](experiments/plan.md) |
 | 2026-11-19 | Training pixels: inner pixels of the parcels, ≤ 100 per parcel; not-cropland pixels = 0 votes in the mask, ≤ 100 per tile, ≥ 2 px from any parcel | [Pixel samples](phase1_data/pixel_samples.md) |
 | 2026-11-19 | Cropland mask = union of WorldCover 2021, Esri LULC (year of the season), GCEP30, GLAD 2019; WorldCover built-up / snow / water removed; third class "not cropland"; mask on the output only; parcels outside the mask flagged, not dropped | [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class) |
 | 2026-11-18 | Classification per 10 m pixel instead of per parcel, for continuous maps; E01–E05 archived | [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps) |
@@ -65,7 +68,7 @@ Next steps
 - [x] ~~AgriFM normalisation~~: chip statistics of each region, config statistics as sensitivity run
   ([D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)). Still optional: pool the finer
   `features_list` maps (stride 8–16 px) instead of the 32-px output.
-- [ ] Region confounding: repeat `05_breakdown_oof.py` on E02; coordinate ablation (Prithvi `USE_COORDS = False`,
+- [ ] Region confounding: repeat `09_breakdown_oof.py` on E02; coordinate ablation (Prithvi `USE_COORDS = False`,
   Clay with constant time/location).
 - [x] ~~AgriFM weights: download `AgriFM.pth` to `checkpoints/agrifm/` and clone the repo to `external/AgriFM`.~~
 - [ ] AgriFM results of E01 (and any other run before 2026-11-06) used an untrained encoder: re-run with the fixed
@@ -77,9 +80,8 @@ Next steps
 - [x] ~~Tunisia: label source and transfer experiment~~ → replaced by Utah as a second study area ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)).
 - [ ] Utah: download WRLU 2024 tiles (`SEASONS = ["2023/24"]`), views, embeddings, RQ1 comparison; then 2021 and the temporal test (training script: train on one year, test on another).
 - [ ] Agree the new wording of RQ3 / RQ4 (D13) with the supervisors.
-- [ ] Prediction / wall-to-wall mapping step: wall-to-wall tiles (`03c`), map of the best model, map accuracy sample (Olofsson et al. 2014).
+- [ ] Prediction / wall-to-wall mapping step: STAC composites per block (benchmark + parity check vs Earth Engine tiles; cluster proxy access to the STAC hosts; reflectance offset from processing baseline 04.00), map of the best model, map accuracy sample (Olofsson et al. 2014).
 - [ ] Not-cropland samples are mostly easy (bare land, rangeland, riverside vegetation): false cropland inside the union mask has no label yet; consider a small labelled sample of union-only pixels.
-- [ ] AlphaEarth embeddings are calendar-year: year in which the agricultural year ends is used (P03); state the mismatch.
 - [ ] Re-run `01_prepare_labels_*` with the mask check once all masks exist (cluster).
 - [ ] Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.
 - [ ] **Phase 2 (after Morocco is complete): US transfer study** - see the change-log entry of 2026-11-04 (future phase). First step: one-day data check of the original state label sources.
@@ -90,7 +92,41 @@ Next steps
 
 ### 2026-11-19 (pixel-wise set-up: cropland mask, pixel samples, experiment plan)
 
-- **New folder `cropland_extent/`** with `make_cropland_mask.py` (before `ml_dataset_prep/00_make_cropland_mask.py`),
+- **AlphaEarth removed** from the pixel-wise experiments (the embedding experiment and its Earth Engine sampling
+  script; AlphaEarth publishes embeddings only, no weights to fine-tune). Experiments renumbered: E03 frozen
+  foundation models + decoder, E04 U-TAE, E05 LoRA (run order E01, E02, E04, E03, E05); pipeline steps 05
+  comparison, 06 wall-to-wall tiles. The AlphaEarth papers stay in the references as related work.
+- **Code folders reorganised into two independent pipelines, scripts numbered in run order.**
+  - `pixelwise_run/` (current): 01 labels, 02 folds, 03 tiles (+ 03b quicklooks), 04 pixel samples (was
+    `04c_make_pixel_samples.py`), 05 comparison of experiments, 06 wall-to-wall tiles (was
+    `03c_build_cropland_tiles.py`); helper modules `regions.py`,
+    `cropland_mask.py`, `pixel_common.py`, `nn_common.py`, `tile_common.py`, `encoders.py` (all six foundation
+    models; the four image models with the same weights and bands as the archived embedding scripts).
+  - `parcelwise_run/` (archive): 01–03 (copies), 04 views, 05 inspection, 06a–06d embeddings, 07 / 07b / 07c
+    training, 08 comparison, 09 breakdown, with `experiment_utils.py`; `experiments/parcel_wise_classification/`
+    and `jobs/embed_*.sbatch`, `jobs/make_views.sbatch` point there.
+  - `ml_dataset_prep/` and `models_run/` no longer exist. Output folders keep their names (`04c_pixel_samples`,
+    `03c_cropland_tiles_128px`), so existing data stays valid. `cropland_extent/` stays (step 0).
+- **Two more foundation models: Presto and TESSERA v2 (Medium)**, pixel time-series models with open weights
+  (Presto MIT; TESSERA weights CC0). Loaders in `experiments/pixel_encoders.py` (code cloned to `external/presto`,
+  `external/tessera`; weights in `checkpoints/presto/default_model.pt`, `checkpoints/tessera/ckpt/student_medium.pt`).
+  Both are E03 / E05 encoders like the other four: every pixel of a tile is encoded (128-d), the 10 m map goes to the
+  same UPerNet head; Sentinel-2 only (Presto: S1 / ERA5 / SRTM / Dynamic World tokens masked; TESSERA: empty
+  Sentinel-1 branch). LoRA on TESSERA's feed-forward layers (its attention packs q, k, v). Checked on a small tile
+  subset on the Mac. Pages: [Foundation models](foundation_models.md), [E03](experiments/E03_frozen_geofm.md),
+  [E05](experiments/E05_lora.md).
+- **Experiment scripts E01–E05** in `experiments/` (one folder per experiment with `run.py`): shared code
+  `pixel_common.py` (samples, features, PASTIS rotation, metrics, block bootstrap from per-block confusion matrices),
+  `nn_common.py` (L-TAE, TempCNN, MLP), `tile_common.py` (tile data, frozen / LoRA foundation-model segmenter with
+  L-TAE and UPerNet head, U-TAE), `05_compare_experiments.py` (comparison table, paired tests with Holm correction);
+  Every script was run
+  on a small subset on the Mac. One page per experiment in the Experiments menu; the menu is called
+  "Experiments" and the pixel-wise experiments are numbered E01–E05 (the parcel-wise ones stay "archived E01–E05").
+- **Imagery source for the maps:** the experiments E01–E05 use the existing Earth Engine tiles; the wall-to-wall
+  composites for the maps are planned from STAC per 10.24 km block, after a benchmark and a parity check against the
+  Earth Engine tiles ([plan](experiments/plan.md#3-after-the-experiments)). Utah 2020/21 tiles downloaded on the
+  cluster (2,716 tiles).
+- **New folder `cropland_extent/`** with `make_cropland_mask.py` (before `pixelwise_run/00_make_cropland_mask.py`),
   `download_esa_worldcover.py` and `download_lgrip30.py` (before `tools/a7_…`, `tools/a8_…`). All three write to
   `outputs/<region>/cropland_extent/` (`cropland_mask/<season>/`, `esa_worldcover/`, `lgrip30/`) and use the
   region's mapping area of `regions.py` (`map_file`, `map_where`; new helpers `map_area()`, `cropland_dir()`,
@@ -101,14 +137,14 @@ Next steps
   continental tiles combined with max() (the overlapping tiles disagree in Morocco). Dynamic World dropped (25 s per
   block, Earth Engine memory errors). 2023/24: Morocco 103,068 km² (24.8%), Utah 9,979 km² (4.5%). No parcel data is
   read by the mask script.
-- **Labels:** `01_prepare_labels_*` read the mask of each parcel's year through `ml_dataset_prep/cropland_mask.py`
+- **Labels:** `01_prepare_labels_*` read the mask of each parcel's year through `pixelwise_run/cropland_mask.py`
   and add `mask_frac`, `mask_votes`, `in_mask`, `mask_<product>` and `mask_check.csv`; this replaces the WorldCover
   check (`wc_cropland_frac`, `wc_major`). Parcels outside the mask are kept.
-- **`03c_build_cropland_tiles.py`** (new): wall-to-wall Sentinel-2 tiles (12 months × 13 bands) for every 128 px tile
+- **`06_build_cropland_tiles.py`** (new): wall-to-wall Sentinel-2 tiles (12 months × 13 bands) for every 128 px tile
   with cropland, same grid and compositing as 03; parcel-store tiles copied (identical to a fresh download).
   Tested on 16 tiles (1.7 s per tile, 2.8 MB); not run: Morocco needs 132,616 tiles (~370 GB per year), Utah 24,861
   (~69 GB); download deferred to the mapping stage.
-- **`04c_make_pixel_samples.py`** (new): labelled pixels (irrigated, rainfed, not cropland) with folds from the
+- **`04_make_pixel_samples.py`** (new): labelled pixels (irrigated, rainfed, not cropland) with folds from the
   parcel tile store and the mask ([page](phase1_data/pixel_samples.md)); Morocco 2023/24: 402,756 pixels.
 - **WorldCover and LGRIP30 PNG maps** with legend and AOI boundary (`MAKE_PNG`, `PNG_ONLY`); WorldCover with its
   official palette.

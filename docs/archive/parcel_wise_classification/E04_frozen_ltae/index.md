@@ -60,8 +60,8 @@ E04 is also compared with the classical classifiers of E02.
 The comparison step also reads the E03 and E02 runs (`EXTRA_RUNS`), so PCA and L-TAE are compared on the same
 parcels with the same bootstrap draws. Regions: Morocco and Utah 2023/24.
 
-## Implementation (`models_run/03c_train_ltae.py`, `HEAD: ltae`)
-1. Reads the same embedding files as `03_train_evaluate.py` (`<model>_agyear_tiles[_2023-24].npz`, 12 steps × D) or
+## Implementation (`parcelwise_run/07c_train_ltae.py`, `HEAD: ltae`)
+1. Reads the same embedding files as `07_train_evaluate.py` (`<model>_agyear_tiles[_2023-24].npz`, 12 steps × D) or
    the monthly Sentinel-2 features (15 variables × 12 months; gaps filled by interpolation in time, as in script 03).
 2. Standardises each channel with the training parcels' observed months; months without a clear pixel are masked in
    the attention, not filled.
@@ -72,7 +72,7 @@ parcels with the same bootstrap draws. Regions: Morocco and Utah 2023/24.
    fold; 3 seeds per round, the out-of-fold probability is their mean.
 5. Writes `oof_predictions.csv`, `metrics_per_fold.csv`, `metrics_with_ci.csv`, `metrics_per_seed.csv`,
    `training_history.csv`, `attention_by_month.csv` and `run_config.json` in the format of script 03
-   (`model = "ltae"`), so `04_compare_models.py` and `make_report.py` treat it like any other run.
+   (`model = "ltae"`), so `08_compare_models.py` and `make_report.py` treat it like any other run.
 
 ## Label efficiency (part of this experiment)
 

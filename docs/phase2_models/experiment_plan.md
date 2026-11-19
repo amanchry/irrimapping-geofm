@@ -76,7 +76,7 @@ All five inputs are cut from the same tile store. Sentinel-2 only.
 | **AgriFM** | 64 px chip, p16 grid | 10 S2 bands | 4 px patch, stride 32 px (320 m) | 1 × 1,024 (whole year) | 1 | `02d` |
 | **Pixel sets** (PSE-TAE only) | all inner pixels of the parcel | 10 S2 bands | pixel | N pixels × 12 × 10 | 12 | `03b` (view B) |
 
-Patch embeddings are pooled over the parcel with the patch-share weights ([models pipeline §5](frozen_encoders.md#5-scripts-02a02d--foundation-model-embeddings)).
+Patch embeddings are pooled over the parcel with the patch-share weights ([models pipeline §5](frozen_encoders.md#5-scripts-06a06d--foundation-model-embeddings)).
 Clay and Prithvi also receive the parcel location and the date, as in their pretraining; [A4](#7-ablations) tests
 whether the location acts as a shortcut.
 
@@ -140,7 +140,7 @@ Setup page: [E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md)
 | **Classifiers and grids** | `logreg` C ∈ {0.01, 0.1, 1, 10}, balanced classes · `rf` 500 trees, max_features ∈ {√p, 0.3}, min_samples_leaf ∈ {1, 5}, class_weight ∈ {none, balanced_subsample} · `svm` RBF, C ∈ {1, 10}, γ ∈ {scale, 0.01}, balanced classes |
 | **Headline** | logistic regression (linear probe) for the GeoFMs; random forest for the baseline, as in the protocol; all three reported |
 | **Runs** | 5 inputs × 2 regions = 10 runs (3 classifiers each) |
-| **Script** | `models_run/03_train_evaluate.py` |
+| **Script** | `parcelwise_run/07_train_evaluate.py` |
 
 ### E03 · PCA + MLP
 
@@ -154,7 +154,7 @@ Setup page: [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index
 | **Training** | AdamW, learning rate 1e-3, weight decay 1e-4, batch 128, class-weighted cross-entropy, up to 100 epochs, early stopping on validation macro-F1 (patience 15), 3 seeds |
 | **Tuning** | none beyond early stopping (same budget for every input) |
 | **Runs** | 5 inputs × 2 regions × 3 seeds |
-| **Script** | `models_run/03c_train_ltae.py`, `HEAD: mlp` on the PCA input |
+| **Script** | `parcelwise_run/07c_train_ltae.py`, `HEAD: mlp` on the PCA input |
 
 ### E04 · L-TAE + MLP
 
@@ -168,7 +168,7 @@ Setup page: [E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md
 | **Model** | L-TAE (Garnot & Landrieu 2020) with the paper's default size: 16 heads, d_k 8, d_model 256, output MLP 256-128; then a linear layer with 2 outputs; sinusoidal encoding of each month's mid-month day (days since the start of the agricultural year), as in L-TAE |
 | **Training** | as E03 (AdamW 1e-3, weight decay 1e-4, batch 128, class-weighted cross-entropy, ≤ 100 epochs, patience 15, 3 seeds) |
 | **Runs** | 4 inputs × 2 regions × 3 seeds |
-| **Script** | `models_run/03c_train_ltae.py`, `HEAD: ltae` |
+| **Script** | `parcelwise_run/07c_train_ltae.py`, `HEAD: ltae` |
 | **Compared with** | the E03 run of the same input (same head, PCA instead of L-TAE) and the E02 runs |
 
 ### E05 · PSE-TAE from scratch
@@ -182,7 +182,7 @@ Setup page: [E05](../archive/parcel_wise_classification/E05_psetae_scratch/index
 | **Model** | PSE-TAE (Garnot et al. 2020): 64 pixels sampled per parcel and month; at prediction the mean of 5 random pixel draws |
 | **Training** | Adam 1e-3, weight decay 1e-4, batch 128, ≤ 100 epochs, early stopping on validation macro-F1 (patience 15), 3 seeds |
 | **Runs** | `morocco_s2`, `utah_s2` × 3 seeds |
-| **Script** | `models_run/03b_train_psetae.py` (`N_SEEDS = 3`) |
+| **Script** | `parcelwise_run/07b_train_psetae.py` (`N_SEEDS = 3`) |
 
 ---
 
@@ -229,10 +229,10 @@ From the out-of-fold predictions; no new training.
 
 | Analysis | Why | Script |
 | --- | --- | --- |
-| Paired differences vs the baseline, Holm-adjusted | main test of Q1 | `04_compare_models.py` |
-| Results by zone, season, parcel size and patch purity | region shortcut (Morocco rainfed in Doukkala); small parcels inside 160 m patches | `05_breakdown_oof.py` |
-| Results by crop group (Utah: rainfed alfalfa vs grain) | where each input fails | later: `05_breakdown_oof.py` extension (needs the crop names joined from `01_labels`) |
-| Random vs spatial CV | how much random CV overstates accuracy | `03_train_evaluate.py` |
+| Paired differences vs the baseline, Holm-adjusted | main test of Q1 | `08_compare_models.py` |
+| Results by zone, season, parcel size and patch purity | region shortcut (Morocco rainfed in Doukkala); small parcels inside 160 m patches | `09_breakdown_oof.py` |
+| Results by crop group (Utah: rainfed alfalfa vs grain) | where each input fails | later: `09_breakdown_oof.py` extension (needs the crop names joined from `01_labels`) |
+| Random vs spatial CV | how much random CV overstates accuracy | `07_train_evaluate.py` |
 | Calibration (Brier, ECE) | usable probabilities for maps | `03`, `03b`, `03c` |
 | Month importance (permutation, L-TAE attention) | which part of the season separates the classes | `03`, `03c` |
 | Compute cost: parameters, embedding time, training time | practical value | collected by hand from the run logs |
@@ -270,10 +270,10 @@ One experiment at a time: implement, check on a small run, run in both regions, 
 | Step | Work | Needs |
 | --- | --- | --- |
 | 0a | ✅ AgriFM normalisation: chip statistics of each region ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)); config statistics as sensitivity run | – |
-| 0b | ✅ Code (13 Nov 2026): region in scripts 02a–05; HGB removed; seeds and label efficiency in 03 / 03b / 03c; new `03c_train_ltae.py`; Holm rule in 04; per-region reports; Slurm submitter | – |
+| 0b | ✅ Code (13 Nov 2026): region in scripts 02a–05; HGB removed; seeds and label efficiency in 03 / 03b / 03c; new `07c_train_ltae.py`; Holm rule in 04; per-region reports; Slurm submitter | – |
 | 0c | ✅ Embeddings, Sentinel-2 only (12 Nov 2026): **Morocco** TerraMind and AgriFM again, Clay and Prithvi reused; **Utah** all four (cluster GPU) | 0a, 0b |
 | 1 | [**E02**](../archive/parcel_wise_classification/E02_frozen_pca/index.md) Morocco + Utah; report page with tables and figures (`make_report.py` extended to two regions) | 0c |
-| 2 | Write `03c_train_ltae.py` (heads `mlp` and `ltae`); [**E03**](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md), then [**E04**](../archive/parcel_wise_classification/E04_frozen_ltae/index.md); reports | 1 |
+| 2 | Write `07c_train_ltae.py` (heads `mlp` and `ltae`); [**E03**](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md), then [**E04**](../archive/parcel_wise_classification/E04_frozen_ltae/index.md); reports | 1 |
 | 3 | [**E05**](../archive/parcel_wise_classification/E05_psetae_scratch/index.md) PSE-TAE (3 seeds) | – (can run any time on the cluster) |
 | 5 | Ablations **A1**, **A4**, **A2** (A3, A5 if time allows) | 1 |
 | 6 | RQ1 synthesis over both regions | 1–5 |

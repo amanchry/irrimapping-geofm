@@ -5,7 +5,7 @@ make_report.py  —  write the result tables and figures of an experiment into i
 What it does
 ------------
 1. Reads the experiment's config (experiments/parcel_wise_classification/<EXPERIMENT>/config.yaml) and its results for every region
-   (results/<region>/comparison/ from models_run/04_compare_models.py, results/<region>/<run>/ from the training
+   (results/<region>/comparison/ from parcelwise_run/08_compare_models.py, results/<region>/<run>/ from the training
    scripts). E01 (before the two regions) has its results directly in results/ and is read as Morocco.
 2. Writes the figures into the documentation, docs/archive/parcel_wise_classification/<EXPERIMENT>/figures/ (file names start with the
    region): macro-F1 per input and classifier (95% CI), macro-F1 per test fold, the learning curves (label
@@ -102,7 +102,7 @@ def fold_descriptions(region):
     """{fold: 'Doukkala 180, Souss 59'}: where the rainfed parcels of each fold are (zones with >= 10 of them),
     counting only the agricultural years of the region's views (Utah's fold file also holds 2021)."""
     import pyogrio
-    sys.path.insert(0, str(ROOT / "models_run"))
+    sys.path.insert(0, str(ROOT / "parcelwise_run"))
     from experiment_utils import region_paths, views_name
     paths = region_paths(region, "agyear", views_name(region))
     if not paths["split_file"].exists():
@@ -424,7 +424,7 @@ def breakdown_parts(res, figs, tag, region):
     parts = ["### Results by zone",
              f"Only the focus zone, where both classes are common ({int(first['n_parcels']):,} parcels, "
              f"{int(first['n_rainfed'])} rainfed, {int(first['n_blocks'])} blocks): does the input separate the "
-             "classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.",
+             "classes inside one region, or does it recognise the region? Script `09_breakdown_oof.py`.",
              how_to_read("zone"),
              "\n".join(lines)]
     if (b / "breakdown.png").exists():

@@ -13,7 +13,7 @@ answer: "No frozen GeoFM beats the S1/S2 baseline (best Clay + SVM 0.910 vs 0.90
 inputs: [s1s2, clay, prithvi, terramind, agrifm]
 steps: [train_evaluate, compare, report]
 
-train_evaluate:            # models_run/03_train_evaluate.py
+train_evaluate:            # parcelwise_run/07_train_evaluate.py
   VALIDATION: nested       # inner spatial CV on the 4 training folds, refit on all 4
   WINDOW: agyear
   S1S2_SOURCE: tiles
@@ -27,7 +27,7 @@ train_evaluate:            # models_run/03_train_evaluate.py
   N_BOOT: 1000
   SEED: 42
 
-compare:                   # models_run/04_compare_models.py
+compare:                   # parcelwise_run/08_compare_models.py
   BASELINE_CLASSIFIER: rf
 
 report:

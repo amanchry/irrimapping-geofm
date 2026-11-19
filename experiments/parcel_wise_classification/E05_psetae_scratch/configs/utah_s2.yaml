@@ -1,5 +1,5 @@
 # E05 - PSE-TAE trained from scratch: Utah, 10 Sentinel-2 bands
-# One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
+# One run of parcelwise_run/07b_train_psetae.py. Same setting names as at the top of the script; anything not listed
 # keeps the script's value. Results: experiments/parcel_wise_classification/E05_psetae_scratch/results/psetae_utah_views_2023-24_s2/
 REGION: utah
 VIEWS_NAME: views_2023-24  # 2023/24 only; Sentinel-1 descending (views_info.json)

@@ -17,11 +17,13 @@ Irrigated agriculture covers about a fifth of the world's cropland but produces 
 
 ```bash
 conda env create -f environment.yml && conda activate condaml
-python ml_dataset_prep/01_prepare_labels.py      # … 02, 03, 04: the dataset
-python models_run/02a_embed_clay.py              # … 02b–02d: foundation-model embeddings
-python experiments/run_experiment.py             # an experiment from its config (EXPERIMENT at the top)
-mkdocs serve --livereload -a 127.0.0.1:8001      # preview the documentation
+python cropland_extent/make_cropland_mask.py           # step 0: cropland mask
+python pixelwise_run/01_prepare_labels_Morocco.py      # steps 01-06 in pixelwise_run/ (numbered in run order)
+python experiments/E01_s2_pixel_baseline/run.py        # experiments E01-E04
+python pixelwise_run/05_compare_experiments.py         # comparison of all finished runs
+mkdocs serve --livereload -a 127.0.0.1:8001           # preview the documentation
 ```
 
-Every script has its settings at the top and a description of what it does. Details:
+Two pipelines, each with numbered scripts: `pixelwise_run/` (current) and `parcelwise_run/` (archive). Every
+script has its settings at the top and a description of what it does. Details:
 [getting started](https://amanchry.github.io/irrimapping-geofm/setup/).

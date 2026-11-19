@@ -1,5 +1,5 @@
 # E05 - PSE-TAE trained from scratch: Morocco, 10 Sentinel-2 bands + Sentinel-1 VV, VH
-# One run of models_run/03b_train_psetae.py. Same setting names as at the top of the script; anything not listed
+# One run of parcelwise_run/07b_train_psetae.py. Same setting names as at the top of the script; anything not listed
 # keeps the script's value. Results: experiments/parcel_wise_classification/E05_psetae_scratch/results/psetae_morocco_views_s2s1/
 REGION: morocco
 VIEWS_NAME: views          # 2023/24 + 2024/25; Sentinel-1 ascending (views_info.json)

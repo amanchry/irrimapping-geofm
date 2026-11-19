@@ -82,7 +82,7 @@ All results: [Results](archive/parcel_wise_classification/results.md).
 
 1. Run [E02](archive/parcel_wise_classification/E02_frozen_pca/index.md): the main RQ1 result.
 2. Confirm AgriFM's input normalisation; re-embed if needed.
-3. Write the L-TAE pipeline (`models_run/03c_train_ltae.py`) and run [E04](archive/parcel_wise_classification/E04_frozen_ltae/index.md).
+3. Write the L-TAE pipeline (`parcelwise_run/07c_train_ltae.py`) and run [E04](archive/parcel_wise_classification/E04_frozen_ltae/index.md).
 4. Results per region and per season from the out-of-fold predictions.
 5. Start RQ2: segmentation head (UPerNet) and LoRA fine-tuning; neural baselines TempCNN and U-TAE.
 

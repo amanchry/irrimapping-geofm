@@ -16,11 +16,11 @@ label_efficiency:          # learning curve inside this experiment (Q5 of the pl
   fractions: [0.10, 0.25, 0.50]   # share of the training blocks; 1.0 = the main run
   draws: 3                        # block draws per fraction; draw k is identical in every experiment and input (paired)
   seeds_per_draw: 1               # neural runs: one seed per draw (the main run keeps its 3 seeds)
-  min_rainfed: 20                 # fixed in models_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
+  min_rainfed: 20                 # fixed in parcelwise_run/experiment_utils.py (MIN_RAINFED); nested draws: 10% ⊂ 25% ⊂ 50%
 
 steps: [ltae, compare, breakdown, report]
 
-ltae:                      # models_run/03c_train_ltae.py (same output format as 03)
+ltae:                      # parcelwise_run/07c_train_ltae.py (same output format as 03)
   HEAD: mlp                # MLP on the PCA input (E04 uses HEAD: ltae)
   FEATURE_MODE: concat
   PCA_DIM: 128

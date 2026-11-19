@@ -5,16 +5,16 @@ run_experiment.py  —  run one experiment from its config file, step by step, f
 What it does
 ------------
 Reads experiments/parcel_wise_classification/<EXPERIMENT>/config.yaml and runs its steps in order, for every region in "regions"
-(Morocco, Utah). Every step is an ordinary script of models_run/; this file only starts it with environment
+(Morocco, Utah). Every step is an ordinary script of parcelwise_run/; this file only starts it with environment
 variables (experiment, region, input, training fraction, draw, seeds), so the script takes its settings from the
 config file and writes into experiments/parcel_wise_classification/<EXPERIMENT>/results/<region>/.
 
   step             script                              runs (per region)
-  train_evaluate   models_run/03_train_evaluate.py     once per input in "inputs"
-  ltae             models_run/03c_train_ltae.py        once per input in "inputs" (section "ltae": HEAD mlp / ltae)
-  psetae           models_run/03b_train_psetae.py      once per file in "psetae_configs" whose REGION is the region
-  compare          models_run/04_compare_models.py     once per region: all runs on the same parcels, learning curves
-  breakdown        models_run/05_breakdown_oof.py      once per region (optional step)
+  train_evaluate   parcelwise_run/07_train_evaluate.py     once per input in "inputs"
+  ltae             parcelwise_run/07c_train_ltae.py        once per input in "inputs" (section "ltae": HEAD mlp / ltae)
+  psetae           parcelwise_run/07b_train_psetae.py      once per file in "psetae_configs" whose REGION is the region
+  compare          parcelwise_run/08_compare_models.py     once per region: all runs on the same parcels, learning curves
+  breakdown        parcelwise_run/09_breakdown_oof.py      once per region (optional step)
   report           experiments/parcel_wise_classification/make_report.py          once: tables + figures into docs/archive/parcel_wise_classification/<name>/report.md
 
 Label efficiency: if the config has a "label_efficiency" block, every training run is repeated with each fraction
@@ -41,7 +41,7 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "models_run"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "parcelwise_run"))
 from experiment_utils import clean_run_env, results_root  # noqa: E402
 
 # ================================ SETTINGS ================================
@@ -55,11 +55,11 @@ QUICK = False                                             # True = QUICK_TEST mo
 # ==========================================================================
 
 SCRIPTS = {                                               # step -> (script, once per input?)
-    "train_evaluate": (ROOT / "models_run" / "03_train_evaluate.py", True),
-    "ltae": (ROOT / "models_run" / "03c_train_ltae.py", True),
-    "psetae": (ROOT / "models_run" / "03b_train_psetae.py", False),
-    "compare": (ROOT / "models_run" / "04_compare_models.py", False),
-    "breakdown": (ROOT / "models_run" / "05_breakdown_oof.py", False),
+    "train_evaluate": (ROOT / "parcelwise_run" / "07_train_evaluate.py", True),
+    "ltae": (ROOT / "parcelwise_run" / "07c_train_ltae.py", True),
+    "psetae": (ROOT / "parcelwise_run" / "07b_train_psetae.py", False),
+    "compare": (ROOT / "parcelwise_run" / "08_compare_models.py", False),
+    "breakdown": (ROOT / "parcelwise_run" / "09_breakdown_oof.py", False),
     "report": (ROOT / "experiments" / "parcel_wise_classification" / "make_report.py", False),
 }
 
@@ -69,7 +69,7 @@ def git_commit():
     try:
         commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                                 text=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain", "models_run", "experiments"], cwd=ROOT,
+        dirty = subprocess.run(["git", "status", "--porcelain", "parcelwise_run", "experiments"], cwd=ROOT,
                                capture_output=True, text=True).stdout.strip()
         return commit + (" (with uncommitted changes)" if dirty else "")
     except OSError:

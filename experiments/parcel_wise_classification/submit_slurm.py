@@ -9,7 +9,7 @@ input or PSE-TAE config, and the label-efficiency fractions and draws) and submi
   train_evaluate (03)        -> jobs/step_cpu.sbatch
   ltae (03c), psetae (03b)   -> jobs/step_gpu.sbatch
 Then one CPU job per region that waits for all of them (--dependency=afterok) and runs the compare step
-(04_compare_models.py) and, if the experiment has it, the breakdown step (05_breakdown_oof.py). The report is
+(08_compare_models.py) and, if the experiment has it, the breakdown step (09_breakdown_oof.py). The report is
 written afterwards on the Mac (copy results/ back, then run_experiment.py with ONLY_STEPS = ["report"]).
 
 Runs that already have results are skipped by the scripts themselves (EXPERIMENT_SKIP_DONE), so submitting
@@ -33,7 +33,7 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "models_run"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "parcelwise_run"))
 from experiment_utils import results_root  # noqa: E402
 
 # Every variable a run may read; each job gets all of them (empty = not set), so nothing leaks from the shell.
@@ -51,11 +51,11 @@ WAIT_FOR = []                          # extra job ids the compare jobs wait for
 DRY_RUN = True                         # True = only print the commands
 # ==========================================================================
 
-SCRIPTS = {"train_evaluate": ("models_run/03_train_evaluate.py", "jobs/step_cpu.sbatch"),
-           "ltae": ("models_run/03c_train_ltae.py", "jobs/step_gpu.sbatch"),
-           "psetae": ("models_run/03b_train_psetae.py", "jobs/step_gpu.sbatch"),
-           "compare": ("models_run/04_compare_models.py", "jobs/step_cpu.sbatch"),
-           "breakdown": ("models_run/05_breakdown_oof.py", "jobs/step_cpu.sbatch")}
+SCRIPTS = {"train_evaluate": ("parcelwise_run/07_train_evaluate.py", "jobs/step_cpu.sbatch"),
+           "ltae": ("parcelwise_run/07c_train_ltae.py", "jobs/step_gpu.sbatch"),
+           "psetae": ("parcelwise_run/07b_train_psetae.py", "jobs/step_gpu.sbatch"),
+           "compare": ("parcelwise_run/08_compare_models.py", "jobs/step_cpu.sbatch"),
+           "breakdown": ("parcelwise_run/09_breakdown_oof.py", "jobs/step_cpu.sbatch")}
 
 
 def load_plan_runs():

@@ -2,7 +2,7 @@
 
 The continuous maps classify every 10 m pixel on its own, so the models are trained and tested on **pixels**, not
 on parcels ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
-`ml_dataset_prep/04c_make_pixel_samples.py` turns the labelled parcels into labelled pixels. It creates no new
+`pixelwise_run/04_make_pixel_samples.py` turns the labelled parcels into labelled pixels. It creates no new
 labels: the label of a pixel is the survey label of its parcel, which `03_build_tiles.py` already wrote into the
 label raster of each tile. The script picks pixels and writes **one row per pixel**: its 12-month time series, its
 label, parcel, fold and position. Every pixel-wise experiment starts from this table, so all models see the same
@@ -47,8 +47,6 @@ Cropland pixels outside the surveyed parcels are not used: their class is unknow
 | `summary.csv` | pixels and parcels per class and fold |
 | `samples_info.json` | settings, band order, class codes, CRS |
 
-The coordinates allow other inputs, such as AlphaEarth or TESSERA embeddings, to be sampled at exactly the same
-pixels.
 
 ## Morocco 2023/24
 

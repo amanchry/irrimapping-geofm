@@ -90,7 +90,7 @@ flowchart LR
 
 ## Training
 
-| Setting | Value (config `ltae:` section, script `models_run/03c_train_ltae.py`, `HEAD: mlp`) |
+| Setting | Value (config `ltae:` section, script `parcelwise_run/07c_train_ltae.py`, `HEAD: mlp`) |
 | --- | --- |
 | Optimiser | AdamW, learning rate 0.001 (`LEARNING_RATE`), weight decay 0.0001 (`WEIGHT_DECAY`) |
 | Loss | cross-entropy with class weights (rainfed errors count more, as rainfed is the minority class) |

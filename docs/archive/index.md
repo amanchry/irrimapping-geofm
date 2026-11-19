@@ -22,8 +22,8 @@ The parcel-wise results remain the RQ1 evidence for which inputs separate irriga
 
 ## Re-running an archived experiment
 
-The scripts of the archive run from their new folder; the training scripts in `models_run/` are shared and write
-into the archive's `results/` folders.
+The experiment scripts of the archive (`experiments/parcel_wise_classification/`) start the parcel-wise training
+scripts in `parcelwise_run/`, which write into the archive's `results/` folders.
 
 ```bash
 # experiments/parcel_wise_classification/run_experiment.py:  EXPERIMENT = "E02_frozen_pca"

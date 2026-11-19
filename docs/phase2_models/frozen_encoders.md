@@ -2,7 +2,7 @@
 
 This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-2 feature baseline under an identical spatial validation design. Every input uses Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 
-It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../archive/parcel_wise_classification/index.md), which run these scripts with the settings of a config file.
+It reads only the ML-ready dataset produced in [`pixelwise_run/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../archive/parcel_wise_classification/index.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -10,7 +10,7 @@ It reads only the ML-ready dataset produced in [`ml_dataset_prep/`](../phase1_da
 2. [Research questions and design](#2-research-questions-and-design)
 3. [Inputs compared](#3-inputs-compared)
 4. [Script 01 — inspect the dataset](#4-script-01--inspect_dataset)
-5. [Scripts 02a–02d — foundation-model embeddings](#5-scripts-02a02d--foundation-model-embeddings)
+5. [Scripts 06a–06d — foundation-model embeddings](#5-scripts-06a06d--foundation-model-embeddings)
 6. [Script 03 — train and evaluate](#6-script-03--train_evaluate)
 7. [Script 04 — compare inputs](#7-script-04--compare_models)
 8. [Output layout](#8-output-layout)
@@ -60,10 +60,10 @@ Sentinel-1 added to the baseline and to TerraMind (Morocco), embeddings averaged
 
 | Step | Script | GPU | What it does |
 | --- | --- | --- | --- |
-| 1 | `01_inspect_dataset.py` | no | checks the dataset before any model is trained |
-| 2 | `02a_embed_clay.py` … `02d_embed_agrifm.py` | recommended | frozen GeoFM embeddings per parcel |
-| 3 | `03_train_evaluate.py` | no | trains and evaluates the classifiers for one input (run once per input) |
-| 4 | `04_compare_models.py` | no | compares all inputs on the same parcels |
+| 1 | `05_inspect_dataset.py` | no | checks the dataset before any model is trained |
+| 2 | `06a_embed_clay.py` … `06d_embed_agrifm.py` | recommended | frozen GeoFM embeddings per parcel |
+| 3 | `07_train_evaluate.py` | no | trains and evaluates the classifiers for one input (run once per input) |
+| 4 | `08_compare_models.py` | no | compares all inputs on the same parcels |
 
 ---
 
@@ -126,7 +126,7 @@ For a closer look in QGIS, `tools/a3_export_chips_geotiff.py` writes single chip
 
 ---
 
-## 5. Scripts 02a–02d — foundation-model embeddings
+## 5. Scripts 06a–06d — foundation-model embeddings
 
 All four scripts follow the same pattern. Only the model, its bands and its normalisation change.
 
@@ -155,10 +155,10 @@ flowchart TD
 
 | Script | Model | Output |
 | --- | --- | --- |
-| `02a_embed_clay.py` | Clay v1.5 | `[N, 12, 1024]` |
-| `02b_embed_prithvi.py` | Prithvi-EO-2.0-300M-TL | `[N, 12, 1024]` |
-| `02c_embed_terramind.py` | TerraMind-1.0-base | `[N, 12, 768]` |
-| `02d_embed_agrifm.py` | AgriFM | `[N, 1, 1024]` |
+| `06a_embed_clay.py` | Clay v1.5 | `[N, 12, 1024]` |
+| `06b_embed_prithvi.py` | Prithvi-EO-2.0-300M-TL | `[N, 12, 1024]` |
+| `06c_embed_terramind.py` | TerraMind-1.0-base | `[N, 12, 768]` |
+| `06d_embed_agrifm.py` | AgriFM | `[N, 1, 1024]` |
 
 AgriFM uses the patch size of its pretrained Sentinel-2 patch embedding (4 × 4 px, output stride 32 px), and the
 script stops unless every encoder weight is loaded from `AgriFM.pth`; embeddings produced before 6 Nov 2026 came
@@ -172,8 +172,8 @@ statistics of the region's own chips ([D15](../decisions.md#d15-agrifm-normalise
 `EMBED_VIEWS` set them without editing the script (Slurm jobs):
 
 ```bash
-python models_run/02a_embed_clay.py                                              # Morocco, views/
-EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python models_run/02a_embed_clay.py  # Utah 2023/24
+python parcelwise_run/06a_embed_clay.py                                              # Morocco, views/
+EMBED_REGION=utah EMBED_VIEWS=views_2023-24 python parcelwise_run/06a_embed_clay.py  # Utah 2023/24
 ```
 
 ### 5.2 How each model handles the 12 months
@@ -216,7 +216,7 @@ embedding and the months never see each other.
 the script gives it 4 consecutive months per pass: Sep–Dec, Jan–Apr and May–Aug in Morocco (Oct–Jan, Feb–May,
 Jun–Sep in Utah). Its tokens span **1 month** × 16 × 16 px (temporal patch size 1) and no layer reduces the time
 axis, so 4 months in give 4 sets of tokens out: for a 64 px chip, 4 months × a 4 × 4 patch grid (`[B, T, n, n, D]`
-with T = 4 in `02b_embed_prithvi.py`). The only effect of passing 4 months together is attention between them: each
+with T = 4 in `06b_embed_prithvi.py`). The only effect of passing 4 months together is attention between them: each
 month's embedding is computed with the other three as context. Three passes × 4 months = 12 embeddings. They could
 be averaged to one per pass, but they are kept monthly so that the months are combined in the same way as for Clay
 and TerraMind.
@@ -332,7 +332,7 @@ flowchart TD
     OOF --> MET["Metrics + 95% block-bootstrap CI"]
 ```
 
-The validation fold is used only to choose the classifier's hyperparameters; the test fold is never used for any choice. The same scheme is used for every input, so the classifiers and a later neural-network baseline are trained, tuned and tested identically. `VALIDATION = "nested"` in `03_train_evaluate.py` gives the alternative design (tuning by spatial CV on the 4 training folds, refit on all 4), for a sensitivity check; its runs get the suffix `_nested`.
+The validation fold is used only to choose the classifier's hyperparameters; the test fold is never used for any choice. The same scheme is used for every input, so the classifiers and a later neural-network baseline are trained, tuned and tested identically. `VALIDATION = "nested"` in `07_train_evaluate.py` gives the alternative design (tuning by spatial CV on the 4 training folds, refit on all 4), for a sensitivity check; its runs get the suffix `_nested`.
 
 Every parcel is predicted once, by a model that saw neither its block in training nor any information from it during tuning. That makes the score an estimate of how well the model maps **new areas**.
 
@@ -395,7 +395,7 @@ Steps 2, 3 and 5 are skipped in label-efficiency runs (§6.6), which only need t
 | `N_SEEDS` (03b, 03c) | trainings per round; the out-of-fold probability is their mean | `EXPERIMENT_N_SEEDS` (1 in label-efficiency runs) |
 | `QUICK_TEST` | fast check of the whole chain | `EXPERIMENT_QUICK_TEST` |
 
-The block draw is one shared function (`models_run/experiment_utils.py`, `draw_training_blocks()`):
+The block draw is one shared function (`parcelwise_run/experiment_utils.py`, `draw_training_blocks()`):
 
 1. Take the training blocks of the round, counting only parcels of the views' agricultural years (Utah's fold file
    also holds 2021).
@@ -546,19 +546,19 @@ The embeddings (`02_embeddings/`) depend only on the dataset and the model, so e
 
 ```bash
 conda activate condaml
-python models_run/01_inspect_dataset.py
-python models_run/02a_embed_clay.py          # GPU recommended; resumable
-python models_run/02b_embed_prithvi.py
-python models_run/02c_embed_terramind.py
-python models_run/02d_embed_agrifm.py
+python parcelwise_run/05_inspect_dataset.py
+python parcelwise_run/06a_embed_clay.py          # GPU recommended; resumable
+python parcelwise_run/06b_embed_prithvi.py
+python parcelwise_run/06c_embed_terramind.py
+python parcelwise_run/06d_embed_agrifm.py
 # an experiment, every region and label-efficiency run (set EXPERIMENT at the top of run_experiment.py):
 python experiments/run_experiment.py
 # the same on the cluster, one Slurm job per run (on the server; DRY_RUN = True first):
 python experiments/submit_slurm.py
 # or one run by hand, for development (EXPERIMENT = None in the script, results in outputs/<REGION>/study/):
-python models_run/03_train_evaluate.py
-EXPERIMENT_REGION=utah EXPERIMENT_INPUT=clay python models_run/03c_train_ltae.py
-python models_run/04_compare_models.py
+python parcelwise_run/07_train_evaluate.py
+EXPERIMENT_REGION=utah EXPERIMENT_INPUT=clay python parcelwise_run/07c_train_ltae.py
+python parcelwise_run/08_compare_models.py
 ```
 
 `QUICK_TEST = True` in a script, or `QUICK = True` in `run_experiment.py` / `submit_slurm.py`, gives a fast check
@@ -572,7 +572,7 @@ region that waits for them; the report is written on the Mac after copying `resu
 | Script | Main settings |
 | --- | --- |
 | 01 | `EXAMPLE_PATCH = 16`, `N_EXAMPLES = 3`, `SEED = 42` |
-| 02a–02d | `CHIP_SOURCE = "tiles"`, `CHIP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
+| 06a–06d | `CHIP_SOURCE = "tiles"`, `CHIP_PATCH_PX` (8 Clay, 16 others), `BATCH_PARCELS`, `EMBED_BATCH`, `DEVICE`. Model-specific: `FRAMES_PER_PASS`, `USE_COORDS` (Prithvi); `MODALITIES` (TerraMind) |
 | 03 | `REGION`, `VIEWS_NAME`, `INPUT`, `S1S2_VARIABLES` (s2 default / all / s1), `TILE_FEATURES` (inner / all), `S1_ORBIT` (chips / ASC / DSC / both), `FEATURE_MODE` (concat / mean), `PCA_DIM = 128`, `TRAIN_FRACTION`, `FRACTION_DRAW`, `RF_TREES = 500`, `N_BOOT = 1000`, `QUICK_TEST` |
 | 03c | `REGION`, `VIEWS_NAME`, `INPUT`, `HEAD` (mlp / ltae), `PCA_DIM`, `N_HEADS`, `D_K`, `D_MODEL`, `MLP`, `DROPOUT`, `LEARNING_RATE`, `WEIGHT_DECAY`, `BATCH_SIZE`, `EPOCHS`, `PATIENCE`, `N_SEEDS = 3`, `TRAIN_FRACTION`, `FRACTION_DRAW` |
 | 04, 05 | `REGION`; 04: `BASELINE_RUN`, `RUNS`, `N_BOOT = 1000`, `SEED = 42`, in experiment mode `EXTRA_RUNS`; 05: `FOCUS_ZONE`, `IRRIGATED_ONLY` per region |

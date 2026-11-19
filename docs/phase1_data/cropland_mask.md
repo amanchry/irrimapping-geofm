@@ -11,7 +11,7 @@ reference layers drawn for comparison. The code is in `cropland_extent/`; all ou
 | `download_esa_worldcover.py` | ESA WorldCover 2021, 10 m GeoTIFF + PNG map | `esa_worldcover/` |
 | `download_lgrip30.py` | LGRIP30 irrigated / rainfed cropland, 30 m GeoTIFF + PNG map | `lgrip30/` |
 
-All three use the same area: the region's **mapping area** in `ml_dataset_prep/regions.py`, i.e. Morocco without
+All three use the same area: the region's **mapping area** in `pixelwise_run/regions.py`, i.e. Morocco without
 Western Sahara (FAO GAUL 2015, 414,905 km²) and the state of Utah (FAO GAUL 2024, 219,809 km²).
 
 ## 1. Why a mask from several products
@@ -63,7 +63,7 @@ The year of a product is the calendar year in which the agricultural year ends, 
    locally.
 3. **One raster per agricultural year.** `cropland_mask.vrt` joins all blocks into one seamless layer.
 4. **Tile table.** `tiles_cropland.parquet` lists every 128 px tile with its number of cropland pixels: the input
-   of the wall-to-wall tiles (`ml_dataset_prep/03c_build_cropland_tiles.py`).
+   of the wall-to-wall tiles (`pixelwise_run/06_build_cropland_tiles.py`).
 
 **Bands of the mask** (uint16, NODATA 65535 outside the mapping area):
 
@@ -112,13 +112,13 @@ Mapping the whole cropland means imagery for every tile that contains cropland: 
 370 GB of monthly Sentinel-2 composites per year) and 24,861 in Utah (about 69 GB), against 2,183 and 2,720 tiles
 around the labelled parcels. Morocco's cropland forms one continuous belt from Tangier to Agadir (a quarter of the
 country), and scattered fields pull in whole 1.64 km² tiles. These tiles are downloaded only for the mapping stage
-(`03c_build_cropland_tiles.py`); model training and testing use the tiles around the labelled parcels.
+(`06_build_cropland_tiles.py`); model training and testing use the tiles around the labelled parcels.
 
 ![Wall-to-wall tile extent, 2023/24](figures/cropland_tiles_extent_2023-24.png)
 
 ## 6. Check against the labelled parcels
 
-`ml_dataset_prep/01_prepare_labels_*.py` reads the mask of each parcel's agricultural year and adds `mask_frac`
+`pixelwise_run/01_prepare_labels_*.py` reads the mask of each parcel's agricultural year and adds `mask_frac`
 (share of the parcel's pixels in the mask), `mask_votes`, `in_mask` (≥ 50% of the parcel) and the share per product;
 `mask_check.csv` reports the share of irrigated and rainfed parcels inside the mask (the mask's omission on surveyed
 cropland). In the Moroccan pixel samples of 2023/24, 0.2% of the sampled parcel pixels lie outside the mask.

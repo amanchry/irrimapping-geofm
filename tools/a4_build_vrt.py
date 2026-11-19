@@ -4,7 +4,7 @@ a4_build_vrt.py  —  combine all tiles of the tile store into virtual rasters (
 
 What it does
 ------------
-The tile store of ml_dataset_prep/03_build_tiles.py holds thousands of small 128 x 128-pixel GeoTIFFs. This
+The tile store of pixelwise_run/03_build_tiles.py holds thousands of small 128 x 128-pixel GeoTIFFs. This
 script writes GDAL virtual rasters (.vrt) that show them as ONE seamless raster per agricultural year,
 so the whole study area can be opened in QGIS (or read with rasterio) as a single layer. A VRT is a
 small XML file that only points to the tiles: nothing is copied, and the tiles stay the only data.
@@ -41,7 +41,7 @@ Notes
 * Paths inside the VRTs are relative, so the project folder can be moved.
 * Re-run after more tiles have been downloaded.
 
-Run (from the project folder, after ml_dataset_prep/03_build_tiles.py)
+Run (from the project folder, after pixelwise_run/03_build_tiles.py)
 --------------------------------------------------------------
     python tools/a4_build_vrt.py
 """
@@ -54,7 +54,7 @@ from xml.sax.saxutils import escape
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-WINDOW = "agyear"                                                   # as in ml_dataset_prep/03_build_tiles.py
+WINDOW = "agyear"                                                   # as in pixelwise_run/03_build_tiles.py
 TILE_ROOT = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW
 TILE_DIR = TILE_ROOT / "tiles"
 OUT_DIR = TILE_ROOT / "vrt"
@@ -133,7 +133,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     seasons = find_tiles()
     if not seasons:
-        raise SystemExit(f"No *_img.tif tiles found in {TILE_DIR}: run ml_dataset_prep/03_build_tiles.py first")
+        raise SystemExit(f"No *_img.tif tiles found in {TILE_DIR}: run pixelwise_run/03_build_tiles.py first")
     months = [k for k in range(N_MONTHS) if MONTHS is None or MONTH_NAMES[k] in MONTHS]
     for season, tiles in seasons.items():
         print(f"\n{season}: {len(tiles):,} downloaded tiles")

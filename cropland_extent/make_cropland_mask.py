@@ -12,7 +12,7 @@ product sees cropland there. The cost is extra non-cropland in the mask, which t
 stored, so a stricter mask (e.g. >= 2 votes) or a different product set can be taken later without
 downloading again.
 
-The mask is made FIRST (before ml_dataset_prep/01-04) so that the same mask is used everywhere:
+The mask is made FIRST (before pixelwise_run/01-04) so that the same mask is used everywhere:
   - 01_prepare_labels_*.py: reads the mask and records the share of each parcel inside it (flag, not drop)
   - 03_build_tiles.py: the continuous tiles = all 128 px tiles of the grid that contain cropland
   - the maps: final predictions are kept inside the mask
@@ -100,7 +100,7 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from shapely.geometry import box
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ml_dataset_prep"))   # regions.py is shared
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pixelwise_run"))   # regions.py is shared
 from regions import admin_boundaries, cropland_dir, map_area, settings  # noqa: E402
 
 # ================================ SETTINGS ================================

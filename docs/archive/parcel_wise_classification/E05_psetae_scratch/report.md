@@ -171,7 +171,7 @@ Validation macro-F1 per epoch in each round (first seed); the best epoch is kept
 
 ### Results by zone
 
-Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed, 26 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.
+Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed, 26 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `09_breakdown_oof.py`.
 
 ??? info "How to read this table"
 
@@ -357,7 +357,7 @@ Validation macro-F1 per epoch in each round (first seed); the best epoch is kept
 
 ### Results by zone
 
-Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 40 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.
+Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 40 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `09_breakdown_oof.py`.
 
 ??? info "How to read this table"
 

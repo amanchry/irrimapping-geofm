@@ -210,7 +210,7 @@ Drop in macro-F1 when a month (or a baseline variable) is shuffled on the test f
 
 ### Results by zone
 
-Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed, 26 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.
+Only the focus zone, where both classes are common (3,498 parcels, 1122 rainfed, 26 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `09_breakdown_oof.py`.
 
 ??? info "How to read this table"
 
@@ -458,7 +458,7 @@ Drop in macro-F1 when a month (or a baseline variable) is shuffled on the test f
 
 ### Results by zone
 
-Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 40 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `05_breakdown_oof.py`.
+Only the focus zone, where both classes are common (2,015 parcels, 595 rainfed, 40 blocks): does the input separate the classes inside one region, or does it recognise the region? Script `09_breakdown_oof.py`.
 
 ??? info "How to read this table"
 

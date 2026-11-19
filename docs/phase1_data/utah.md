@@ -380,12 +380,12 @@ years. Per round of the 5-fold rotation:
 
 ```bash
 conda activate condaml
-python ml_dataset_prep/01_prepare_labels_Utah.py     # ~1 min; YEARS = [2024, 2021]
+python pixelwise_run/01_prepare_labels_Utah.py     # ~1 min; YEARS = [2024, 2021]
 # in 02, 03 and 04 set REGION = "utah" at the top, then:
-python ml_dataset_prep/02_make_spatial_folds.py      # seconds
-python ml_dataset_prep/03_build_tiles.py             # SEASONS = ["2023/24"]; first N_TEST_TILES = 20; Earth Engine, resumable
-python ml_dataset_prep/04_make_views.py              # SEASONS = ["2023/24"] -> views_2023-24/
-python models_run/01_inspect_dataset.py              # REGION = "utah", VIEWS_NAME = "views_2023-24"
+python pixelwise_run/02_make_spatial_folds.py      # seconds
+python pixelwise_run/03_build_tiles.py             # SEASONS = ["2023/24"]; first N_TEST_TILES = 20; Earth Engine, resumable
+python parcelwise_run/04_make_views.py              # SEASONS = ["2023/24"] -> views_2023-24/
+python parcelwise_run/05_inspect_dataset.py              # REGION = "utah", VIEWS_NAME = "views_2023-24"
 ```
 
 Run everything in the `condaml` environment: another GDAL / GEOS version once gave one field more.
@@ -400,7 +400,7 @@ Run everything in the `condaml` environment: another GDAL / GEOS version once ga
 Running 01 with one year only and adding the other year later would redraw the cells and rebalance the folds, and
 the two years would no longer be paired.
 
-Region settings (`ml_dataset_prep/regions.py`): `crs_epsg = 32612`, `start_month = 10`, `block_km = 20`, map
+Region settings (`pixelwise_run/regions.py`): `crs_epsg = 32612`, `start_month = 10`, `block_km = 20`, map
 boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`, `EXCLUDE_CROPS`,
 `IRRIGATED_METHODS`, `RAINFED_METHODS`, `STATES`, `EXPORT_ALL_FIELDS`, `SAMPLE`, `CELL_M`, `N_RAINFED_CELLS`,
 `N_IRRIGATED_CELLS`, `MAX_CELLS_PER_BLOCK`, `SEED`.

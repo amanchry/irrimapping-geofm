@@ -1,10 +1,11 @@
 # cropland_extent/
 
-Cropland products and the cropland mask: where the wall-to-wall irrigated / rainfed maps are made. Run
-`make_cropland_mask.py` before `ml_dataset_prep/01_prepare_labels_*.py`; scripts 01, 03c and 04c read its mask.
+Cropland products and the cropland mask: where the wall-to-wall irrigated / rainfed maps are made. `make_cropland_mask.py` is
+step 0 of the pixel-wise pipeline: run it before `pixelwise_run/01_prepare_labels_*.py`; steps 01, 04 and 06 of
+`pixelwise_run/` read its mask.
 
 All three write to **`outputs/<region>/cropland_extent/`** and use the same area: the region's mapping area in
-`ml_dataset_prep/regions.py` (Morocco without Western Sahara; Utah).
+`pixelwise_run/regions.py` (Morocco without Western Sahara; Utah).
 
 | Script | What it does | Output (in `outputs/<region>/cropland_extent/`) |
 | --- | --- | --- |
@@ -13,5 +14,5 @@ All three write to **`outputs/<region>/cropland_extent/`** and use the same area
 | `download_lgrip30.py` | LGRIP30 irrigated / rainfed cropland 30 m GeoTIFF of the region (NASA Earthdata token) + PNG map with legend | `lgrip30/` |
 
 The two download scripts make reference layers for maps and documentation; the mask itself reads the products
-directly in Earth Engine. Settings are at the top of each script (`REGION`); `regions.py` in `ml_dataset_prep/` holds the region
+directly in Earth Engine. Settings are at the top of each script (`REGION`); `regions.py` in `pixelwise_run/` holds the region
 settings shared by all scripts.

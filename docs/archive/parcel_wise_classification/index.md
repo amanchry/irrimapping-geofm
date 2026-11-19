@@ -66,21 +66,21 @@ experiments/_template/          config.yaml, index.md and report.md to start a n
 ```mermaid
 flowchart LR
     CFG["<b>config.yaml</b><br/>inputs · steps · settings"] --> RUN["<b>run_experiment.py</b>"]
-    RUN --> S1["<b>train_evaluate</b><br/>models_run/03 · once per input"]
-    RUN --> S2["<b>ltae</b><br/>models_run/03c · once per input"]
+    RUN --> S1["<b>train_evaluate</b><br/>parcelwise_run/03 · once per input"]
+    RUN --> S2["<b>ltae</b><br/>parcelwise_run/03c · once per input"]
     S1 --> R["results/&lt;region&gt;/&lt;run&gt;/<br/>out-of-fold predictions"]
     S2 --> R
-    R --> C["<b>compare</b><br/>models_run/04<br/>same parcels · paired bootstrap"]
+    R --> C["<b>compare</b><br/>parcelwise_run/04<br/>same parcels · paired bootstrap"]
     C --> REP["<b>report</b><br/>make_report.py"]
     REP --> MD["docs/experiments/&lt;name&gt;/report.md<br/>experiment list · results page<br/>site menu"]
     EMB[("outputs/morocco/study/02_embeddings<br/>shared by all experiments")] -.-> S1
     EMB -.-> S2
 ```
 
-- The **scripts in `models_run/` are not edited for an experiment.** Each has its settings at the top; in
+- The **scripts in `parcelwise_run/` are not edited for an experiment.** Each has its settings at the top; in
   experiment mode the values in `config.yaml` replace them (same names). A misspelt setting stops the run with an
   error, so a config can never be silently ignored.
-- **Embeddings are shared.** They depend only on the dataset and the model, so `models_run/02a–02d` are run once
+- **Embeddings are shared.** They depend only on the dataset and the model, so `parcelwise_run/06a–06d` are run once
   and every experiment reads `outputs/morocco/study/02_embeddings/`.
 - **Runs that are finished are skipped**, so an interrupted experiment continues where it stopped.
   `RERUN = True` (or deleting `results/`) repeats it.
@@ -101,7 +101,7 @@ flowchart LR
     P2 --> H["MLP head"]
     K --> O["out-of-fold predictions<br/>same format"]
     H --> O
-    O --> CMP["04_compare_models<br/>same parcels, same bootstrap draws"]
+    O --> CMP["08_compare_models<br/>same parcels, same bootstrap draws"]
 ```
 
 Because both pipelines write the same `oof_predictions.csv`, the comparison and the report need no change. E04 also
@@ -122,6 +122,6 @@ bootstrap draws. Details: [evaluation protocol §5](../../phase2_models/evaluati
    in `report.md` (the tables and figures are already there), set `status: done` and a one-line `answer:` in the
    config, run `make_report.py` once more, and add an entry to the [progress log](../../progress.md).
 
-A new **pipeline variant** (another model or aggregation) gets its own script in `models_run/` with settings at the
-top, the experiment-mode block, and the output format of `03_train_evaluate.py`; then add it to `SCRIPTS` in
+A new **pipeline variant** (another model or aggregation) gets its own script in `parcelwise_run/` with settings at the
+top, the experiment-mode block, and the output format of `07_train_evaluate.py`; then add it to `SCRIPTS` in
 `run_experiment.py`.

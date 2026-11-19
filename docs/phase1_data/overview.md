@@ -19,17 +19,18 @@ that differences between models are attributable to the models rather than to th
 
 | Step | Script | Output |
 | --- | --- | --- |
-| 0 | `cropland_extent/make_cropland_mask.py` | cropland mask per agricultural year (`outputs/<region>/cropland_extent/`) |
-| 1 | `ml_dataset_prep/01_prepare_labels_Morocco.py` or `01_prepare_labels_Utah.py` | cleaned, labelled cropland parcels (one script per region, same output layout), with their share inside the mask |
-| 2 | `ml_dataset_prep/02_make_spatial_folds.py` | fold (0–4) per parcel |
-| 3 | `ml_dataset_prep/03_build_tiles.py` | tile store from Google Earth Engine |
-| 4 | `ml_dataset_prep/04_make_views.py` | parcel-wise model inputs (views A–C; [archived experiments](../archive/index.md)) |
-| 4c | `ml_dataset_prep/04c_make_pixel_samples.py` | labelled pixels for the pixel-wise models |
-| maps | `ml_dataset_prep/03c_build_cropland_tiles.py` | wall-to-wall Sentinel-2 tiles over the cropland mask (mapping stage) |
-| check | `models_run/01_inspect_dataset.py` | dataset inspection figures |
+| 0 | `cropland_extent/make_cropland_mask.py` | cropland mask per region and agricultural year |
+| 01 | `pixelwise_run/01_prepare_labels_Morocco.py` or `01_prepare_labels_Utah.py` | cleaned, labelled cropland parcels (one script per region, same output layout), with their share inside the mask |
+| 02 | `pixelwise_run/02_make_spatial_folds.py` | fold (0–4) per parcel |
+| 03 | `pixelwise_run/03_build_tiles.py` | tile store from Google Earth Engine |
+| 04 | `pixelwise_run/04_make_pixel_samples.py` | labelled pixels for the pixel-wise models |
+| 06 | `pixelwise_run/06_build_cropland_tiles.py` | wall-to-wall Sentinel-2 tiles over the cropland mask (mapping stage) |
 
-Scripts 02–04 and the inspection serve both regions: set `REGION = "morocco"` or `"utah"` at the top. The settings
-that differ per region (projection, agricultural year, block size, map boundaries) are in `ml_dataset_prep/regions.py`.
+The archived parcel-wise pipeline (`parcelwise_run/`) uses the same steps 01–03, then `04_make_views.py` (parcel
+features and chips) and the parcel model scripts 05–09 ([Archive](../archive/index.md)).
+
+Steps 02–06 serve both regions: set `REGION = "morocco"` or `"utah"` at the top. The settings
+that differ per region (projection, agricultural year, block size, map boundaries) are in `pixelwise_run/regions.py`.
 All outputs of a region are in `outputs/<region>/` (`dataset/`, and for Morocco also `study/` and `analysis/`).
 
 The scripts, design choices, figures and output formats are documented in [Morocco training data](morocco.md) and

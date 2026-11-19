@@ -19,9 +19,14 @@
 * [Phase 3 · Temporal test and second region](phase3_transfer/index.md)
 * [Phase 4 · Multi-model fusion](phase4_fusion/index.md)
 * [Phase 5 · Annual maps](phase5_maps/index.md)
-* Experiments · pixel-wise
+* Experiments
     * [Overview](experiments/index.md)
     * [Experiment plan](experiments/plan.md)
+    * [E01 · Sentinel-2 pixel baseline](experiments/E01_s2_pixel_baseline.md)
+    * [E02 · Temporal neural networks](experiments/E02_temporal_nn.md)
+    * [E03 · Frozen GeoFMs + decoder](experiments/E03_frozen_geofm.md)
+    * [E04 · U-TAE from scratch](experiments/E04_utae.md)
+    * [E05 · LoRA fine-tuning](experiments/E05_lora.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

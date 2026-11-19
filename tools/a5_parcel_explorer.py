@@ -11,7 +11,7 @@ Writes ONE self-contained HTML page to inspect the training parcels (not the chi
     irrigated and all rainfed parcels of the same agricultural year;
   * pin several parcels to compare their curves; filter by class, agricultural year, zone and fold;
     search by parcel ID.
-The values are the parcel features of ml_dataset_prep/04_make_views.py (median over the inner pixels per
+The values are the parcel features of parcelwise_run/04_make_views.py (median over the inner pixels per
 month), i.e. exactly what the baseline classifier sees.
 
 Open the page in any browser (internet is needed only for the basemap tiles).
@@ -212,7 +212,7 @@ const PINC = ['#111111', '#7B3FA0', '#2A9D8F', '#D62828', '#6A994E', '#E76F51'];
 let curVar = 'NDVI', selected = null, pins = [];
 
 document.getElementById('foot').textContent =
-  `Values: median of the parcel's ${D.features} pixels per month (ml_dataset_prep/04_make_views.py). ` +
+  `Values: median of the parcel's ${D.features} pixels per month (parcelwise_run/04_make_views.py). ` +
   `Bands: median and interquartile range of all parcels of the same class and agricultural year.`;
 
 // ---------- map

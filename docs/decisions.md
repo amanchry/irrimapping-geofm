@@ -132,7 +132,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Where:** [literature notes](references/heads-and-mapping.md).
 
 ## D12. AgriFM with its pretrained 4-px patch embedding
-- **Before:** `02d_embed_agrifm.py` built the Sentinel-2 encoder with the patch size of the repository's fine-tuning
+- **Before:** `06d_embed_agrifm.py` built the Sentinel-2 encoder with the patch size of the repository's fine-tuning
   configuration (`configs/cropland_mapping.py`: 4 time steps × 2 × 2 px, output stride 16 px) and loaded
   `AgriFM.pth` through mmengine. No weight was loaded: the checkpoint names carry the prefix `encoder.`, and the
   pretrained patch embedding (`S2_patch_emd`, kernel 128 × 10 × 4 × 4 × 4) does not fit a 2 × 2 px patch. mmengine
@@ -147,7 +147,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   approximation.
 - **Consequence:** AgriFM has the coarsest grid of the four models (320 m against 80–160 m), which matters for small
   parcels; the patch-share weighting is unchanged. Earlier AgriFM results are void and are re-run.
-- **Where:** [`models_run/02d_embed_agrifm.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/models_run/02d_embed_agrifm.py),
+- **Where:** [`parcelwise_run/06d_embed_agrifm.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/parcelwise_run/06d_embed_agrifm.py),
   [Foundation models · inputs](foundation_models.md).
 
 ## D13. Utah as a second independent study area
@@ -172,7 +172,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
     - Tunisia has 10 rainfed reference points, too few for a rainfed F1 (D10).
 - **Consequence:** RQ4 changes from "spatial transferability of the Morocco model" to "do the results hold in a
   second region"; RQ3 is answered in Utah. To be agreed with the supervisors.
-- **Where:** [Utah training data](phase1_data/utah.md), `ml_dataset_prep/01_prepare_labels_Utah.py`.
+- **Where:** [Utah training data](phase1_data/utah.md), `pixelwise_run/01_prepare_labels_Utah.py`.
 
 ## D14. Sentinel-2 only for every input
 - **Proposal:** Sentinel-1 and Sentinel-2 time series.
@@ -204,7 +204,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   cloud-masked monthly composites of this study have blue 714 ± 344 (Morocco). With the config statistics the
   visible and NIR bands use only 8–30% of the expected spread and sit about 0.8 SD below zero, so the frozen encoder
   sees an almost constant input in these bands.
-- **Now:** per-band mean and standard deviation of the region's own chips (`NORM = "data"` in `02d_embed_agrifm.py`):
+- **Now:** per-band mean and standard deviation of the region's own chips (`NORM = "data"` in `06d_embed_agrifm.py`):
   all valid pixels of 20 evenly spaced chip files, every 4th pixel; computed from imagery only (no labels), saved to
   `agrifm_norm_stats_<tag>.json` and reused. For the Utah temporal test the 2023/24 statistics are reused for 2020/21
   (`NORM_STATS_FILE`), so both years are scaled identically.
@@ -213,7 +213,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   closest equivalent.
 - **Sensitivity:** the config statistics are kept as a second embedding (`NORM = "config"`, `agrifm-cfgnorm_*.npz`;
   the Morocco file made on 6 Nov 2026 is this version).
-- **Where:** [Foundation models · AgriFM](foundation_models.md#agrifm), `models_run/02d_embed_agrifm.py`.
+- **Where:** [Foundation models · AgriFM](foundation_models.md#agrifm), `parcelwise_run/06d_embed_agrifm.py`.
 
 ## D16. Pixel-wise classification for continuous maps
 - **Before:** the RQ1 experiments (E01–E05) classified **parcels**: the embeddings or Sentinel-2 features of a parcel
@@ -221,7 +221,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Problem:** the final product is an annual, continuous (wall-to-wall) map. A parcel-wise model needs a parcel
   outline for every field it classifies, and outlines exist only for the surveyed parcels.
 - **Now:** every 10 m pixel is classified on its own. Training and test samples are the labelled pixels of the
-  surveyed parcels (`ml_dataset_prep/04c_make_pixel_samples.py`); a pixel takes its parcel's label and fold, so no
+  surveyed parcels (`pixelwise_run/04_make_pixel_samples.py`); a pixel takes its parcel's label and fold, so no
   parcel is split between training and test. Parcel-level accuracy is still reported (majority of a parcel's
   pixels) for comparison with E01–E05.
 - **Kept:** labels, spatial folds (20 km blocks, 5 folds, PASTIS rotation), the tile store and its compositing,

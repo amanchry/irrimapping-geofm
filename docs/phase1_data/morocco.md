@@ -559,7 +559,7 @@ Each chip folder holds:
 
 ### 7.6 Dataset inspection
 
-The checks of `models_run/01_inspect_dataset.py` ([Model training and inference §4](../phase2_models/frozen_encoders.md#4-script-01--inspect_dataset))
+The checks of `parcelwise_run/05_inspect_dataset.py` ([Model training and inference §4](../phase2_models/frozen_encoders.md#4-script-01--inspect_dataset))
 characterise the final dataset before any model is trained.
 
 <figure markdown="span">
@@ -644,17 +644,17 @@ red_june = chips[0, 9, info["bands"].index("B4")] / 10000
 
 ```bash
 conda activate condaml
-python ml_dataset_prep/01_prepare_labels_Morocco.py   # minutes
-python ml_dataset_prep/02_make_spatial_folds.py      # minutes
-python ml_dataset_prep/03_build_tiles.py             # Earth Engine; a few hours; resumable
-python ml_dataset_prep/04_make_views.py              # local
+python pixelwise_run/01_prepare_labels_Morocco.py   # minutes
+python pixelwise_run/02_make_spatial_folds.py      # minutes
+python pixelwise_run/03_build_tiles.py             # Earth Engine; a few hours; resumable
+python parcelwise_run/04_make_views.py              # local
 ```
 
 Scripts 02–04 serve both study regions: set `REGION = "morocco"` at the top of each (the default). The settings
 that differ between regions (projection, agricultural year, block size, map boundaries) are in
-`ml_dataset_prep/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
+`pixelwise_run/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
 
-Run 03 first with `N_TEST_TILES = 20`, then check the result with `models_run/01_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
+Run 03 first with `N_TEST_TILES = 20`, then check the result with `parcelwise_run/05_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
 
 To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/morocco/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | 📝 planned — 3 seeds per region; setup page: `docs/experiments/E05_psetae_scratch/index.md` |
 | **Config** | [`config.yaml`](config.yaml) |
-| **Script** | `models_run/03b_train_psetae.py` |
+| **Script** | `parcelwise_run/07b_train_psetae.py` |
 
 ## Question
 Does a temporal deep model trained only on our labelled parcels (no pretraining) match the frozen foundation
@@ -32,5 +32,5 @@ is kept but not run (Sentinel-1 is thin in Utah after the loss of Sentinel-1B).
 # all four in a row — experiments/run_experiment.py:  EXPERIMENT = "E05_psetae_scratch"
 python experiments/run_experiment.py
 # one run (e.g. in a Slurm job), without editing a script:
-EXPERIMENT=E05_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python models_run/03b_train_psetae.py
+EXPERIMENT=E05_psetae_scratch PSETAE_CONFIG=utah_s2s1.yaml python parcelwise_run/07b_train_psetae.py
 ```

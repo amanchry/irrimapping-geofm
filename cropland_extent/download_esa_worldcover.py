@@ -55,7 +55,7 @@ from osgeo import gdal
 from rasterio.enums import Resampling
 
 gdal.UseExceptions()
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ml_dataset_prep"))   # regions.py is shared
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pixelwise_run"))   # regions.py is shared
 from regions import cropland_dir, map_area, settings  # noqa: E402
 
 # ================================ SETTINGS ================================
