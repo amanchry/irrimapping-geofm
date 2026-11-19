@@ -37,7 +37,7 @@ Steps
    region. The same cells are used in every year (temporal comparisons see the same places).
 6. Attributes (same names as Morocco): parcel_id, ag_season, label, class_name, crop, zone (= river basin),
    area_ha, nn_dist_m (nearest other field of the same year), mask_frac, mask_votes, in_mask,
-   mask_<product> (share inside the cropland mask of 00_make_cropland_mask.py, run first; cropland_mask.py;
+   mask_<product> (share inside the cropland mask of cropland_extent/make_cropland_mask.py, run first; cropland_mask.py;
    fields outside the mask are KEPT and only flagged; fields outside Utah, the mapping area, get NaN).
    Extra: year, state, county, crop_group, irr_method, cell_id.
 7. Save the fields, summary tables, the mask check (mask_check.csv) and figures.
@@ -402,7 +402,7 @@ def main():
     lab = lab.rename(columns={"Descriptio": "crop", "Basin": "zone", "State": "state", "County": "county",
                               "CropGroup": "crop_group", "IRR_Method": "irr_method"})
     lab = lab.to_crs(4326)
-    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of 00_make_cropland_mask.py
+    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of cropland_extent/make_cropland_mask.py
     mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 7. Save.

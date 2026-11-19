@@ -425,4 +425,4 @@ boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`
   classes are affected alike.
 - **Sentinel-1:** 2021 has both Sentinel-1 satellites, 2024 only Sentinel-1A, so about twice as many Sentinel-1
   scenes per month in the test year.
-- **Cropland mask check:** `mask_frac` and `in_mask` per field (cropland mask of `00_make_cropland_mask.py`; fields outside Utah get NaN).
+- **Cropland mask check:** `mask_frac` and `in_mask` per field (cropland mask of `cropland_extent/make_cropland_mask.py`; fields outside Utah get NaN).

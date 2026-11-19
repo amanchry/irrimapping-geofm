@@ -31,8 +31,8 @@ threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-sc
 | Dataset | Provider | Content | Resolution | Use here | Access | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | **FAO GAUL** (2015 level 0 Morocco; 2024 level 1 Utah) | FAO | country and state boundaries | vector | outlines on the maps | open · [FAO GAUL](https://data.apps.fao.org/catalog/dataset/global-administrative-unit-layers-gaul) | ✅ |
-| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | cropland check of the survey parcels; reference map (`tools/a7_download_esa_worldcover.py`) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
-| **LGRIP30** | Teluguntla et al. (2023), USGS / NASA LP DAAC | irrigated and rainfed cropland | 30 m, nominal 2015 | reference map (`tools/a8_download_lgrip30.py`); comparison of the final maps | open · [LP DAAC](https://doi.org/10.5067/COMMUNITY/LGRIP/LGRIP30.001) | 🟦 |
+| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | cropland check of the survey parcels; reference map (`cropland_extent/download_esa_worldcover.py`) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
+| **LGRIP30** | Teluguntla et al. (2023), USGS / NASA LP DAAC | irrigated and rainfed cropland | 30 m, nominal 2015 | reference map (`cropland_extent/download_lgrip30.py`); comparison of the final maps | open · [LP DAAC](https://doi.org/10.5067/COMMUNITY/LGRIP/LGRIP30.001) | 🟦 |
 | **GMIE** | Wu et al. (2023) | global maximum irrigation extent | 30 m | comparison of the final maps | open, citation required · [paper](https://doi.org/10.1016/j.gloenvcha.2023.102652) | 📝 |
 | **WorldCereal** cropland / irrigation | Van Tricht et al. (2023) | cropland and irrigation products | 10 m | comparison; cropland mask for mapping | open · [ESSD paper](https://doi.org/10.5194/essd-15-5491-2023) | 📝 |
 | **GLAD global cropland** | Potapov et al. (2021) | cropland extent and change | 30 m | cropland mask for mapping | open · [paper](https://doi.org/10.1038/s43016-021-00429-z) | 📝 |

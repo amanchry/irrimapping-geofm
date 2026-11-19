@@ -1,5 +1,5 @@
 """
-a8_download_lgrip30.py  —  LGRIP30 irrigated / rainfed cropland (30 m) for an area of interest (visualisation layer)
+download_lgrip30.py  —  LGRIP30 irrigated / rainfed cropland (30 m) for an area of interest (visualisation layer)
 ====================================================================================================================
 
 What it does
@@ -20,69 +20,72 @@ the environment variable EARTHDATA_TOKEN. Tokens expire after 60 days. Never wri
 
 Steps
 -----
-1. Read the AOI polygon(s) (a boundary file and an optional attribute filter) and write them to one GeoJSON.
+1. Read the AOI: the region's mapping area from regions.py (Morocco without Western Sahara, or Utah), the same
+   area as the cropland mask; written to one GeoJSON.
 2. Ask NASA's Common Metadata Repository (CMR, public) for the LGRIP30 tiles inside the AOI's bounding box.
 3. Download the tiles with the Earthdata token (skipped if already there).
 4. Mosaic (VRT), clip to the AOI and write a compressed GeoTIFF; optionally a coarser copy (mode resampling).
 5. Remove the downloaded tiles unless KEEP_TILES = True.
+6. PNG map for visualisation and documentation: class colours (CLASSES), AOI boundary, legend with each class's
+   share of the AOI (MAKE_PNG). PNG_ONLY = True skips steps 2-5 and draws the PNG from the GeoTIFF that is
+   already there.
 
-Output (OUT_DIR)
-----------------
+Output (OUT_DIR = outputs/<region>/cropland_extent/lgrip30/)
+------------------------------------------------------------
 LGRIP30_2015_<AOI_NAME>.tif         30 m, clipped to the AOI, 255 = outside the AOI / no data
 LGRIP30_2015_<AOI_NAME>_250m.tif    coarse copy (COARSE_RES_DEG), if set
 aoi_<AOI_NAME>.geojson              the AOI used for the clip
+LGRIP30_2015_<AOI_NAME>.png         map with legend and AOI boundary (MAKE_PNG)
 
-Run (from the project folder; set the AOI below first)
--------------------------------------------------------
-    python tools/a8_download_lgrip30.py
+Run (from the project folder; set REGION below first)
+------------------------------------------------------
+    python cropland_extent/download_lgrip30.py
 """
 import os
+import sys
 from pathlib import Path
 
-os.environ.setdefault("OGR_GEOJSON_MAX_OBJ_SIZE", "0")     # GAUL polygons are larger than the GDAL default limit
-
 import geopandas as gpd
-import pyogrio
-import requests
+import matplotlib
+matplotlib.use("Agg")                                      # write figures to files, no window
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
 from osgeo import gdal
-from tqdm import tqdm
+from rasterio.enums import Resampling
 
 gdal.UseExceptions()
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ml_dataset_prep"))   # regions.py is shared
+from regions import cropland_dir, map_area, settings  # noqa: E402
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 
-# Area of interest: any polygon file, with an optional OGR SQL filter on its attributes. Examples:
-#   Utah:    data/admin_boundaries/FAO_GAUL_2024_AdminL1.geojson, "gaul1_name = 'Utah'"
-#   Morocco: data/admin_boundaries/FAO_GAUL_2015_AdminL0.geojson, "ADM0_NAME = 'Morocco'"
-#   own AOI: any .geojson / .gpkg / .shp, AOI_WHERE = None
-
-AOI_NAME = "Morocco"                                          
-AOI_FILE = ROOT / "data" / "admin_boundaries" / "FAO_GAUL_2015_AdminL0.geojson"
-AOI_WHERE = "ADM0_NAME = 'Morocco'"           
-
-
-# AOI_NAME = "Utah"                                          # used in the output file names
-# AOI_FILE = ROOT / "data" / "admin_boundaries" / "FAO_GAUL_2024_AdminL1.geojson"
-# AOI_WHERE = "gaul1_name = 'Utah'"                          # None = all polygons of AOI_FILE
-
-OUT_DIR = ROOT / "data" / "lgrip30"
+REGION = "morocco"                                         # "morocco" | "utah": the AOI is the region's mapping area
+                                                           # (regions.py: map_file / map_where), as for the mask
+AOI_NAME = REGION.capitalize()                             # used in the output file names
+OUT_DIR = cropland_dir(REGION) / "lgrip30"                 # outputs/<region>/cropland_extent/lgrip30/
 COARSE_RES_DEG = 0.002245                                  # ~250 m copy for quick maps; None = no copy
 KEEP_TILES = False                                         # True = keep the downloaded tiles in OUT_DIR/_tiles/
 TOKEN_FILE = ROOT / "secrets" / "earthdata_token.txt"      # or environment variable EARTHDATA_TOKEN
 CMR_URL = "https://cmr.earthdata.nasa.gov/search/granules.json"
 SHORT_NAME, VERSION = "LGRIP30", "001"
 NODATA = 255                                               # outside the AOI (class 0 is water, not no data)
+MAKE_PNG = True                                            # step 6: PNG map with legend and AOI boundary
+PNG_ONLY = True                                           # True = only draw the PNG from the existing GeoTIFF
+PNG_MAX_PX = 2500                                          # longest side of the map image (pixels, mode resampling)
 # ==========================================================================
+
+# LGRIP30 classes (product legend) and the colours used for the maps
+CLASSES = {0: ("Ocean and water bodies", "#0050cb"), 1: ("Non-croplands", "#d58855"),
+           2: ("Irrigated croplands", "#c2d30c"), 3: ("Rainfed croplands", "#379a4b")}
 
 
 def read_aoi():
-    """AOI polygons from AOI_FILE (filtered by AOI_WHERE), in EPSG:4326, dissolved into one feature."""
-    gdf = pyogrio.read_dataframe(AOI_FILE, where=AOI_WHERE) if AOI_WHERE else gpd.read_file(AOI_FILE)
-    if gdf.empty:
-        raise SystemExit(f"No polygon in {AOI_FILE} matches {AOI_WHERE!r}")
-    gdf = gdf.to_crs(4326)
-    return gpd.GeoDataFrame({"name": [AOI_NAME]}, geometry=[gdf.geometry.union_all()], crs=4326)
+    """The region's mapping area (regions.py) in EPSG:4326 as one feature."""
+    return gpd.GeoDataFrame({"name": [AOI_NAME]}, geometry=[map_area(REGION)], crs=settings(REGION)["crs_epsg"]).to_crs(4326)
 
 
 def read_token():
@@ -95,6 +98,7 @@ def read_token():
 
 def find_tiles(bbox):
     """(name, GeoTIFF URL) of every LGRIP30 tile that intersects the bounding box, from NASA CMR (no login)."""
+    import requests                                        # download-only package (not needed for PNG_ONLY)
     params = {"short_name": SHORT_NAME, "version": VERSION, "page_size": 2000,
               "bounding_box": ",".join(f"{v:.6f}" for v in bbox)}
     entries = requests.get(CMR_URL, params=params, timeout=60).json()["feed"]["entry"]
@@ -111,6 +115,7 @@ def find_tiles(bbox):
 
 def download(url, path, token):
     """Download one tile with the Earthdata token (temporary name first, so a broken download is never kept)."""
+    import requests
     tmp = path.with_suffix(".part")
     with requests.get(url, headers={"Authorization": f"Bearer {token}"}, stream=True, timeout=120) as r:
         if r.status_code in (401, 403) or "text/html" in r.headers.get("Content-Type", ""):
@@ -123,12 +128,49 @@ def download(url, path, token):
     tmp.rename(path)
 
 
+def make_png(tif, aoi, png):
+    """Map of the GeoTIFF (read at <= PNG_MAX_PX, mode resampling) with the AOI boundary and a legend."""
+    with rasterio.open(tif) as src:
+        scale = max(src.width, src.height) / PNG_MAX_PX
+        shape = (max(1, round(src.height / scale)), max(1, round(src.width / scale))) if scale > 1 else (src.height, src.width)
+        arr = src.read(1, out_shape=shape, resampling=Resampling.mode)
+        b = src.bounds
+    codes = sorted(CLASSES)
+    idx = np.full(arr.shape, -1)
+    for k, c in enumerate(codes):
+        idx[arr == c] = k
+    valid = idx >= 0
+    shares = {c: 100 * float((arr[valid] == c).mean()) for c in codes} if valid.any() else {}
+    fig, ax = plt.subplots(figsize=(10, 10 * shape[0] / shape[1] + 1.2), dpi=150)
+    ax.imshow(np.ma.masked_less(idx, 0), cmap=ListedColormap([CLASSES[c][1] for c in codes]), vmin=0,
+              vmax=len(codes) - 1, interpolation="nearest", extent=[b.left, b.right, b.bottom, b.top])
+    aoi.boundary.plot(ax=ax, color="#222222", linewidth=0.8)
+    ax.set_xlabel("Longitude (°)")
+    ax.set_ylabel("Latitude (°)")
+    ax.set_title(f"LGRIP30 irrigated / rainfed cropland, nominal 2015 (30 m) · {AOI_NAME}", fontsize=12)
+    handles = [Patch(facecolor=CLASSES[c][1], edgecolor="0.5", label=f"{c} {CLASSES[c][0]} ({shares.get(c, 0):.1f}%)")
+               for c in codes]
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1), frameon=False, fontsize=9,
+              title="Class (share of the AOI)", title_fontsize=9)
+    fig.text(0.01, 0.005, "Source: LGRIP30 v001", fontsize=7, color="0.4")
+    fig.savefig(png, bbox_inches="tight")
+    plt.close(fig)
+    print(f"PNG -> {png}")
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    tile_dir = OUT_DIR / "_tiles"
-    tile_dir.mkdir(exist_ok=True)
 
     aoi = read_aoi()
+    out = OUT_DIR / f"LGRIP30_2015_{AOI_NAME}.tif"
+    if PNG_ONLY:
+        if not out.exists():
+            raise SystemExit(f"{out} not found: run once with PNG_ONLY = False")
+        make_png(out, aoi, out.with_suffix(".png"))
+        return
+    from tqdm import tqdm
+    tile_dir = OUT_DIR / "_tiles"
+    tile_dir.mkdir(exist_ok=True)
     aoi_file = OUT_DIR / f"aoi_{AOI_NAME}.geojson"
     aoi.to_file(aoi_file, driver="GeoJSON")
     bbox = tuple(aoi.total_bounds)
@@ -146,7 +188,6 @@ def main():
 
     vrt = tile_dir / "mosaic.vrt"
     gdal.BuildVRT(str(vrt), tifs)
-    out = OUT_DIR / f"LGRIP30_2015_{AOI_NAME}.tif"
     print(f"Clipping to the AOI -> {out}")
     gdal.Warp(str(out), str(vrt), options=gdal.WarpOptions(
         cutlineDSName=str(aoi_file), cropToCutline=True, dstNodata=NODATA, outputType=gdal.GDT_Byte,
@@ -165,6 +206,8 @@ def main():
         for f in tifs + [str(vrt)]:
             Path(f).unlink(missing_ok=True)
         tile_dir.rmdir()
+    if MAKE_PNG:
+        make_png(out, aoi, out.with_suffix(".png"))
     print("Done")
 
 

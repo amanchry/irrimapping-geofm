@@ -152,7 +152,7 @@ flowchart LR
    - `ag_season`: agricultural year of the survey date (1 Sep – 31 Aug, e.g. `2023/24`). This decides which imagery a parcel gets.
    - `nn_dist_m`: distance to the nearest other parcel.
    - `mask_frac`, `mask_votes`, `in_mask`, `mask_<product>`: share of the parcel inside the cropland mask of its
-     agricultural year (`00_make_cropland_mask.py`, run first), and per cropland product. Parcels outside the
+     agricultural year (`cropland_extent/make_cropland_mask.py`, run first), and per cropland product. Parcels outside the
      mask are kept and only flagged; `mask_check.csv` gives the share per year and class.
 6. Save the parcels, a summary table and four figures.
 

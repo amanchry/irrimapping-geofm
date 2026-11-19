@@ -6,7 +6,7 @@ What it does
 ------------
 03_build_tiles.py downloads only the tiles around the labelled parcels (training). The continuous annual maps
 need imagery for EVERY cropland pixel of the region, so this script downloads every tile of the same grid that
-contains cropland in the mask of 00_make_cropland_mask.py. 03_build_tiles.py is unchanged.
+contains cropland in the mask of cropland_extent/make_cropland_mask.py. 03_build_tiles.py is unchanged.
 
 Grid (identical to 03_build_tiles.py and the cropland mask)
 -----------------------------------------------------------
@@ -18,7 +18,7 @@ images line up without resampling. 128 px is kept because it is a whole number o
 
 Which tiles
 -----------
-tiles_cropland.parquet of 00_make_cropland_mask.py: every tile with >= MIN_CROP_PX cropland pixels in the
+tiles_cropland.parquet of cropland_extent/make_cropland_mask.py: every tile with >= MIN_CROP_PX cropland pixels in the
 mask of that agricultural year. MIN_CROP_PX = 1 keeps every cropland pixel (a complete map); the script prints
 how many tiles and how much cropland a higher threshold would keep.
 
@@ -65,7 +65,7 @@ from rasterio.transform import Affine
 from rasterio.windows import from_bounds
 from shapely.geometry import box
 
-from regions import dataset_dir, settings
+from regions import cropland_dir, dataset_dir, settings
 
 # ================================ SETTINGS ================================
 REGION = "morocco"                         # "morocco" | "utah" (regions.py)
@@ -92,7 +92,7 @@ TILE_M = TILE_PX * GSD_M
 S2_BANDS = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12"]
 MONTH_BANDS = S2_BANDS + ["S2_NCLEAR"]
 NODATA = -32768
-MASK_ROOT = dataset_dir(REGION) / "00_cropland_mask"
+MASK_ROOT = cropland_dir(REGION) / "cropland_mask"        # cropland_extent/make_cropland_mask.py
 PARCEL_STORE = dataset_dir(REGION) / "03_tiles_128px" / "agyear"
 OUT_ROOT = dataset_dir(REGION) / "03c_cropland_tiles_128px"
 
@@ -118,7 +118,7 @@ def month_starts(season):
 def select_tiles(season):
     path = MASK_ROOT / season_tag(season) / "tiles_cropland.parquet"
     if not path.exists():
-        raise FileNotFoundError(f"{path} not found: run 00_make_cropland_mask.py for {season} first")
+        raise FileNotFoundError(f"{path} not found: run cropland_extent/make_cropland_mask.py for {season} first")
     t = pd.read_parquet(path)
     total = t["n_crop_px"].sum()
     print("Tiles kept and cropland covered for a minimum share of cropland per tile:")

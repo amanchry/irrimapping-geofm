@@ -69,6 +69,17 @@ def dataset_dir(region):
     return ROOT / "outputs" / region / "dataset"
 
 
+def cropland_dir(region):
+    """outputs/<region>/cropland_extent/ — outputs of cropland_extent/ (cropland_mask/<season>/, esa_worldcover/,
+    lgrip30/)."""
+    return ROOT / "outputs" / region / "cropland_extent"
+
+
+def mask_dir(region, ag_season):
+    """Cropland mask of one agricultural year (cropland_extent/make_cropland_mask.py)."""
+    return cropland_dir(region) / "cropland_mask" / ag_season.replace("/", "-")
+
+
 def admin_boundaries(region):
     """Boundary polygons for the maps (EPSG:4326). The global GAUL file is large, so the region's features are
     read once and cached in outputs/<region>/dataset/admin_boundaries.geojson."""

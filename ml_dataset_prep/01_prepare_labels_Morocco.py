@@ -26,7 +26,7 @@ Steps
      nn_dist_m   distance to the nearest other parcel (spatial clustering)
      mask_frac, mask_votes, in_mask, mask_<product>
                  share of the parcel inside the cropland mask of its agricultural year
-                 (00_make_cropland_mask.py, run first), mean number of products that call it cropland,
+                 (cropland_extent/make_cropland_mask.py, run first), mean number of products that call it cropland,
                  and the share per product (cropland_mask.py). Parcels outside the mask are KEPT and
                  only flagged (in_mask = False): they show what the mask misses.
 6. Save the parcels, a summary table, the mask check and figures (map, class balance, parcel size, survey timing).
@@ -183,7 +183,7 @@ def main():
     dist, _ = cKDTree(xy).query(xy, k=2)
     lab["nn_dist_m"] = dist[:, 1]                                  # nearest OTHER parcel
     lab["ag_season"] = lab["date"].apply(agricultural_season)
-    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of 00_make_cropland_mask.py
+    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of cropland_extent/make_cropland_mask.py
     mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 6. Save.

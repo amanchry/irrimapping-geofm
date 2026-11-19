@@ -1,5 +1,5 @@
 """
-00_make_cropland_mask.py  —  one cropland mask per region and agricultural year, from several cropland products
+make_cropland_mask.py  —  one cropland mask per region and agricultural year, from several cropland products
 =================================================================================================================
 
 What it does
@@ -12,7 +12,7 @@ product sees cropland there. The cost is extra non-cropland in the mask, which t
 stored, so a stricter mask (e.g. >= 2 votes) or a different product set can be taken later without
 downloading again.
 
-The mask is made FIRST (script 00) so that the same mask is used everywhere:
+The mask is made FIRST (before ml_dataset_prep/01-04) so that the same mask is used everywhere:
   - 01_prepare_labels_*.py: reads the mask and records the share of each parcel inside it (flag, not drop)
   - 03_build_tiles.py: the continuous tiles = all 128 px tiles of the grid that contain cropland
   - the maps: final predictions are kept inside the mask
@@ -36,7 +36,7 @@ clipped to the years a product has)
                    projects/sat-io/open-datasets/GFSAD/GCEP30
                    https://gee-community-catalog.org/projects/gcep30/
                    Thenkabail et al. 2021, USGS Professional Paper 1868, https://doi.org/10.3133/pp1868
-   6   glad        GLAD global cropland extent (Potapov et al.)                   30 m  2003, 2007,  value 1
+   6   glad        GLAD global cropland extent (Peter Potapov et al.)                  30 m  2003, 2007,  value 1
                    users/potapovpeter/Global_cropland_<year>                            2011, 2015,
                    https://glad.umd.edu/dataset/croplands                               2019
                    Potapov et al. 2022, Nature Food, https://doi.org/10.1038/s43016-021-00429-z
@@ -76,8 +76,8 @@ Steps
 6. Summary: cropland area per product and of the union, area that ONLY one product calls cropland
    (what each product adds to the union), votes histogram; quicklook map.
 
-Outputs (outputs/<region>/dataset/00_cropland_mask/<season>/)
--------------------------------------------------------------
+Outputs (outputs/<region>/cropland_extent/cropland_mask/<season>/)
+------------------------------------------------------------------
 blocks/<season>_<bx>_<by>.tif  uint16, 4 bands, NODATA 65535 outside the mapping area:
                                cropland (0/1) · votes (0-N) · products (bit flags, see table) · excluded (0/1)
 cropland_mask.vrt              all blocks as one raster
@@ -87,6 +87,7 @@ mask_info.json                 products, years, rules and settings used
 """
 import json
 import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -99,7 +100,8 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from shapely.geometry import box
 
-from regions import admin_boundaries, dataset_dir, map_area, settings
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ml_dataset_prep"))   # regions.py is shared
+from regions import admin_boundaries, cropland_dir, map_area, settings  # noqa: E402
 
 # ================================ SETTINGS ================================
 REGION = "morocco"                      # "morocco" | "utah" (regions.py)
@@ -122,7 +124,7 @@ BLOCK_PX = 1024                         # download block = 8 x 8 tiles (10.24 km
 DOWNLOAD_WORKERS = 8                    # parallel Earth Engine requests
 RETRIES = 4
 N_TEST_BLOCKS = None                    # e.g. 6 blocks for a quick test; None = all
-OUT_ROOT = dataset_dir(REGION) / "00_cropland_mask"
+OUT_ROOT = cropland_dir(REGION) / "cropland_mask"
 # ==========================================================================
 
 BITS = {"worldcover": 0, "esri_lulc": 1, "dynamic_world": 2, "worldcereal": 3, "gcep30": 4, "lgrip30": 5,

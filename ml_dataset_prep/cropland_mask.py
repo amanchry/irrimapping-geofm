@@ -1,5 +1,5 @@
 """
-cropland_mask.py  —  read the cropland mask of 00_make_cropland_mask.py for labelled parcels (used by scripts 01)
+cropland_mask.py  —  read the cropland mask of cropland_extent/make_cropland_mask.py for labelled parcels (used by scripts 01)
 ===============================================================================================================
 
 The labelled parcels are checked against the cropland mask of THEIR agricultural year, but never dropped: a
@@ -21,14 +21,10 @@ import pandas as pd
 import rasterio
 from rasterio.mask import mask as rio_mask
 
-from regions import dataset_dir
+from regions import mask_dir
 
 IN_MASK_FRAC = 0.5                 # a parcel counts as "in the mask" if at least half of its pixels are
 NODATA = 65535
-
-
-def mask_dir(region, ag_season):
-    return dataset_dir(region) / "00_cropland_mask" / ag_season.replace("/", "-")
 
 
 def parcel_mask_stats(parcels, region):
@@ -37,7 +33,7 @@ def parcel_mask_stats(parcels, region):
     seasons = sorted(out["ag_season"].unique())
     missing = [s for s in seasons if not (mask_dir(region, s) / "cropland_mask.vrt").exists()]
     if missing:
-        raise FileNotFoundError(f"no cropland mask for {missing}: run 00_make_cropland_mask.py first "
+        raise FileNotFoundError(f"no cropland mask for {missing}: run cropland_extent/make_cropland_mask.py first "
                                 f"(REGION = {region!r}, SEASONS including {missing})")
     info = json.loads((mask_dir(region, seasons[0]) / "mask_info.json").read_text())
     products = {p: v["bit"] for p, v in info["products"].items()}
