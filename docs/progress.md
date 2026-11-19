@@ -24,8 +24,9 @@ Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
 2. E03 with Presto and TESSERA; LoRA fine-tuning (RQ2) deferred ([plan](experiments/plan.md)).
-3. Maps (Phase 5): wall-to-wall composites from STAC (parity check against the Earth Engine tiles first), map of
-   the best model, map accuracy sample.
+3. STAC approach (independent of the Earth Engine tiles): Sentinel-2 download of all cropland tiles
+   (`s2_download/`; Utah 2023/24 first, then Morocco 2023/24 and 2024/25), then training tiles, experiments and maps
+   on the STAC tiles; map accuracy sample.
 
 ---
 
@@ -80,7 +81,7 @@ Next steps
 - [x] ~~Tunisia: label source and transfer experiment~~ → replaced by Utah as a second study area ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)).
 - [ ] Utah: download WRLU 2024 tiles (`SEASONS = ["2023/24"]`), views, embeddings, RQ1 comparison; then 2021 and the temporal test (training script: train on one year, test on another).
 - [ ] Agree the new wording of RQ3 / RQ4 (D13) with the supervisors.
-- [ ] Prediction / wall-to-wall mapping step: STAC composites per block (benchmark + parity check vs Earth Engine tiles; cluster proxy access to the STAC hosts; reflectance offset from processing baseline 04.00), map of the best model, map accuracy sample (Olofsson et al. 2014).
+- [ ] Prediction / wall-to-wall mapping step: STAC composites per block (`s2_download/`; cluster proxy access to the STAC hosts; reflectance offset from processing baseline 04.00), map of the best model, map accuracy sample (Olofsson et al. 2014).
 - [ ] Not-cropland samples are mostly easy (bare land, rangeland, riverside vegetation): false cropland inside the union mask has no label yet; consider a small labelled sample of union-only pixels.
 - [ ] Re-run `01_prepare_labels_*` with the mask check once all masks exist (cluster).
 - [ ] Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.
@@ -89,6 +90,12 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-20 (STAC download: parity mode removed)
+
+- The STAC approach is independent of the Earth Engine tiles (its models are trained on STAC tiles only), so the
+  parity mode of `s2_download/02_download_s2_stac.py` and `03_parity_check.py` were removed; 02 now downloads every
+  cropland tile of the mask. Morocco 2024/25 added; `S2_SEASONS` selects the year per cluster job.
 
 ### 2026-11-19 (E03 and E04 results)
 

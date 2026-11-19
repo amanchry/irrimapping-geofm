@@ -16,7 +16,7 @@ Three different squares appear in the figures. They are nested: the large ones c
   Block             10.24 km (1,024 px)   Our download unit: one job reads every scene of the year for this
                                           square and builds the 12 monthly composites.
   Model tile        1.28 km (128 px)      What is stored, read by the models and predicted. Same tile_id and
-                                          pixels as the cropland mask and the training tiles (03_build_tiles.py).
+                                          pixels as the cropland mask.
 
   1 block = 8 x 8 model tiles. A Sentinel-2 tile holds about 10 x 10 blocks.
   Blocks and model tiles follow our own grid (UTM of the region, 10 m, origin at 0/0); they are not cut from
@@ -68,8 +68,7 @@ Right: one block
   one Sentinel-2 tile. For one date a block job therefore usually reads one file per band, two where tiles or
   orbits overlap.
 - Each region spans two UTM zones (Morocco 29 and 30, Utah 11 and 12). Sentinel-2 tiles of the other zone are
-  reprojected onto the region's grid (EPSG:32629 Morocco, EPSG:32612 Utah), as Earth Engine did for the
-  training tiles.
+  reprojected onto the region's grid (EPSG:32629 Morocco, EPSG:32612 Utah).
 
 
 5. Why these sizes

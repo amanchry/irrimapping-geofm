@@ -70,13 +70,10 @@ spatio-temporal network of the same input.
 
 1. **Temporal test (RQ3), Utah:** the best models trained on 2023/24 and applied to 2020/21 on the test folds.
 2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites, predictions kept inside the cropland
-   mask; irrigated and rainfed area per region and year. The experiments use the Earth Engine tiles; for the whole
-   area the composites are planned from a STAC catalogue (Planetary Computer or Earth Search) per 10.24 km block of
-   the mask grid, without Earth Engine's 48 MB request limit. Before use, a parity check on the labelled tiles
-   compares STAC and Earth Engine composites per band and month and scores the trained model on both inputs (STAC
-   offers only the scene classification layer as cloud mask, the training tiles use Cloud Score+). If the score
-   drops, the training tiles are rebuilt from the same STAC pipeline. `06_build_cropland_tiles.py` (Earth Engine)
-   stays as the fallback.
+   mask; irrigated and rainfed area per region and year. Two independent approaches: the experiments above use the
+   Earth Engine tiles; the STAC approach ([`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download))
+   downloads monthly composites (Earth Search, scene-classification cloud mask) for every cropland tile of the mask
+   per 10.24 km block, and its models are trained, evaluated and mapped on those STAC tiles only.
 3. **Map accuracy:** a stratified random sample over the map (including not-cropland), area-adjusted accuracy and
    area estimates (Olofsson et al. 2014); comparison with LGRIP30 and national statistics.
 

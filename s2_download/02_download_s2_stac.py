@@ -1,42 +1,35 @@
 """
-02_download_s2_stac.py  —  monthly Sentinel-2 composites per 128 px tile from a STAC catalogue (no Earth Engine)
-================================================================================================================
+02_download_s2_stac.py  —  monthly Sentinel-2 composites per 128 px cropland tile from a STAC catalogue
+=======================================================================================================
 
 What it does
 ------------
 For every download block (1024 x 1024 px = 10.24 km, 8 x 8 model tiles; 01_s2_grid_overview.py) and agricultural
 year:
 1. Searches the Sentinel-2 L2A scenes of the year over the block (Earth Search, collection sentinel-2-c1-l2a; no
-   account needed). Scenes with more than MAX_SCENE_CLOUD % cloud are skipped (same filter as the Earth Engine
-   tiles: CLOUDY_PIXEL_PERCENTAGE < 60).
+   account needed). Scenes with more than MAX_SCENE_CLOUD % cloud are skipped.
 2. Month by month, reads the 12 bands and the scene classification (SCL) of every scene onto the block grid
-   (region's UTM CRS, 10 m, nearest-neighbour resampling as Earth Engine's default), as raw integers.
+   (region's UTM CRS, 10 m, nearest-neighbour resampling), as raw integers.
 3. Harmonises the reflectance: scenes of processing baseline 04.00 or later (from 25 Jan 2022) carry an offset of
-   +1000 in Collection 1; it is subtracted (values below 0 -> 0), as in COPERNICUS/S2_SR_HARMONIZED.
+   +1000 in Collection 1; it is subtracted (values below 0 -> 0), so all years are on one scale.
    A failed read is retried, then the month is read scene by scene; scenes that still fail are left out and
    logged (never treated as cloud). If more than MAX_FAILED_FRAC of a block's scenes fail, the block is skipped
    and logged, and no tiles are written, so a rerun downloads it again.
 4. Cloud mask per pixel and scene: SCL classes in SCL_INVALID are removed (no data, defective, dark, cloud shadow,
    cloud medium / high, cirrus); a value of 0 is no data.
 5. Monthly composite = median of the clear observations per band; S2_NCLEAR = number of clear observations.
-   Every scene counts, also where two Sentinel-2 tiles overlap (the same acquisition then counts twice), exactly as
-   the median over the Earth Engine collection does.
-6. Cuts the block into its 8 x 8 tiles and writes only the selected tiles, in the format of the Earth Engine tile
-   stores (pixelwise_run/06_build_cropland_tiles.py): int16, 156 bands month-major (<band>_m01 ... <band>_m12 with
-   B1 ... B12 and S2_NCLEAR), NODATA -32768 where a month has no clear observation, same tile_id and grid. The
-   experiment and mapping code therefore read these tiles unchanged.
+   Every scene counts, also where two Sentinel-2 tiles overlap (the same acquisition then counts twice).
+6. Cuts the block into its 8 x 8 tiles and writes only the selected tiles: int16, 156 bands month-major
+   (<band>_m01 ... <band>_m12 with B1 ... B12 and S2_NCLEAR), NODATA -32768 where a month has no clear observation,
+   tile_id and grid of the cropland mask.
 
-Difference to the Earth Engine tiles: the cloud mask (SCL here, Cloud Score+ cs_cdf >= 0.60 there). Check with
-03_parity_check.py before the tiles are used with models trained on the Earth Engine tiles.
+Which tiles
+-----------
+Every tile with >= MIN_CROP_FRAC cropland in the cropland mask of the year (tiles_cropland.parquet of
+cropland_extent/make_cropland_mask.py), grouped into blocks of 8 x 8 tiles.
 
-Which tiles (TILE_SET)
-----------------------
-"parity"    the parcel-store tiles (03_tiles_128px) of N_PARITY_BLOCKS blocks spread over the region (k-means on
-            the block centres), so dry and cloudy areas are both tested: for 03_parity_check.py
-"cropland"  every tile with >= MIN_CROP_FRAC cropland in the mask (the wall-to-wall maps)
-
-Outputs (outputs/<region>/s2_download/<tile_set>/<season>/)
------------------------------------------------------------
+Outputs (outputs/<region>/s2_download/cropland/<season>/)
+--------------------------------------------------------
 tiles/<tile_id>_img.tif   int16, 156 bands, NODATA -32768, deflate
 tiles_qa.jsonl            per tile: s2_nodata_pct, months_with_data, mean_nclear (on the tile's cropland pixels)
 blocks_done.jsonl         per block: scenes found / used / not readable (ids), seconds, tiles written
@@ -47,7 +40,8 @@ Run (from the project folder; CPU, internet; resumable: finished tiles are skipp
 ----------------------------------------------------------------------------------
     python s2_download/02_download_s2_stac.py
     # cluster, one array task per share of the blocks (compute nodes go through the proxy):
-    #   EXPERIMENT_REGION=morocco S2_TILE_SET=cropland S2_PART=<k> S2_N_PARTS=<n> python s2_download/02_download_s2_stac.py
+    #   EXPERIMENT_REGION=morocco S2_SEASONS=2023/24 S2_PART=<k> S2_N_PARTS=<n> \
+    #       python s2_download/02_download_s2_stac.py
 """
 import json
 import os
@@ -63,7 +57,7 @@ from rasterio.transform import Affine
 from rasterio.windows import from_bounds
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pixelwise_run"))   # regions.py is shared
-from regions import cropland_dir, dataset_dir, settings  # noqa: E402
+from regions import cropland_dir, settings  # noqa: E402
 
 # GDAL settings for many small range reads of cloud-optimised GeoTIFFs over HTTPS
 for k, v in {"GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR", "GDAL_HTTP_MAX_RETRY": "5", "GDAL_HTTP_RETRY_DELAY": "3",
@@ -80,10 +74,9 @@ def env(name, default):
 
 # ================================ SETTINGS ================================
 REGION = env("EXPERIMENT_REGION", "morocco")        # "morocco" | "utah"
-SEASONS = {"morocco": ["2023/24"], "utah": ["2023/24"]}[REGION]
-TILE_SET = env("S2_TILE_SET", "parity")             # "parity" (compare with Earth Engine) | "cropland" (maps)
-N_PARITY_BLOCKS = 8                                 # parity: blocks spread over the region (all their parcel tiles)
-MIN_CROP_FRAC = 0.01                                # cropland: tile kept if >= 1% cropland (as 01_s2_grid_overview)
+SEASONS = {"morocco": ["2023/24", "2024/25"], "utah": ["2023/24"]}[REGION]   # the training years
+SEASONS = [x for x in env("S2_SEASONS", ",".join(SEASONS)).split(",") if x]  # e.g. S2_SEASONS=2024/25 (one job set per year)
+MIN_CROP_FRAC = 0.01                                # tile kept if >= 1% cropland (as 01_s2_grid_overview)
 N_TEST_BLOCKS = env("S2_TEST_BLOCKS", 0)            # e.g. 3 blocks for a quick test; 0 = all
 PART, N_PARTS = env("S2_PART", 0), env("S2_N_PARTS", 1)   # this job handles blocks PART, PART + N_PARTS, ...
 
@@ -91,7 +84,7 @@ STAC_URL = "https://earth-search.aws.element84.com/v1"
 COLLECTION = "sentinel-2-c1-l2a"
 MAX_SCENE_CLOUD = 60                                # scene cloud cover (%), as CLOUDY_PIXEL_PERCENTAGE < 60 in EE
 SCL_INVALID = [0, 1, 2, 3, 8, 9, 10]                # no data, defective, dark, shadow, cloud medium/high, cirrus
-RESAMPLING = "nearest"                              # 20 m / 60 m bands to 10 m; Earth Engine's default
+RESAMPLING = "nearest"                              # 20 m / 60 m bands to 10 m
 OFFSET_FROM_BASELINE = "04.00"                      # baseline >= this: subtract 1000 (harmonised reflectance)
 THREADS = 8                                         # parallel reads (dask threads)
 READ_RETRIES = 3                                    # retries of a failed read (month, then scene by scene)
@@ -110,7 +103,6 @@ ASSETS = {"B1": "coastal", "B2": "blue", "B3": "green", "B4": "red", "B5": "rede
           "B7": "rededge3", "B8": "nir", "B8A": "nir08", "B9": "nir09", "B11": "swir16", "B12": "swir22"}
 MONTH_BANDS = S2_BANDS + ["S2_NCLEAR"]
 NODATA = -32768
-PARCEL_STORE = dataset_dir(REGION) / "03_tiles_128px" / "agyear" / "tiles"
 MASK_ROOT = cropland_dir(REGION) / "cropland_mask"
 
 
@@ -131,26 +123,7 @@ def month_starts(season):
 def select_tiles(season):
     tag = season_tag(season)
     mask = pd.read_parquet(MASK_ROOT / tag / "tiles_cropland.parquet")
-    if TILE_SET == "cropland":
-        t = mask[(mask["n_crop_px"] > 0) & (mask["crop_frac"] >= MIN_CROP_FRAC)]
-    elif TILE_SET == "parity":
-        ids = sorted(p.name[:-len("_img.tif")] for p in PARCEL_STORE.glob(f"{tag}_*_img.tif"))
-        if not ids:
-            raise FileNotFoundError(f"no {tag} tiles in {PARCEL_STORE} (parcel store, 03_build_tiles.py)")
-        t = pd.DataFrame({"tile_id": ids})
-        t[["ix", "iy"]] = t["tile_id"].str.split("_", expand=True)[[1, 2]].astype(int)
-        t = t.merge(mask[["tile_id", "n_crop_px", "crop_frac"]], on="tile_id", how="left").fillna(0)
-        # N_PARITY_BLOCKS blocks spread over the region (k-means on the centres of the blocks with parcel tiles;
-        # in each cluster the block with most parcel tiles), so dry and cloudy areas are both tested
-        from sklearn.cluster import KMeans
-        t["bx"], t["by"] = t["ix"] // BLOCK_TILES, t["iy"] // BLOCK_TILES
-        cnt = t.groupby(["bx", "by"]).size().rename("n").reset_index()
-        k = min(N_PARITY_BLOCKS, len(cnt))
-        cnt["cluster"] = KMeans(k, n_init=10, random_state=42).fit_predict(cnt[["bx", "by"]].to_numpy(float))
-        keep = cnt.sort_values("n", ascending=False).drop_duplicates("cluster")
-        t = t.merge(keep[["bx", "by"]], on=["bx", "by"])
-    else:
-        raise ValueError(f"TILE_SET must be 'parity' or 'cropland', not {TILE_SET!r}")
+    t = mask[(mask["n_crop_px"] > 0) & (mask["crop_frac"] >= MIN_CROP_FRAC)]
     t = t.assign(bx=t["ix"] // BLOCK_TILES, by=t["iy"] // BLOCK_TILES)
     return t[["tile_id", "ix", "iy", "bx", "by", "n_crop_px"]].reset_index(drop=True)
 
@@ -277,7 +250,7 @@ def tile_qa(cube, crop):
     c = cube.reshape(N_MONTHS, len(MONTH_BANDS), TILE_PX, TILE_PX)
     on = crop == 1
     if not on.any():
-        on = np.ones_like(on, bool)                                         # parity tiles without cropland
+        on = np.ones_like(on, bool)                                         # no cropland pixel in the window
     missing = c[:, S2_BANDS.index("B4")][:, on] == NODATA
     return {"s2_nodata_pct": round(100 * float(missing.mean()), 2),
             "months_with_data": int(((~missing).mean(axis=1) >= 0.5).sum()),
@@ -289,10 +262,10 @@ def main():
     from shapely.geometry import box
     for season in SEASONS:
         tag = season_tag(season)
-        out = ROOT / "outputs" / REGION / "s2_download" / TILE_SET / tag
+        out = ROOT / "outputs" / REGION / "s2_download" / "cropland" / tag
         (out / "tiles").mkdir(parents=True, exist_ok=True)
         (out / "tiles_info.json").write_text(json.dumps({
-            "region": REGION, "season": season, "tile_set": TILE_SET, "crs_epsg": CRS_EPSG, "gsd_m": GSD_M,
+            "region": REGION, "season": season, "crs_epsg": CRS_EPSG, "gsd_m": GSD_M,
             "tile_px": TILE_PX, "block_px": BLOCK_PX, "start_month": START_MONTH, "n_months": N_MONTHS,
             "month_bands": MONTH_BANDS, "s2_scale": "surface reflectance x 10000 (harmonised)", "nodata": NODATA,
             "band_order": "month-major: <band>_m01 ... <band>_m12",
@@ -307,7 +280,7 @@ def main():
         if N_TEST_BLOCKS:
             keys = keys[:N_TEST_BLOCKS]
         todo = [k for k in keys if not all(p.exists() for p in blocks.get_group(k)["path"])]
-        print(f"== {REGION} {season} {TILE_SET}: {len(tiles):,} tiles in {blocks.ngroups:,} blocks; this job "
+        print(f"== {REGION} {season}: {len(tiles):,} tiles in {blocks.ngroups:,} blocks; this job "
               f"{len(keys):,} blocks (part {PART + 1}/{N_PARTS}), {len(todo):,} to go")
 
         months = month_starts(season)
