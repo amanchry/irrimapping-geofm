@@ -1,5 +1,10 @@
 # RQ1 · Experiment plan
 
+!!! warning "Parcel-wise plan (archived experiments E01–E05)"
+    This plan describes the parcel-wise experiments, now in the [Archive](../archive/index.md). The current
+    experiments classify pixels: see the [pixel-wise experiment plan](../experiments/plan.md)
+    ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
+
 This page is the complete plan of the frozen-encoder evaluation of Phase 2 · Model evaluation (RQ1): which experiments are run, what each one
 answers, and every setting. It is agreed before the runs start; an experiment page in
 [Experiments](../archive/parcel_wise_classification/index.md) is created from it when the experiment is implemented. Rules shared by all

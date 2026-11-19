@@ -8,6 +8,8 @@
     * [Overview](phase1_data/overview.md)
     * [Morocco training data](phase1_data/morocco.md)
     * [Utah training data](phase1_data/utah.md)
+    * [Cropland extent and mask](phase1_data/cropland_mask.md)
+    * [Pixel samples](phase1_data/pixel_samples.md)
 * Phase 2 · Model evaluation
     * [Overview](phase2_models/overview.md)
     * [RQ1 · Experiment plan](phase2_models/experiment_plan.md)
@@ -19,6 +21,7 @@
 * [Phase 5 · Annual maps](phase5_maps/index.md)
 * Experiments · pixel-wise
     * [Overview](experiments/index.md)
+    * [Experiment plan](experiments/plan.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

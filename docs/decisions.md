@@ -21,6 +21,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D13](#d13-utah-as-a-second-independent-study-area) | RQ3 / RQ4: second region and temporal test | zero-shot transfer of the Morocco model to Tunisia (RQ4); temporal test within Morocco (RQ3) | Utah (WRLU) as an independent second study area, no transfer; temporal test in Utah: train on WRLU 2024, test on WRLU 2021 on held-out folds | 12 Nov 2026 |
 | [D14](#d14-sentinel-2-only-for-every-input) | Input data of the models | Sentinel-1 and Sentinel-2 | Sentinel-2 only for every GeoFM and the baselines; Sentinel-1 as an optional ablation (Morocco) | 12 Nov 2026 |
 | [D15](#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips) | AgriFM normalisation | not specified | per-band mean / std of the region's own chips; config statistics as sensitivity run | 12 Nov 2026 |
+| [D16](#d16-pixel-wise-classification-for-continuous-maps) | Unit of classification | one prediction per parcel (parcel embeddings / features) | one prediction per 10 m pixel; parcel-wise experiments E01–E05 archived | 18 Nov 2026 |
+| [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified | union of 4 cropland products per agricultural year; third class "not cropland"; mask applied to the map, never to the inputs | 19 Nov 2026 |
 
 ---
 
@@ -212,3 +214,34 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Sensitivity:** the config statistics are kept as a second embedding (`NORM = "config"`, `agrifm-cfgnorm_*.npz`;
   the Morocco file made on 6 Nov 2026 is this version).
 - **Where:** [Foundation models · AgriFM](foundation_models.md#agrifm), `models_run/02d_embed_agrifm.py`.
+
+## D16. Pixel-wise classification for continuous maps
+- **Before:** the RQ1 experiments (E01–E05) classified **parcels**: the embeddings or Sentinel-2 features of a parcel
+  were averaged inside its outline and classified as one sample.
+- **Problem:** the final product is an annual, continuous (wall-to-wall) map. A parcel-wise model needs a parcel
+  outline for every field it classifies, and outlines exist only for the surveyed parcels.
+- **Now:** every 10 m pixel is classified on its own. Training and test samples are the labelled pixels of the
+  surveyed parcels (`ml_dataset_prep/04c_make_pixel_samples.py`); a pixel takes its parcel's label and fold, so no
+  parcel is split between training and test. Parcel-level accuracy is still reported (majority of a parcel's
+  pixels) for comparison with E01–E05.
+- **Kept:** labels, spatial folds (20 km blocks, 5 folds, PASTIS rotation), the tile store and its compositing,
+  Sentinel-2 only (D14), metrics and statistics.
+- **Archive:** E01–E05 with their pages, results and scripts are kept unchanged in the
+  [Archive](archive/index.md); they remain the RQ1 evidence at parcel level.
+- **Where:** [Pixel samples](phase1_data/pixel_samples.md), [pixel-wise experiment plan](experiments/plan.md).
+
+## D17. Cropland mask from four products and a "not cropland" class
+- **Before:** not specified; WorldCover 2021 was used only to check the survey parcels.
+- **Now:** the mapped area of each agricultural year is the **union** of 4 cropland products (ESA WorldCover 2021,
+  Esri LULC of the year, GCEP30, GLAD 2019): a pixel is cropland if any product calls it cropland; WorldCover
+  built-up, snow and water are removed. The models have a third class, **not cropland**, trained on pixels that no
+  product calls cropland, so they can remove the union's false cropland. The mask is applied to the map output, never
+  to the model inputs; labelled parcels outside the mask stay in training and are only flagged.
+- **Why:** each product alone misses surveyed cropland (WorldCover 78% of the irrigated test parcels, GCEP30 99%,
+  union 100%); combining products is established practice (Meier et al. 2018; Xie et al. 2021; Teluguntla et al.
+  2023), and IrrMapper handled non-cropland as extra classes instead of an external mask (Ketchum et al. 2020).
+  A mask that uses no field labels has the same quality in labelled and unlabelled areas.
+- **Reporting:** accuracy of the classifier on labelled pixels; omission of the mask on the surveyed parcels
+  (`mask_check.csv`); accuracy of the final map from an independent sample over the map, including non-cropland.
+- **Where:** [Cropland extent and mask](phase1_data/cropland_mask.md), `cropland_extent/make_cropland_mask.py`.
+

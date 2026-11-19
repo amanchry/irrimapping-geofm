@@ -26,8 +26,17 @@ FIGURES = {                                              # source (in the projec
     "outputs/morocco/study/01_inspection/seasonal_profiles.png":         "phase1_data/figures/seasonal_profiles.png",
     "outputs/morocco/study/01_inspection/examples_irrigated.png":        "phase1_data/figures/examples_irrigated.jpg",
     "outputs/morocco/study/01_inspection/examples_rainfed.png":          "phase1_data/figures/examples_rainfed.jpg",
-    "experiments/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/cv_random_vs_spatial.png": "experiments/E01_frozen_pca_nested/figures/cv_random_vs_spatial_baseline.png",
-    "experiments/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/importance.png":           "experiments/E01_frozen_pca_nested/figures/importance_baseline.png",
+    "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/cv_random_vs_spatial.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/cv_random_vs_spatial_baseline.png",
+    "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/importance.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/importance_baseline.png",
+    # cropland extent and pixel samples (pixel-wise classification)
+    "outputs/morocco/cropland_extent/cropland_mask/2023-24/cropland_mask_quicklook.png": "phase1_data/figures/cropland_mask_morocco_2023-24.png",
+    "outputs/utah/cropland_extent/cropland_mask/2023-24/cropland_mask_quicklook.png":    "phase1_data/figures/cropland_mask_utah_2023-24.png",
+    "outputs/cropland_tiles_extent_2023-24.png":                                         "phase1_data/figures/cropland_tiles_extent_2023-24.png",
+    "outputs/morocco/cropland_extent/esa_worldcover/ESA_WorldCover_10m_2021_Morocco.png": "phase1_data/figures/worldcover_2021_morocco.jpg",
+    "outputs/utah/cropland_extent/esa_worldcover/ESA_WorldCover_10m_2021_Utah.png":       "phase1_data/figures/worldcover_2021_utah.jpg",
+    "outputs/morocco/cropland_extent/lgrip30/LGRIP30_2015_Morocco.png":                   "phase1_data/figures/lgrip30_2015_morocco.png",
+    "outputs/utah/cropland_extent/lgrip30/LGRIP30_2015_Utah.png":                         "phase1_data/figures/lgrip30_2015_utah.png",
+    "outputs/morocco/dataset/04c_pixel_samples/2023-24/explainer_2023-24_391_2832.png":   "phase1_data/figures/pixel_samples_explainer.png",
 }
 # --------------------------------------------------------------------------
 
