@@ -1,0 +1,32 @@
+{
+  "model": "U-TAE",
+  "encoder_widths": [
+    64,
+    64,
+    64,
+    128
+  ],
+  "decoder_widths": [
+    32,
+    32,
+    64,
+    128
+  ],
+  "n_head": 16,
+  "d_k": 4,
+  "d_model": 256,
+  "experiment": "E04",
+  "region": "morocco",
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch": 4,
+  "epochs": 100,
+  "patience": 10,
+  "n_seeds": 3,
+  "tiles": 2230,
+  "git_commit": "cd6388b (uncommitted changes)",
+  "finished": "2026-11-19 15:45",
+  "machine": "ctit089",
+  "pixels": 522003,
+  "quick": false
+}

@@ -1,0 +1,20 @@
+{
+  "encoder": "terramind",
+  "frozen": true,
+  "temporal_head": "ltae",
+  "decoder": "UPerNet",
+  "experiment": "E03",
+  "region": "utah",
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "batch": 8,
+  "epochs": 50,
+  "patience": 8,
+  "n_seeds": 3,
+  "tiles": 2405,
+  "git_commit": "cd6388b (uncommitted changes)",
+  "finished": "2026-11-19 17:40",
+  "machine": "ctit093",
+  "pixels": 654382,
+  "quick": false
+}

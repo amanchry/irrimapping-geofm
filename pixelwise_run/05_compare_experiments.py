@@ -7,7 +7,7 @@ What it does
 Collects every run with results in experiments/E0*/results/<region>/<run>/ (oof_predictions.parquet), checks that
 all runs of a region were scored on the same pixels, and writes for each region:
   comparison.csv        one row per run: cropland macro-F1 and 3-class macro-F1 with 95% CI
-  paired_vs_<ref>.csv   paired difference of every run to the reference run (same pixels, same block-bootstrap
+  paired_vs_<ref>.csv   paired difference of every run to each reference run (same pixels, same block-bootstrap
                         draws): difference, 95% CI, two-sided bootstrap p-value and Holm-adjusted p-value; a
                         difference counts when its CI excludes 0 and the Holm-adjusted p < 0.05
 The tables go to experiments/comparison/<region>/ (copied to the documentation when the results are reported).
@@ -28,7 +28,8 @@ from pixel_common import block_confusions, bootstrap_draws, metrics_from_confusi
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1] / "experiments"   # experiment folders E0*/results/
 REGIONS = ["morocco", "utah"]
-REFERENCE = "E01_s2_pixel_baseline/rf"             # run every other run is compared with
+REFERENCES = ["E01_s2_pixel_baseline/rf",          # runs every other run is compared with (one table each)
+              "E04_utae/utae"]
 METRICS = ["cropland_macro_f1", "macro_f1_3class"]
 OUT_DIR = ROOT / "comparison"
 # ==========================================================================
@@ -73,32 +74,33 @@ def main():
         table = pd.DataFrame(rows).sort_values("cropland_macro_f1", ascending=False)
         table.to_csv(out / "comparison.csv", index=False)
         print(f"\n== {region}\n" + table[["run"] + METRICS].round(3).to_string(index=False))
-        if REFERENCE not in oofs:
-            print(f"  reference {REFERENCE} not finished: no paired tests")
-            continue
-        blocks = sorted(oofs[REFERENCE]["block_id"].unique(), key=str)
-        draws = bootstrap_draws(len(blocks))
-        ref = boot_metrics(oofs[REFERENCE], blocks, draws)
-        ref_point = score(oofs[REFERENCE], n_boot=1)[0].set_index("metric")["value"]
-        paired = []
-        for k, o in oofs.items():
-            if k == REFERENCE:
+        for REFERENCE in REFERENCES:
+            if REFERENCE not in oofs:
+                print(f"  reference {REFERENCE} not finished: no paired tests")
                 continue
-            b = boot_metrics(o, blocks, draws)
-            point = score(o, n_boot=1)[0].set_index("metric")["value"]
-            for x in METRICS:
-                d = b[x] - ref[x]
-                paired.append({"run": k, "metric": x, "difference": point[x] - ref_point[x],
-                               "ci_low": d.quantile(0.025), "ci_high": d.quantile(0.975),
-                               "p": min(1.0, 2 * min((d <= 0).mean(), (d >= 0).mean()))})
-        paired = pd.DataFrame(paired)
-        if len(paired):
-            paired["p_holm"] = paired.groupby("metric")["p"].transform(lambda p: holm(p.to_numpy()))
-            paired["counts"] = ((paired["ci_low"] > 0) | (paired["ci_high"] < 0)) & (paired["p_holm"] < 0.05)
-            name = REFERENCE.replace("/", "_")
-            paired.to_csv(out / f"paired_vs_{name}.csv", index=False)
-            print(paired[paired["metric"] == "cropland_macro_f1"].round(3).to_string(index=False))
-
+            blocks = sorted(oofs[REFERENCE]["block_id"].unique(), key=str)
+            draws = bootstrap_draws(len(blocks))
+            ref = boot_metrics(oofs[REFERENCE], blocks, draws)
+            ref_point = score(oofs[REFERENCE], n_boot=1)[0].set_index("metric")["value"]
+            paired = []
+            for k, o in oofs.items():
+                if k == REFERENCE:
+                    continue
+                b = boot_metrics(o, blocks, draws)
+                point = score(o, n_boot=1)[0].set_index("metric")["value"]
+                for x in METRICS:
+                    d = b[x] - ref[x]
+                    paired.append({"run": k, "metric": x, "difference": point[x] - ref_point[x],
+                                   "ci_low": d.quantile(0.025), "ci_high": d.quantile(0.975),
+                                   "p": min(1.0, 2 * min((d <= 0).mean(), (d >= 0).mean()))})
+            paired = pd.DataFrame(paired)
+            if len(paired):
+                paired["p_holm"] = paired.groupby("metric")["p"].transform(lambda p: holm(p.to_numpy()))
+                paired["counts"] = ((paired["ci_low"] > 0) | (paired["ci_high"] < 0)) & (paired["p_holm"] < 0.05)
+                name = REFERENCE.replace("/", "_")
+                paired.to_csv(out / f"paired_vs_{name}.csv", index=False)
+                print(paired[paired["metric"] == "cropland_macro_f1"].round(3).to_string(index=False))
+    
 
 if __name__ == "__main__":
     main()

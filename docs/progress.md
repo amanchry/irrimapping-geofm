@@ -13,7 +13,7 @@ change log).
 | --- | --- | --- |
 | Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
 | Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E04 (pixel-wise) | `experiments/` | scripts ready and checked on subsets ([plan](experiments/plan.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); E01 next on the cluster |
+| Experiments E01–E04 (pixel-wise) | `experiments/` | E01–E04 done in both regions ([results](experiments/index.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); cropland macro-F1 Morocco 0.876 (RF) – 0.900 (AgriFM), differences not significant; Utah 0.729 (RF) → 0.766 (U-TAE) → 0.797 (TerraMind), significant. Presto and TESSERA (E03) still to run |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
 | Embeddings (Sentinel-2 only) | `parcelwise_run/06a–06d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
@@ -23,7 +23,7 @@ change log).
 Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. Run E01 (Sentinel-2 pixel baseline) on the cluster, then E02, E04, E03 one at a time; LoRA fine-tuning (RQ2) deferred ([plan](experiments/plan.md)).
+2. E03 with Presto and TESSERA; LoRA fine-tuning (RQ2) deferred ([plan](experiments/plan.md)).
 3. Maps (Phase 5): wall-to-wall composites from STAC (parity check against the Earth Engine tiles first), map of
    the best model, map accuracy sample.
 
@@ -89,6 +89,16 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-19 (E03 and E04 results)
+
+- E04 U-TAE and E03 with Prithvi, Clay, TerraMind and AgriFM finished in both regions; result pages written
+  ([E03](experiments/E03_frozen_geofm.md), [E04](experiments/E04_utae.md)). Utah: U-TAE +0.037 and the foundation
+  models +0.055 to +0.068 cropland macro-F1 over the random forest, three encoders also significantly above U-TAE.
+  Morocco: no significant difference on the cropland metric.
+- `05_compare_experiments.py` also tests every run against E04 U-TAE (`paired_vs_E04_utae_utae.csv`); the Holm
+  family now holds the eight runs of E01–E04, so the E01 / E02 pages were updated to the final p-values.
+- `report_figures.py` writes `scores_e03_e04.png` and `confusion_e03_e04.png`.
 
 ### 2026-11-19 (pixel-wise set-up: cropland mask, pixel samples, experiment plan)
 

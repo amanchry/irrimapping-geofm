@@ -77,12 +77,12 @@ Out-of-fold scores over the 5 spatial folds, with 95% block-bootstrap confidence
 | Utah | random forest | **0.729** [0.682, 0.765] | 0.746 [0.714, 0.772] | 0.870 | 0.559 | 0.809 | 0.817 |
 | Utah | gradient boosting | **0.726** [0.679, 0.763] | 0.750 [0.718, 0.776] | 0.875 | 0.552 | 0.824 | 0.824 |
 
-Paired difference gradient boosting − random forest on the same pixels (block bootstrap; Holm correction over all runs
-compared with the E01 random forest so far):
+Paired difference gradient boosting − random forest on the same pixels (block bootstrap; Holm correction over the eight
+runs of E01–E04 compared with the E01 random forest):
 
 | Region | Cropland macro-F1 | 3-class macro-F1 |
 | --- | --- | --- |
-| Morocco | +0.005 [−0.007, 0.021], p<sub>Holm</sub> 0.72 | **+0.012** [0.003, 0.024], p<sub>Holm</sub> 0.018 |
+| Morocco | +0.005 [−0.007, 0.021], p<sub>Holm</sub> 1.00 | **+0.012** [0.003, 0.024], p<sub>Holm</sub> 0.018 |
 | Utah | −0.003 [−0.015, 0.008], p<sub>Holm</sub> 0.62 | +0.004 [−0.004, 0.013], p<sub>Holm</sub> 0.61 |
 
 ![Scores of E01 and E02](figures/scores_e01_e02.png)

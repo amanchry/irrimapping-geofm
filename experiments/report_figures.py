@@ -2,9 +2,10 @@
 report_figures.py  —  figures for the experiment pages (docs/experiments/figures/)
 ==================================================================================
 
-Reads the finished runs in experiments/E0*/results/<region>/<run>/ and writes:
+Reads the finished runs in experiments/E0*/results/<region>/<run>/ and writes, for every <tag> in FIGURES:
   scores_<tag>.png        cropland and 3-class macro-F1 with 95% block-bootstrap CI, per region and run
-  confusion_<tag>.png     row-normalised confusion matrices of RUNS_CONFUSION
+  confusion_<tag>.png     row-normalised confusion matrices of the runs in "confusion"
+and once:
   e01_importance.png      E01 random forest: permutation importance per month and per band
   e02_attention.png       E02 L-TAE: mean attention per month and class (test folds)
 
@@ -23,10 +24,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pixelwise_run"))
 from regions import settings  # noqa: E402
 
 # ================================ SETTINGS ================================
-TAG = "e01_e02"
-RUNS = {"E01 random forest": "E01_s2_pixel_baseline/rf", "E01 gradient boosting": "E01_s2_pixel_baseline/hgb",
-        "E02 TempCNN": "E02_temporal_nn/tempcnn", "E02 L-TAE": "E02_temporal_nn/ltae"}
-RUNS_CONFUSION = {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 L-TAE": "E02_temporal_nn/ltae"}
+FIGURES = {
+    "e01_e02": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf",
+                           "E01 gradient boosting": "E01_s2_pixel_baseline/hgb",
+                           "E02 TempCNN": "E02_temporal_nn/tempcnn", "E02 L-TAE": "E02_temporal_nn/ltae"},
+                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 L-TAE": "E02_temporal_nn/ltae"}},
+    "e03_e04": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 L-TAE": "E02_temporal_nn/ltae",
+                           "E04 U-TAE": "E04_utae/utae", "E03 Prithvi": "E03_frozen_geofm/prithvi",
+                           "E03 Clay": "E03_frozen_geofm/clay", "E03 TerraMind": "E03_frozen_geofm/terramind",
+                           "E03 AgriFM": "E03_frozen_geofm/agrifm"},
+                "confusion": {"E02 L-TAE": "E02_temporal_nn/ltae", "E04 U-TAE": "E04_utae/utae",
+                              "E03 TerraMind": "E03_frozen_geofm/terramind"}},
+}
 REGIONS = {"morocco": "Morocco", "utah": "Utah"}
 # ==========================================================================
 
@@ -46,9 +55,23 @@ def month_labels(region):
     return [MONTHS[(s - 1 + k) % 12] for k in range(12)]
 
 
-def scores():
-    fig, ax = plt.subplots(1, 2, figsize=(12, 4.2), sharey=False)
-    colors = ["#9ecae1", "#3182bd", "#fdae6b", "#e6550d"]
+COLORS = {"E01": ["#9ecae1", "#3182bd"], "E02": ["#fdae6b", "#e6550d"], "E04": ["#74c476"],
+          "E03": ["#bcbddc", "#9e9ac8", "#756bb1", "#54278f"]}
+
+
+def run_colors(runs):
+    used = {k: 0 for k in COLORS}
+    out = []
+    for label in runs:
+        e = label[:3]
+        out.append(COLORS[e][used[e] % len(COLORS[e])])
+        used[e] += 1
+    return out
+
+
+def scores(tag, RUNS):
+    fig, ax = plt.subplots(1, 2, figsize=(max(12, 1.7 * len(RUNS) + 5), 4.2), sharey=False)
+    colors = run_colors(RUNS)
     for a, (region, name) in zip(ax, REGIONS.items()):
         for j, metric in enumerate(["cropland_macro_f1", "macro_f1_3class"]):
             for i, (label, run) in enumerate(RUNS.items()):
@@ -65,13 +88,13 @@ def scores():
         a.set_title(name)
         a.grid(axis="y", alpha=0.3)
     ax[0].set_ylabel("out-of-fold score (95% block-bootstrap CI)")
-    ax[1].legend(loc="upper right", fontsize=8)
-    fig.tight_layout()
-    fig.savefig(OUT / f"scores_{TAG}.png", dpi=130)
+    fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=len(RUNS), fontsize=8, frameon=False)
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    fig.savefig(OUT / f"scores_{tag}.png", dpi=130)
     plt.close(fig)
 
 
-def confusion():
+def confusion(tag, RUNS_CONFUSION):
     fig, ax = plt.subplots(len(REGIONS), len(RUNS_CONFUSION), figsize=(4.4 * len(RUNS_CONFUSION), 8))
     for r, (region, name) in enumerate(REGIONS.items()):
         for c, (label, run) in enumerate(RUNS_CONFUSION.items()):
@@ -90,7 +113,7 @@ def confusion():
             a.set_ylabel("reference")
             a.set_title(f"{name} · {label}", fontsize=10)
     fig.tight_layout()
-    fig.savefig(OUT / f"confusion_{TAG}.png", dpi=130)
+    fig.savefig(OUT / f"confusion_{tag}.png", dpi=130)
     plt.close(fig)
 
 
@@ -133,8 +156,9 @@ def attention():
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    scores()
-    confusion()
+    for tag, f in FIGURES.items():
+        scores(tag, f["scores"])
+        confusion(tag, f["confusion"])
     importance()
     attention()
     print(f"Figures in {OUT}")

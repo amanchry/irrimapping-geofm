@@ -58,13 +58,13 @@ Out-of-fold scores with 95% block-bootstrap CI; the E01 rows are repeated for co
 | Utah | TempCNN | 0.721 [0.674, 0.762] | 0.745 [0.712, 0.775] | 0.862 | 0.545 | 0.829 |
 | Utah | L-TAE | **0.741** [0.697, 0.776] | **0.760** [0.730, 0.785] | 0.879 | 0.560 | 0.840 |
 
-Paired difference to the E01 random forest on the same pixels (block bootstrap, 95% CI; Holm correction over all
-runs compared with the E01 random forest so far; **bold** = CI excludes 0 and p<sub>Holm</sub> < 0.05):
+Paired difference to the E01 random forest on the same pixels (block bootstrap, 95% CI; Holm correction over the
+eight runs of E01–E04 compared with the E01 random forest; **bold** = CI excludes 0 and p<sub>Holm</sub> < 0.05):
 
 | Region | Model | Δ cropland macro-F1 | Δ 3-class macro-F1 |
 | --- | --- | --- | --- |
-| Morocco | TempCNN | +0.010 [−0.013, 0.032], p<sub>Holm</sub> 0.72 | +0.013 [−0.005, 0.030], p<sub>Holm</sub> 0.22 |
-| Morocco | L-TAE | +0.014 [−0.004, 0.031], p<sub>Holm</sub> 0.50 | **+0.022** [0.009, 0.034], p<sub>Holm</sub> < 0.001 |
+| Morocco | TempCNN | +0.010 [−0.013, 0.032], p<sub>Holm</sub> 1.00 | +0.013 [−0.005, 0.030], p<sub>Holm</sub> 0.22 |
+| Morocco | L-TAE | +0.014 [−0.004, 0.031], p<sub>Holm</sub> 0.63 | **+0.022** [0.009, 0.034], p<sub>Holm</sub> < 0.001 |
 | Utah | TempCNN | −0.008 [−0.022, 0.007], p<sub>Holm</sub> 0.62 | −0.001 [−0.010, 0.009], p<sub>Holm</sub> 0.87 |
 | Utah | L-TAE | +0.012 [−0.001, 0.026], p<sub>Holm</sub> 0.26 | **+0.014** [0.004, 0.023], p<sub>Holm</sub> 0.018 |
 
@@ -122,8 +122,9 @@ again reflect snow and missing observations (as in E01).
 Temporal neural networks on the same pixel series give **at most a small gain** over the random forest: L-TAE is
 best in both regions (cropland macro-F1 0.890 Morocco, 0.741 Utah) but the difference to E01 (+0.01) is within
 the uncertainty of the spatial folds; only the 3-class score improves significantly. The limits of the per-pixel
-input (rainfed class, zones with few rainfed parcels) remain. The next experiments test whether **spatial context**
-(E04 U-TAE, E03 foundation models on 128 px tiles) helps where the temporal model alone does not.
+input (rainfed class, zones with few rainfed parcels) remain. The tile models test whether **spatial context** helps where the temporal model alone does
+not: it does in Utah ([E04](E04_utae.md) U-TAE +0.037, [E03](E03_frozen_geofm.md) foundation models up to +0.068),
+not significantly in Morocco.
 
 ## References
 
