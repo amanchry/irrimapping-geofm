@@ -1,0 +1,24 @@
+{
+  "experiment": "E01",
+  "region": "morocco",
+  "model": "hgb",
+  "features": "12 months x (12 S2 bands + NDVI + NDWI)",
+  "grid": {
+    "learning_rate": [
+      0.05,
+      0.1
+    ],
+    "max_leaf_nodes": [
+      31,
+      63
+    ]
+  },
+  "rf_trees": 500,
+  "hgb_max_iter": 1000,
+  "seed": 42,
+  "git_commit": "cd6388b (uncommitted changes)",
+  "finished": "2026-11-19 12:52",
+  "machine": "hpc-node32",
+  "pixels": 522003,
+  "quick": false
+}

@@ -13,7 +13,7 @@ change log).
 | --- | --- | --- |
 | Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
 | Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E05 (pixel-wise) | `experiments/` | scripts ready and checked on subsets ([plan](experiments/plan.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); E01 next on the cluster |
+| Experiments E01–E04 (pixel-wise) | `experiments/` | scripts ready and checked on subsets ([plan](experiments/plan.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); E01 next on the cluster |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
 | Embeddings (Sentinel-2 only) | `parcelwise_run/06a–06d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
@@ -23,7 +23,7 @@ change log).
 Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. Run E01 (Sentinel-2 pixel baseline) on the cluster, then E02, E04, E03, E05 one at a time ([plan](experiments/plan.md)).
+2. Run E01 (Sentinel-2 pixel baseline) on the cluster, then E02, E04, E03 one at a time; LoRA fine-tuning (RQ2) deferred ([plan](experiments/plan.md)).
 3. Maps (Phase 5): wall-to-wall composites from STAC (parity check against the Earth Engine tiles first), map of
    the best model, map accuracy sample.
 
@@ -114,7 +114,7 @@ Next steps
   same UPerNet head; Sentinel-2 only (Presto: S1 / ERA5 / SRTM / Dynamic World tokens masked; TESSERA: empty
   Sentinel-1 branch). LoRA on TESSERA's feed-forward layers (its attention packs q, k, v). Checked on a small tile
   subset on the Mac. Pages: [Foundation models](foundation_models.md), [E03](experiments/E03_frozen_geofm.md),
-  [E05](experiments/E05_lora.md).
+  E05 (deferred).
 - **Experiment scripts E01–E05** in `experiments/` (one folder per experiment with `run.py`): shared code
   `pixel_common.py` (samples, features, PASTIS rotation, metrics, block bootstrap from per-block confusion matrices),
   `nn_common.py` (L-TAE, TempCNN, MLP), `tile_common.py` (tile data, frozen / LoRA foundation-model segmenter with

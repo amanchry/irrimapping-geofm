@@ -48,7 +48,7 @@ then sees the same optical data, and Sentinel-1 coverage of Utah changed between
 "S1GRD"]` in script 02c, written as `terramind-s1s2_agyear_tiles.npz`) and the baseline with radar features
 (`S1S2_VARIABLES = "all"` in script 03).
 
-### Pixel-wise experiments (E03, E05)
+### Pixel-wise experiments (E03)
 
 In the pixel-wise experiments every encoder sees whole 128 × 128 px tiles of 12 monthly Sentinel-2 composites and
 is followed by the same UPerNet head ([E03](experiments/E03_frozen_geofm.md)). The image models give patch features
@@ -126,8 +126,7 @@ and pools them with attention into a 128-d embedding (Matryoshka-ordered: the fi
 usable on their own). The Medium student is used, as recommended by the authors. TESSERA was trained on single
 acquisitions; here each observation is a monthly composite dated the 15th of its month, and only clear months are
 used, padded or subsampled to the observation-count bin of the reference code (8 or 16). Sentinel-2 only: the
-Sentinel-1 branch receives one empty observation, as the reference code does without Sentinel-1. LoRA adapters
-(E05) go on the feed-forward layers, because PyTorch's multi-head attention stores q, k and v in one packed weight.
+Sentinel-1 branch receives one empty observation, as the reference code does without Sentinel-1.
 
 ## Weights
 

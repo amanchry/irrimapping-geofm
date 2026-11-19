@@ -26,7 +26,6 @@
     * [E02 · Temporal neural networks](experiments/E02_temporal_nn.md)
     * [E03 · Frozen GeoFMs + decoder](experiments/E03_frozen_geofm.md)
     * [E04 · U-TAE from scratch](experiments/E04_utae.md)
-    * [E05 · LoRA fine-tuning](experiments/E05_lora.md)
 * [Results](results.md)
 * [Decisions](decisions.md)
 * Progress

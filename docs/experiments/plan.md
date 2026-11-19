@@ -36,11 +36,10 @@ cluster; the results are copied to the Mac for the reports.
 | **E02** | Does a temporal neural network beat the classical baseline on the same pixels? | same pixel time series | TempCNN (Pelletier et al. 2019); L-TAE on single pixels (Garnot & Landrieu 2020) | GPU | 2 |
 | **E03** | Do frozen geospatial foundation models with a light decoder beat the pixel models? (RQ1) | 128 × 128 px tiles, 12 months | frozen Prithvi-EO-2.0, Clay v1.5, TerraMind, AgriFM and the pixel time-series models Presto, TESSERA + UPerNet decoder (PANGAEA; Marsocci et al. 2024), L-TAE over time for the single-date image models | GPU | 4 |
 | **E04** | Does a spatio-temporal network trained from scratch match the foundation models? | 128 × 128 px tiles, 12 months | U-TAE (Garnot & Landrieu 2021) | GPU | 3 |
-| **E05** | Does fine-tuning the best foundation model improve on the frozen encoder? (RQ2) | as E03 | best E03 encoder with LoRA | GPU | 5 |
 
 Run order: E01 first (it fixes the evaluation code and gives the reference numbers), then the other pixel model
 (E02), then the tile models (E04 before E03, because U-TAE tests the tile training pipeline without the large
-encoders), then E05.
+encoders). Fine-tuning with LoRA (RQ2) is deferred until after E01–E04.
 
 ### Details per experiment
 
@@ -66,8 +65,6 @@ UPerNet head ([Foundation models](../foundation_models.md)).
 **E04 · U-TAE from scratch.** The PASTIS segmentation baseline: U-Net encoder with L-TAE attention over the 12
 months, trained on the same tiles with the same masked loss. Shows how much the pretrained encoders add over a
 spatio-temporal network of the same input.
-
-**E05 · fine-tuning.** LoRA adapters on the best E03 encoder, same decoder and data; answers RQ2.
 
 ## 3. After the experiments
 

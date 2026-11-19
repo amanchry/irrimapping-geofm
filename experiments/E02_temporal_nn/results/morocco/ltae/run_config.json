@@ -1,0 +1,27 @@
+{
+  "experiment": "E02",
+  "region": "morocco",
+  "model": "ltae",
+  "n_seeds": 3,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 512,
+  "epochs": 100,
+  "patience": 10,
+  "ltae": {
+    "n_head": 16,
+    "d_k": 8,
+    "d_model": 256,
+    "mlp": [
+      256,
+      128
+    ],
+    "dropout": 0.2
+  },
+  "input": "12 months x (12 S2 bands + NDVI + NDWI)",
+  "git_commit": "cd6388b (uncommitted changes)",
+  "finished": "2026-11-19 11:15",
+  "machine": "ctit088",
+  "pixels": 522003,
+  "quick": false
+}

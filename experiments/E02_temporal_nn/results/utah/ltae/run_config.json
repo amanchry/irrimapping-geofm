@@ -1,0 +1,27 @@
+{
+  "experiment": "E02",
+  "region": "utah",
+  "model": "ltae",
+  "n_seeds": 3,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 512,
+  "epochs": 100,
+  "patience": 10,
+  "ltae": {
+    "n_head": 16,
+    "d_k": 8,
+    "d_model": 256,
+    "mlp": [
+      256,
+      128
+    ],
+    "dropout": 0.2
+  },
+  "input": "12 months x (12 S2 bands + NDVI + NDWI)",
+  "git_commit": "cd6388b (uncommitted changes)",
+  "finished": "2026-11-19 12:22",
+  "machine": "hpc-node06",
+  "pixels": 654382,
+  "quick": false
+}
