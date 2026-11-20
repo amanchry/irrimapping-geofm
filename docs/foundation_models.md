@@ -2,7 +2,7 @@
 
 Six geospatial foundation models (GeoFMs) are evaluated in this study: four image models and two pixel time-series
 models. This page summarises their design and pretraining, specifies how each model is applied in the pixel-wise
-experiments in Morocco and Utah, and lists the primary sources. Other pages refer to this page rather than repeating
+experiments (Morocco first, then Utah), and lists the primary sources. Other pages refer to this page rather than repeating
 its content.
 
 ## Selection
@@ -39,7 +39,7 @@ flowchart LR
     A["128 px tile<br/>12 months, Sentinel-2"] --> B["Encoder<br/>(frozen, fine-tuned<br/>or from scratch)"]
     B --> C["L-TAE over the months<br/>(image models)"]
     C --> D["Feature pyramid<br/>+ UPerNet head"]
-    D --> E["irrigated / rainfed /<br/>not cropland<br/>per 10 m pixel"]
+    D --> E["irrigated / rainfed<br/>per 10 m pixel"]
 ```
 
 ### Inputs and outputs per model
@@ -64,7 +64,7 @@ explains the strategies):
 | Experiment | Models | Encoder | Trained |
 | --- | --- | --- | --- |
 | [E04](experiments/E04_frozen_geofm.md) (RQ1) | all six | **frozen**: pretrained weights, no gradient updates, evaluation mode | head only (2.4–3.2 M weights with the image models) |
-| [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Utah | **frozen**, **LoRA** (low-rank adapters, rank 16, on the attention and MLP layers), **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights) | head only (frozen), 5.5 M adapters + head (LoRA), or all ≈ 306 M weights |
+| [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Morocco first | **frozen**, **LoRA** (low-rank adapters, rank 16, on the attention and MLP layers), **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights); 10, 25, 50 or 100% of the training parcels | head only (frozen), 5.5 M adapters + head (LoRA), or all ≈ 306 M weights |
 
 ### Earlier parcel-wise benchmark (archived)
 

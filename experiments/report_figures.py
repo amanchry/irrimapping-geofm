@@ -3,7 +3,7 @@ report_figures.py  —  figures for the experiment pages (docs/experiments/figur
 ==================================================================================
 
 Reads the finished runs in experiments/E0*/results/<region>/<run>/ and writes, for every <tag> in FIGURES:
-  scores_<tag>.png        cropland and 3-class macro-F1 with 95% block-bootstrap CI, per region and run
+  scores_<tag>.png        macro-F1 (irrigated, rainfed) and rainfed F1 with 95% block-bootstrap CI, per region and run
   confusion_<tag>.png     row-normalised confusion matrices of the runs in "confusion"
 and once:
   e01_importance.png      E01 random forest: permutation importance per month and per band
@@ -37,12 +37,13 @@ FIGURES = {
     "e04": {"confusion": {"Prithvi": "E04_frozen_geofm/prithvi", "Clay": "E04_frozen_geofm/clay",
                           "TerraMind": "E04_frozen_geofm/terramind", "AgriFM": "E04_frozen_geofm/agrifm"}},
 }
-REGIONS = {"morocco": "Morocco", "utah": "Utah"}
+REGIONS = {"morocco": "Morocco"}                   # Utah added later: {"morocco": "Morocco", "utah": "Utah"}
+METRICS = {"macro_f1": "macro-F1\n(irrigated, rainfed)", "f1_rainfed": "rainfed F1"}
 # ==========================================================================
 
 EXP = Path(__file__).resolve().parent
 OUT = EXP.parent / "docs" / "experiments" / "figures"
-CLASSES = ["irrigated", "rainfed", "not cropland"]
+CLASSES = ["irrigated", "rainfed"]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
@@ -71,10 +72,12 @@ def run_colors(runs):
 
 
 def scores(tag, RUNS):
-    fig, ax = plt.subplots(1, 2, figsize=(max(12, 1.7 * len(RUNS) + 5), 4.2), sharey=False)
+    fig, ax = plt.subplots(1, len(REGIONS), figsize=(max(6, 0.85 * len(RUNS) + 3) * len(REGIONS), 4.2),
+                           sharey=False, squeeze=False)
+    ax = ax[0]
     colors = run_colors(RUNS)
     for a, (region, name) in zip(ax, REGIONS.items()):
-        for j, metric in enumerate(["cropland_macro_f1", "macro_f1_3class"]):
+        for j, metric in enumerate(METRICS):
             for i, (label, run) in enumerate(RUNS.items()):
                 m = pd.read_csv(res(run, region) / "metrics.csv").set_index("metric").loc[metric]
                 x = j * (len(RUNS) + 1) + i
@@ -84,8 +87,8 @@ def scores(tag, RUNS):
                 a.text(x, m["ci_low"] - 0.012, f"{m['value']:.3f}", ha="center", va="top", fontsize=7, rotation=90,
                        color="white")
         a.set_xticks([(len(RUNS) - 1) / 2, len(RUNS) + 1 + (len(RUNS) - 1) / 2])
-        a.set_xticklabels(["cropland macro-F1\n(irrigated, rainfed)", "3-class macro-F1"])
-        a.set_ylim(0.5, 1.0)
+        a.set_xticklabels(list(METRICS.values()))
+        a.set_ylim(0.3, 1.0)
         a.set_title(name)
         a.grid(axis="y", alpha=0.3)
     ax[0].set_ylabel("out-of-fold score (95% block-bootstrap CI)")
@@ -96,20 +99,21 @@ def scores(tag, RUNS):
 
 
 def confusion(tag, RUNS_CONFUSION):
-    fig, ax = plt.subplots(len(REGIONS), len(RUNS_CONFUSION), figsize=(4.4 * len(RUNS_CONFUSION), 8))
+    fig, ax = plt.subplots(len(REGIONS), len(RUNS_CONFUSION), figsize=(3.6 * len(RUNS_CONFUSION), 3.6 * len(REGIONS)),
+                           squeeze=False)
     for r, (region, name) in enumerate(REGIONS.items()):
         for c, (label, run) in enumerate(RUNS_CONFUSION.items()):
             o = pd.read_parquet(res(run, region) / "oof_predictions.parquet", columns=["label", "pred"])
-            cm = pd.crosstab(o["label"], o["pred"]).reindex(index=[1, 2, 3], columns=[1, 2, 3], fill_value=0).to_numpy()
+            cm = pd.crosstab(o["label"], o["pred"]).reindex(index=[1, 2], columns=[1, 2], fill_value=0).to_numpy()
             share = cm / cm.sum(1, keepdims=True)
             a = ax[r, c]
             a.imshow(share, cmap="Blues", vmin=0, vmax=1)
-            for i in range(3):
-                for k in range(3):
+            for i in range(len(CLASSES)):
+                for k in range(len(CLASSES)):
                     a.text(k, i, f"{share[i, k]:.2f}\n({cm[i, k]:,})", ha="center", va="center", fontsize=8,
                            color="white" if share[i, k] > 0.5 else "black")
-            a.set_xticks(range(3), CLASSES, fontsize=8)
-            a.set_yticks(range(3), CLASSES, fontsize=8)
+            a.set_xticks(range(len(CLASSES)), CLASSES, fontsize=8)
+            a.set_yticks(range(len(CLASSES)), CLASSES, fontsize=8)
             a.set_xlabel("predicted")
             a.set_ylabel("reference")
             a.set_title(f"{name} · {label}", fontsize=10)
@@ -119,7 +123,7 @@ def confusion(tag, RUNS_CONFUSION):
 
 
 def importance():
-    fig, ax = plt.subplots(2, 2, figsize=(12, 6.5))
+    fig, ax = plt.subplots(len(REGIONS), 2, figsize=(12, 3.3 * len(REGIONS)), squeeze=False)
     for r, (region, name) in enumerate(REGIONS.items()):
         d = res("E01_s2_pixel_baseline/rf", region)
         im = pd.read_csv(d / "importance_month.csv")
@@ -129,7 +133,7 @@ def importance():
         ax[r, 1].bar(ib["group"], ib["mean"], yerr=ib["std"], color="#e6550d", capsize=2)
         ax[r, 1].set_title(f"{name}: importance per band (all months)", fontsize=10)
         for a in ax[r]:
-            a.set_ylabel("drop in 3-class macro-F1")
+            a.set_ylabel("drop in macro-F1")
             a.axhline(0, color="k", lw=0.5)
             a.tick_params(axis="x", labelsize=8)
     fig.tight_layout()

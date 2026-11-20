@@ -23,7 +23,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D15](#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips) | AgriFM normalisation | not specified | per-band mean / std of the region's own chips; config statistics as sensitivity run | 12 Nov 2026 |
 | [D16](#d16-pixel-wise-classification-for-continuous-maps) | Unit of classification | one prediction per parcel (parcel embeddings / features) | one prediction per 10 m pixel; parcel-wise experiments E01–E05 archived | 18 Nov 2026 |
 | [D18](#d18-wall-to-wall-composites-from-stac-for-the-maps) | Imagery for the maps | annual stacks via STAC / xarray | monthly Sentinel-2 composites of every cropland tile from a STAC catalogue (Earth Search), per 10.24 km block | 19 Nov 2026 |
-| [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified | union of 4 cropland products per agricultural year; third class "not cropland"; mask applied to the map, never to the inputs | 19 Nov 2026 |
+| [D19](#d19-two-class-experiments-cropland-extent-in-the-mapping-phase) | Classes of the experiments | irrigated / rainfed | two classes (irrigated, rainfed) on the surveyed parcel pixels; no cropland mask and no not-cropland class in the experiments; Morocco first, then Utah | 20 Nov 2026 |
+| [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified | mapping phase only (D19): union of 4 cropland products per agricultural year, to be compared with single products such as Dynamic World; the not-cropland class is no longer used in the experiments | 19 Nov 2026 |
 
 ---
 
@@ -246,6 +247,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Where:** [Pixel samples](phase1_data/pixel_samples.md), [pixel-wise experiment plan](experiments/plan.md).
 
 ## D17. Cropland mask from four products and a "not cropland" class
+!!! note "Experiments changed by D19 (20 Nov 2026)"
+    The experiments no longer use the mask or the not-cropland class (two classes on the surveyed parcels). The
+    mask below stays the candidate for the mapping phase, where it will be compared with single products.
+
 - **Before:** not specified; WorldCover 2021 was used only to check the survey parcels.
 - **Now:** the mapped area of each agricultural year is the **union** of 4 cropland products (ESA WorldCover 2021,
   Esri LULC of the year, GCEP30, GLAD 2019): a pixel is cropland if any product calls it cropland; WorldCover
@@ -271,3 +276,21 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Status (20 Nov 2026):** Utah 2023/24 17,278 of 18,472 tiles (the rest after a fix); Morocco on hold.
 - **Where:** [`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download),
   [experiment plan §3](experiments/plan.md#3-after-the-experiments).
+
+## D19. Two-class experiments; cropland extent in the mapping phase
+- **Before (D17):** three classes in the experiments: irrigated, rainfed and "not cropland", the last one trained on
+  pixels that none of the cropland products calls cropland.
+- **Problem:** the not-cropland labels come from the products, not from the field (weak labels, and only the easy
+  cases with 0 votes); they mix the question "where is cropland?" into the comparison of models, and part of a
+  model's score depended on how often it confused surveyed fields with that weak class.
+- **Now:** the experiments compare models only on what has ground truth: the pixels of the surveyed parcels, all of
+  them cropland, in **two classes, irrigated and rainfed** (headline: macro-F1 of the two). No cropland mask is used
+  in labels, samples or experiments. Where cropland is, and how non-cropland is handled on the maps, is decided in
+  the mapping phase: candidate masks (the union of products of `make_cropland_mask.py`, Dynamic World alone
+  (`download_dynamic_world.py`), others) are compared on the omission of surveyed irrigated and rainfed parcels and on
+  commission, and the maps are assessed with an independent sample.
+- **Consequences:** all pixel-wise experiments (E01–E05) are run again in two classes, **Morocco first**, then Utah;
+  the earlier 3-class results were removed. Pixel samples: `pixelwise_run/04_make_pixel_samples.py`
+  (`04_pixel_samples/`).
+- **Where:** [Experiment plan](experiments/plan.md), [Pixel samples](phase1_data/pixel_samples.md),
+  [Cropland extent and mask](phase1_data/cropland_mask.md).

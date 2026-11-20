@@ -1,28 +1,31 @@
 # Pixel-wise experiment plan
 
-The experiments compare inputs and models for classifying **every 10 m pixel** as irrigated, rainfed or not
-cropland, so that the best model can produce the annual continuous maps (Phase 5;
-[D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)). Experiments run one at a time on the
-cluster; the results are copied to the Mac for the reports.
+The experiments compare inputs, models and adaptation strategies for classifying the **10 m pixels of the surveyed
+parcels as irrigated or rainfed** ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps),
+[D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)). The best model later produces
+the annual maps (Phase 5), where the cropland extent is decided. All experiments run for **Morocco first**; Utah
+follows with the same plan. Experiments run one at a time on the cluster; the results are copied to the Mac for the
+reports.
 
 ## 1. Common set-up (identical for every experiment)
 
 | Item | Choice |
 | --- | --- |
-| **Samples** | the labelled pixels of `04_make_pixel_samples.py` ([Pixel samples](../phase1_data/pixel_samples.md)): inner pixels of the surveyed parcels (≤ 100 per parcel) and not-cropland pixels (0 votes in the [cropland mask](../phase1_data/cropland_mask.md)) |
-| **Classes** | 1 irrigated · 2 rainfed · 3 not cropland ([D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
-| **Regions and years** | Morocco: 2023/24 and 2024/25 pooled, each pixel with its own year (as in [D2](../decisions.md#d2-two-agricultural-years-per-parcel-season)). Utah: train and test on 2023/24 (WRLU 2024); 2020/21 only for the temporal test (RQ3) |
+| **Samples** | the labelled pixels of `04_make_pixel_samples.py` ([Pixel samples](../phase1_data/pixel_samples.md)): inner pixels of the surveyed parcels, at most 100 per parcel. Morocco: 473,675 pixels of 8,775 parcels (7,579 irrigated, 1,196 rainfed) in 2,015 tiles |
+| **Classes** | 1 irrigated · 2 rainfed (no cropland mask, no not-cropland class; [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
+| **Regions and years** | **Morocco first**: 2023/24 and 2024/25 pooled, each pixel with its own year (as in [D2](../decisions.md#d2-two-agricultural-years-per-parcel-season)). Utah afterwards: train and test on 2023/24 (WRLU 2024); 2020/21 only for the temporal test (RQ3) |
 | **Input imagery** | Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)): 12 monthly composites of the agricultural year × 12 bands, from the same tile store for every model |
-| **Validation** | PASTIS rotation over the 5 spatial folds (20 km blocks): 3 folds train, the next fold validation (early stopping, hyperparameters), 1 fold test; 5 rounds, so every pixel is tested once. Pixels of fold −1 are not used |
+| **Validation** | PASTIS rotation over the 5 spatial folds (20 km blocks; Morocco about 1,500 irrigated and 240 rainfed parcels per fold): 3 folds train, the next fold validation (early stopping, hyperparameters), 1 fold test; 5 rounds, so every pixel is tested once |
 | **Same test pixels** | every experiment is scored on the same out-of-fold pixels. Models that work on whole tiles (E03–E05) predict the tile and are read at the sampled pixels |
-| **Class imbalance** | class weights inversely proportional to the training-pixel counts (rainfed ≈ 1 : 11 irrigated in Morocco) |
+| **Class imbalance** | class weights inversely proportional to the training-pixel counts (Morocco: rainfed pixels ≈ 1 : 8 irrigated, so a rainfed pixel counts about 8 times more) |
 | **Seeds** | neural models: 3 seeds (42, 1042, 2042), mean probability; classical models: seed 42 |
 
 **Metrics** (all from the out-of-fold predictions):
 
-- **Headline: cropland macro-F1**, the mean F1 of irrigated and rainfed over the parcel pixels. This is the question
-  of the study and is comparable across experiments whatever the not-cropland performance.
-- **3-class macro-F1**, and per-class F1, precision and recall; confusion matrix.
+- **Headline: macro-F1**, the mean F1 of irrigated and rainfed, so the minority class (rainfed) counts as much as
+  the majority.
+- Per-class F1, precision and recall (**rainfed recall**: how many rainfed pixels are found); overall accuracy;
+  confusion matrix.
 - 95% confidence intervals by **block bootstrap** over the 20 km blocks; two inputs or models are compared by the
   paired difference on the same pixels; a difference counts when its CI excludes 0 **and** Holm-corrected p < 0.05
   ([evaluation protocol](../phase2_models/evaluation.md)).
@@ -32,15 +35,16 @@ cluster; the results are copied to the Mac for the reports.
 
 | ID | Question | Input | Model | Compute | Order |
 | --- | --- | --- | --- | --- | --- |
-| **E01** | How well do the raw Sentinel-2 pixel time series separate the classes? (baseline) | 12 months × 12 bands per pixel (144 values) + NDVI, NDWI per month | random forest; histogram gradient boosting | CPU | 1 |
+| **E01** | How well do the raw Sentinel-2 pixel time series separate irrigated from rainfed? (baseline) | 12 months × 12 bands per pixel (144 values) + NDVI, NDWI per month | random forest; histogram gradient boosting | CPU | 1 |
 | **E02** | Does a temporal neural network beat the classical baseline on the same pixels? | same pixel time series | TempCNN (Pelletier et al. 2019) | GPU | 2 |
 | **E03** | Does a spatio-temporal network trained from scratch on the whole tile beat the pixel models? | 128 × 128 px tiles, 12 months | U-TAE (Garnot & Landrieu 2021) | GPU | 3 |
 | **E04** | Do frozen geospatial foundation models with a light decoder beat the pixel models? (RQ1) | 128 × 128 px tiles, 12 months | frozen Prithvi-EO-2.0, Clay v1.5, TerraMind, AgriFM and the pixel time-series models Presto, TESSERA + UPerNet decoder (PANGAEA; Marsocci et al. 2024), L-TAE over time for the single-date image models | GPU | 4 |
-| **E05** | Does fine-tuning (LoRA or full) beat the frozen encoder and the same network trained from scratch, and how does this depend on the number of labelled parcels? (RQ2; Utah) | 128 × 128 px tiles, 12 months; 10 / 25 / 50 / 100% of the training parcels | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04): frozen, LoRA, fully fine-tuned, from scratch | GPU | 5 |
+| **E05** | Does fine-tuning (LoRA or full) beat the frozen encoder and the same network trained from scratch, and how does this depend on the number of labelled parcels? (RQ2) | 128 × 128 px tiles, 12 months; 10 / 25 / 50 / 100% of the training parcels | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04): frozen, LoRA, fully fine-tuned, from scratch | GPU | 5 |
 
-Run order: E01 first (it fixes the evaluation code and gives the reference numbers), then the other pixel model
-(E02), then the tile models (E03 before E04, because U-TAE tests the tile training pipeline without the large
-encoders), then E05 (frozen, fine-tuned and from scratch first, LoRA after them).
+Run order (Morocco): E01 first (it fixes the evaluation code and gives the reference numbers), then the other
+pixel model (E02), then the tile models (E03 before E04, because U-TAE tests the tile training pipeline without the
+large encoders), then E05. Jobs: 1 CPU + 24 GPU (E02 1, E03 1, E04 6, E05 16); the same set again for Utah
+afterwards.
 
 ### Details per experiment
 
@@ -62,7 +66,7 @@ spatio-temporal network of the same input.
 **E04 · frozen foundation models + decoder.** The encoders see whole 128 px tiles (16 px patches for Prithvi and
 AgriFM's settings, 8 px for Clay), one month at a time or all months as the model allows; the patch features are
 combined over time with L-TAE and brought back to 10 m by a UPerNet decoder, trained with a masked loss on the
-labelled pixels of each tile (irrigated, rainfed and the not-cropland samples; all other pixels ignored). Only the
+labelled pixels of each tile (irrigated and rainfed; all other pixels ignored). Only the
 decoder and temporal head are trained. Same normalisations and band choices as in the archived embedding scripts (loaders in `pixelwise_run/encoders.py`)
 (D12, D15). The two pixel time-series models, Presto (Tseng et al. 2023) and TESSERA v2 (Feng et al. 2025, 2026),
 encode the 12-month series of every pixel of the tile into a 128-d vector; the 10 m feature map goes to the same
@@ -78,8 +82,10 @@ paired tests per share ([E05](E05_prithvi_strategies.md)).
 ## 3. After the experiments
 
 1. **Temporal test (RQ3), Utah:** the best models trained on 2023/24 and applied to 2020/21 on the test folds.
-2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites, predictions kept inside the cropland
-   mask; irrigated and rainfed area per region and year. Two independent approaches: the experiments above use the
+2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites; the cropland extent is decided here
+   (candidate masks such as the union of products or Dynamic World, compared on the omission of surveyed irrigated
+   and rainfed parcels and on commission; [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase));
+   irrigated and rainfed area per region and year. Two independent approaches: the experiments above use the
    Earth Engine tiles; the STAC approach ([`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download))
    downloads monthly composites (Earth Search, scene-classification cloud mask) for every cropland tile of the mask
    per 10.24 km block, and its models are trained, evaluated and mapped on those STAC tiles only
@@ -92,7 +98,8 @@ paired tests per share ([E05](E05_prithvi_strategies.md)).
 
 - Sentinel-1 added to E01 / E02 (the tile store has it).
 - Fewer labels for the other models: 10 / 25 / 50% of the training parcels, as in E05 (Prithvi only).
-- Two classes only (no not-cropland class): how much the third class costs on irrigated / rainfed.
+- A third class "not cropland" (weak labels from the cropland products), for the mapping phase: does a 3-class
+  model remove false cropland better than a mask?
 - Stricter mask (≥ 2 votes) for the maps.
 
 ## 5. How an experiment runs

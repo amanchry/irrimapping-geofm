@@ -8,12 +8,12 @@ dissemination.
 
 | Phase | Aim | Objective · RQ | Main outputs | Period | Status |
 | --- | --- | --- | --- | --- | --- |
-| [**1 · Data preparation**](phase1_data/overview.md) | Build an ML-ready dataset of irrigated and rainfed parcels with spatial folds and a common image store, for Morocco and the second study area, Utah | basis for all RQs | labelled parcels, spatial folds, tile store, cropland mask, labelled pixel samples (outcome 6) | Sep – Nov 2026 | ✅ Morocco, Utah 2023/24 · 🔄 STAC wall-to-wall tiles |
-| [**2 · Model evaluation**](phase2_models/overview.md) | Compare six foundation models with Sentinel-2 baselines for pixel-wise classification, frozen and fine-tuned, in Morocco and Utah | Objective 1 · RQ1, RQ2 | model comparison under spatial cross-validation; mapping model (outcomes 1, 2) | Sep 2026 – Jan 2027 | ⏳ RQ1: E01–E04 done (Presto, TESSERA to run) · RQ2: E05 running |
+| [**1 · Data preparation**](phase1_data/overview.md) | Build an ML-ready dataset of irrigated and rainfed parcels with spatial folds and a common image store, for Morocco and the second study area, Utah | basis for all RQs | labelled parcels, spatial folds, tile store, labelled pixel samples (outcome 6); cropland products and mask for the maps | Sep – Nov 2026 | ✅ Morocco · ⏳ Utah 2023/24 pixel samples to be rebuilt · 🔄 STAC wall-to-wall tiles |
+| [**2 · Model evaluation**](phase2_models/overview.md) | Compare six foundation models with Sentinel-2 baselines for pixel-wise classification, frozen and fine-tuned, in Morocco and Utah | Objective 1 · RQ1, RQ2 | model comparison under spatial cross-validation; mapping model (outcomes 1, 2) | Sep 2026 – Jan 2027 | 📝 E01–E05 planned (two classes: irrigated, rainfed); Morocco first, then Utah |
 | [**3 · Temporal and spatial transferability**](phase3_transfer/index.md) | Assess how the best model performs in other years and whether the conclusions hold in a second region | Objective 2 · RQ3, RQ4 | temporal and spatial transfer accuracy (outcomes 4, 5) | Feb – Mar 2027 | 📝 planned |
 | [**4 · Multi-model fusion**](phase4_fusion/index.md) | Test whether combining several foundation models improves on the best single model | Objective 3 (optional) · RQ5 | fused model and its comparison | Dec 2026 – Jan 2027 | 📝 optional |
-| [**5 · Annual maps**](phase5_maps/index.md) | Produce and assess annual 10 m irrigated-cropland maps | Objective 2 · RQ3 (map series), RQ4 (second region) | maps 2021–2025 for Morocco (and Utah if time allows), checked against statistics and existing products (outcome 3) | Mar 2027 | 📝 planned |
-| **6 · Synthesis and dissemination** | Comparative analysis, thesis writing, release of dataset, code and maps | all | thesis; public dataset, code and maps | Apr – Jun 2027 | 📝 |
+| [**5 · Annual maps**](phase5_maps/index.md) | Choose the cropland mask, then produce and assess annual 10 m irrigated-cropland maps | Objective 2 · RQ3 (map series), RQ4 (second region) | maps 2021–2025 for Morocco (and Utah if time allows), checked against statistics and existing products (outcome 3) | Mar 2027 | 📝 planned |
+| **6 · Synthesis and dissemination** | Comparative analysis, writing of the final report, release of dataset, code and maps | all | final report; public dataset, code and maps | Apr – Jun 2027 | 📝 |
 
 Periods follow the work plan of the [research proposal](assets/research_proposal.pdf); the
 [Progress report](progress_report.md) tracks them against the actual progress.
@@ -25,7 +25,7 @@ flowchart TD
     P2 --> P4["<b>Phase 4 · Fusion</b><br/>RQ5 (optional)"]
     P3 --> P5["<b>Phase 5 · Annual maps</b><br/>Morocco 2021–2025"]
     P4 --> P5
-    P5 --> P6["<b>Phase 6 · Synthesis</b><br/>thesis · data and code release"]
+    P5 --> P6["<b>Phase 6 · Synthesis</b><br/>report · data and code release"]
 ```
 
 Phases 3 and 4 both build on the best model of Phase 2 and can proceed in parallel. Phase 5 uses the best model of
@@ -42,6 +42,7 @@ are assigned to a phase here.
 | **Second study area** | RQ4 requires reference labels outside Morocco; Utah (WRLU) became the second, independent study area ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | 1 |
 | **Year-transfer test** | Region and survey year are partly confounded in Morocco; RQ3 is tested in Utah, trained on 2023/24 and applied to 2020/21 ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | 3 |
 | **Wall-to-wall imagery** | the maps need composites of every cropland tile, downloaded from a STAC catalogue (`s2_download/`) | 1, 5 |
+| **Cropland mask for the maps** | the experiments classify the surveyed parcels only (irrigated or rainfed), so the cropland extent of the maps and the handling of land that is not cropland are decided in the mapping phase (union of products vs Dynamic World, [Cropland extent and mask](phase1_data/cropland_mask.md)) | 5 |
 | **Map accuracy and area assessment** | Map-based area totals are biased without an accuracy assessment against independent reference data | 5 |
 | **Synthesis and dissemination** | Comparative evaluation, writing and the public release of dataset, code and maps | 6 |
 

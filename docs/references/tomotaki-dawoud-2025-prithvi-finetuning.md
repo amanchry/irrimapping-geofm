@@ -55,9 +55,9 @@ Dice loss, all training data (Table 1 of the paper):
   fine-tuning, from scratch) with the same Prithvi-EO-2.0-300M encoder, loss and score per epoch, and score against the
   share of training labels. It is the closest published comparison of the three strategies for crops with Prithvi.
 - **The expectation to test:** fine-tuning beats the frozen encoder, and pretraining matters most with few labels. E05
-  checks whether this holds for irrigated / rainfed / not-cropland at 10 m.
+  checks whether this holds for irrigated / rainfed at 10 m.
 - **A warning for the imbalanced class:** fine-tuning overfitted the majority class in the crop-health task; rainfed
-  is the minority class here (about 1 : 5 in Utah, 1 : 11 in Morocco), so E05 reports per-class F1 and compares
+  is the minority class here (about 1 rainfed to 6 irrigated parcels in Morocco, 1 to 5 in Utah), so E05 reports per-class F1 and compares
   validation-loss curves, not only accuracy.
 
 ## Differences and limitations

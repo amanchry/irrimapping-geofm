@@ -24,19 +24,14 @@ Steps
      ag_season   agricultural year of the survey date, 1 Sep - 31 Aug ("2023/24", "2024/25");
                  each parcel later gets satellite data from this year
      nn_dist_m   distance to the nearest other parcel (spatial clustering)
-     mask_frac, mask_votes, in_mask, mask_<product>
-                 share of the parcel inside the cropland mask of its agricultural year
-                 (cropland_extent/make_cropland_mask.py, run first), mean number of products that call it cropland,
-                 and the share per product (cropland_mask.py). Parcels outside the mask are KEPT and
-                 only flagged (in_mask = False): they show what the mask misses.
-6. Save the parcels, a summary table, the mask check and figures (map, class balance, parcel size, survey timing).
+6. Save the parcels, a summary table and figures (map, class balance, parcel size, survey timing).
+(No cropland mask is used: every surveyed parcel is cropland.)
 
 Output (outputs/morocco/dataset/01_labels/)
 -------------------------------------------
 parcels_labelled.geojson   one polygon per parcel: parcel_id, date, ag_season, label, class_name,
-                           crop, zone, area_ha, nn_dist_m, mask_frac, mask_votes, in_mask, mask_<product>
+                           crop, zone, area_ha, nn_dist_m
 summary.csv                parcels and area per class and per agricultural year
-mask_check.csv             per year and class: share of parcels inside the cropland mask and inside each product
 *.png                      figures
 
 Run (from the project folder)
@@ -55,7 +50,6 @@ from matplotlib.patches import Patch
 from scipy.spatial import cKDTree
 from shapely.ops import unary_union
 
-from cropland_mask import mask_check_table, parcel_mask_stats
 from regions import admin_boundaries, dataset_dir, settings
 
 # ================================ SETTINGS ================================
@@ -183,16 +177,11 @@ def main():
     dist, _ = cKDTree(xy).query(xy, k=2)
     lab["nn_dist_m"] = dist[:, 1]                                  # nearest OTHER parcel
     lab["ag_season"] = lab["date"].apply(agricultural_season)
-    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of cropland_extent/make_cropland_mask.py
-    mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 6. Save.
     summary = lab.groupby(["ag_season", "class_name"]).agg(parcels=("label", "size"), area_ha=("area_ha", "sum")).round(1)
     summary.to_csv(OUT_DIR / "summary.csv")
     print(f"\nParcels per agricultural year and class:\n{summary.to_string()}")
-    check = mask_check_table(lab)
-    check.to_csv(OUT_DIR / "mask_check.csv", index=False)
-    print(f"\nParcels inside the cropland mask (%; kept either way):\n{check.to_string(index=False)}")
 
     country = admin_boundaries(REGION)
     plot_map(lab, country)
@@ -200,7 +189,7 @@ def main():
     plot_timing(lab)
 
     cols = ["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha",
-            "nn_dist_m"] + mask_cols + ["geometry"]
+            "nn_dist_m", "geometry"]
     out = lab[cols].copy()
     out["parcel_id"] = out["parcel_id"].astype(str)
     out["date"] = out["date"].dt.strftime("%Y-%m-%d")

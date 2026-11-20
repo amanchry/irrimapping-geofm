@@ -1,22 +1,22 @@
 """
-E02_temporal_nn/run.py  —  E02: temporal neural networks on the Sentinel-2 pixel time series
-===========================================================================================
+E02_temporal_nn/run.py  —  E02: temporal neural network (TempCNN) on the Sentinel-2 pixel time series
+======================================================================================================
 
 Question: does a temporal neural network beat the classical baseline (E01) on the same pixels and input?
+Two classes: irrigated, rainfed (the surveyed parcel pixels).
 
 Models
 ------
 tempcnn   TempCNN (Pelletier et al. 2019): 3 x Conv1d(64, k=5) + BN + ReLU + dropout over the 12 months,
-          dense 256, output 3 classes. Input: the gap-filled series (as E01).
-ltae      L-TAE (Garnot & Landrieu 2020) on single pixels: 16 heads, d_k 8, d_model 256, MLP 256-128, output 3
-          classes. Months without a clear observation are masked in the attention (the gap-filled values are
-          not attended).
+          dense 256, output 2 classes. Input: the gap-filled series (as E01).
+ltae      (on hold, not in MODELS) L-TAE (Garnot & Landrieu 2020) on single pixels: 16 heads, d_k 8, d_model 256,
+          MLP 256-128; months without a clear observation are masked in the attention.
 Input per month: 12 Sentinel-2 bands + NDVI + NDWI (14 channels), standardised per channel with the training
 pixels of the round; values still missing after gap filling -> 0 (= the training mean).
 
 Training: AdamW (lr 1e-3, weight decay 1e-4), class-weighted cross-entropy, batch 512, early stopping on the
-validation fold's 3-class macro-F1 (patience 10, at most 100 epochs); N_SEEDS seeds per round, the out-of-fold
-probability is the seed mean. Same PASTIS rotation and metrics as E01 (pixelwise_run/pixel_common.py).
+validation fold's macro-F1 (patience 10, at most 100 epochs); N_SEEDS seeds per round (the seed also sets the
+initial weights), the out-of-fold probability is the seed mean. Same PASTIS rotation and metrics as E01 (pixelwise_run/pixel_common.py).
 
 Output: experiments/E02_temporal_nn/results/<region>/<model>/  (as E01, plus training_history.csv and, for ltae,
 attention_by_month.csv: mean attention of each month per class on the test folds)
@@ -31,17 +31,18 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "pixelwise_run"))
 from nn_common import DEVICE, LTAEClassifier, TempCNN, predict_proba, train_pixel_model  # noqa: E402
-from pixel_common import (CLASSES, add_indices, class_weights, clear_months, env_setting, fill_time,  # noqa: E402
+from pixel_common import (CLASSES, N_CLASSES, add_indices, class_weights, clear_months, env_setting, fill_time,  # noqa: E402
                           get_logger, load_samples, month_positions, results_dir, rounds, s2_series, save_run,
                           standardiser)
 
 # ================================ SETTINGS ================================
 EXP_DIR = Path(__file__).resolve().parent
-REGION = env_setting("REGION", "morocco")          # "morocco" | "utah"
-MODELS = ["tempcnn", "ltae"]
+REGION = env_setting("REGION", "morocco")          # "morocco" (first) | "utah" (later)
+MODELS = ["tempcnn"]                               # "ltae" (pixel L-TAE) is on hold and not run
 N_SEEDS = 3                                        # seeds SEED, SEED + 1000, SEED + 2000
 SEED = 42
 LR, WEIGHT_DECAY, BATCH_SIZE = 1e-3, 1e-4, 512
@@ -70,7 +71,7 @@ def main():
         out_dir = results_dir(EXP_DIR, REGION, name, QUICK_TEST)
         log = get_logger(out_dir)
         log.info(f"E02 {REGION} {name}: {len(df):,} pixels, device {DEVICE}")
-        proba = np.zeros((len(df), 3), dtype=np.float32)
+        proba = np.zeros((len(df), N_CLASSES), dtype=np.float32)
         history, att_rows = [], []
         for k, train_f, val_f, test_f in rounds():
             tr, va, te = (np.flatnonzero(np.isin(folds, train_f)), np.flatnonzero(folds == val_f),
@@ -84,6 +85,7 @@ def main():
             for s in range(N_SEEDS):
                 seed = SEED + 1000 * s
                 log.info(f"  round {k + 1} seed {seed}: train {len(tr):,} | val {len(va):,} | test {len(te):,}")
+                torch.manual_seed(seed)                                 # initial weights from the seed
                 model, hist = train_pixel_model(build(name, x.shape[2]), x, y, tr, va, w, seed, mask=mask, lr=LR,
                                                 weight_decay=WEIGHT_DECAY, batch_size=BATCH_SIZE, epochs=EPOCHS,
                                                 patience=PATIENCE, log=log)

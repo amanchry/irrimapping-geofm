@@ -35,13 +35,13 @@ sys.path.insert(0, str(ROOT / "pixelwise_run"))
 from pixel_common import block_confusions, bootstrap_draws, metrics_from_confusion, score  # noqa: E402
 
 # ================================ SETTINGS ================================
-REGION = "utah"
+REGION = "morocco"                                 # "morocco" (first) | "utah" (later)
 STRATEGIES = {"scratch": ("From scratch", "#969696"), "frozen": ("Frozen", "#3182bd"),
               "lora": ("LoRA", "#31a354"), "finetune": ("Full fine-tuning", "#e6550d")}
 FRACTIONS = [0.1, 0.25, 0.5, 1.0]
 COMPARISONS = [("finetune", "frozen"), ("finetune", "scratch"), ("frozen", "scratch"),
                ("lora", "frozen"), ("finetune", "lora"), ("lora", "scratch")]
-METRICS = ["cropland_macro_f1", "macro_f1_3class"]
+METRICS = ["macro_f1", "f1_rainfed"]               # headline: macro-F1 of irrigated and rainfed
 REFERENCE_RUNS = {"E03 U-TAE": "E03_utae/results/{region}/utae", "E01 random forest": "E01_s2_pixel_baseline/results/{region}/rf"}
 CURVE_FRACTION = 1.0                               # training share shown in the learning curves
 # ==========================================================================
@@ -49,7 +49,7 @@ CURVE_FRACTION = 1.0                               # training share shown in the
 EXP = Path(__file__).resolve().parent
 RES = EXP / "results" / REGION
 FIG = ROOT / "docs" / "experiments" / "figures"
-CLASSES = ["irrigated", "rainfed", "not cropland"]
+CLASSES = ["irrigated", "rainfed"]
 
 spec = importlib.util.spec_from_file_location("compare", ROOT / "pixelwise_run" / "05_compare_experiments.py")
 compare = importlib.util.module_from_spec(spec)
@@ -78,7 +78,7 @@ def summary(runs):
         per_run = h.groupby(["round", "seed"])
         best_epoch = h.loc[per_run["val_macro_f1"].idxmax(), "epoch"]
         row = {"run": d.name, "strategy": s, "fraction": f}
-        for x in METRICS + ["f1_irrigated", "f1_rainfed", "f1_not_cropland"]:
+        for x in METRICS + ["f1_irrigated", "recall_rainfed", "precision_rainfed"]:
             if x in m.index:
                 row[x] = m.loc[x, "value"]
                 if x in METRICS:
@@ -125,7 +125,7 @@ def paired(runs):
 
 def fig_curves(runs):
     panels = [("loss", "training loss"), ("val_loss", "validation loss"),
-              ("val_macro_f1", "validation 3-class macro-F1")]
+              ("val_macro_f1", "validation macro-F1 (irrigated, rainfed)")]
     fig, ax = plt.subplots(1, 3, figsize=(14, 3.8))
     for s, (label, color) in STRATEGIES.items():
         d = runs.get((s, CURVE_FRACTION))
@@ -168,8 +168,7 @@ def fig_fraction(table):
         a.set_xticks([10, 25, 50, 100], ["10%", "25%", "50%", "100%"])
         a.minorticks_off()
         a.set_xlabel("share of the training parcels")
-        a.set_title({"cropland_macro_f1": "cropland macro-F1 (irrigated, rainfed)",
-                     "macro_f1_3class": "3-class macro-F1"}[x], fontsize=10)
+        a.set_title({"macro_f1": "macro-F1 (irrigated, rainfed)", "f1_rainfed": "rainfed F1"}[x], fontsize=10)
         a.grid(alpha=0.3)
     ax[0].set_ylabel("out-of-fold score (95% block-bootstrap CI)")
     ax[1].legend(fontsize=8)
@@ -185,15 +184,15 @@ def fig_confusion(runs):
     fig, ax = plt.subplots(1, len(keys), figsize=(4.4 * len(keys), 4), squeeze=False)
     for a, k in zip(ax[0], keys):
         o = pd.read_parquet(runs[k] / "oof_predictions.parquet", columns=["label", "pred"])
-        cm = pd.crosstab(o["label"], o["pred"]).reindex(index=[1, 2, 3], columns=[1, 2, 3], fill_value=0).to_numpy()
+        cm = pd.crosstab(o["label"], o["pred"]).reindex(index=[1, 2], columns=[1, 2], fill_value=0).to_numpy()
         share = cm / cm.sum(1, keepdims=True)
         a.imshow(share, cmap="Blues", vmin=0, vmax=1)
-        for i in range(3):
-            for j in range(3):
+        for i in range(len(CLASSES)):
+            for j in range(len(CLASSES)):
                 a.text(j, i, f"{share[i, j]:.2f}\n({cm[i, j]:,})", ha="center", va="center", fontsize=8,
                        color="white" if share[i, j] > 0.5 else "black")
-        a.set_xticks(range(3), CLASSES, fontsize=8)
-        a.set_yticks(range(3), CLASSES, fontsize=8)
+        a.set_xticks(range(len(CLASSES)), CLASSES, fontsize=8)
+        a.set_yticks(range(len(CLASSES)), CLASSES, fontsize=8)
         a.set_xlabel("predicted")
         a.set_ylabel("reference")
         a.set_title(f"{REGION.title()} · {STRATEGIES[k[0]][0]} (100%)", fontsize=10)

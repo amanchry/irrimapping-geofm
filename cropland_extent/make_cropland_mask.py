@@ -12,10 +12,11 @@ product sees cropland there. The cost is extra non-cropland in the mask, which t
 stored, so a stricter mask (e.g. >= 2 votes) or a different product set can be taken later without
 downloading again.
 
-The mask is made FIRST (before pixelwise_run/01-04) so that the same mask is used everywhere:
-  - 01_prepare_labels_*.py: reads the mask and records the share of each parcel inside it (flag, not drop)
-  - 03_build_tiles.py: the continuous tiles = all 128 px tiles of the grid that contain cropland
-  - the maps: final predictions are kept inside the mask
+The mask is for the MAPPING phase only; the experiments (pixelwise_run/01-05, two classes on the surveyed parcels)
+do not use it. Where it is used:
+  - the wall-to-wall tiles: pixelwise_run/06_build_cropland_tiles.py and s2_download/ (tiles with cropland)
+  - the maps: final predictions are kept inside the chosen mask (to be compared with single products such as
+    Dynamic World, download_dynamic_world.py)
 This script reads NO parcel or label data: the mask depends only on the cropland products, so it has the
 same quality in labelled and unlabelled areas.
 

@@ -10,9 +10,11 @@ pixels.
 
 ![From labelled parcels to labelled pixels](figures/pixel_samples_explainer.png)
 
-*One tile in Doukkala (2023/24): (1) Sentinel-2 tile with the surveyed parcels; (2) label raster of 03: one label per
-parcel on all its pixels, edge pixels marked; (3) votes of the cropland mask; (4) the sampled pixels; (5) NDVI of the
-sampled pixels per class; (6) the output table.*
+*One tile in Doukkala (2023/24, 15 surveyed parcels): (1) Sentinel-2 tile with the surveyed parcels; (2) label raster of
+03: one label per parcel on all its pixels, edge pixels marked and skipped; (3) inner pixels and the sampled pixels:
+at most 100 per parcel, so the 6 larger parcels are cut to 100; (4) every sampled pixel takes its parcel's fold and
+20 km block (all parcels of this tile lie in one block, so one fold); (5) NDVI of the sampled pixels per class;
+(6) the output table, one row per pixel.*
 
 ## Classes
 
@@ -20,24 +22,11 @@ sampled pixels per class; (6) the output table.*
 | --- | --- | --- |
 | 1 | Irrigated | inner pixels of irrigated parcels |
 | 2 | Rainfed | inner pixels of rainfed parcels |
-| 3 | Not cropland | pixels that **none of the 4 cropland products calls cropland** (0 votes in the [cropland mask](cropland_mask.md)) **and that are not built-up, snow/ice or permanent water** (WorldCover 2021 classes 50, 70, 80); in practice natural vegetation, scrub, grassland, bare soil or rock. Of these, at most 100 random pixels per tile are taken that lie outside every surveyed parcel and at least 2 pixels (20 m) from any parcel pixel, so that no mixed edge pixel or unsurveyed part of a field is labelled not cropland |
-| – | Built-up, snow/ice, water | **not sampled**: removed from the mask by rule (`excluded` band), so they never reach the model and are not cropland on every map |
 
-Both the class-3 pixels and the excluded pixels lie outside the cropland mask, so both are "not cropland" on the
-final map by rule. Class 3 is sampled for a different reason: the model predicts only **inside** the mask, and the
-union of four products also includes false cropland (scrub, bare or natural land that one product took for fields).
-The class-3 pixels are examples of that kind of land, so the model learns to recognise it inside the mask. Built-up
-and water never reach the model, so they are not used as examples: they would only teach an easy distinction the
-model never has to make.
-
-```
-all land
-├── built-up / water / snow (excluded)  → not cropland by rule; never seen by the model
-├── 0 votes, not excluded               → not cropland by rule; ALSO the training examples of class 3
-└── cropland mask (≥ 1 vote)            → the model decides: irrigated · rainfed · not cropland
-```
-
-Cropland pixels outside the surveyed parcels are not used: their class is unknown.
+All surveyed parcels are cropland, so the experiments compare models on the irrigated / rainfed decision alone ([D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)). No
+cropland mask is used to select pixels. Pixels outside the surveyed parcels are not used: their class is unknown.
+Where cropland lies, and how land that is not cropland is handled, is decided in the mapping phase
+([Cropland extent and mask](cropland_mask.md), [Phase 5](../phase5_maps/index.md)).
 
 ## Sampling rules
 
@@ -46,59 +35,51 @@ Cropland pixels outside the surveyed parcels are not used: their class is unknow
   (`edge_fallback`).
 - **At most 100 pixels per parcel**, drawn at random (seed 42), so a few large irrigated fields do not dominate and
   the pixels of one parcel stay a small group.
-- **At most 100 not-cropland pixels per tile**, drawn at random from every tile of the year.
-- **Folds.** A parcel pixel takes its parcel's fold of the [spatial folds](morocco.md) (20 km blocks), so a parcel is
-  never split between training and test. A not-cropland pixel takes the fold of its 20 km block; pixels in a block
-  without labelled parcels get fold −1 and are left out of cross-validation.
+- **Folds.** Every pixel takes its parcel's fold and 20 km block of the [spatial folds](morocco.md), so a parcel is
+  never split between training and test.
 
 ## Output
 
-`outputs/<region>/dataset/04c_pixel_samples/<season>/`
+`outputs/<region>/dataset/04_pixel_samples/<season>/`
 
 | File | Content |
 | --- | --- |
 | `pixels_X.npy` | int16 [pixels, 12 months, 19 bands]: the bands of the tile store (12 Sentinel-2 bands, clear-observation count, Sentinel-1 VV / VH and scene counts per orbit), NODATA −32768; the experiments use the Sentinel-2 bands only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
-| `pixels.parquet` | one row per pixel, same order: `label`, `class_name`, `parcel_idx`, `parcel_id`, `fold`, `block_id`, `zone`, `tile_id`, `row`, `col`, `x`, `y` (UTM pixel centre), `lon`, `lat`, `edge`, `edge_fallback`, `mask_cropland`, `mask_votes` |
+| `pixels.parquet` | one row per pixel, same order: `label`, `class_name`, `parcel_idx`, `parcel_id`, `fold`, `block_id`, `zone`, `tile_id`, `row`, `col`, `x`, `y` (UTM pixel centre), `lon`, `lat`, `edge`, `edge_fallback` |
 | `summary.csv` | pixels and parcels per class and fold |
 | `samples_info.json` | settings, band order, class codes, CRS |
 
+The earlier three-class samples (with not-cropland pixels) are kept unchanged in `04c_pixel_samples/`; no
+experiment reads them.
 
 ## Sample sets
 
-| Region | Year | Pixels | Irrigated (parcels) | Rainfed (parcels) | Not cropland (tiles) | Of which fold −1 |
-| --- | --- | --- | --- | --- | --- | --- |
-| Morocco | 2023/24 | 402,756 | 336,211 (6,183) | 31,671 (698) | 34,874 (455) | 97 |
-| Morocco | 2024/25 | 119,369 | 83,672 (1,396) | 22,121 (498) | 13,576 (158) | 25 |
-| Utah | 2023/24 | 656,081 | 394,064 (4,998) | 75,559 (1,013) | 186,458 (1,911) | 1,699 |
+| Region | Year | Pixels | Irrigated (parcels) | Rainfed (parcels) | Tiles |
+| --- | --- | --- | --- | --- | --- |
+| Morocco | 2023/24 | 367,882 | 336,211 (6,183) | 31,671 (698) | 1,490 |
+| Morocco | 2024/25 | 105,793 | 83,672 (1,396) | 22,121 (498) | 525 |
+| **Morocco** | **pooled** | **473,675** | **419,883 (7,579)** | **53,792 (1,196)** | **2,015** |
+| Utah | 2023/24 | to be rebuilt with the two-class script on the cluster | – | – | – |
 
-Counts from `summary.csv` of each set. The experiments leave out the pixels of fold −1: Morocco pools both years
-(522,003 pixels in 2,230 tiles), Utah 2023/24 gives 654,382 pixels in 2,405 tiles
-([E01](../experiments/E01_s2_pixel_baseline.md), [E04](../experiments/E04_frozen_geofm.md)).
+Counts from `summary.csv` of each set; tiles from `pixels.parquet`. Every pixel has a fold (0–4). The experiments
+pool the two Morocco years, each pixel with its own year: 473,675 pixels of 8,775 parcels in 2,015 tiles.
 
-### Morocco 2023/24 in detail
+### Morocco per fold
 
-402,756 pixels (184 MB): 336,211 irrigated from 6,183 parcels, 31,671 rainfed from 698 parcels and 34,874 not
-cropland from 455 tiles.
-
-| Fold | Irrigated | Rainfed | Not cropland |
-| --- | --- | --- | --- |
-| 0 | 69,104 | 4,130 | 8,009 |
-| 1 | 62,922 | 6,154 | 11,004 |
-| 2 | 72,720 | 10,134 | 8,338 |
-| 3 | 65,290 | 8,444 | 2,445 |
-| 4 | 66,175 | 2,809 | 4,981 |
-| −1 (no fold) | – | – | 97 |
-
-Checks: all 2,000 tested parcel pixels lie inside their own parcel; no Sentinel-2 value is missing; 0.2% of the
-parcel pixels lie outside the cropland mask. Median NDVI: irrigated peaks at 0.71 in February–March, rainfed at
-0.36 in April (2023/24 was a dry year), not cropland stays near 0.15.
+| Fold | 2023/24 irrigated | 2023/24 rainfed | 2024/25 irrigated | 2024/25 rainfed |
+| --- | --- | --- | --- | --- |
+| 0 | 69,104 | 4,130 | 15,559 | 6,814 |
+| 1 | 62,922 | 6,154 | 16,616 | 4,666 |
+| 2 | 72,720 | 10,134 | 22,557 | 1,173 |
+| 3 | 65,290 | 8,444 | 20,426 | 1,986 |
+| 4 | 66,175 | 2,809 | 8,514 | 7,482 |
 
 **Limitations.**
 
-- Rainfed is the minority class (about 1 rainfed pixel per 11 irrigated); the models need class weights.
-- The not-cropland pixels come from 455 of 2,183 tiles: in the cropland belt nearly every pixel has at least one
-  cropland vote. They are mostly bare land and rangeland, but also evergreen riverside vegetation (example tile
-  above). False cropland inside the union mask, the hard case, has no label yet.
+- Rainfed is the minority class (about 1 rainfed pixel per 8 irrigated pixels when the two years are pooled); the
+  models need class weights.
+- The rainfed pixels are unevenly spread over the folds and years (e.g. 1,173 in fold 2 of 2024/25 but 10,134 in
+  fold 2 of 2023/24), so the rainfed scores vary between test folds.
 - The tiles lie around the surveyed parcels, so accuracy measured on these pixels holds for similar areas; the
   accuracy of the final map needs an independent sample over the map.
 
@@ -106,7 +87,7 @@ parcel pixels lie outside the cropland mask. Median NDVI: irrigated peaks at 0.7
 
 | Region | Year | Status |
 | --- | --- | --- |
-| Morocco | 2023/24 | ✅ done; used in E01–E04 |
-| Morocco | 2024/25 | ✅ done; used in E01–E04 (pooled with 2023/24) |
-| Utah | 2023/24 | ✅ done; used in E01–E05 |
+| Morocco | 2023/24 | ✅ done (two classes); input of E01–E05 (planned, Morocco first) |
+| Morocco | 2024/25 | ✅ done (two classes); pooled with 2023/24 |
+| Utah | 2023/24 | ⏳ to be rebuilt with the two-class script on the cluster; experiments follow Morocco |
 | Utah | 2020/21 | prepared for the temporal test (RQ3); not yet built |

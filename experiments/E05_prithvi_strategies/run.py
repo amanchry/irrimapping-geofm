@@ -31,7 +31,7 @@ out-of-fold pixels as E01-E04.
 
 Training (identical for the four strategies): masked class-weighted cross-entropy, AdamW, weight decay 1e-4, batch 8
 tiles, bfloat16, flips / rotations, 1 epoch linear warm-up, gradient clipping at norm 1, early stopping on the
-validation 3-class macro-F1 (patience 15, at most 60 epochs), 3 seeds per round.
+validation macro-F1 (irrigated, rainfed) (patience 15, at most 60 epochs), 3 seeds per round.
 
 Output: experiments/E05_prithvi_strategies/results/<region>/<strategy>_p<percent>/ (as E04, plus label_subset.csv
 for fractions < 1). Figures and paired tests: experiments/E05_prithvi_strategies/report.py.
@@ -41,7 +41,7 @@ Run (GPU; one job per strategy and fraction, 16 jobs)
     python experiments/E05_prithvi_strategies/run.py
     # cluster (frozen, finetune, scratch first; lora later):
     for s in frozen finetune scratch lora; do for f in 0.1 0.25 0.5 1.0; do
-      sbatch --time=72:00:00 --export=ALL,SCRIPT=experiments/E05_prithvi_strategies/run.py,EXPERIMENT_REGION=utah,EXPERIMENT_STRATEGY=$s,EXPERIMENT_FRACTION=$f jobs/step_gpu.sbatch
+      sbatch --time=72:00:00 --export=ALL,SCRIPT=experiments/E05_prithvi_strategies/run.py,EXPERIMENT_REGION=morocco,EXPERIMENT_STRATEGY=$s,EXPERIMENT_FRACTION=$f jobs/step_gpu.sbatch
     done; done
 First a quick test per strategy (EXPERIMENT_QUICK_TEST=1: 60 tiles, 2 epochs, 1 seed) to read the epoch time and
 the GPU memory.
@@ -55,7 +55,7 @@ from tile_common import GeoFMSegmenter, run_tile_experiment  # noqa: E402
 
 # ================================ SETTINGS ================================
 EXP_DIR = Path(__file__).resolve().parent
-REGION = env_setting("REGION", "utah")             # "utah" | "morocco"
+REGION = env_setting("REGION", "morocco")          # "morocco" (first) | "utah" (later)
 STRATEGY = env_setting("STRATEGY", "frozen")       # "frozen" | "lora" | "finetune" | "scratch"
 FRACTION = env_setting("FRACTION", 1.0)            # share of the training parcels: 0.1 | 0.25 | 0.5 | 1.0
 ENCODER = "prithvi"

@@ -20,7 +20,7 @@ pyramid + UPerNet head, at 10 m (pixel models: the 10 m feature map pooled to 4 
 Only the temporal head and the decoder are trained.
 
 Training: masked cross-entropy at the sampled pixels of the training folds (class weights), AdamW, random flips /
-rotations, early stopping on the validation pixels' 3-class macro-F1; N_SEEDS seeds per round. Scored on the same
+rotations, early stopping on the validation pixels' macro-F1 (irrigated, rainfed); N_SEEDS seeds per round. Scored on the same
 out-of-fold pixels as every other experiment.
 
 Output: experiments/E04_frozen_geofm/results/<region>/<encoder>/ (as E01, plus training_history.csv)
@@ -39,7 +39,7 @@ from tile_common import GeoFMSegmenter, run_tile_experiment  # noqa: E402
 
 # ================================ SETTINGS ================================
 EXP_DIR = Path(__file__).resolve().parent
-REGION = env_setting("REGION", "morocco")          # "morocco" | "utah"
+REGION = env_setting("REGION", "morocco")          # "morocco" (first) | "utah" (later)
 ENCODER = env_setting("ENCODER", "clay")           # "prithvi" | "clay" | "terramind" | "agrifm" | "presto" | "tessera"
 LR = 1e-4
 WEIGHT_DECAY = 1e-4

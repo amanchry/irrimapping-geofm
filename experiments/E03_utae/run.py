@@ -2,8 +2,9 @@
 E03_utae/run.py  —  E03: U-TAE trained from scratch on the 128 px tiles
 ======================================================================
 
-Question: does a spatio-temporal network of the same input, trained from scratch, match the frozen foundation
-models (E04)? It also tests the tile training pipeline before the large encoders.
+Question: does a spatio-temporal network trained from scratch on the whole tile beat the pixel models (E01, E02)?
+It is also the reference for the frozen foundation models (E04): what pretraining adds beyond spatial context.
+Two classes: irrigated, rainfed.
 
 Model (pixelwise_run/tile_common.py, UTAE; Garnot & Landrieu 2021)
 ----------------------------------------------------------------
@@ -13,7 +14,7 @@ L-TAE at 1/8 resolution with 16 heads (d_k 4, d_model 256), attention masks aggr
 level (the PASTIS configuration).
 
 Training: masked cross-entropy at the sampled pixels of the training folds (class weights), AdamW lr 1e-3,
-random flips / rotations, early stopping on the validation pixels' 3-class macro-F1; N_SEEDS seeds per round.
+random flips / rotations, early stopping on the validation pixels' macro-F1 (irrigated, rainfed); N_SEEDS seeds per round.
 
 Output: experiments/E03_utae/results/<region>/utae/ (as E01, plus training_history.csv)
 

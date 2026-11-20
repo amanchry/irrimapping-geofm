@@ -48,7 +48,7 @@ from sklearn.metrics import f1_score
 
 from nn_common import DEVICE, LTAE
 from encoders import IMAGE_ENCODERS, PIXEL_ENCODERS
-from pixel_common import (CLASSES, ROOT, S2_BANDS, class_weights, get_logger, load_samples, metrics_from_confusion,
+from pixel_common import (CLASSES, N_CLASSES, ROOT, S2_BANDS, class_weights, get_logger, load_samples, metrics_from_confusion,
                           month_dates, month_positions, results_dir, rounds, s2_series, save_run, standardiser)
 
 AMP = DEVICE == "cuda"
@@ -137,7 +137,7 @@ class UPerHead(nn.Module):
     levels, 1 x 1 classifier. feats: list of maps from fine to coarse. Pool sizes 1, 2, 4 (instead of 1, 2, 3, 6):
     the coarsest map of a 128 px tile has only 4 x 4 or 8 x 8 cells."""
 
-    def __init__(self, in_chs, ch=128, n_classes=3, pool_scales=(1, 2, 4)):
+    def __init__(self, in_chs, ch=128, n_classes=N_CLASSES, pool_scales=(1, 2, 4)):
         super().__init__()
         self.lateral = nn.ModuleList([conv_gn(c, ch, 1) for c in in_chs[:-1]])
         self.ppm = nn.ModuleList([nn.Sequential(nn.AdaptiveAvgPool2d(s), conv_gn(in_chs[-1], ch, 1)) for s in pool_scales])
@@ -394,7 +394,7 @@ class UTAE(nn.Module):
     one attention mask per head and pixel, the masks (upsampled) aggregate the skip features of every level over
     time (channel groups = heads), and a convolutional decoder. Input [B, T, 12, H, W] standardised."""
 
-    def __init__(self, in_ch, enc=(64, 64, 64, 128), dec=(32, 32, 64, 128), n_head=16, d_k=4, d_model=256, n_classes=3,
+    def __init__(self, in_ch, enc=(64, 64, 64, 128), dec=(32, 32, 64, 128), n_head=16, d_k=4, d_model=256, n_classes=N_CLASSES,
                  mean=None, std=None):
         super().__init__()
         self.register_buffer("mean", torch.tensor(mean, dtype=torch.float32).view(1, 1, -1, 1, 1))
@@ -473,9 +473,9 @@ def predict_tiles(model, ds, pixel_folds, workers, batch):
 
 def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weight_decay, batch, epochs, patience,
                      workers, log, encoder_lr=None, warmup_epochs=0, grad_clip=None):
-    """Masked, class-weighted cross-entropy; early stopping on the validation pixels' 3-class macro-F1. Logged per
-    epoch: training loss, validation loss (the same weighted cross-entropy), validation 3-class and cropland
-    macro-F1. Trainable encoder weights (LoRA or full) get encoder_lr (default lr) and are kept in the best state."""
+    """Masked, class-weighted cross-entropy; early stopping on the validation pixels' macro-F1 (irrigated, rainfed).
+    Logged per epoch: training loss, validation loss (the same weighted cross-entropy), validation macro-F1 and
+    rainfed F1. Trainable encoder weights (LoRA or full) get encoder_lr (default lr) and are kept in the best state."""
     torch.manual_seed(seed)
     np.random.seed(seed)
     model = model.to(DEVICE)
@@ -520,14 +520,14 @@ def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weigh
         rows, p = predict_tiles(model, val_ds, [val_fold], workers, batch)
         yv = y_all[rows] - 1
         pred = p.argmax(1)
-        f1 = f1_score(yv, pred, labels=[0, 1, 2], average="macro", zero_division=0)
-        cm = np.zeros((3, 3))
+        cm = np.zeros((N_CLASSES, N_CLASSES))
         np.add.at(cm, (yv, pred), 1)
-        crop_f1 = metrics_from_confusion(cm)["cropland_macro_f1"]
+        m = metrics_from_confusion(cm)
+        f1, rain_f1 = m["macro_f1"], m["f1_rainfed"]
         nll = -np.log(np.clip(p[np.arange(len(yv)), yv], 1e-7, 1.0))      # same weighted loss as in training
         val_loss = float((w[yv] * nll).sum() / w[yv].sum())
         history.append({"epoch": epoch, "loss": float(np.mean(losses)), "val_loss": val_loss,
-                        "val_macro_f1": float(f1), "val_cropland_f1": float(crop_f1),
+                        "val_macro_f1": float(f1), "val_f1_rainfed": float(rain_f1),
                         "seconds": round(time.time() - t0), "seconds_train": round(t_train)})
         if f1 > best:
             best, wait = f1, 0
@@ -536,7 +536,7 @@ def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weigh
         else:
             wait += 1
         log.info(f"    epoch {epoch:3d} loss {np.mean(losses):.4f} val loss {val_loss:.4f} val macro-F1 {f1:.4f} "
-                 f"cropland {crop_f1:.4f} ({time.time() - t0:.0f}s){' *' if wait == 0 else ''}")
+                 f"rainfed F1 {rain_f1:.4f} ({time.time() - t0:.0f}s){' *' if wait == 0 else ''}")
         if wait >= patience:
             break
     model.load_state_dict(best_state, strict=False)
@@ -547,13 +547,12 @@ def label_subset(df, train_mask, fraction, seed):
     """Rows of the training folds that keep their label when only `fraction` of the training parcels is used (E05).
     Every parcel gets one fixed random number (seed); per class (irrigated, rainfed) the training parcels with the
     smallest numbers are kept, so a smaller share is always a subset of a larger one and the class shares stay as in
-    the full set. Not-cropland pixels are kept in the tiles that still hold a kept parcel. Validation and test folds
-    are not touched. Returns (keep [N] bool, one-row summary dict)."""
+    the full set. Validation and test folds are not touched. Returns (keep [N] bool, one-row summary dict)."""
     lab, keys = df["label"].to_numpy(), df["parcel_key"].to_numpy()
     if fraction >= 1:
         keep = train_mask.copy()
     else:
-        all_keys = np.unique(keys[keys != ""])
+        all_keys = np.unique(keys)
         u = dict(zip(all_keys, np.random.default_rng(seed).random(len(all_keys))))
         keep = np.zeros(len(df), dtype=bool)
         for c in (1, 2):
@@ -561,13 +560,10 @@ def label_subset(df, train_mask, fraction, seed):
             n = max(1, int(round(fraction * len(ks))))
             chosen = ks[np.argsort([u[k] for k in ks])][:n]
             keep |= train_mask & np.isin(keys, chosen)
-        tiles = np.unique(df["tile_id"].to_numpy()[keep])
-        keep |= train_mask & (lab == 3) & np.isin(df["tile_id"].to_numpy(), tiles)
     summary = {"fraction": fraction}
-    for c, name in ((1, "irrigated"), (2, "rainfed"), (3, "not_cropland")):
-        if c < 3:
-            summary[f"parcels_{name}"] = len(np.unique(keys[keep & (lab == c)]))
-            summary[f"parcels_{name}_all"] = len(np.unique(keys[train_mask & (lab == c)]))
+    for c, name in ((1, "irrigated"), (2, "rainfed")):
+        summary[f"parcels_{name}"] = len(np.unique(keys[keep & (lab == c)]))
+        summary[f"parcels_{name}_all"] = len(np.unique(keys[train_mask & (lab == c)]))
         summary[f"pixels_{name}"] = int((keep & (lab == c)).sum())
     summary["tiles"] = len(np.unique(df["tile_id"].to_numpy()[keep]))
     return keep, summary
@@ -593,7 +589,7 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
     table = TileTable(df, info["start_month"])
     y, folds = df["label"].to_numpy(), df["fold"].to_numpy()
     log.info(f"{exp_id} {region} {run_name}: {len(df):,} pixels in {len(table.groups):,} tiles, device {DEVICE}")
-    proba = np.zeros((len(df), 3), dtype=np.float32)
+    proba = np.zeros((len(df), N_CLASSES), dtype=np.float32)
     history, subsets = [], []
     for k, train_f, val_f, test_f in rounds():
         if label_fraction < 1:
@@ -604,8 +600,7 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
             train_ds = TileDataset(region, table, train_tiles, train_f, augment=True, keep=keep)
             log.info(f"  round {k + 1}: {label_fraction:.0%} of the training parcels: irrigated "
                      f"{summ['parcels_irrigated']:,}/{summ['parcels_irrigated_all']:,}, rainfed "
-                     f"{summ['parcels_rainfed']:,}/{summ['parcels_rainfed_all']:,}, not-cropland pixels "
-                     f"{summ['pixels_not_cropland']:,}")
+                     f"{summ['parcels_rainfed']:,}/{summ['parcels_rainfed_all']:,}")
         else:
             tr_rows = np.flatnonzero(np.isin(folds, train_f))
             train_ds = TileDataset(region, table, table.tiles_with(train_f), train_f, augment=True)
@@ -613,7 +608,7 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
         test_ds = TileDataset(region, table, table.tiles_with([test_f]), [test_f])
         w = class_weights(y[tr_rows])
         log.info(f"  round {k + 1}: tiles train {len(train_ds):,} | val {len(val_ds):,} | test {len(test_ds):,}")
-        acc = np.zeros((len(df), 3), dtype=np.float32)
+        acc = np.zeros((len(df), N_CLASSES), dtype=np.float32)
         for s in range(n_seeds):
             sd = seed + 1000 * s
             torch.manual_seed(sd)                     # head (and, from scratch, encoder) initialisation per seed

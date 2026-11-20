@@ -2,7 +2,7 @@
 
 This page describes the construction of the **machine-learning-ready dataset for Morocco**: labelled parcels, spatial
 train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and the
-labelled pixels (irrigated, rainfed, not cropland) from which every pixel-wise experiment starts
+labelled pixels of the surveyed parcels (two classes: irrigated, rainfed) from which every pixel-wise experiment starts
 ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)). The models use the Sentinel-2 bands only
 ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 
@@ -34,20 +34,16 @@ labelled pixels (irrigated, rainfed, not cropland) from which every pixel-wise e
 flowchart TD
     subgraph IN["Inputs"]
         FS["Field survey<br/>~10,000 parcels<br/>Dec 2023 – Jan 2025"]
-        WC["ESA WorldCover 2021<br/>(cropland check)"]
         GEE["Google Earth Engine<br/>Sentinel-2 L2A · Cloud Score+<br/>Sentinel-1 GRD"]
     end
 
     FS --> S01["<b>01_prepare_labels_Morocco.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
-    WC --> S01
     S01 -->|"parcels_labelled.geojson<br/>8,781 parcels"| S02["<b>02_make_spatial_folds.py</b><br/>20 km blocks → 5 balanced folds"]
     S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| SPLIT[["Split by agricultural year<br/>(ag_season from survey date)"]]
     SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>03_build_tiles.py</b><br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
     SPLIT -->|"2024/25 · 1,894 parcels<br/>imagery Sep 2024 – Aug 2025"| S03
     GEE --> S03
-    CM["Cropland mask<br/>(union of 4 products)"]
-    S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_pixel_samples.py</b><br/>labelled pixels: irrigated · rainfed · not cropland<br/>12 months, fold, position"]
-    CM --> S04
+    S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_pixel_samples.py</b><br/>labelled parcel pixels: irrigated · rainfed<br/>12 months, fold, position"]
     S04 --> PX["Pixel models<br/>(E01, E02)"]
     S03 --> VD["Full tiles<br/>(tile models E03–E05)"]
     S03 -.->|"archived"| S04A["parcelwise_run/04_make_views.py<br/>views A–C (parcel-wise)"]
@@ -58,7 +54,7 @@ flowchart TD
 | 1 | `01_prepare_labels_Morocco.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
 | 2 | `02_make_spatial_folds.py` | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
 | 3 | `03_build_tiles.py` | the tile store: monthly images + label rasters + QA |
-| 4 | `04_make_pixel_samples.py` | labelled pixels per agricultural year: 402,756 (2023/24) and 119,369 (2024/25) |
+| 4 | `04_make_pixel_samples.py` | labelled pixels of the surveyed parcels (irrigated, rainfed) per agricultural year: 367,882 (2023/24) and 105,793 (2024/25) |
 | 4 (archived) | `parcelwise_run/04_make_views.py` | parcel-wise model views A–C |
 
 Steps 1–2 complete within minutes. Step 3 requires several hours and resumes from the last completed tile when restarted. Step 4 runs locally.
@@ -123,7 +119,6 @@ the 8,781 labelled parcels (e.g. 1,216 rainfed raw vs 1,196 after cleaning; the 
 
 | Data | Used for |
 | --- | --- |
-| ESA WorldCover 2021 (10 m) | label check: share of each parcel mapped as cropland (script 01) |
 | Sentinel-2 L2A harmonised + Cloud Score+ | monthly imagery of every model (script 03, cloud mask `cs_cdf` ≥ 0.60) |
 | Sentinel-1 GRD | monthly VV/VH in the tile store, ascending and descending kept apart; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
 | FAO GAUL 2015 (level 0) | country outline on the maps (`data/admin_boundaries/`) |
@@ -144,7 +139,7 @@ flowchart LR
     D -->|"missing"| X["dropped"]
     E --> G{"Land use is<br/>cropland?"}
     F --> G
-    G -->|"Seasonal Crop · Trees<br/>Trees + Seasonal"| H["Add attributes<br/>area_ha · ag_season<br/>nn_dist_m · WorldCover share"]
+    G -->|"Seasonal Crop · Trees<br/>Trees + Seasonal"| H["Add attributes<br/>area_ha · ag_season<br/>nn_dist_m"]
     G -->|"bare soil · weeds · water"| X
     H --> I["parcels_labelled.geojson<br/>summary.csv · figures"]
 ```
@@ -159,9 +154,9 @@ flowchart LR
    - `area_ha`: area in UTM 29N.
    - `ag_season`: agricultural year of the survey date (1 Sep – 31 Aug, e.g. `2023/24`). This decides which imagery a parcel gets.
    - `nn_dist_m`: distance to the nearest other parcel.
-   - `mask_frac`, `mask_votes`, `in_mask`, `mask_<product>`: share of the parcel inside the cropland mask of its
-     agricultural year (`cropland_extent/make_cropland_mask.py`, run first), and per cropland product. Parcels outside the
-     mask are kept and only flagged; `mask_check.csv` gives the share per year and class.
+
+   No cropland mask is used: every surveyed parcel is cropland. The cropland mask serves the mapping phase only
+   ([Cropland extent and mask](cropland_mask.md)).
 6. Save the parcels, a summary table and four figures.
 
 **Result**
@@ -359,7 +354,7 @@ How each part of the pipeline handles the season:
 | Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
 | Imagery | one 12-month Earth Engine image per year, built over that year's tiles only. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
 | QA, `tiles.parquet` | one row per (season, tile), with an `ag_season` column |
-| Pixel samples (`04_make_pixel_samples.py`) | one sample set per season (`04c_pixel_samples/<season>/`); each parcel's pixels come from the tiles of its own season. (The archived `04_make_views.py` likewise cut every parcel from the tiles of its own season.) |
+| Pixel samples (`04_make_pixel_samples.py`) | one sample set per season (`04_pixel_samples/<season>/`); each parcel's pixels come from the tiles of its own season. (The archived `04_make_views.py` likewise cut every parcel from the tiles of its own season.) |
 | Folds (`02`) | blocks are defined by location only, so a place surveyed in both years falls in the **same** block and fold. No information leaks between years from training to test. |
 | Viewing (`tools/a4_build_vrt.py`) | one virtual raster per year, because the two years overlap in space |
 
@@ -494,17 +489,20 @@ with the most irrigated pixels and the tile with the most rainfed pixels (Sentin
 
 **Purpose:** turn the labelled parcels into labelled pixels for the pixel-wise models. The script
 `pixelwise_run/04_make_pixel_samples.py` runs locally and needs no Earth Engine. It reads the label rasters and
-images of the tile store and the cropland mask, and writes one table per agricultural year with the 12-month series,
-label, parcel, fold and position of every sampled pixel. Classes, sampling rules, output files and counts are
-documented on the page [Pixel samples](pixel_samples.md).
+images of the tile store and writes one table per agricultural year with the 12-month series, label, parcel, fold
+and position of every sampled pixel. Only pixels of the surveyed parcels are taken (two classes, irrigated and
+rainfed); no cropland mask is used. Classes, sampling rules, output files and counts are documented on the page
+[Pixel samples](pixel_samples.md).
 
-| Season | Pixels | Irrigated | Rainfed | Not cropland |
-| --- | --- | --- | --- | --- |
-| 2023/24 | 402,756 | 336,211 | 31,671 | 34,874 |
-| 2024/25 | 119,369 | 83,672 | 22,121 | 13,576 |
+| Season | Pixels | Irrigated (parcels) | Rainfed (parcels) |
+| --- | --- | --- | --- |
+| 2023/24 | 367,882 | 336,211 (6,183) | 31,671 (698) |
+| 2024/25 | 105,793 | 83,672 (1,396) | 22,121 (498) |
+| **Pooled** | **473,675** | **419,883 (7,579)** | **53,792 (1,196)** |
 
-**Output:** `outputs/morocco/dataset/04c_pixel_samples/<season>/` (`pixels_X.npy`, `pixels.parquet`, `summary.csv`,
-`samples_info.json`).
+**Output:** `outputs/morocco/dataset/04_pixel_samples/<season>/` (`pixels_X.npy`, `pixels.parquet`, `summary.csv`,
+`samples_info.json`). The earlier three-class samples with not-cropland pixels are kept in `04c_pixel_samples/`
+and are no longer used.
 
 ### Archived: model views (`parcelwise_run/04_make_views.py`)
 
@@ -637,7 +635,7 @@ outputs/morocco/dataset/
         ├── chips_p8/  chips_p16/        view C: part_*.npz, index.csv, chips_info.json
         ├── qa_purity.csv, qa_clear_obs.csv
         └── views_info.json
-04c_pixel_samples/<season>/              (in outputs/morocco/dataset/) labelled pixels, one folder per year
+04_pixel_samples/<season>/               (in outputs/morocco/dataset/) labelled pixels, one folder per year
     ├── pixels_X.npy                     int16 [pixels, 12 months, 19 bands]
     ├── pixels.parquet                   label, parcel, fold, block, zone, tile, position per pixel
     ├── summary.csv                      pixels and parcels per class and fold
@@ -656,7 +654,7 @@ outputs/morocco/dataset/
 
 | Model family | Use | Train / validation / test |
 | --- | --- | --- |
-| Pixel models: random forest, gradient boosting, TempCNN (E01, E02) | pixel samples (`04c_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test); fold −1 left out |
+| Pixel models: random forest, gradient boosting, TempCNN (E01, E02) | pixel samples (`04_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test) |
 | Tile models: frozen foundation models with L-TAE + UPerNet, U-TAE, fine-tuning (E03–E05) | full tiles: `_img.tif` (Sentinel-2 bands) + `_lab.tif`, loss only on the labelled pixels of the training folds | same folds; scored at the labelled pixels of the test fold |
 | Annual maps (Phase 5) | wall-to-wall Sentinel-2 tiles over the cropland mask (`s2_download/`) | – |
 
@@ -664,7 +662,7 @@ Minimal example: read the pixel samples.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/morocco/dataset/04c_pixel_samples/2023-24"
+folder = "outputs/morocco/dataset/04_pixel_samples/2023-24"
 X = np.load(f"{folder}/pixels_X.npy")                  # [pixels, 12, 19] int16
 meta = pd.read_parquet(f"{folder}/pixels.parquet")      # label, fold, parcel_id, tile_id, row, col, ...
 info = json.load(open(f"{folder}/samples_info.json"))

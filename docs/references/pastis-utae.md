@@ -26,6 +26,6 @@
 - **U-TAE as a neural baseline** trained from scratch on the same tiles ([E03](../experiments/E03_utae.md)).
 
 ## Differences and limitations
-- Dense labels in France, many crop classes; this research has sparse labels and three classes (irrigated, rainfed,
-  not cropland; [D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)). Our folds are
+- Dense labels in France, many crop classes; this research has sparse labels and two classes (irrigated, rainfed;
+  [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)). Our folds are
   20 km spatial blocks.

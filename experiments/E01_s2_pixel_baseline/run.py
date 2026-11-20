@@ -2,18 +2,19 @@
 E01_s2_pixel_baseline/run.py  —  E01: Sentinel-2 pixel time series with random forest and gradient boosting
 ============================================================================================================
 
-Question: how well do the raw Sentinel-2 time series of single pixels separate irrigated, rainfed and
-not-cropland pixels? E01 is the reference for every later experiment.
+Question: how well do the raw Sentinel-2 time series of single pixels separate irrigated from rainfed pixels of
+the surveyed parcels? E01 is the reference for every later experiment.
 
 What it does
 ------------
-1. Reads the labelled pixels of pixelwise_run/04_make_pixel_samples.py (pixelwise_run/pixel_common.py): Morocco 2023/24 + 2024/25, Utah 2023/24.
+1. Reads the labelled pixels of pixelwise_run/04_make_pixel_samples.py (pixelwise_run/pixel_common.py): 2 classes
+   (irrigated, rainfed); Morocco 2023/24 + 2024/25 (Utah 2023/24 later).
 2. Features per pixel: 12 months x (12 Sentinel-2 bands + NDVI + NDWI) = 168 values. Months without a clear
    observation are filled by linear interpolation in time; a band never observed is filled with the training median.
 3. PASTIS rotation (5 rounds): every hyperparameter set in the grid is trained on the 3 training folds and scored
-   on the validation fold (3-class macro-F1); the best one predicts the test fold.
+   on the validation fold (macro-F1 of irrigated and rainfed); the best one predicts the test fold.
 4. Out-of-fold metrics with 95% block-bootstrap CI; grouped permutation importance per month and per band
-   (random forest; test folds; drop in 3-class macro-F1).
+   (random forest; test folds; drop in macro-F1).
 
 Output: experiments/E01_s2_pixel_baseline/results/<region>/<model>/
     oof_predictions.parquet, metrics.csv, metrics_by_group.csv, confusion.png, run_config.json, run.log,
@@ -22,7 +23,7 @@ Output: experiments/E01_s2_pixel_baseline/results/<region>/<model>/
 Run (from the project folder; CPU)
 ----------------------------------
     python experiments/E01_s2_pixel_baseline/run.py
-    # cluster: sbatch --export=ALL,SCRIPT=experiments/E01_s2_pixel_baseline/run.py,EXPERIMENT_REGION=utah jobs/step_cpu.sbatch
+    # cluster: sbatch --export=ALL,SCRIPT=experiments/E01_s2_pixel_baseline/run.py,EXPERIMENT_REGION=morocco jobs/step_cpu.sbatch
 QUICK_TEST = True runs on 20,000 pixels with a small grid (fast check of the chain).
 """
 import sys
@@ -36,12 +37,12 @@ from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassif
 from sklearn.metrics import f1_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "pixelwise_run"))
-from pixel_common import (CLASSES, S2_BANDS, add_indices, env_setting, feature_names, fill_time,  # noqa: E402
+from pixel_common import (CLASSES, N_CLASSES, S2_BANDS, add_indices, env_setting, feature_names, fill_time,  # noqa: E402
                           get_logger, load_samples, results_dir, rounds, s2_series, save_run)
 
 # ================================ SETTINGS ================================
 EXP_DIR = Path(__file__).resolve().parent
-REGION = env_setting("REGION", "morocco")          # "morocco" | "utah"
+REGION = env_setting("REGION", "morocco")          # "morocco" (first) | "utah" (later)
 MODELS = ["rf", "hgb"]                             # random forest, histogram gradient boosting
 RF_GRID = {"max_features": ["sqrt", 0.33], "min_samples_leaf": [1, 5]}
 RF_TREES = 500
@@ -78,7 +79,7 @@ def macro_f1(y, p):
 
 
 def permutation_importance(model, x, y, rng):
-    """Drop in 3-class macro-F1 when all features of one month (or one band over all months) are shuffled."""
+    """Drop in macro-F1 when all features of one month (or one band over all months) are shuffled."""
     base = macro_f1(y, model.predict_proba(x))
     names = feature_names()
     groups = {f"m{m + 1:02d}": [i for i, n in enumerate(names) if n.endswith(f"_m{m + 1:02d}")] for m in range(12)}
@@ -100,7 +101,7 @@ def main():
         out_dir = results_dir(EXP_DIR, REGION, name, QUICK_TEST)
         log = get_logger(out_dir)
         log.info(f"E01 {REGION} {name}: {len(df):,} pixels, {feats.shape[1]} features")
-        proba = np.zeros((len(df), 3), dtype=np.float32)
+        proba = np.zeros((len(df), N_CLASSES), dtype=np.float32)
         chosen, imp_rows = [], []
         for k, train_f, val_f, test_f in rounds():
             tr, va, te = np.isin(folds, train_f), folds == val_f, folds == test_f

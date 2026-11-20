@@ -1,8 +1,9 @@
 # E03 · U-TAE from scratch
 
-!!! success "Status: done in both regions"
-    Same pixels as [E01](E01_s2_pixel_baseline.md): Morocco 522,003 in 2,230 tiles (2023/24 and 2024/25), Utah
-    654,382 in 2,405 tiles (2023/24); 3 seeds per round on one GPU.
+!!! info "Status: planned (Morocco first, Utah later)"
+    Same labelled pixels as [E01](E01_s2_pixel_baseline.md) (Morocco 2023/24 and 2024/25 pooled, 473,675 pixels in
+    2,015 tiles; two classes), but the model sees the whole 128 px tile; 3 seeds per round on one GPU. Code ready
+    and tested; results follow after the run.
 
 **Question.** Does a spatio-temporal network trained from scratch on the whole tile beat the pixel models (E01,
 E02)? It is also the reference for the frozen foundation models of [E04](E04_frozen_geofm.md): it shows how much the
@@ -20,109 +21,86 @@ convolutional decoder brings the result back to 10 m.
 
 | Item | Choice |
 | --- | --- |
-| **Input** | 12 Sentinel-2 bands × 12 months, standardised per band with the training pixels of the round; missing values 0, months without any clear pixel masked in the attention |
+| **Input** | 12 Sentinel-2 bands × 12 months of the whole tile, standardised per band with the training pixels of the round; missing values 0, months without any clear pixel masked in the attention |
 | **Widths** | encoder 64–64–64–128, decoder 32–32–64–128 (the PASTIS configuration) |
 | **Temporal attention** | L-TAE at 1/8 resolution: 16 heads, d<sub>k</sub> 4, d<sub>model</sub> 256 |
-| **Parameters** | 1.15 M, all trained |
-| **Training** | as E04 (masked class-weighted cross-entropy at the training-fold pixels, flips and rotations, early stopping on the validation pixels), but learning rate 10⁻³, batch 4 tiles, patience 10, at most 100 epochs; 3 seeds |
+| **Output** | 2 class scores (irrigated, rainfed) for every 10 m pixel of the tile |
+| **Parameters** | 1.15 M, all trained from random weights |
+
+??? info "How U-TAE works"
+    U-TAE (U-Net with Temporal Attention Encoder; Garnot & Landrieu 2021) classifies every pixel of an image time
+    series. It combines a **U-Net**, which sees the neighbourhood of each pixel at several resolutions, with
+    **temporal attention**, which decides which months matter at each place.
+
+    ```mermaid
+    flowchart TD
+        A["tile 128 × 128 px · 12 months · 12 bands"] --> B["CNN encoder, the same for every month:<br/>maps at 128², 64², 32², 16² px"]
+        B --> C["L-TAE on the 16² map:<br/>month weights per position (16 heads)"]
+        C --> D["month weights upsampled and applied at every size:<br/>12 months → one map per size"]
+        D --> E["U-Net decoder: 16² → 128²,<br/>adding the map of each size (skip connections)"]
+        E --> F["2 class scores per 10 m pixel"]
+    ```
+
+    1. **Encoder per month.** A small convolutional network describes the image of each month on its own (the same
+       weights for all 12 months) and halves the resolution three times: 128, 64, 32 and 16 px.
+    2. **Temporal attention at the coarsest level.** At each position of the 16 × 16 map, an L-TAE looks at the 12
+       months and gives each one a weight (per head), from the data of that position: months without a clear
+       observation get no weight.
+    3. **The same month weights at every level.** The weights are upsampled and used at all four resolutions to
+       collapse the 12 months into one map per resolution.
+    4. **Decoder.** Starting from the coarsest map, the decoder upsamples step by step and adds the map of the same
+       resolution from step 3 (skip connections), so the result keeps the 10 m detail of the image while using the
+       context of the coarser maps.
+
+    Everything is trained from random weights on our labels only; it is the counterpart of E04 without
+    pretraining.
+
+??? info "How L-TAE works (temporal attention)"
+    L-TAE (Lightweight Temporal Attention Encoder; Garnot & Landrieu 2020) turns a sequence of 12 monthly feature
+    vectors into one vector. Each month gets a code for its position in the agricultural year; each of the 16 heads
+    has a learnt **master query** and scores every month against it; a softmax turns the scores into weights that
+    sum to 1 (months without data get weight 0); each head takes the weighted average of the months, and the heads
+    are joined. Unlike a convolution, the weights depend on the data of each pixel or position. The same module is
+    the temporal head of the foundation models in E04 and E05.
+
+## Training
+
+| Item | Choice |
+| --- | --- |
+| **Labels** | the labelled pixels of the round's training folds; every other pixel of the tile is ignored in the loss. A tile with pixels of two folds contributes only its training-fold labels |
+| **Loss** | class-weighted cross-entropy (weights from the training pixels: rainfed counts about 8 times more) |
+| **Optimiser** | AdamW, learning rate 10⁻³, weight decay 10⁻⁴, batch 4 tiles |
+| **Augmentation** | random flips and 90° rotations |
+| **Early stopping** | macro-F1 of the validation pixels, patience 10, at most 100 epochs |
+| **Seeds** | 3 per round (42, 1042, 2042), mean probability |
+| **Scoring** | the test tiles are predicted and read at their labelled pixels: the same out-of-fold pixels as every other experiment |
 
 ## How to run
 
-Script: [`experiments/E03_utae/run.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_utae/run.py).
+Script: [`experiments/E03_utae/run.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E03_utae/run.py)
+(model and training loop: [`pixelwise_run/tile_common.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/tile_common.py)).
 
 ```bash
 sbatch --export=ALL,SCRIPT=experiments/E03_utae/run.py,EXPERIMENT_REGION=morocco jobs/step_gpu.sbatch
 ```
 
+`EXPERIMENT_QUICK_TEST=1` runs the chain on 60 tiles for 2 epochs (output in `results_quick/`; too short to learn
+the rainfed class, it only checks the code).
+
 ## Outputs
 
-`experiments/E03_utae/results/<region>/utae/`: the E01 files plus `training_history.csv`.
+`experiments/E03_utae/results/<region>/utae/`: the E01 files plus `training_history.csv` (per epoch: training loss,
+validation loss, validation macro-F1 and rainfed F1, seconds).
 
 ## Results
 
-### Scores
-
-Out-of-fold scores with 95% block-bootstrap CI. The pixel models E01 random forest and E02 TempCNN are repeated for
-comparison.
-
-| Region | Model | Cropland macro-F1 | 3-class macro-F1 | F1 irrigated | F1 rainfed | F1 not cropland |
-| --- | --- | --- | --- | --- | --- | --- |
-| Morocco | E01 random forest | 0.876 [0.801, 0.929] | 0.838 [0.773, 0.887] | 0.959 | 0.784 | 0.770 |
-| Morocco | E02 TempCNN | 0.886 [0.798, 0.944] | 0.851 [0.784, 0.903] | 0.960 | 0.807 | 0.786 |
-| Morocco | U-TAE | **0.897** [0.843, 0.936] | **0.859** [0.815, 0.896] | 0.961 | 0.814 | 0.802 |
-| Utah | E01 random forest | 0.729 [0.682, 0.765] | 0.746 [0.714, 0.772] | 0.870 | 0.559 | 0.809 |
-| Utah | E02 TempCNN | 0.721 [0.674, 0.762] | 0.745 [0.712, 0.775] | 0.862 | 0.545 | 0.829 |
-| Utah | U-TAE | **0.766** [0.725, 0.797] | **0.766** [0.739, 0.791] | 0.883 | 0.600 | 0.816 |
-
-Paired difference on the same pixels (block bootstrap, 95% CI; Holm correction over the seven runs of E01–E04
-compared with the same reference; **bold** = CI excludes 0 and p<sub>Holm</sub> < 0.05):
-
-| Region | Comparison | Δ cropland macro-F1 | Δ 3-class macro-F1 |
-| --- | --- | --- | --- |
-| Morocco | U-TAE − E01 random forest | +0.021 [−0.012, 0.063], p<sub>Holm</sub> 0.95 | +0.021 [−0.003, 0.048], p<sub>Holm</sub> 0.22 |
-| Morocco | U-TAE − E02 TempCNN | +0.011 [−0.022, 0.063], p<sub>Holm</sub> 1.00 | +0.008 [−0.019, 0.043], p<sub>Holm</sub> 1.00 |
-| Utah | U-TAE − E01 random forest | **+0.037** [0.019, 0.053], p<sub>Holm</sub> < 0.001 | **+0.020** [0.008, 0.032], p<sub>Holm</sub> < 0.001 |
-| Utah | U-TAE − E02 TempCNN | **+0.044** [0.021, 0.066], p<sub>Holm</sub> < 0.001 | **+0.021** [0.006, 0.035], p<sub>Holm</sub> 0.028 |
-
-![Scores of E01–E04](figures/scores_e03_e04.png)
-
-- **Utah:** spatial context helps. U-TAE is the first model that beats the random forest significantly on the
-  cropland metric (+0.037), and it also beats TempCNN (+0.044, significant). The gain comes from the rainfed class
-  (F1 0.600 vs 0.559 and 0.545).
-- **Morocco:** U-TAE has the highest cropland macro-F1 of the models trained from scratch (0.897) and the narrowest
-  CI, but the difference to the random forest and to TempCNN is within the uncertainty of the spatial folds.
-
-### Errors
-
-![Confusion matrices of the random forest, U-TAE and TerraMind](figures/confusion_e03_e04.png)
-
-Compared with the E01 random forest (left and middle columns):
-
-- **Morocco:** U-TAE recovers more rainfed pixels (recall 0.84 vs 0.73) and loses fewer of them to not cropland (6%
-  vs 12%), but predicts more not-cropland pixels as irrigated (10% vs 8%) or rainfed (3.5% vs 0.9%); the rainfed
-  precision drops (0.79 vs 0.85), so the rainfed F1 rises moderately (0.814 vs 0.784).
-- **Utah:** U-TAE recovers more rainfed pixels (recall 0.58 vs 0.52), mainly by losing fewer of them to not
-  cropland (19% vs 25%); a rainfed pixel is still predicted as irrigated in 23% of the cases, as with the random
-  forest.
-
-Cropland macro-F1 and rainfed F1 per group (zones with rainfed labels and at least about 10,000 labelled pixels):
-
-| Region | Group | Pixels | Cropland macro-F1 (RF / TempCNN / U-TAE) | F1 rainfed (RF / TempCNN / U-TAE) |
-| --- | --- | --- | --- | --- |
-| Morocco | 2023/24 | 402,659 | 0.893 / 0.903 / 0.906 | 0.822 / 0.839 / 0.838 |
-| Morocco | 2024/25 | 119,344 | 0.844 / 0.854 / 0.879 | 0.718 / 0.751 / 0.772 |
-| Morocco | Doukkala | 142,356 | 0.891 / 0.902 / 0.887 | 0.849 / 0.873 / 0.851 |
-| Morocco | Souss | 33,687 | 0.583 / 0.499 / **0.813** | 0.205 / 0.075 / **0.664** |
-| Morocco | Statte | 10,355 | 0.748 / 0.669 / 0.655 | 0.520 / 0.371 / 0.333 |
-| Utah | Bear River | 158,422 | 0.736 / 0.713 / 0.781 | 0.641 / 0.628 / 0.710 |
-| Utah | Sevier River | 119,599 | 0.484 / 0.519 / 0.562 | 0.048 / 0.127 / 0.201 |
-| Utah | Utah Lake | 25,386 | 0.465 / 0.529 / **0.648** | 0.015 / 0.132 / **0.375** |
-| Utah | Weber River | 23,822 | 0.577 / 0.591 / 0.665 | 0.237 / 0.299 / 0.389 |
-| Utah | West Desert | 15,906 | 0.677 / 0.702 / 0.721 | 0.687 / 0.677 / 0.695 |
-
-The tile model helps most where the pixel models barely find the rainfed class: Souss (rainfed F1 at most 0.21 → 0.66) and
-Utah Lake (at most 0.13 → 0.38), presumably because the field and its surroundings resolve what the time series of a single
-pixel leaves ambiguous. It does not help in Sevier River, the largest difficult zone in
-Utah (rainfed F1 0.20), and it is worse in the small Statte zone. The Morocco zones Gharb, Tadla and El Haouz have no
-rainfed labels and are left out of the table.
-
-### Training
-
-- Early stopping selected the best epoch after on average 19 epochs in Morocco and 17 in Utah, with a wide range
-  (1–57 and 6–55): in some rounds the validation score keeps rising for 50 epochs, in others it peaks almost at
-  once.
-- 1.15 M trained parameters. GPU time per region (5 rounds × 3 seeds, one job): 4.9 h in Morocco and 6.1 h in Utah
-  (about 40 and 54 s per epoch).
-
-### Conclusion
-
-A spatio-temporal network trained from scratch on the 128 px tiles **improves the Utah map significantly** over
-the pixel models (cropland macro-F1 0.766 vs 0.729 random forest), mainly through the rainfed class, and is **on par
-in Morocco** (0.897, not significantly different from 0.876 and 0.886). Spatial context therefore matters most where
-the pixel signal of rainfed fields is weak. U-TAE is the reference for [E04](E04_frozen_geofm.md): the frozen
-foundation models are compared with it to see what pretraining adds beyond spatial context.
+_To be filled after the Morocco run._ Planned: scores with 95% CI and the paired difference to the E01 random
+forest, confusion matrix, scores per year and zone, training curves and run time. The comparison with the other
+experiments is on the [comparison page](comparison.md).
 
 ## References
 
+- Garnot, V. S. F. & Landrieu, L. (2020). Lightweight temporal self-attention for classifying satellite images time
+  series (L-TAE). *AALTD*.
 - Garnot, V. S. F. & Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional
   temporal attention networks. *ICCV*.

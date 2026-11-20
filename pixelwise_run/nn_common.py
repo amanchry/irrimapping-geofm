@@ -6,8 +6,8 @@ LTAE        lightweight temporal attention encoder (Garnot & Landrieu 2020): cha
             encoding of the day in the agricultural year, one learned master query per head; masked months get
             no attention. Returns the aggregated feature vector and the attention per head (used by E02, E04, E03).
 TempCNN     three 1-D convolutions over the months + dense layer (Pelletier et al. 2019) (E02).
-train_pixel_model   weighted cross-entropy, AdamW, early stopping on the validation fold's 3-class macro-F1;
-                    the best epoch is kept.
+train_pixel_model   weighted cross-entropy, AdamW, early stopping on the validation fold's macro-F1 (irrigated,
+                    rainfed); the best epoch is kept. Number of classes: N_CLASSES of pixel_common.py.
 """
 import math
 
@@ -15,6 +15,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import f1_score
+
+from pixel_common import N_CLASSES
 
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -55,7 +57,7 @@ class LTAE(nn.Module):
 
 
 class LTAEClassifier(nn.Module):
-    def __init__(self, d_in, positions, n_classes=3, **kw):
+    def __init__(self, d_in, positions, n_classes=N_CLASSES, **kw):
         super().__init__()
         self.ltae = LTAE(d_in, positions, **kw)
         self.out = nn.Linear(self.ltae.d_out, n_classes)
@@ -70,7 +72,7 @@ class LTAEClassifier(nn.Module):
 class TempCNN(nn.Module):
     """Pelletier et al. (2019): 3 x (Conv1d k=5, BN, ReLU, dropout), flatten, dense + BN + ReLU + dropout, output."""
 
-    def __init__(self, d_in, n_months=12, n_classes=3, filters=64, kernel=5, dense=256, dropout=0.2):
+    def __init__(self, d_in, n_months=12, n_classes=N_CLASSES, filters=64, kernel=5, dense=256, dropout=0.2):
         super().__init__()
         layers, c = [], d_in
         for _ in range(3):
@@ -98,7 +100,7 @@ def predict_proba(model, x, mask=None, batch=4096):
 
 def train_pixel_model(model, x, y, train, val, weights, seed, mask=None, lr=1e-3, weight_decay=1e-4,
                       batch_size=512, epochs=100, patience=10, log=None):
-    """Train on rows `train`, early stopping on the 3-class macro-F1 of rows `val`. y holds classes 1-3.
+    """Train on rows `train`, early stopping on the macro-F1 of rows `val`. y holds classes 1 .. N_CLASSES.
     Returns the model with the best epoch's weights and the training history."""
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
@@ -122,7 +124,7 @@ def train_pixel_model(model, x, y, train, val, weights, seed, mask=None, lr=1e-3
             opt.step()
             losses.append(loss.item())
         pv = predict_proba(model, x[val], mask[val] if mask is not None else None)
-        f1 = f1_score(y0[val], pv.argmax(1), labels=[0, 1, 2], average="macro", zero_division=0)
+        f1 = f1_score(y0[val], pv.argmax(1), labels=list(range(N_CLASSES)), average="macro", zero_division=0)
         history.append({"epoch": epoch, "loss": float(np.mean(losses)), "val_macro_f1": float(f1)})
         if f1 > best:
             best, wait = f1, 0

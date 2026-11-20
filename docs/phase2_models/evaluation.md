@@ -12,19 +12,21 @@ parcel-wise benchmark is kept in the [archive](../archive/parcel_wise_classifica
 
 ## 1. Task and unit
 
-Every **10 m pixel** is classified into one of three classes: **1 irrigated**, **2 rainfed**, **3 not cropland**
-([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps),
-[D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)). The labelled pixels are the
-inner pixels of the surveyed parcels (at most 100 per parcel) and not-cropland pixels taken where none of the four
-cropland products shows cropland ([pixel samples](../phase1_data/pixel_samples.md)). Every model is scored on the
-same labelled pixels. Regions: Morocco (2023/24 and 2024/25 pooled, each pixel with its own year) and Utah
-(2023/24), analysed separately.
+Every labelled **10 m pixel** of the surveyed parcels is classified into one of two classes: **1 irrigated** or
+**2 rainfed** ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps), [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)). All surveyed parcels are
+cropland, so the experiments measure the irrigated / rainfed decision alone; no cropland mask is used, and the
+handling of land that is not cropland is left to the mapping phase ([Phase 5](../phase5_maps/index.md)). The
+labelled pixels are the inner pixels of the surveyed parcels, at most 100 per parcel
+([pixel samples](../phase1_data/pixel_samples.md)). Every model is scored on the same labelled pixels.
+
+All experiments run in **Morocco first**: 2023/24 and 2024/25 pooled, each pixel with its own year (473,675 pixels
+of 8,775 parcels, 7,579 irrigated and 1,196 rainfed, in 2,015 tiles). Utah (2023/24) follows later with the same
+plan and is analysed separately.
 
 ## 2. Spatial splits
 
 Parcels are grouped into **20 km blocks**, and the blocks into **5 folds** with a similar class balance; a block is
-never split, and every labelled pixel takes the fold of its block. Pixels of blocks without labelled parcels (fold
-−1) are not used. Fold assignment: [Morocco dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds).
+never split, and every labelled pixel takes the fold of its parcel's block. Fold assignment: [Morocco dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds).
 
 **PASTIS rotation** (Garnot & Landrieu 2021). Five rounds; in each, 3 folds train, the next fold is the validation
 fold, one fold is the test fold:
@@ -56,10 +58,10 @@ only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 | Experiment | Input | Models |
 | --- | --- | --- |
 | [E01](../experiments/E01_s2_pixel_baseline.md) | pixel time series, 12 months × 12 bands (+ NDVI, NDWI) | random forest, histogram gradient boosting |
-| [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN |
+| [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN (the pixel L-TAE is on hold) |
 | [E03](../experiments/E03_utae.md) | 128 × 128 px tiles | U-TAE from scratch |
-| [E04](../experiments/E04_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models + L-TAE + UPerNet ([Foundation models](../foundation_models.md)) |
-| [E05](../experiments/E05_prithvi_strategies.md) | 128 × 128 px tiles, 10–100% of the training parcels | Prithvi frozen, LoRA, fully fine-tuned, from scratch |
+| [E04](../experiments/E04_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models (Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA) + L-TAE + feature pyramid + UPerNet ([Foundation models](../foundation_models.md)) |
+| [E05](../experiments/E05_prithvi_strategies.md) | 128 × 128 px tiles, 10, 25, 50 or 100% of the training parcels | Prithvi frozen, LoRA, fully fine-tuned, from scratch (four strategies) |
 
 Neural models: class-weighted cross-entropy (weights from the training pixels), early stopping on the validation
 fold, 3 seeds (42, 1042, 2042) per round; the out-of-fold prediction is the mean probability of the seeds. Settings
@@ -89,11 +91,10 @@ flowchart LR
 
 | Metric | Role |
 | --- | --- |
-| **Cropland macro-F1** | headline: mean F1 of irrigated and rainfed over the parcel pixels; a parcel pixel predicted "not cropland" counts as missed. Comparable across experiments whatever the not-cropland performance |
-| 3-class macro-F1 | mean F1 of the three classes |
-| F1, precision, recall per class | e.g. rainfed recall: how many rainfed pixels are found |
-| Overall accuracy | for comparison with the literature only |
-| Confusion matrix | which classes are confused (e.g. rainfed → irrigated) |
+| **Macro-F1** | headline: mean F1 of irrigated and rainfed over the labelled pixels |
+| Rainfed F1, precision, recall | the minority class: how many rainfed pixels are found (recall) and how many pixels predicted rainfed are rainfed (precision); the same three scores are kept for irrigated |
+| Overall accuracy | for comparison with the literature only (dominated by the irrigated majority) |
+| Confusion matrix | which way the errors go (rainfed → irrigated or irrigated → rainfed) |
 
 The kappa coefficient is not reported (Pontius & Millones 2011). Results are also given per region, per year
 (Morocco) and per zone.
@@ -110,7 +111,8 @@ difference between two models is measured on identical resamples (**paired**; Fo
 - A model is **better** (or **worse**) only if the 95% CI of Δ excludes 0 **and** the Holm-adjusted p-value is
   below 0.05 (Holm 1979; correction over all comparisons of a table and metric).
 - A CI that excludes 0 without surviving Holm is reported as "higher / lower, not significant after Holm".
-- Otherwise: **no clear difference**. With few large blocks per fold, the CIs are wide (0.09–0.14 in Morocco).
+- Otherwise: **no clear difference**. With few large blocks per fold, wide CIs are expected.
+- The paired tests are run for the headline macro-F1 and for the rainfed F1.
 
 ## 7. Reporting standard
 

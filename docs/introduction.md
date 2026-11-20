@@ -1,7 +1,7 @@
 # Introduction
 
 !!! abstract "Research proposal"
-    **[:material-file-pdf-box: Thesis proposal (PDF)](assets/research_proposal.pdf)**
+    **[:material-file-pdf-box: Research proposal (PDF)](assets/research_proposal.pdf)**
 
 ## Why irrigated cropland matters
 

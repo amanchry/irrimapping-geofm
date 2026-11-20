@@ -5,19 +5,21 @@ frozen encoder, and how does the answer depend on the number of labelled parcels
 
 ## Design
 
-The frozen-encoder benchmark of RQ1 pools embeddings over parcel polygons and cannot produce wall-to-wall maps. RQ2
-therefore uses a pixel-level model that serves both as the fine-tuning experiment and as the mapping model of
+The earlier frozen-encoder benchmark (archived) pooled embeddings over parcel polygons and cannot produce wall-to-wall
+maps. All experiments therefore use pixel-level models, which serve both as the comparison and as the mapping model of
 [Phase 5](../phase5_maps/index.md) ([decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).
 
 | Component | Description | Where |
 | --- | --- | --- |
 | Frozen encoder + segmentation head | each GeoFM with an L-TAE over the months and a UPerNet head trained on the labelled pixels of the tiles, as in PANGAEA | [E04](../experiments/E04_frozen_geofm.md) |
-| Fine-tuning and training from scratch | Prithvi-EO-2.0 with the same head: frozen, LoRA (low-rank adapters), fully fine-tuned, or trained from random weights, with 10–100% of the training parcels | [E05](../experiments/E05_prithvi_strategies.md) |
-| Classical baseline | random forest on the per-pixel Sentinel-2 time series | [E01](../experiments/E01_s2_pixel_baseline.md) |
-| Neural baselines | TempCNN (pixel time series), U-TAE (image time series), trained from scratch | [E02](../experiments/E02_temporal_nn.md), [E03](../experiments/E03_utae.md) |
+| Fine-tuning and training from scratch | Prithvi-EO-2.0 with the same head: frozen, LoRA (low-rank adapters), fully fine-tuned, or trained from random weights, with 10, 25, 50 or 100% of the training parcels | [E05](../experiments/E05_prithvi_strategies.md) |
+| Classical baseline | random forest and gradient boosting on the per-pixel Sentinel-2 time series | [E01](../experiments/E01_s2_pixel_baseline.md) |
+| Neural baselines | TempCNN (pixel time series; the pixel L-TAE is on hold), U-TAE (image time series), trained from scratch | [E02](../experiments/E02_temporal_nn.md), [E03](../experiments/E03_utae.md) |
 
 Training, tuning and testing follow the [evaluation protocol](evaluation.md): the same spatial folds and the PASTIS
-rotation, and the same out-of-fold pixels for every model ([experiment plan](../experiments/plan.md)).
+rotation, and the same out-of-fold pixels for every model ([experiment plan](../experiments/plan.md)). The task has
+two classes, irrigated and rainfed, on the labelled pixels of the surveyed parcels. E05 runs in Morocco first
+(2023/24 and 2024/25 pooled); Utah follows with the same plan.
 
 ## What fine-tuning means
 
@@ -109,7 +111,7 @@ encoder (Marti-Escofet et al. 2025).
 
 ```mermaid
 flowchart TD
-    A["E04 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs LoRA vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Utah<br/>(strategies 1, 4 and 2)"]
+    A["E04 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs LoRA vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Morocco first<br/>(strategies 1, 4 and 2)"]
     B --> C{"Does fine-tuning (LoRA or full) beat the frozen encoder<br/>(paired CI excludes 0 and Holm p below 0.05)?"}
     C -- "yes" --> D["Cheapest strategy that keeps the gain<br/>(LoRA if it matches full fine-tuning);<br/>optional LP-FT (5)"]
     C -- "no, or only with many labels" --> E["Frozen encoder for the maps;<br/>fine-tuning not needed"]
@@ -212,7 +214,7 @@ Science 270. [Summary page](../references/tomotaki-dawoud-2025-prithvi-finetunin
   layers); no search over the rank.
 - Decoder: UPerNet in E03–E05 (as PANGAEA); Marti-Escofet et al. (2025) found a UNet decoder better for fine-tuned
   GeoFMs.
-- Aggregation of the pixel predictions to parcels for a comparison with the parcel-wise results of RQ1.
+- Aggregation of the pixel predictions to parcels for a comparison with the archived parcel-wise results.
 
 ## References
 

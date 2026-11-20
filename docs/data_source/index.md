@@ -37,6 +37,9 @@ Access: open, no account needed. Compositing and status: `s2_download/README.md`
 
 ## Auxiliary and reference maps
 
+The cropland products serve the mapping phase only: the experiments classify the surveyed parcels as irrigated or
+rainfed and use no cropland mask ([Cropland extent and mask](../phase1_data/cropland_mask.md)).
+
 | Dataset | Provider | Content | Resolution | Use here | Access | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | **FAO GAUL** (2015 level 0 Morocco; 2024 level 1 Utah) | FAO | country and state boundaries | vector | outlines on the maps | open · [FAO GAUL](https://data.apps.fao.org/catalog/dataset/global-administrative-unit-layers-gaul) | ✅ |
@@ -47,6 +50,7 @@ Access: open, no account needed. Compositing and status: `s2_download/README.md`
 | **GLAD global cropland** | Potapov et al. (2022) | cropland extent and change (2003–2019) | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [paper](https://doi.org/10.1038/s43016-021-00429-z) · [GLAD](https://glad.umd.edu/dataset/croplands) | ✅ |
 | **Esri / Impact Observatory LULC** | Karra et al. (2021) | annual land use / land cover (crops = class 5), 2017–2025 | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [GEE community catalogue](https://gee-community-catalog.org/projects/S2TSLULC/) | ✅ |
 | **GCEP30** (GFSAD) | Thenkabail et al. (2021), USGS | global cropland extent, nominal 2015 | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [USGS PP 1868](https://doi.org/10.3133/pp1868) · [GEE community catalogue](https://gee-community-catalog.org/projects/gcep30/) | ✅ |
+| **Dynamic World V1** | Brown et al. (2022) | 9 land-cover classes with per-class probabilities, per Sentinel-2 image | 10 m | annual layer per agricultural year (most frequent class, mean crop probability, image count; `cropland_extent/download_dynamic_world.py`); candidate cropland mask for the maps, compared with the union of 4 products | open · [GEE catalogue](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) | 📝 |
 | **FAO WaPOR** | FAO | evapotranspiration, water productivity | 20–250 m | interpretation of irrigation patterns; optional extra variables | open (registration) · [WaPOR](https://www.fao.org/in-action/remote-sensing-for-water-productivity/en) | 📝 |
 | **FAO AQUASTAT** | FAO | national irrigated-area statistics | country | check of the annual map series (RQ3) | open · [AQUASTAT](https://www.fao.org/aquastat/en/) | 📝 |
 

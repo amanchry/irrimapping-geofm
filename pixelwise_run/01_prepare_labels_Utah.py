@@ -36,11 +36,10 @@ Steps
    MAX_CELLS_PER_BLOCK per spatial block of 02_make_spatial_folds.py so the sample is spread over the
    region. The same cells are used in every year (temporal comparisons see the same places).
 6. Attributes (same names as Morocco): parcel_id, ag_season, label, class_name, crop, zone (= river basin),
-   area_ha, nn_dist_m (nearest other field of the same year), mask_frac, mask_votes, in_mask,
-   mask_<product> (share inside the cropland mask of cropland_extent/make_cropland_mask.py, run first; cropland_mask.py;
-   fields outside the mask are KEPT and only flagged; fields outside Utah, the mapping area, get NaN).
+   area_ha, nn_dist_m (nearest other field of the same year).
    Extra: year, state, county, crop_group, irr_method, cell_id.
-7. Save the fields, summary tables, the mask check (mask_check.csv) and figures.
+7. Save the fields, summary tables and figures.
+(No cropland mask is used: every labelled field is cropland.)
 
 Agricultural year
 -----------------
@@ -85,7 +84,6 @@ import pyogrio
 from scipy.spatial import cKDTree
 from shapely.ops import unary_union
 
-from cropland_mask import mask_check_table, parcel_mask_stats
 from regions import admin_boundaries, dataset_dir, settings
 
 # ================================ SETTINGS ================================
@@ -402,8 +400,6 @@ def main():
     lab = lab.rename(columns={"Descriptio": "crop", "Basin": "zone", "State": "state", "County": "county",
                               "CropGroup": "crop_group", "IRR_Method": "irr_method"})
     lab = lab.to_crs(4326)
-    lab = parcel_mask_stats(lab, REGION)                           # cropland mask of cropland_extent/make_cropland_mask.py
-    mask_cols = [c for c in lab.columns if c.startswith("mask_")] + ["in_mask"]
 
     # 7. Save.
     summary = lab.groupby(["ag_season", "class_name"]).agg(fields=("label", "size"), area_ha=("area_ha", "sum"),
@@ -412,15 +408,12 @@ def main():
     print(f"\nFields per agricultural year and class:\n{summary.to_string()}")
     by_zone = pd.crosstab([lab["zone"], lab["ag_season"]], lab["class_name"])
     by_zone.to_csv(OUT_DIR / "summary_by_zone.csv")
-    check = mask_check_table(lab)
-    check.to_csv(OUT_DIR / "mask_check.csv", index=False)
-    print(f"\nFields inside the cropland mask (%; kept either way; Utah only):\n{check.to_string(index=False)}")
 
     plot_map(lab, admin)
     plot_balance_and_size(lab)
     plot_crops(lab)
 
-    cols = (["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha", "nn_dist_m"] + mask_cols
+    cols = (["parcel_id", "date", "ag_season", "label", "class_name", "crop", "zone", "area_ha", "nn_dist_m"]
             + ["year", "state", "county", "crop_group", "irr_method", "cell_id", "geometry"])
     lab["date"] = None                                              # WRLU has no survey date per field
     out = lab[cols].reset_index(drop=True)

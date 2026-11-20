@@ -1,8 +1,10 @@
 # Phase 1 · Data preparation
 
-Phase 1 provides the data on which all later phases rely: the cropland mask that defines the mapped area, labelled
-reference parcels, a spatial partition for validation, a common store of monthly imagery from which every model
-input is derived, the labelled pixels of the pixel-wise models and the wall-to-wall Sentinel-2 tiles for the maps.
+Phase 1 provides the data on which all later phases rely: labelled reference parcels, a spatial partition for
+validation, a common store of monthly imagery from which every model input is derived, the labelled pixels of the
+pixel-wise models and, for the mapping phase, the cropland products, the cropland mask and the wall-to-wall
+Sentinel-2 tiles. The labels, the pixel samples and the experiments do not use a cropland mask; the mask serves the
+maps only.
 Every model uses Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)). The design ensures
 that differences between models are attributable to the models rather than to their input data.
 
@@ -11,9 +13,9 @@ that differences between models are attributable to the models rather than to th
 | Component | Content | Status | Page |
 | --- | --- | --- | --- |
 | **1a · Morocco training data** | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed); 5 spatial folds of 20 km blocks; 2,987 tiles of 128 × 128 px with 12 monthly composites × 19 bands (2023/24 and 2024/25) | ✅ complete | [Morocco training data](morocco.md) |
-| **1b · Utah training data** (second study area, [D13](../decisions.md#d13-utah-as-a-second-independent-study-area)) | 12,015 WRLU crop fields in 550 sampled cells: WRLU 2024 (5,000 irrigated, 1,013 rainfed) and WRLU 2021 for the temporal test (4,987 irrigated, 1,015 rainfed); 5 spatial folds of 20 km blocks; tile plan of 5,436 tiles | ✅ 2023/24 complete (labels, folds, tiles, pixel samples); 2020/21 labels, folds and label rasters prepared for the temporal test | [Utah training data](utah.md) |
-| **1d · Cropland extent and mask** | union of 4 cropland products per region and agricultural year ([D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)); Morocco 103,068 km², Utah 9,979 km² of cropland (2023/24) | ✅ Morocco 2023/24 and 2024/25, Utah 2023/24 and 2020/21 | [Cropland extent and mask](cropland_mask.md) |
-| **1e · Pixel samples** (input of every experiment) | labelled pixels: irrigated, rainfed, not cropland, with folds; Morocco 2023/24 (402,756) and 2024/25 (119,369); Utah 2023/24 (656,081, of which 654,382 in a fold) | ✅ Morocco 2023/24 and 2024/25, Utah 2023/24; Utah 2020/21 to be built for the temporal test | [Pixel samples](pixel_samples.md) |
+| **1b · Utah training data** (second study area, [D13](../decisions.md#d13-utah-as-a-second-independent-study-area)) | 12,015 WRLU crop fields in 550 sampled cells: WRLU 2024 (5,000 irrigated, 1,013 rainfed) and WRLU 2021 for the temporal test (4,987 irrigated, 1,015 rainfed); 5 spatial folds of 20 km blocks; tile plan of 5,436 tiles | ✅ 2023/24 labels, folds and tiles complete; pixel samples to be rebuilt with the two-class script; 2020/21 labels, folds and label rasters prepared for the temporal test | [Utah training data](utah.md) |
+| **1d · Cropland extent and mask** | for the mapping phase only: union of 4 cropland products per region and agricultural year ([D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)); Morocco 103,068 km², Utah 9,979 km² of cropland (2023/24); annual Dynamic World layer as an alternative (`download_dynamic_world.py`); the mask is chosen in [Phase 5](../phase5_maps/index.md) | ✅ union: Morocco 2023/24 and 2024/25, Utah 2023/24 and 2020/21; 📝 Dynamic World | [Cropland extent and mask](cropland_mask.md) |
+| **1e · Pixel samples** (input of every experiment) | labelled pixels of the surveyed parcels, two classes (irrigated, rainfed), with folds (`04_pixel_samples/`); Morocco 2023/24 (367,882) and 2024/25 (105,793): 473,675 pixels of 8,775 parcels in 2,015 tiles | ✅ Morocco 2023/24 and 2024/25; ⏳ Utah 2023/24 to be rebuilt with the two-class script; Utah 2020/21 to be built for the temporal test | [Pixel samples](pixel_samples.md) |
 | **1f · Wall-to-wall Sentinel-2 tiles** (STAC) | 12 monthly Sentinel-2 composites for every 128 px tile with ≥ 1% cropland, from the Earth Search STAC catalogue (`s2_download/`); Utah 18,472 and Morocco 112,536 tiles (2023/24) | 🔄 Utah 2023/24: 17,278 of 18,472 tiles, the rest to be rerun after a bug fix; Morocco on hold | [Cropland extent and mask §5](cropland_mask.md#5-extent-of-the-wall-to-wall-tiles) |
 | **1c · Multi-year imagery, Morocco** | tiles for 2021–2025 for the annual maps | 📝 prepared in [Phase 5](../phase5_maps/index.md) | – |
 
@@ -26,11 +28,12 @@ that differences between models are attributable to the models rather than to th
 
 | Step | Script | Output |
 | --- | --- | --- |
-| 0 | `cropland_extent/make_cropland_mask.py` | cropland mask per region and agricultural year |
-| 01 | `pixelwise_run/01_prepare_labels_Morocco.py` or `01_prepare_labels_Utah.py` | cleaned, labelled cropland parcels (one script per region, same output layout), with their share inside the mask |
+| 01 | `pixelwise_run/01_prepare_labels_Morocco.py` or `01_prepare_labels_Utah.py` | cleaned, labelled cropland parcels (one script per region, same output layout) |
 | 02 | `pixelwise_run/02_make_spatial_folds.py` | fold (0–4) per parcel |
 | 03 | `pixelwise_run/03_build_tiles.py` | tile store from Google Earth Engine |
-| 04 | `pixelwise_run/04_make_pixel_samples.py` | labelled pixels for the pixel-wise models |
+| 04 | `pixelwise_run/04_make_pixel_samples.py` | labelled pixels (irrigated, rainfed) of the surveyed parcels for the pixel-wise models (`04_pixel_samples/<season>/`) |
+| M1 | `cropland_extent/make_cropland_mask.py` | cropland mask per region and agricultural year (union of 4 products; mapping phase only) |
+| M2 | `cropland_extent/download_dynamic_world.py` | annual Dynamic World layer per agricultural year (most frequent class, mean crop probability, image count); candidate mask for the maps |
 | 06 | `pixelwise_run/06_build_cropland_tiles.py` | wall-to-wall Sentinel-2 tiles over the cropland mask from Earth Engine (earlier route for the mapping stage) |
 | S01 | `s2_download/01_s2_grid_overview.py` | download blocks of 10.24 km over the cropland tiles, the Sentinel-2 tiles over them, overview figures |
 | S02 | `s2_download/02_download_s2_stac.py` (cluster wrapper `s2_dl.sbatch`) | monthly Sentinel-2 composites (SCL cloud mask, monthly median) of every tile with ≥ 1% cropland, from the Earth Search STAC catalogue (`sentinel-2-c1-l2a`) |

@@ -11,10 +11,10 @@ change log).
 
 | Step | Where | Status |
 | --- | --- | --- |
-| Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
-| Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E04 (pixel-wise) | `experiments/` | E01–E04 done in both regions ([results](experiments/index.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); cropland macro-F1 Morocco 0.876 (RF) – 0.900 (AgriFM), differences not significant; Utah 0.729 (RF) → 0.766 (U-TAE) → 0.797 (TerraMind), significant. Presto and TESSERA (E04) still to run |
-| E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Utah, 10–100% of the training parcels: the 12 jobs of frozen, fine-tuned and from scratch running on the cluster; the 4 LoRA jobs later ([E05](experiments/E05_prithvi_strategies.md)) |
+| Cropland mask (mapping phase only) | `cropland_extent/` | Union of 4 products: 2023/24 for both regions; Dynamic World download script added (`download_dynamic_world.py`); not used by the experiments ([D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
+| Pixel samples (2 classes) | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 and 2024/25 done (473,675 pixels of 8,775 parcels, `04_pixel_samples/`); Utah to be rebuilt on the cluster ([page](phase1_data/pixel_samples.md)) |
+| Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Redesigned 2026-11-20; code ready and tested; earlier 3-class results removed; Morocco first ([experiments](experiments/index.md)) |
+| E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Moved to Morocco, 2 classes; code ready and tested; 16 jobs to run ([E05](experiments/E05_prithvi_strategies.md)) |
 | STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
@@ -23,12 +23,9 @@ change log).
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
-   the results to the Mac.
-2. E04 with Presto and TESSERA; E05: finish the 12 running jobs, run `report.py`, then the 4 LoRA jobs
-   ([E05](experiments/E05_prithvi_strategies.md)).
-3. STAC approach (independent of the Earth Engine tiles): rerun the 78 missing Utah blocks, then Morocco 2023/24
-   and 2024/25 (`s2_download/`); then training tiles, experiments and maps on the STAC tiles; map accuracy sample.
+1. Cluster (Morocco): pull, quick tests, then E01, E02, E03, E04 (six encoders) and E05 (16 jobs).
+2. Utah: `04_make_pixel_samples.py` on the cluster, then the same experiments.
+3. STAC approach: rerun the 78 missing Utah blocks, then Morocco 2023/24 and 2024/25 (`s2_download/`).
 
 ---
 
@@ -92,6 +89,24 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-20 (experiments redesigned: two classes, Morocco first)
+
+- Decision [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase): the experiments use
+  two classes (irrigated, rainfed) on the surveyed parcel pixels; no cropland mask and no not-cropland class.
+  Cropland extent and non-cropland handling move to the mapping phase.
+- `pixelwise_run/`: `CLASSES = [1, 2]` and headline `macro_f1` in `pixel_common.py` (models output two scores,
+  metrics, class weights, confusion follow it); `04_make_pixel_samples.py` samples parcel pixels only, into
+  `04_pixel_samples/` (Morocco: 473,675 pixels of 8,775 parcels; the old 3-class samples stay in
+  `04c_pixel_samples/`); `01_prepare_labels_*` no longer check the mask; the parcel mask helper `cropland_mask.py`
+  removed; E05 label subsets without not-cropland pixels.
+- Experiments: E02 runs TempCNN only (pixel L-TAE on hold); the seed also sets the initial weights in E02; E05 moved
+  from Utah to Morocco; every script, `report.py`, `report_figures.py` and `05_compare_experiments.py` on 2 classes and
+  Morocco first. Quick tests of E01–E05 passed on the Mac.
+- All earlier pixel-wise results (3 classes) removed from the repository (`experiments/E0*/results/`, comparison
+  tables, result figures); experiment pages rewritten as plans with collapsible explanations of every model.
+- `cropland_extent/download_dynamic_world.py`: annual Dynamic World layer per agricultural year (most frequent class,
+  mean crop probability, image count) on the project grid, for the later choice of a mask.
 
 ### 2026-11-20 (experiments renumbered: E03 U-TAE, E04 frozen GeoFMs)
 

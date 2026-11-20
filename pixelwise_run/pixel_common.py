@@ -5,15 +5,16 @@ pixel_common.py  —  shared code of the pixel-wise experiments E01–E05 (not r
 Every experiment script (experiments/E0*/run.py) uses this module, so all experiments read the same pixels, use
 the same folds and rotation, and are scored with the same metrics.
 
-1. Samples: the labelled pixels of pixelwise_run/04_make_pixel_samples.py for a region and its training years
-   (Morocco 2023/24 + 2024/25 pooled, Utah 2023/24). Pixels with fold -1 (block without labelled parcels) are
-   dropped. Each pixel keeps `sample_idx`, its row in that year's pixels.parquet.
+1. Samples: the labelled pixels of the surveyed parcels (pixelwise_run/04_make_pixel_samples.py) for a region and
+   its training years (Morocco 2023/24 + 2024/25 pooled, Utah 2023/24). Two classes: 1 irrigated, 2 rainfed (no
+   cropland mask, no not-cropland class). Pixels with fold -1 are dropped. Each pixel keeps `sample_idx`, its row in
+   that year's pixels.parquet.
 2. Sentinel-2 series: 12 months x 12 bands (reflectance x 10,000); months without a clear observation
    (S2_NCLEAR = 0 or NODATA) are NaN, optionally filled by linear interpolation in time; NDVI and NDWI per month.
 3. Validation: PASTIS rotation over the 5 spatial folds. Round k: test fold k, validation fold k+1 (mod 5),
    training = the other 3 folds.
-4. Metrics: headline = cropland macro-F1 (mean F1 of irrigated and rainfed over the parcel pixels; a parcel pixel
-   predicted "not cropland" counts as a miss); 3-class macro-F1; per-class F1 / precision / recall. 95% CI by block bootstrap over the 20 km blocks, computed
+4. Metrics: headline = macro-F1 (mean F1 of irrigated and rainfed); per-class F1 / precision / recall; overall
+   accuracy. 95% CI by block bootstrap over the 20 km blocks, computed
    from per-block confusion matrices (fast, and identical draws for every experiment: paired comparisons).
 5. Saving: oof_predictions.parquet, metrics.csv, metrics_by_group.csv, confusion.png, run_config.json, run.log in
    experiments/<ID>/results[_quick]/<region>/<run>/.
@@ -30,8 +31,9 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-CLASSES = [1, 2, 3]
-CLASS_NAMES = {1: "irrigated", 2: "rainfed", 3: "not_cropland"}
+CLASSES = [1, 2]                     # 1 irrigated, 2 rainfed (the surveyed cropland parcels)
+CLASS_NAMES = {1: "irrigated", 2: "rainfed"}
+N_CLASSES = len(CLASSES)
 SEASONS = {"morocco": ["2023/24", "2024/25"], "utah": ["2023/24"]}      # training years per region
 N_FOLDS = 5
 S2_BANDS = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12"]
@@ -52,7 +54,7 @@ def env_setting(name, default):
 
 # ---------------------------------------------------------------- samples
 def samples_dir(region, season):
-    return ROOT / "outputs" / region / "dataset" / "04c_pixel_samples" / season.replace("/", "-")
+    return ROOT / "outputs" / region / "dataset" / "04_pixel_samples" / season.replace("/", "-")
 
 
 def load_samples(region, seasons=None, quick=False, seed=42):
@@ -69,7 +71,7 @@ def load_samples(region, seasons=None, quick=False, seed=42):
         info = json.loads((d / "samples_info.json").read_text())
         df["season"] = season
         df["sample_idx"] = np.arange(len(df))
-        keep = df["fold"].to_numpy() >= 0
+        keep = (df["fold"].to_numpy() >= 0) & df["label"].isin(CLASSES).to_numpy()
         dfs.append(df[keep])
         xs.append(np.asarray(x[keep]))
     df = pd.concat(dfs, ignore_index=True)
@@ -77,7 +79,7 @@ def load_samples(region, seasons=None, quick=False, seed=42):
     if quick and len(df) > 20000:
         pick = np.sort(np.random.default_rng(seed).choice(len(df), 20000, replace=False))
         df, X = df.iloc[pick].reset_index(drop=True), X[pick]
-    df["parcel_key"] = np.where(df["label"] < 3, df["season"] + "|" + df["parcel_id"].astype(str), "")
+    df["parcel_key"] = df["season"] + "|" + df["parcel_id"].astype(str)
     return df, X, info
 
 
@@ -147,7 +149,7 @@ def rounds():
 
 
 def class_weights(y):
-    """Weights inversely proportional to the class counts (classes 1, 2, 3), mean 1."""
+    """Weights inversely proportional to the class counts (CLASSES), mean 1."""
     counts = np.array([(y == c).sum() for c in CLASSES], dtype=float)
     w = np.where(counts > 0, counts.sum() / (len(CLASSES) * np.maximum(counts, 1)), 0.0)
     return w
@@ -168,7 +170,8 @@ def _f1(tp, fp, fn):
 
 
 def metrics_from_confusion(cm_pix):
-    """cm_pix: 3 x 3 pixel confusion (rows true 1-3, columns predicted 1-3)."""
+    """cm_pix: N_CLASSES x N_CLASSES pixel confusion (rows true class, columns predicted class, order of CLASSES).
+    macro_f1 (headline) = mean F1 of the classes (irrigated, rainfed)."""
     out = {}
     tp = np.diag(cm_pix)
     fp, fn = cm_pix.sum(0) - tp, cm_pix.sum(1) - tp
@@ -176,12 +179,7 @@ def metrics_from_confusion(cm_pix):
     with np.errstate(divide="ignore", invalid="ignore"):
         prec = np.where(tp + fp > 0, tp / (tp + fp), 0.0)
         rec = np.where(tp + fn > 0, tp / (tp + fn), 0.0)
-    crop = cm_pix[:2]                                         # true irrigated / rainfed rows
-    ctp = np.diag(crop[:, :2])
-    cfn = crop.sum(1) - ctp                                   # includes predictions "not cropland"
-    cfp = crop[:, :2].sum(0) - ctp
-    out["cropland_macro_f1"] = float(_f1(ctp, cfp, cfn).mean())
-    out["macro_f1_3class"] = float(f1.mean())
+    out["macro_f1"] = float(f1.mean())
     out["overall_accuracy"] = float(tp.sum() / max(cm_pix.sum(), 1))
     for i, c in enumerate(CLASSES):
         out[f"f1_{CLASS_NAMES[c]}"] = float(f1[i])
@@ -191,9 +189,9 @@ def metrics_from_confusion(cm_pix):
 
 
 def block_confusions(oof, blocks):
-    """Per-block pixel confusion matrices [B, 3, 3], in the order of `blocks`."""
+    """Per-block pixel confusion matrices [B, N_CLASSES, N_CLASSES], in the order of `blocks`."""
     pos = {b: i for i, b in enumerate(blocks)}
-    cm_pix = np.zeros((len(blocks), 3, 3))
+    cm_pix = np.zeros((len(blocks), N_CLASSES, N_CLASSES))
     bi = oof["block_id"].map(pos).to_numpy()
     np.add.at(cm_pix, (bi, oof["label"].to_numpy() - 1, oof["pred"].to_numpy() - 1), 1)
     return cm_pix
@@ -218,7 +216,7 @@ def score(oof, n_boot=N_BOOT):
 
 
 def score_groups(oof):
-    """Point estimates per year and per zone (zones: parcel pixels and the not-cropland pixels of that year)."""
+    """Point estimates per year and per zone."""
     rows = []
     for col in ["season", "zone"]:
         for value, g in oof.groupby(col):
@@ -260,9 +258,9 @@ def git_commit():
 
 def save_run(out_dir, df, proba, settings, log, extra_tables=None, quick=False):
     """Write the out-of-fold predictions, metrics with CI, metrics per group, confusion figure and the run config.
-    proba: [N, 3] out-of-fold class probabilities in the order of df."""
+    proba: [N, N_CLASSES] out-of-fold class probabilities in the order of df."""
     oof = df[["season", "sample_idx", "label", "parcel_key", "parcel_id", "fold", "block_id", "zone", "tile_id",
-              "x", "y", "mask_votes"]].copy()
+              "x", "y"]].copy()
     for i, c in enumerate(CLASSES):
         oof[f"p_{CLASS_NAMES[c]}"] = proba[:, i].astype(np.float32)
     oof["pred"] = np.array(CLASSES)[proba.argmax(1)]
@@ -277,7 +275,7 @@ def save_run(out_dir, df, proba, settings, log, extra_tables=None, quick=False):
         **settings, "git_commit": git_commit(), "finished": time.strftime("%Y-%m-%d %H:%M"),
         "machine": platform.node(), "pixels": len(oof), "quick": quick}, indent=2, default=str))
     m = metrics.set_index("metric")
-    for k in ["cropland_macro_f1", "macro_f1_3class"]:
+    for k in ["macro_f1", "f1_rainfed"]:
         log.info(f"{k}: {m.loc[k, 'value']:.3f} [{m.loc[k, 'ci_low']:.3f}, {m.loc[k, 'ci_high']:.3f}]")
     log.info(f"Saved {out_dir}")
     return oof, metrics
@@ -291,13 +289,13 @@ def plot_confusion(oof, path):
     share = cm / np.maximum(cm.sum(1, keepdims=True), 1)
     fig, ax = plt.subplots(figsize=(4.2, 3.6))
     ax.imshow(share, cmap="Blues", vmin=0, vmax=1)
-    names = ["Irrigated", "Rainfed", "Not cropland"]
-    for i in range(3):
-        for j in range(3):
+    names = [CLASS_NAMES[c].capitalize() for c in CLASSES]
+    for i in range(N_CLASSES):
+        for j in range(N_CLASSES):
             ax.text(j, i, f"{share[i, j]:.2f}\n({cm[i, j]:,})", ha="center", va="center", fontsize=8,
                     color="white" if share[i, j] > 0.6 else "black")
-    ax.set_xticks(range(3), names, fontsize=8)
-    ax.set_yticks(range(3), names, fontsize=8)
+    ax.set_xticks(range(N_CLASSES), names, fontsize=8)
+    ax.set_yticks(range(N_CLASSES), names, fontsize=8)
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Reference")
     fig.tight_layout()

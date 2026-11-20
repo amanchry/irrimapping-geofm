@@ -25,7 +25,8 @@ A GPU (CUDA or Apple Silicon) is recommended for the tile models (experiments E0
 ### 2. Earth Engine
 
 Earth Engine is used by `pixelwise_run/03_build_tiles.py` (tile store), `cropland_extent/make_cropland_mask.py`
-(cropland mask) and the earlier wall-to-wall route `pixelwise_run/06_build_cropland_tiles.py`. Put the
+(cropland mask), `cropland_extent/download_dynamic_world.py` (annual Dynamic World layer) and the earlier
+wall-to-wall route `pixelwise_run/06_build_cropland_tiles.py`. Put the
 service-account key in `secrets/` (path set at the top of each script), or run `earthengine authenticate` once. The
 STAC download `s2_download/` needs no account: it reads the public Earth Search catalogue.
 
@@ -63,13 +64,16 @@ STAC-based approach).
 
 ```bash
 # Pixel-wise pipeline (pixelwise_run/; step table in pixelwise_run/README.md)
-python cropland_extent/make_cropland_mask.py           # 0  cropland mask per region and year
 python pixelwise_run/01_prepare_labels_Morocco.py      # 01 labels (01_prepare_labels_Utah.py for Utah)
 python pixelwise_run/02_make_spatial_folds.py          # 02 spatial folds
 python pixelwise_run/03_build_tiles.py                 # 03 tile store (Earth Engine)
-python pixelwise_run/04_make_pixel_samples.py          # 04 labelled pixels
+python pixelwise_run/04_make_pixel_samples.py          # 04 labelled pixels, irrigated / rainfed (04_pixel_samples/<season>/)
 python experiments/E01_s2_pixel_baseline/run.py        # experiments, one at a time: E01, E02, E03, E04, E05
 python pixelwise_run/05_compare_experiments.py         # 05 comparison table and paired tests
+
+# Cropland extent for the mapping phase (cropland_extent/; not used by the steps above)
+python cropland_extent/make_cropland_mask.py           # cropland mask per region and year (union of 4 products)
+python cropland_extent/download_dynamic_world.py       # annual Dynamic World layer per year (candidate mask)
 python pixelwise_run/06_build_cropland_tiles.py        # 06 earlier Earth Engine route for wall-to-wall tiles
 
 # STAC download (s2_download/; details in s2_download/README.md)
@@ -100,7 +104,7 @@ irrigated_area_mapping_code/
 │   ├── results.md · progress.md results overview · change log
 │   ├── archive/                 archived parcel-wise classification
 │   └── assets/                  style sheet and scripts of the website
-├── cropland_extent/         cropland mask (step 0) and reference layers (WorldCover, LGRIP30)
+├── cropland_extent/         cropland mask and reference layers (WorldCover, LGRIP30, Dynamic World); mapping phase only
 ├── pixelwise_run/           pixel-wise pipeline, steps 01–06 + shared code (six encoders, models, metrics)
 ├── s2_download/             wall-to-wall Sentinel-2 composites from STAC (scripts 01–02, s2_dl.sbatch)
 ├── experiments/             E01–E05: one folder per experiment with run.py + results/; comparison/
@@ -113,8 +117,9 @@ irrigated_area_mapping_code/
 ├── external/                third-party code: AgriFM, Presto, TESSERA (not in git)
 ├── secrets/                 Earth Engine service-account key    (never commit)
 └── outputs/<region>/        outputs per region, morocco or utah (not in git)
-    ├── dataset/                 01_labels · 02_folds · 03_tiles_128px/agyear · 04c_pixel_samples/<season>
-    ├── cropland_extent/         cropland mask per year, reference layers
+    ├── dataset/                 01_labels · 02_folds · 03_tiles_128px/agyear · 04_pixel_samples/<season>
+    │                            (04c_pixel_samples/: earlier three-class samples, no longer used)
+    ├── cropland_extent/         cropland mask per year, reference layers (mapping phase)
     ├── s2_download/             grid overview and STAC tiles per year
     ├── study/                   01_inspection · 02_embeddings (archived parcel-wise runs)
     └── analysis/                figures and pages from tools/ (Morocco)

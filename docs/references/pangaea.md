@@ -34,5 +34,5 @@ they do not consistently beat supervised models trained from scratch.
   [decision D8](../decisions.md#d8-two-temporal-aggregation-pipelines)).
 
 ## Differences and limitations
-- Dense segmentation benchmarks; here the labels are sparse (labelled pixels inside surveyed parcels and
-  not-cropland pixels), so the loss is computed on the labelled pixels only.
+- Dense segmentation benchmarks; here the labels are sparse (labelled pixels inside the surveyed
+  parcels), so the loss is computed on the labelled pixels only.

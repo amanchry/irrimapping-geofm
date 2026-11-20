@@ -3,15 +3,17 @@
 This page describes the **Utah dataset**, the second, independent study area
 ([D13](../decisions.md#d13-utah-as-a-second-independent-study-area)). It is built with the same pipeline as the
 [Morocco training data](morocco.md): only the label script (`01_prepare_labels_Utah.py`) is region-specific;
-scripts 02–04 are the same files, run with `REGION = "utah"`. As everywhere in the study, every 10 m pixel is
-classified as irrigated, rainfed or not cropland
-([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
+scripts 02–04 are the same files, run with `REGION = "utah"`. As in Morocco, the experiments classify the labelled
+10 m pixels of the crop fields as irrigated or rainfed
+([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)); no cropland mask is used. The
+experiments run in Morocco first; Utah follows later with the same plan.
 
 !!! info "Status"
     Labels (01), spatial folds (02) and the tile plan with label rasters (03) are complete for WRLU 2024
-    (2023/24) and WRLU 2021 (2020/21). For 2023/24 the tile images (03) and the
-    [pixel samples](pixel_samples.md) (04, 654,382 labelled pixels in 2,405 tiles used in the experiments) are
-    complete and are used in E01–E05. The 2020/21 data are prepared for the temporal test (RQ3). The wall-to-wall
+    (2023/24) and WRLU 2021 (2020/21). For 2023/24 the tile images (03) are complete;
+    the [pixel samples](pixel_samples.md) (04) are to be rebuilt on the cluster with the two-class script
+    (`04_pixel_samples/`), after which E01–E05 follow the Morocco runs. The earlier three-class samples are kept in
+    `04c_pixel_samples/` and are no longer used. The 2020/21 data are prepared for the temporal test (RQ3). The wall-to-wall
     Sentinel-2 tiles of the STAC download (`s2_download/`) are described in
     [Cropland extent and mask §5](cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
 
@@ -40,10 +42,10 @@ classified as irrigated, rainfed or not cropland
 | 1 | `01_prepare_labels_Utah.py` | 12,015 labelled crop fields in 550 sampled cells: WRLU 2024 (5,000 irrigated, 1,013 rainfed) and WRLU 2021 (4,987 irrigated, 1,015 rainfed); plus all 245,648 labelled crop fields of both years before sampling |
 | 2 | `02_make_spatial_folds.py` (`REGION = "utah"`) | a fold (0–4) per field, from 183 spatial blocks of 20 km |
 | 3 | `03_build_tiles.py` (`REGION = "utah"`) | tile plan: 5,436 tiles (2,720 for 2023/24, 2,716 for 2020/21); label rasters written |
-| 4 | `04_make_pixel_samples.py` (`REGION = "utah"`) | labelled pixels (irrigated, rainfed, not cropland) per year: 2023/24 done (`04c_pixel_samples/2023-24/`) |
+| 4 | `04_make_pixel_samples.py` (`REGION = "utah"`) | labelled pixels of the crop fields (irrigated, rainfed) per year (`04_pixel_samples/<season>/`): 2023/24 to be rebuilt with the two-class script |
 
 All outputs are in `outputs/utah/dataset/` (`01_labels/`, `02_folds/`, `03_tiles_128px/agyear/`,
-`04c_pixel_samples/`), with the same
+`04_pixel_samples/`), with the same
 file names and columns as `outputs/morocco/dataset/`.
 
 ---
@@ -55,8 +57,7 @@ file names and columns as `outputs/morocco/dataset/`.
   are reported side by side. This tests whether the conclusions from Morocco hold in a second region with other
   crops, climate and labels.
 - **Two questions in Utah:**
-    1. how well the models separate irrigated, rainfed and not-cropland pixels (spatial cross-validation, as in
-       Morocco);
+    1. how well the models separate irrigated and rainfed pixels (spatial cross-validation, as in Morocco);
     2. **temporal transferability:** whether a model trained on one year still works in another year
        ([section 10](#10-temporal-test-design)).
 - **Training year:** WRLU 2024 (agricultural year `2023/24`). **Temporal test year:** WRLU 2021 (`2020/21`).
@@ -89,7 +90,6 @@ Washington, Utah, the IrrMap states):
 | --- | --- | --- |
 | Water-Related Land Use (WRLU), Utah Division of Water Resources | labels | one polygon layer per year, 2017–2025; all agricultural fields of Utah and of the parts of its river basins in Idaho, Wyoming, Colorado, Nevada and Arizona; crop (`Descriptio`, `CropGroup`), irrigation method (`IRR_Method`), basin, county, state. In `data/Utah_field_data/` |
 | FAO GAUL 2024 (level 1) | maps | state outlines (`data/admin_boundaries/`) |
-| ESA WorldCover 2021 (10 m) | label check | optional: needs a raster covering Utah (`ESA_WorldCover_10m_2021_Utah.tif`); not yet available, so the check was skipped |
 | Sentinel-2 L2A, Cloud Score+, Sentinel-1 GRD | imagery | as for Morocco (Google Earth Engine); the models use Sentinel-2 only (D14) |
 | Sentinel-2 L2A (Earth Search STAC, `sentinel-2-c1-l2a`) | wall-to-wall imagery | `s2_download/`, every tile with ≥ 1% cropland |
 
@@ -397,7 +397,7 @@ python pixelwise_run/01_prepare_labels_Utah.py     # ~1 min; YEARS = [2024, 2021
 # in 02, 03 and 04 set REGION = "utah" at the top, then:
 python pixelwise_run/02_make_spatial_folds.py      # seconds
 python pixelwise_run/03_build_tiles.py             # SEASONS = ["2023/24"]; first N_TEST_TILES = 20; Earth Engine, resumable
-python pixelwise_run/04_make_pixel_samples.py      # SEASONS per region in the script -> 04c_pixel_samples/<season>/
+python pixelwise_run/04_make_pixel_samples.py      # SEASONS per region in the script -> 04_pixel_samples/<season>/
 ```
 
 Run everything in the `condaml` environment: another GDAL / GEOS version once gave one field more.
@@ -407,7 +407,7 @@ Run everything in the `condaml` environment: another GDAL / GEOS version once ga
 | 01 labels, 02 folds | **all years in `YEARS`** at once (local, ~1 min) | sampled cells, parcel numbers and folds are fixed once, the same for every year |
 | 03 plan + label rasters | all years (local, seconds) | the parcel numbers in the label rasters never change |
 | 03 Earth Engine download | **only the years in `SEASONS`** | 2024 first (`["2023/24"]`), 2021 later (`["2020/21"]`); finished tiles are skipped |
-| 04 pixel samples | **only the years in `SEASONS`** (each needs its tiles and cropland mask) | each year in its own folder: `04c_pixel_samples/2023-24/`, `04c_pixel_samples/2020-21/` |
+| 04 pixel samples | **only the years in `SEASONS`** (each needs its tiles) | each year in its own folder: `04_pixel_samples/2023-24/`, `04_pixel_samples/2020-21/` |
 
 !!! note "Archived: parcel-wise set-up"
     The archived parcel-wise pipeline ran `parcelwise_run/04_make_views.py` (views A–C, `views_2023-24/`) and
@@ -441,4 +441,5 @@ boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`
   classes are affected alike.
 - **Sentinel-1:** 2021 has both Sentinel-1 satellites, 2024 only Sentinel-1A, so about twice as many Sentinel-1
   scenes per month in the test year.
-- **Cropland mask check:** `mask_frac` and `in_mask` per field (cropland mask of `cropland_extent/make_cropland_mask.py`; fields outside Utah get NaN).
+- **No cropland mask in the labels:** every WRLU field is cropland, so no mask check is made; the cropland mask
+  serves the mapping phase only ([Cropland extent and mask](cropland_mask.md)).

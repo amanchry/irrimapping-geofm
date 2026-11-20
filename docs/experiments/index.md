@@ -1,26 +1,26 @@
 # Experiments
 
-The experiments classify **every 10 m pixel** as irrigated, rainfed or not cropland, so the trained model can produce an annual,
-continuous map of the whole area, not only of the surveyed parcels.
+The experiments classify the **10 m pixels of the surveyed parcels** as irrigated or rainfed, comparing models and
+ways of adapting foundation models; the best model will later produce the annual, continuous maps (where cropland is
+is decided in the mapping phase, [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)).
 
-!!! success "Status: E01–E04 done in both regions; E05 running (Utah)"
-    Results are on the experiment pages; the plan is on the [experiment plan](plan.md) page. E04 covers Prithvi,
-    Clay, TerraMind and AgriFM; Presto and TESSERA are still to be run. Pixel samples: Morocco 2023/24 and 2024/25,
-    Utah 2023/24.
+!!! info "Status: all experiments planned, Morocco first (Utah later)"
+    Redesigned on 20 November 2026: two classes, no cropland mask, earlier 3-class results removed. Code ready and
+    tested; the plan is on the [experiment plan](plan.md) page. Pixel samples: Morocco 2023/24 and 2024/25
+    (473,675 pixels of 8,775 parcels).
 
 ## Experiment list
 
 | ID | Experiment | Input | Model | Status |
 | --- | --- | --- | --- | --- |
-| [E01](E01_s2_pixel_baseline.md) | Sentinel-2 pixel baseline | pixel time series, 12 months × 12 bands | random forest, gradient boosting | ✅ done: cropland macro-F1 0.876 Morocco, 0.729 Utah (RF) |
-| [E02](E02_temporal_nn.md) | Temporal neural network | pixel time series | TempCNN | ✅ done: 0.886 Morocco, 0.721 Utah (not significant) |
-| [E03](E03_utae.md) | U-TAE from scratch | 128 px tiles | U-TAE | ✅ done: 0.897 Morocco (not significant), 0.766 Utah (+0.037 significant) |
-| [E04](E04_frozen_geofm.md) | Frozen GeoFMs + decoder (RQ1) | 128 px tiles | Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + UPerNet | ✅ done (4 of 6 encoders): best 0.900 Morocco (AgriFM, not significant), 0.797 Utah (TerraMind, +0.068 significant) |
+| [E01](E01_s2_pixel_baseline.md) | Sentinel-2 pixel baseline | pixel time series, 12 months × 12 bands | random forest, gradient boosting | planned (1 CPU job) |
+| [E02](E02_temporal_nn.md) | Temporal neural network | pixel time series | TempCNN | planned (1 GPU job) |
+| [E03](E03_utae.md) | U-TAE from scratch | 128 px tiles | U-TAE | planned (1 GPU job) |
+| [E04](E04_frozen_geofm.md) | Frozen GeoFMs + decoder (RQ1) | 128 px tiles | Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + L-TAE + UPerNet | planned (6 GPU jobs) |
 | [Comparison](comparison.md) | all runs of E01–E04 side by side, paired tests (RQ1) | | | |
-| [E05](E05_prithvi_strategies.md) | Prithvi frozen, LoRA, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04) | ⏳ Utah: frozen, fine-tuned and from scratch running; LoRA later |
+| [E05](E05_prithvi_strategies.md) | Prithvi frozen, LoRA, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04) | planned (16 GPU jobs) |
 
-Common set-up, metrics and run order: [experiment plan](plan.md). Data: [pixel samples](../phase1_data/pixel_samples.md),
-[cropland mask](../phase1_data/cropland_mask.md).
+Common set-up, metrics and run order: [experiment plan](plan.md). Data: [pixel samples](../phase1_data/pixel_samples.md).
 
 ## Code
 
