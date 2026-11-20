@@ -56,6 +56,8 @@
     * [Moroccan field survey](references/ouassanouan-2026-morocco-survey.md)
     * [GMIA-NEXT](references/kebede-2026-gmia-next.md)
     * [PANGAEA](references/pangaea.md)
+    * [Prithvi fine-tuning: Tomotaki-Dawoud et al.](references/tomotaki-dawoud-2025-prithvi-finetuning.md)
+    * [TESSERA](references/tessera.md)
     * [PASTIS](references/pastis-utae.md)
     * [L-TAE](references/ltae.md)
     * [IrrMap](references/irrmap.md)

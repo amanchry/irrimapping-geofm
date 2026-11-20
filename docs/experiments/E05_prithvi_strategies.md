@@ -22,7 +22,7 @@ architecture TerraTorch builds with random weights as easily as with pretrained 
 frozen encoder of E03 (cropland macro-F1 0.790 against 0.797 for TerraMind). One encoder keeps the cost at 12 jobs.
 
 The question follows a recent study that fine-tuned Prithvi-EO-2.0 for crop-type mapping of smallholder farms
-(Tomotaki-Dawoud et al. 2025): full fine-tuning gave a macro-F1 of 0.79 against 0.56 for the frozen encoder and 0.63
+([Tomotaki-Dawoud et al. 2025](../references/tomotaki-dawoud-2025-prithvi-finetuning.md)): full fine-tuning gave a macro-F1 of 0.79 against 0.56 for the frozen encoder and 0.63
 from scratch. That study used one validation split, no confidence intervals, three dates of 30 m HLS imagery
 resampled to 0.5 m, and 601 parcels. E05 repeats the comparison with spatial cross-validation, block-bootstrap
 confidence intervals and paired tests, 12 monthly composites of 10 m Sentinel-2, and a label-share curve.
