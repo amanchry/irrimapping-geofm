@@ -42,13 +42,25 @@ Cropland pixels outside the surveyed parcels are not used: their class is unknow
 
 | File | Content |
 | --- | --- |
-| `pixels_X.npy` | int16 [pixels, 12 months, 19 bands]: the bands of the tile store (12 Sentinel-2 bands, clear-observation count, Sentinel-1 VV / VH and scene counts per orbit), NODATA −32768 |
+| `pixels_X.npy` | int16 [pixels, 12 months, 19 bands]: the bands of the tile store (12 Sentinel-2 bands, clear-observation count, Sentinel-1 VV / VH and scene counts per orbit), NODATA −32768; the experiments use the Sentinel-2 bands only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
 | `pixels.parquet` | one row per pixel, same order: `label`, `class_name`, `parcel_idx`, `parcel_id`, `fold`, `block_id`, `zone`, `tile_id`, `row`, `col`, `x`, `y` (UTM pixel centre), `lon`, `lat`, `edge`, `edge_fallback`, `mask_cropland`, `mask_votes` |
 | `summary.csv` | pixels and parcels per class and fold |
 | `samples_info.json` | settings, band order, class codes, CRS |
 
 
-## Morocco 2023/24
+## Sample sets
+
+| Region | Year | Pixels | Irrigated (parcels) | Rainfed (parcels) | Not cropland (tiles) | Of which fold −1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Morocco | 2023/24 | 402,756 | 336,211 (6,183) | 31,671 (698) | 34,874 (455) | 97 |
+| Morocco | 2024/25 | 119,369 | 83,672 (1,396) | 22,121 (498) | 13,576 (158) | 25 |
+| Utah | 2023/24 | 656,081 | 394,064 (4,998) | 75,559 (1,013) | 186,458 (1,911) | 1,699 |
+
+Counts from `summary.csv` of each set. The experiments leave out the pixels of fold −1: Morocco pools both years
+(522,003 pixels in 2,230 tiles), Utah 2023/24 gives 654,382 pixels in 2,405 tiles
+([E01](../experiments/E01_s2_pixel_baseline.md), [E03](../experiments/E03_frozen_geofm.md)).
+
+### Morocco 2023/24 in detail
 
 402,756 pixels (184 MB): 336,211 irrigated from 6,183 parcels, 31,671 rainfed from 698 parcels and 34,874 not
 cropland from 455 tiles.
@@ -79,6 +91,7 @@ parcel pixels lie outside the cropland mask. Median NDVI: irrigated peaks at 0.7
 
 | Region | Year | Status |
 | --- | --- | --- |
-| Morocco | 2023/24 | ✅ done (local) |
-| Morocco | 2024/25 | on the cluster |
-| Utah | 2023/24, 2020/21 | on the cluster (the Utah tile images are on the cluster) |
+| Morocco | 2023/24 | ✅ done; used in E01–E04 |
+| Morocco | 2024/25 | ✅ done; used in E01–E04 (pooled with 2023/24) |
+| Utah | 2023/24 | ✅ done; used in E01–E05 |
+| Utah | 2020/21 | prepared for the temporal test (RQ3); not yet built |

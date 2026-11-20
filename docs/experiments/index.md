@@ -1,9 +1,9 @@
 # Experiments
 
-The experiments classify **every 10 m pixel** as irrigated or rainfed, so the trained model can produce an annual,
+The experiments classify **every 10 m pixel** as irrigated, rainfed or not cropland, so the trained model can produce an annual,
 continuous map of the whole area, not only of the surveyed parcels.
 
-!!! success "Status: E01–E04 done in both regions"
+!!! success "Status: E01–E04 done in both regions; E05 running (Utah)"
     Results are on the experiment pages; the plan is on the [experiment plan](plan.md) page. E03 covers Prithvi,
     Clay, TerraMind and AgriFM; Presto and TESSERA are still to be run. Pixel samples: Morocco 2023/24 and 2024/25,
     Utah 2023/24.
@@ -16,9 +16,7 @@ continuous map of the whole area, not only of the surveyed parcels.
 | [E02](E02_temporal_nn.md) | Temporal neural networks | pixel time series | TempCNN, L-TAE | ✅ done: L-TAE 0.890 Morocco, 0.741 Utah (+0.01, not significant) |
 | [E03](E03_frozen_geofm.md) | Frozen GeoFMs + decoder (RQ1) | 128 px tiles | Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + UPerNet | ✅ done (4 of 6 encoders): best 0.900 Morocco (AgriFM, not significant), 0.797 Utah (TerraMind, +0.068 significant) |
 | [E04](E04_utae.md) | U-TAE from scratch | 128 px tiles | U-TAE | ✅ done: 0.897 Morocco (not significant), 0.766 Utah (+0.037 significant) |
-| [E05](E05_prithvi_strategies.md) | Prithvi frozen, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E03) | ⏳ code ready, Utah not run yet |
-
-Fine-tuning with LoRA (low-rank adapters) is not part of E05; `add_lora` in `tile_common.py` is ready for a later run.
+| [E05](E05_prithvi_strategies.md) | Prithvi frozen, LoRA, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E03) | ⏳ Utah: frozen, fine-tuned and from scratch running; LoRA later |
 
 Common set-up, metrics and run order: [experiment plan](plan.md). Data: [pixel samples](../phase1_data/pixel_samples.md),
 [cropland mask](../phase1_data/cropland_mask.md).

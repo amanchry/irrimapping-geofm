@@ -32,7 +32,7 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 | | Paper | Venue | Why it matters here | Summary |
 | --- | --- | --- | --- | --- |
 | ★ | Marsocci, V., et al. (2024). [PANGAEA: a global and inclusive benchmark for geospatial foundation models](https://arxiv.org/abs/2412.04204) | arXiv | frozen-encoder protocol; L-TAE for time series; GeoFMs vs supervised baselines | [📄](pangaea.md) |
-| ★ | Tong, X.-Y., & Wang, S. (2025). [Invariant features for global crop type classification](https://arxiv.org/abs/2509.03497) | arXiv | GeoFM embeddings vs temporal CNNs under geographic shift (RQ4) | [📄](tong-wang-2025.md) |
+| ★ | Tong, X.-Y., & Wang, S. (2025). [Invariant features for global crop type classification](https://arxiv.org/abs/2509.03497) | arXiv | GeoFM embeddings vs temporal CNNs under geographic shift (second study area, RQ4; D13) | [📄](tong-wang-2025.md) |
 | ✓ | Butsko, C., Van Tricht, K., Tseng, G., et al. (2025). [Deploying geospatial foundation models in the real world: lessons from WorldCereal](https://arxiv.org/abs/2508.00858) | arXiv | operational GeoFM crop mapping; fine-tuned vs frozen | |
 | ✓ | Marti-Escofet, F., Blumenstiel, B., Scheibenreif, L., Fraccaro, P., & Schindler, K. (2025). [Fine-tune smarter, not harder: parameter-efficient fine-tuning for geospatial foundation models](https://arxiv.org/abs/2504.17397) | arXiv | LoRA and other PEFT methods (RQ2) | |
 | ✓ | van der Plas, T. L., et al. (2026). [Better together: evaluating the complementarity of Earth embedding models](https://arxiv.org/abs/2605.18667) | arXiv | embedding fusion (RQ5) | |
@@ -54,7 +54,7 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 | ✓ | Thenkabail, P. S., et al. (2009). [Global irrigated area map (GIAM), derived from remote sensing](https://doi.org/10.1080/01431160902800928) | IJRS 30(14) | global irrigation map | |
 | ✓ | Gao, Q., Zribi, M., Escorihuela, M. J., Baghdadi, N., & Quintana Seguí, P. (2018). [Irrigation mapping using Sentinel-1 time series at field scale](https://doi.org/10.3390/rs10091495) | Remote Sensing 10(9) | Sentinel-1 irrigation mapping; RBF SVM | |
 | ✓ | Elwan, E., Le Page, M., Jarlan, L., et al. (2022). [Irrigation mapping on two contrasted climatic contexts using Sentinel-1 and Sentinel-2 data](https://doi.org/10.3390/w14050804) | Water 14(5) | Sentinel-1/2 irrigation mapping incl. Morocco; SVM | |
-| ★ | Kebede, E. A., et al. (2026). [GMIA-NEXT: next-generation global map of irrigated areas](https://doi.org/10.21203/rs.3.rs-10085674/v1) | Research Square (preprint); maps and points on Zenodo | independent test points (RQ4, Phase 5); comparison map | [📄](kebede-2026-gmia-next.md) |
+| ★ | Kebede, E. A., et al. (2026). [GMIA-NEXT: next-generation global map of irrigated areas](https://doi.org/10.21203/rs.3.rs-10085674/v1) | Research Square (preprint); maps and points on Zenodo | independent comparison points for the maps (Phase 5); comparison map | [📄](kebede-2026-gmia-next.md) |
 | ✓ | Van Tricht, K., et al. (2023). [WorldCereal: a dynamic open-source system for global-scale, seasonal, and reproducible crop and irrigation mapping](https://doi.org/10.5194/essd-15-5491-2023) | ESSD 15 | operational crop and irrigation mapping | |
 | ✓ | Bazzi, H., et al. (2019). [Mapping irrigated areas using Sentinel-1 time series in Catalonia, Spain](https://doi.org/10.3390/rs11151836) | Remote Sensing 11(15) | 1D-CNN > RF for irrigated mapping | |
 | ✓ | Guemouria, Y., Hammani, A., & Bouignane, A. (2023). [Opportunities and challenges of irrigation in Morocco, Spain, and India](https://doi.org/10.1002/wwp2.12148) | World Water Policy 9(4) | Moroccan irrigation context | |
@@ -68,10 +68,10 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 
 | | Paper | Venue | Why it matters here | Summary |
 | --- | --- | --- | --- | --- |
-| ★ | Garnot, V. S. F., & Landrieu, L. (2021). [Panoptic segmentation of satellite image time series with convolutional temporal attention networks (PASTIS, U-TAE)](https://arxiv.org/abs/2107.07933) | ICCV 2021 | fold rotation (3 / 1 / 1); tile design; U-TAE baseline | [📄](pastis-utae.md) |
-| ★ | Garnot, V. S. F., & Landrieu, L. (2020). [Lightweight temporal self-attention for classifying satellite images time series (L-TAE)](https://arxiv.org/abs/2007.00586) | AALTD, ECML-PKDD | the L-TAE pipeline (E04) | [📄](ltae.md) |
+| ★ | Garnot, V. S. F., & Landrieu, L. (2021). [Panoptic segmentation of satellite image time series with convolutional temporal attention networks (PASTIS, U-TAE)](https://arxiv.org/abs/2107.07933) | ICCV 2021 | fold rotation (3 / 1 / 1); tile design; U-TAE baseline (E04) | [📄](pastis-utae.md) |
+| ★ | Garnot, V. S. F., & Landrieu, L. (2020). [Lightweight temporal self-attention for classifying satellite images time series (L-TAE)](https://arxiv.org/abs/2007.00586) | AALTD, ECML-PKDD | pixel L-TAE (E02) and the temporal head of the tile models (E03, E05); E04 is U-TAE | [📄](ltae.md) |
 | ✓ | Pelletier, C., Webb, G. I., & Petitjean, F. (2019). [Temporal convolutional neural network for the classification of satellite image time series (TempCNN)](https://doi.org/10.3390/rs11050523) | Remote Sensing 11(5) | pixel-level neural baseline | |
-| ✓ | Garnot, V. S. F., Landrieu, L., Giordano, S., & Chehata, N. (2020). [Satellite image time series classification with pixel-set encoders and temporal self-attention (PSE-TAE)](https://arxiv.org/abs/1911.07757) | CVPR 2020 | parcel-level neural baseline | |
+| ✓ | Garnot, V. S. F., Landrieu, L., Giordano, S., & Chehata, N. (2020). [Satellite image time series classification with pixel-set encoders and temporal self-attention (PSE-TAE)](https://arxiv.org/abs/1911.07757) | CVPR 2020 | parcel-level neural baseline (archived parcel-wise baseline, E05 of the archive) | |
 | ✓ | Rußwurm, M., Pelletier, C., Zollner, M., Lefèvre, S., & Körner, M. (2020). [BreizhCrops: a time series dataset for crop type mapping](https://arxiv.org/abs/1905.11893) | ISPRS Archives | benchmark of LSTM / Transformer / TempCNN | |
 | ○ | Sykas, D., Sdraka, M., Zografakis, D., & Papoutsis, I. (2022). A Sentinel-2 multiyear, multicountry benchmark dataset for crop classification and segmentation with deep learning (Sen4AgriNet) | IEEE JSTARS 15 | tile design | |
 | ○ | Kerner, H., et al. (2025). Fields of The World: a machine learning benchmark dataset for global agricultural field boundary segmentation | AAAI 2025 | tile design | |
@@ -85,7 +85,7 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 | ✓ | Kattenborn, T., et al. (2022). [Spatially autocorrelated training and validation samples inflate performance assessment of convolutional neural networks](https://doi.org/10.1016/j.ophoto.2022.100018) | ISPRS Open J. Photogramm. Remote Sens. 5 | same for deep models | |
 | ✓ | Foody, G. M. (2009). [Classification accuracy comparison: hypothesis tests and the use of confidence intervals](https://doi.org/10.1016/j.rse.2009.03.014) | Remote Sensing of Environment 113 | paired differences with CIs | |
 | ✓ | Holm, S. (1979). A simple sequentially rejective multiple test procedure | Scandinavian Journal of Statistics 6 | multiple-test correction | |
-| ✓ | Varma, S., & Simon, R. (2006). [Bias in error estimation when using cross-validation for model selection](https://doi.org/10.1186/1471-2105-7-91) | BMC Bioinformatics 7 | nested cross-validation (E01) | |
+| ✓ | Varma, S., & Simon, R. (2006). [Bias in error estimation when using cross-validation for model selection](https://doi.org/10.1186/1471-2105-7-91) | BMC Bioinformatics 7 | nested cross-validation ([archived parcel-wise E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/index.md)) | |
 | ✓ | Valavi, R., Elith, J., Lahoz-Monfort, J. J., & Guillera-Arroita, G. (2019). [blockCV: an R package for generating spatially or environmentally separated folds for k-fold cross-validation of species distribution models](https://doi.org/10.1111/2041-210X.13107) | Methods Ecol. Evol. 10(2) | same principle as the spatial folds | |
 | ✓ | Schratz, P., Muenchow, J., Iturritxa, E., Richter, J., & Brenning, A. (2019). [Hyperparameter tuning and performance assessment of statistical and machine-learning algorithms using spatial data](https://doi.org/10.1016/j.ecolmodel.2019.06.002) | Ecol. Model. 406 | spatial folds for tuning as well as testing | |
 | ✓ | Karasiak, N., Dejoux, J.-F., Monteil, C., & Sheeren, D. (2022). [Spatial dependence between training and test sets: another pitfall of classification accuracy assessment in remote sensing](https://doi.org/10.1007/s10994-021-05972-1) | Machine Learning 111 | random CV overstates accuracy in remote sensing | |
@@ -99,4 +99,5 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 
 - [Heads and mapping: what GeoFM crop studies use](heads-and-mapping.md) — classifier heads on frozen embeddings,
   neural baselines, and what wall-to-wall mapping requires (basis of
-  [decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).
+  [decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model), superseded by
+  [D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps): every pixel is classified).

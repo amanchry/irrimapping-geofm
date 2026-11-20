@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 # E02 · Frozen GeoFMs + PCA + classical classifiers — report
 
 > **Answer.** Only in Utah, and only with some heads. In Morocco, Clay, Prithvi and TerraMind match the Sentinel-2

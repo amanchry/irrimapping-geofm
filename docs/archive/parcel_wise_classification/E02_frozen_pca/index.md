@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 
 *Main table of RQ1: frozen embeddings of four GeoFMs vs Sentinel-2 features, 12 months concatenated and reduced by PCA, classified by logistic regression, random forest and SVM, in Morocco and Utah.*
 
@@ -45,7 +45,7 @@ Every method choice of this experiment and the paper it comes from (full list: [
 ## Question
 Do frozen foundation-model embeddings separate irrigated from rainfed parcels better than Sentinel-2 features,
 with the same parcels, folds and classifiers, under the **final validation design**? (Q1 of the
-[experiment plan](../../../phase2_models/experiment_plan.md#4-design-what-is-varied))
+[experiment plan](../experiment_plan.md#4-design-what-is-varied))
 
 ## Why
 E01 used nested spatial CV. The study now uses the PASTIS rotation for every model (classifiers and, later,
@@ -65,12 +65,12 @@ neural networks), so they are trained, tuned and tested in exactly the same way
 | Regions | Morocco | Morocco and Utah 2023/24, analysed separately |
 
 Temporal aggregation (concat + PCA 128), grids and metrics are unchanged; see the
-[evaluation protocol](../../../phase2_models/evaluation.md) and the [experiment plan](../../../phase2_models/experiment_plan.md#e02--pca--classical-classifiers).
+[evaluation protocol](../evaluation_protocol.md) and the [experiment plan](../experiment_plan.md#e02--pca--classical-classifiers).
 
 ## Label efficiency (part of this experiment)
 
 Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
-to the main result (Q5 of the [experiment plan](../../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+to the main result (Q5 of the [experiment plan](../experiment_plan.md#6-label-efficiency-inside-e02e05)).
 
 | Setting | Value |
 | --- | --- |

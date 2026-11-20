@@ -161,7 +161,7 @@ def lora_png():
     block(ax, 1.6, 0.55, ADDED, "A\nr × 1024", w=1.0, h=0.9, fs=8.5, tc="white")
     block(ax, 3.1, 0.55, ADDED, "B\n3072 × r", w=1.0, h=0.9, fs=8.5, tc="white")
     arrow(ax, 2.6, 1.0, 3.1, 1.0)
-    ax.text(3.85, 0.25, "r = 8:  8 × (1024 + 3072) = 32,768 weights (1% of W)", ha="center", fontsize=8,
+    ax.text(3.85, 0.25, "r = 16:  16 × (1024 + 3072) = 65,536 weights (2% of W)", ha="center", fontsize=8,
             color=ADDED)
     arrow(ax, 4.85, 3.0, 5.9, 2.15)
     arrow(ax, 4.15, 1.0, 5.9, 1.85, "× α / r")

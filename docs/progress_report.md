@@ -4,16 +4,21 @@ Where the research stands against the [research plan](research_plan.md) and the 
 finished, what came out, what is next and what is still open. Every individual change is in the
 [change log](progress.md).
 
-*Last updated: 6 November 2026*
+*Last updated: 20 November 2026*
 
 ## Summary
 
-The **dataset is complete**: 8,781 field-surveyed parcels with Sentinel-1/2 time series of their agricultural year,
-five spatial folds and a shared tile store. **Embeddings of all four foundation models** are computed. The **first
-RQ1 experiment** shows that no frozen foundation model beats a well-designed Sentinel-1/2 baseline on average
-(macro-F1 0.910 for the best pair vs 0.906), while Clay and Prithvi hold up better in the hardest region. The main RQ1
-run with the final validation design is ready, and a second way of combining the months (L-TAE) is planned. The
-experiment setup, documentation and website are in place, so every result can be rerun and traced.
+The study now classifies **every 10 m pixel** as irrigated, rainfed or not cropland, so that the trained model can
+map the whole cropland area ([D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); the earlier
+parcel-wise experiments are [archived](archive/index.md). Both study areas are ready: **Morocco** (2023/24 and
+2024/25) and **Utah** (2023/24), with a cropland mask, labelled pixel samples and five spatial folds each.
+
+**RQ1 is answered for four of the six foundation models** (E01–E04). In Morocco every model reaches a cropland
+macro-F1 between 0.876 and 0.900 and no difference is significant. In Utah the frozen foundation models are clearly
+better: TerraMind 0.797 against 0.729 for the random forest and 0.766 for U-TAE. **RQ2 has started:** E05 compares
+Prithvi frozen, fully fine-tuned and trained from scratch with 10–100% of the labelled parcels (running on the
+cluster); LoRA follows as a fourth strategy. Wall-to-wall Sentinel-2 composites for the maps are being downloaded
+from STAC.
 
 ## Timeline
 
@@ -22,19 +27,21 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
     section 1 · Data
-    Dataset Morocco (labels, folds, tile store) :done,   d1, 2026-09-01, 2026-10-31
+    Morocco dataset (labels, folds, tiles)      :done,   d1, 2026-09-01, 2026-10-31
+    Utah dataset, cropland masks, pixel samples :done,   d2, 2026-11-06, 2026-11-19
+    STAC Sentinel-2 download (maps)             :active, d3, 2026-11-19, 2026-12-15
     section 2 · Model evaluation
-    RQ1 · baseline + embeddings                 :done,   r1, 2026-10-01, 2026-11-05
-    RQ1 · E01 PCA, nested CV                    :done,   r2, 2026-10-28, 2026-11-05
-    RQ1 · E02 PCA, PASTIS                       :active, r3, 2026-11-06, 2026-11-20
-    RQ1 · E04 L-TAE                             :        r4, 2026-11-13, 2026-11-30
-    RQ2 · LoRA + segmentation head              :        f1, 2026-11-20, 2026-12-31
+    Parcel-wise RQ1 (archived)                  :done,   r1, 2026-10-01, 2026-11-18
+    RQ1 · pixel-wise E01–E04                    :done,   r2, 2026-11-18, 2026-11-20
+    RQ1 · E03 Presto, TESSERA                   :        r3, 2026-11-23, 2026-12-04
+    RQ2 · E05 frozen / fine-tuned / scratch     :active, f1, 2026-11-20, 2026-12-04
+    RQ2 · E05 LoRA                              :        f2, 2026-12-01, 2026-12-15
     section 4 · Fusion (optional)
     RQ5 · multi-model fusion                    :        u1, 2026-12-15, 2027-01-31
     section 3 · Transferability
-    RQ3 / RQ4 · temporal test, Utah             :        t1, 2027-02-01, 2027-03-15
+    RQ3 / RQ4 · temporal and spatial test       :        t1, 2027-02-01, 2027-03-15
     section 5 · Annual maps
-    Maps 2021–2025                              :        m1, 2027-03-01, 2027-03-31
+    Maps and map accuracy                       :        m1, 2027-03-01, 2027-03-31
     section 6 · Synthesis
     Analysis and writing                        :        w1, 2027-04-01, 2027-05-31
     Submission                                  :milestone, w2, 2027-06-15, 0d
@@ -44,15 +51,15 @@ gantt
 
 | Phase | Work package | Planned | Status | Output |
 | --- | --- | --- | --- | --- |
-| 1 | Data acquisition, ML-ready dataset | Sep 2026 | ✅ done | [Phase 1](phase1_data/overview.md) |
-| 2 | Sentinel-based baseline | Sep 2026 | ✅ done | baseline in [E01](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) |
-| 2 | Foundation-model embeddings | Sep – Oct 2026 | ✅ done (AgriFM scaling to confirm) | [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md) |
-| 2 | Frozen-encoder experiments (RQ1) | Sep – Oct 2026 | ⏳ E01 done · E02 running · E04 planned | [Experiments](archive/parcel_wise_classification/index.md) |
-| 2 | Parameter-efficient fine-tuning, LoRA (RQ2) | Nov – Dec 2026 | 📝  | [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
-| 4 | Full fine-tuning, multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
+| 1 | Data acquisition, ML-ready dataset (Morocco, Utah) | Sep – Nov 2026 | ✅ done | [Phase 1](phase1_data/overview.md) |
+| 1 | Cropland mask and pixel samples | Nov 2026 | ✅ done | [Cropland mask](phase1_data/cropland_mask.md), [Pixel samples](phase1_data/pixel_samples.md) |
+| 2 | Parcel-wise RQ1 benchmark | Sep – Nov 2026 | ✅ done, archived | [Archive](archive/index.md) |
+| 2 | Pixel-wise RQ1 experiments E01–E04 | Nov 2026 | ✅ done (E03: 4 of 6 encoders; Presto, TESSERA to run) | [RQ1 · Experiment plan](phase2_models/experiment_plan.md) |
+| 2 | Fine-tuning (RQ2): E05 frozen / LoRA / full fine-tuning / from scratch | Nov – Dec 2026 | ⏳ 12 jobs running, LoRA later | [E05](experiments/E05_prithvi_strategies.md), [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
+| 4 | Multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
-| 3 | Temporal and spatial transferability (RQ3, RQ4) | Feb – Mar 2027 | 🔄 Utah dataset in preparation ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | [Phase 3](phase3_transfer/index.md) |
-| 5 | Annual irrigated maps 2021–2025 | Mar 2027 | 📝 | [Phase 5](phase5_maps/index.md) |
+| 3 | Temporal and spatial transferability (RQ3, RQ4) | Feb – Mar 2027 | 📝 Utah 2020/21 labels prepared for the temporal test | [Phase 3](phase3_transfer/index.md) |
+| 5 | Annual irrigated maps | Mar 2027 | 🔄 STAC composites: Utah 2023/24 94% downloaded | [Phase 5](phase5_maps/index.md) |
 | 6 | Analysis, writing, revision | Apr – May 2027 | 📝 | |
 | 6 | Submission | Jun 2027 | 📝 | |
 
@@ -60,39 +67,49 @@ gantt
 
 | Area | What | Where |
 | --- | --- | --- |
-| Labels | 8,781 cropland parcels (7,585 irrigated, 1,196 rainfed), each with its own agricultural year (2023/24 or 2024/25) | [Dataset §4](phase1_data/morocco.md) |
-| Validation design | 5 spatial folds of 20 km blocks; PASTIS rotation (3 train / 1 validation / 1 test) | [Protocol §2](phase2_models/evaluation.md#2-spatial-splits) |
-| Image store | 2,987 non-overlapping 128 px tiles, 12 monthly composites × 19 bands (Sentinel-2 with Cloud Score+, Sentinel-1) | [Dataset §6](phase1_data/morocco.md) |
-| Model inputs | parcel features (baseline) and patch-aligned 64 px chips for the foundation models | [Dataset §7](phase1_data/morocco.md) |
-| Embeddings | Clay v1.5, Prithvi-EO-2.0, TerraMind, AgriFM for every parcel and month | [Models pipeline](phase2_models/frozen_encoders.md) |
-| First RQ1 result | E01: four classifiers on every input, block-bootstrap confidence intervals | [E01 report](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) |
-| Reproducibility | every result from a config file; reports generated; documentation website | [Experiments](archive/parcel_wise_classification/index.md) |
-| Literature | GeoFM heads, neural baselines, mapping requirements; reference list | [Reference papers](references/index.md) |
-| Transfer data | US state datasets checked: eastern Washington and Utah have irrigated and dryland fields | [Data sources](data_source/index.md) |
+| Labels | Morocco: 8,781 surveyed parcels (7,585 irrigated, 1,196 rainfed), 2023/24 and 2024/25. Utah: 6,013 WRLU 2024 fields (5,000 irrigated, 1,013 rainfed); 2021 for the temporal test | [Morocco](phase1_data/morocco.md), [Utah](phase1_data/utah.md) |
+| Cropland mask | union of four products, third class "not cropland" | [Cropland mask](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class) |
+| Pixel samples | inner pixels of the parcels (≤ 100 per parcel) and not-cropland pixels; Utah 654,382 labelled pixels in 2,405 tiles | [Pixel samples](phase1_data/pixel_samples.md) |
+| Validation design | 5 spatial folds of 20 km blocks; PASTIS rotation (3 train / 1 validation / 1 test); every model scored on the same out-of-fold pixels | [Experiment plan](experiments/plan.md) |
+| Experiments E01–E04 | random forest, TempCNN, L-TAE, U-TAE and four frozen GeoFMs + L-TAE + UPerNet, both regions | [Experiments](experiments/index.md) |
+| E05 | Prithvi frozen / LoRA / full fine-tuning / from scratch, 10–100% of the parcels; code tested, 12 jobs running | [E05](experiments/E05_prithvi_strategies.md) |
+| STAC download | monthly Sentinel-2 composites of every cropland tile from Earth Search; Utah 2023/24: 17,278 of 18,472 tiles | [`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download) |
+| Parcel-wise benchmark | frozen GeoFM embeddings + classifiers, E01–E05 of that set-up; kept as the archive | [Archive](archive/index.md) |
+| Literature | GeoFM fine-tuning strategies, reference pages | [Reference papers](references/index.md), [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 
 ## Key results
 
-| Experiment | Result |
-| --- | --- |
-| [E01](archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) · frozen GeoFMs + PCA, nested CV | No GeoFM beats the S1/S2 baseline after correcting for multiple tests (best Clay + SVM 0.910 vs baseline + SVM 0.906). Linear probe: TerraMind and Clay equal the baseline. AgriFM is behind. In the hardest fold (rainfed in Doukkala and Souss) the baseline drops to 0.80 while Clay and Prithvi stay higher. |
+Cropland macro-F1 (mean F1 of irrigated and rainfed), out of fold; "significant" means against the random forest
+(95% block-bootstrap CI excludes 0 and Holm-corrected p < 0.05; details on the experiment pages):
 
-All results: [Results](archive/parcel_wise_classification/results.md).
+| Experiment | Morocco | Utah |
+| --- | --- | --- |
+| [E01](experiments/E01_s2_pixel_baseline.md) · random forest | 0.876 | 0.729 |
+| [E02](experiments/E02_temporal_nn.md) · L-TAE (pixel) | 0.890 (not significant) | 0.741 (not significant) |
+| [E04](experiments/E04_utae.md) · U-TAE from scratch | 0.897 (not significant) | 0.766 (significant) |
+| [E03](experiments/E03_frozen_geofm.md) · best frozen GeoFM | 0.900 AgriFM (not significant) | 0.797 TerraMind (significant) |
+
+- **Morocco:** all models within 0.876–0.900; no foundation model differs significantly from the random forest or
+  U-TAE.
+- **Utah:** the four frozen foundation models beat the random forest by 0.055–0.068; spatial context (U-TAE) adds
+  +0.037 over the random forest.
+
+All results: [Results](results.md).
 
 ## Next steps
 
-1. Run [E02](archive/parcel_wise_classification/E02_frozen_pca/index.md): the main RQ1 result.
-2. Confirm AgriFM's input normalisation; re-embed if needed.
-3. Write the L-TAE pipeline (`parcelwise_run/07c_train_ltae.py`) and run [E04](archive/parcel_wise_classification/E04_frozen_ltae/index.md).
-4. Results per region and per season from the out-of-fold predictions.
-5. Start RQ2: segmentation head (UPerNet) and LoRA fine-tuning; neural baselines TempCNN and U-TAE.
+1. **E05:** collect the 12 running jobs, run `report.py`, write the results; then the 4 LoRA jobs.
+2. **E03 with Presto and TESSERA** in both regions; rerun the comparison table and paired tests.
+3. **STAC download:** rerun the 78 missing Utah blocks; Morocco 2023/24 and 2024/25.
+4. **RQ3 temporal test** (Utah 2020/21) with the best models; then the maps and the map accuracy sample.
 
 ## Open points and risks
 
 | Point | Why it matters | Next action |
 | --- | --- | --- |
-| AgriFM pixel scale (its config mean ~4,180 vs ~1,100 in Earth Engine Sentinel-2) | AgriFM may be under-rated in E01 | check the scale its weights expect |
-| Prithvi pretrained on 30 m HLS, used at 10 m | possible handicap | state it; optional 30 m test |
-| Neighbouring fields inside a chip | mixed patches for small parcels | accuracy by parcel size; optional masked-chip test |
-| Region and year partly confounded | a "hard region" may be a "hard year" | per-year results; year test within Doukkala / El Haouz |
-| Second region (RQ4) | Tunisia has only 10 rainfed reference points | decided: Utah as an independent second study area with its own labels ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)); wording of RQ3 / RQ4 to agree with the supervisors |
-| Wall-to-wall mapping (RQ3) | parcel pooling needs polygons | segmentation head and pixel models ([D11](decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)) |
+| Prithvi pretrained on 30 m HLS, used at 10 m | its frozen features may be handicapped, so fine-tuning may gain more than for other encoders | stated in E05; compare with the other encoders' frozen scores |
+| Decoder choice | Marti-Escofet et al. (2025) found UNet better than UPerNet for fine-tuned GeoFMs | keep UPerNet for comparability with PANGAEA; optional UNet check |
+| No tuning per fine-tuning strategy | a strategy may be favoured by its settings | stated in E05; small learning-rate check if the differences are small |
+| Validation complete at low label shares | low-share scores slightly optimistic for every strategy | stated in E05 |
+| Region and year partly confounded in Morocco | a "hard region" may be a "hard year" | per-year results |
+| Morocco differences not significant | wide CIs (0.09–0.14) from few, large spatial blocks | report CIs; rely on Utah for the clearer contrasts |

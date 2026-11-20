@@ -27,10 +27,15 @@ cropland, compared with Sentinel features and tested across years and regions.
   irrigated fields — attributed to different irrigation regimes, phenology and management.
 
 ## What this research takes from it
-- Several classifier heads on frozen embeddings, as in our parcel benchmark ([E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md)).
-- A warning for RQ4: temporal transfer can be stable while spatial transfer fails; the transfer region must be close
-  in irrigation practice ([decision D10](../decisions.md#d10-transfer-region-under-review)).
+- Several classifier heads on frozen embeddings, as in the archived parcel-wise benchmark
+  ([archived E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md)).
+- A warning on spatial transfer: temporal transfer can be stable while transfer to another region fails. This
+  research therefore trains and tests each region on its own labels, with Utah as an independent second study area
+  instead of a zero-shot transfer region ([decision D13](../decisions.md#d13-utah-as-a-second-independent-study-area)),
+  and tests temporal transfer in Utah (RQ3).
 
 ## Differences and limitations
 - Two temperate regions and two to three years only; the contribution of each AlphaEarth input source cannot be separated.
-- Pixel-level task; this research classifies parcels and compares four open GeoFMs against a Sentinel baseline.
+- Pixel-level task, like this research, which classifies every 10 m pixel
+  ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)) and compares six open GeoFMs against
+  Sentinel-2 baselines.

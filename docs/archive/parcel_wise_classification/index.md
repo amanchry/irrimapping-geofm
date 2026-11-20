@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../experiments/index.md). About the archive: [Archive](../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../experiments/index.md). About the archive: [Archive](../index.md).
 
 Every reported result is produced by an **experiment**: a self-contained folder that records the research question,
 the complete configuration and the outputs. Each experiment can be re-run from its configuration file and
@@ -23,7 +23,7 @@ reproduces the reported result.
 
 <!-- AUTO:INDEX:END -->
 
-The experiments of RQ1 follow the [RQ1 experiment plan](../../phase2_models/experiment_plan.md): E02 (PCA + LogReg / RF /
+The experiments of RQ1 follow the [RQ1 experiment plan](experiment_plan.md): E02 (PCA + LogReg / RF /
 SVM), E03 (PCA + MLP), E04 (L-TAE + MLP) and E05 (PSE-TAE from scratch), each in Morocco and
 Utah. Every experiment E02–E05 also includes the **label-efficiency** runs (10, 25 and 50% of the training blocks),
 so its report shows a learning curve next to the main result. Ablations A1–A5 are short runs that change one setting of these experiments; their results appear in the report
@@ -106,7 +106,7 @@ flowchart LR
 
 Because both pipelines write the same `oof_predictions.csv`, the comparison and the report need no change. E04 also
 lists the E02 runs under `compare: EXTRA_RUNS`, so PCA and L-TAE are compared on the same parcels and the same
-bootstrap draws. Details: [evaluation protocol §5](../../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
+bootstrap draws. Details: [evaluation protocol §5](evaluation_protocol.md#5-temporal-aggregation-two-pipelines).
 
 ## Start a new experiment
 

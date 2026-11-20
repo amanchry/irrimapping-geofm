@@ -12,8 +12,7 @@ therefore uses a pixel-level model that serves both as the fine-tuning experimen
 | Component | Description | Where |
 | --- | --- | --- |
 | Frozen encoder + segmentation head | each GeoFM with an L-TAE over the months and a UPerNet head trained on the labelled pixels of the tiles, as in PANGAEA | [E03](../experiments/E03_frozen_geofm.md) |
-| Full fine-tuning and training from scratch | Prithvi-EO-2.0 with the same head: frozen, fully fine-tuned, or trained from random weights, with 10–100% of the training parcels | [E05](../experiments/E05_prithvi_strategies.md) |
-| Parameter-efficient fine-tuning | low-rank adaptation (LoRA) of the encoder with the same head | later (`add_lora` in `tile_common.py`) |
+| Fine-tuning and training from scratch | Prithvi-EO-2.0 with the same head: frozen, LoRA (low-rank adapters), fully fine-tuned, or trained from random weights, with 10–100% of the training parcels | [E05](../experiments/E05_prithvi_strategies.md) |
 | Classical baseline | random forest on the per-pixel Sentinel-2 time series | [E01](../experiments/E01_s2_pixel_baseline.md) |
 | Neural baselines | TempCNN and L-TAE (pixel time series), U-TAE (image time series), trained from scratch | [E02](../experiments/E02_temporal_nn.md), [E04](../experiments/E04_utae.md) |
 
@@ -102,29 +101,31 @@ example masked-patch reconstruction. It brings the features closer to the target
 A linear layer computes W x with a pretrained matrix W (in Prithvi's attention, 1024 → 3072 values). LoRA keeps W
 frozen and adds a second path through two small matrices, A (r × 1024) and B (3072 × r), with a small rank r. Only A
 and B are trained. B starts at zero, so training starts exactly from the pretrained model; after training, B·A can be
-added into W, so the model is as fast as before. With r = 8 on the `qkv` projection of every Prithvi block, LoRA
-trains 24 × 32,768 ≈ 0.79 M weights, about 0.26% of the encoder.
+added into W, so the model is as fast as before. In E05, LoRA has rank 16 on the `qkv` projection and the two MLP
+layers (`fc1`, `fc2`) of every Prithvi block: 24 × (65,536 + 81,920 + 81,920) ≈ 5.5 M weights, about 1.8% of the
+encoder (Marti-Escofet et al. 2025).
 
 ## What this research does
 
 ```mermaid
 flowchart TD
-    A["E03 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Utah<br/>(strategies 1 and 2)"]
-    B --> C{"Does full fine-tuning beat the frozen encoder<br/>(paired CI excludes 0 and Holm p below 0.05)?"}
-    C -- "yes" --> D["Can a cheaper strategy keep the gain?<br/>LoRA (4) and LP-FT (5)"]
-    C -- "no, or only with many labels" --> E["Frozen encoder (or LoRA) for the maps;<br/>full fine-tuning not needed"]
+    A["E03 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs LoRA vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Utah<br/>(strategies 1, 4 and 2)"]
+    B --> C{"Does fine-tuning (LoRA or full) beat the frozen encoder<br/>(paired CI excludes 0 and Holm p below 0.05)?"}
+    C -- "yes" --> D["Cheapest strategy that keeps the gain<br/>(LoRA if it matches full fine-tuning);<br/>optional LP-FT (5)"]
+    C -- "no, or only with many labels" --> E["Frozen encoder for the maps;<br/>fine-tuning not needed"]
     D --> F["Best model → temporal and spatial test (Phase 3) → annual maps (Phase 5)"]
     E --> F
 ```
 
-- **E05 measures the two ends:** strategy 1 (frozen) and strategy 2 (full fine-tuning), plus the same network from
-  random weights, which separates the value of *pretraining* (fine-tuned vs from scratch) from the value of *training
-  the encoder* (fine-tuned vs frozen).
+- **E05 measures the two ends and the middle:** strategy 1 (frozen), strategy 4 (LoRA) and strategy 2 (full
+  fine-tuning), plus the same network from random weights, which separates the value of *pretraining* (fine-tuned vs
+  from scratch) from the value of *training the encoder* (fine-tuned vs frozen), and shows whether a small
+  adaptation (LoRA vs full fine-tuning) is enough.
 - **The label shares** (10–100%) test the claim of several studies that pretraining matters most when labels are few.
-- **LoRA and LP-FT come next** only if E05 shows a gain from training the encoder, to see whether a cheaper strategy
-  keeps it. Continued pretraining (6) is left out: it needs a pretraining run per region.
-- "Fine-tuning" in the results of E05 always means **full fine-tuning with discriminative learning rates**; LoRA runs
-  will be named separately (for example "LoRA, r = 8").
+- **LoRA runs after the other three strategies** (same jobs, later). LP-FT (5) is optional, if E05 shows a gain from
+  training the encoder. Continued pretraining (6) is left out: it needs a pretraining run per region.
+- In E05, "fine-tuned" means **full fine-tuning with discriminative learning rates**; the LoRA runs are named
+  separately ("LoRA": rank 16, α 32, on the `qkv`, `fc1` and `fc2` layers, 5.5 M adapter weights).
 
 ## Papers to read
 
@@ -155,8 +156,8 @@ Science 270. [Summary page](../references/tomotaki-dawoud-2025-prithvi-finetunin
   (test mIoU 68.02 vs 68.14), and both were far above the linear probe (51.55). On held-out regions LoRA generalised
   better (floods: 87.57 vs 82.07). For Clay, LoRA stayed below full fine-tuning. Among decoders, UNet did best and
   UPerNet worst in most settings.
-- **Why read it:** the closest study to our next step (LoRA on Prithvi), from the authors of TerraTorch; the decoder
-  result is relevant to the UPerNet head used here.
+- **Why read it:** the closest study to the LoRA run of E05 (same encoder, same LoRA set-up), from the authors of
+  TerraTorch; the decoder result is relevant to the UPerNet head used here.
 
 ### 3 · Kumar et al. (2022) — why full fine-tuning can hurt (LP-FT)
 
@@ -207,8 +208,8 @@ Science 270. [Summary page](../references/tomotaki-dawoud-2025-prithvi-finetunin
 
 ## Open points
 
-- LoRA rank and target layers: `add_lora` uses r = 8 on the attention `qkv` projection; Marti-Escofet et al. (2025)
-  used r = 16 on query, value and the feed-forward layers.
+- LoRA rank and target layers: E05 follows Marti-Escofet et al. (2025) (rank 16 on attention and feed-forward
+  layers); no search over the rank.
 - Decoder: UPerNet in E03–E05 (as PANGAEA); Marti-Escofet et al. (2025) found a UNet decoder better for fine-tuned
   GeoFMs.
 - Aggregation of the pixel predictions to parcels for a comparison with the parcel-wise results of RQ1.

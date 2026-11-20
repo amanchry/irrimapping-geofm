@@ -2,14 +2,14 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 
 *Exactly the E02 input (12 months → PCA 128) with a trained MLP head instead of the classical classifiers: E02 → E03 isolates the effect of the head.*
 
 | | |
 | --- | --- |
 | **Status** | done (13 Nov 2026), Morocco and Utah |
-| **Research question** | RQ1 — Q2 of the [experiment plan](../../../phase2_models/experiment_plan.md#4-design-what-is-varied) |
+| **Research question** | RQ1 — Q2 of the [experiment plan](../experiment_plan.md#4-design-what-is-varied) |
 | **Builds on** | [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/parcel_wise_classification/E03_frozen_pca_mlp/config.yaml) |
 | **Report** | **[REPORT.md](report.md)** |
@@ -105,7 +105,7 @@ flowchart LR
 ## Label efficiency (part of this experiment)
 
 Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
-to the main result (Q5 of the [experiment plan](../../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+to the main result (Q5 of the [experiment plan](../experiment_plan.md#6-label-efficiency-inside-e02e05)).
 
 | Setting | Value |
 | --- | --- |

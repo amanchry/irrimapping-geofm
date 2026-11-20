@@ -55,10 +55,19 @@ cropland mapping.
 | Objective | Research question |
 | --- | --- |
 | **1 · Compare models and adaptation strategies** in Morocco | **RQ1** What classification accuracy does each foundation model achieve for irrigated cropland mapping across Morocco's agricultural regions, and how does it compare with a conventional Sentinel-based classifier? |
-| | **RQ2** To what extent does parameter-efficient fine-tuning improve on a frozen encoder? |
+| | **RQ2** To what extent does fine-tuning (LoRA or full fine-tuning) improve on a frozen encoder, compared with training from scratch? |
 | **2 · Evaluate temporal and spatial transferability** of the best model | **RQ3** How temporally consistent is the best model across years, and does the annual map series for Morocco (2021–2025) reflect the irrigation trends in national statistics? |
 | | **RQ4** When the Morocco-trained model is applied without retraining to another region, how much does accuracy degrade, and do its annual maps stay consistent? |
 | **3 · Optional extension:** multi-model fusion | **RQ5** Does fusing the embeddings of several foundation models improve on the best single model? |
+
+!!! note "Research questions as proposed"
+    The questions above follow the research proposal; RQ2 is worded as it is now tested. Changes to the design
+    since the proposal are recorded in [Decisions](decisions.md), in particular
+    [D13](decisions.md#d13-utah-as-a-second-independent-study-area) (Utah as an independent second study area
+    instead of a zero-shot transfer region, which changes RQ4),
+    [D14](decisions.md#d14-sentinel-2-only-for-every-input) (Sentinel-2 only as model input) and
+    [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps) (every 10 m pixel is classified, not
+    every parcel). The current phases are described in the [Research plan](research_plan.md).
 
 
 ## Study area and data
@@ -83,34 +92,37 @@ Utah Division of Water Resources), and it also provides the temporal test: model
 | Data | Use |
 | --- | --- |
 | **Field survey**, Ouassanouan et al. (2026): 8,826 georeferenced parcels with crop type, irrigation status and irrigation system (8,781 after cleaning: 7,585 irrigated, 1,196 rainfed) | training and validation in Morocco |
-| **Sentinel-2** multispectral (10 m) and **Sentinel-1** SAR (VV, VH) time series | model input |
+| **Sentinel-2** multispectral (10 m) and **Sentinel-1** SAR (VV, VH) time series | model input in the proposal; every model now uses Sentinel-2 only, Sentinel-1 remains an optional ablation ([D14](decisions.md#d14-sentinel-2-only-for-every-input)) |
 | GMIE, LGRIP30, FAO WaPOR, FAO AQUASTAT | comparison of the maps with existing products and national statistics |
 
 ## Models compared
 
-Four openly available GeoFMs are evaluated: **Prithvi-EO-2.0** (NASA, IBM), **Clay v1.5** (Clay Foundation),
-**TerraMind** (IBM, ESA) and **AgriFM** (Li et al., 2025). They accept multi-temporal Sentinel-1/2 input and together
-represent the principal GeoFM families: masked-autoencoder Vision Transformers, a multimodal generative model and an
-agriculture-specific spatio-temporal model. Architecture, pretraining, configuration and sources are given in
+Six openly available GeoFMs are evaluated: **Prithvi-EO-2.0** (NASA, IBM), **Clay v1.5** (Clay Foundation),
+**TerraMind** (IBM, ESA), **AgriFM** (Li et al., 2025), **Presto** (Tseng et al., 2023) and **TESSERA** (Feng et al.,
+2025). The proposal named the first four; Presto and TESSERA, which encode the time series of a single pixel, were
+added later. Together they represent the principal GeoFM families: masked-autoencoder Vision Transformers, a
+multimodal generative model, an agriculture-specific spatio-temporal model and pixel time-series models. Every model
+receives Sentinel-2 input only ([D14](decisions.md#d14-sentinel-2-only-for-every-input)). Architecture, pretraining, configuration and sources are given in
 [Foundation models](foundation_models.md).
 
 ## Approach
 
 ```mermaid
 flowchart LR
-    A["<b>1 · Data preparation</b><br/>Sentinel-1/2 time series<br/>parcel labels · spatial folds"] --> B["<b>2 · Model evaluation</b><br/>frozen encoders · fine-tuning (LoRA)<br/>vs a Sentinel-based baseline"]
-    B --> C["<b>3 · Annual mapping</b><br/>Morocco 2021–2025<br/>temporal consistency"]
-    C --> D["<b>4 · Transferability</b><br/>zero-shot application<br/>to a data-scarce region"]
-    B -.-> E["<i>optional</i><br/>multi-model fusion"]
+    A["<b>1 · Data preparation</b><br/>Sentinel-2 time series<br/>labelled pixels · spatial folds"] --> B["<b>2 · Model evaluation</b><br/>frozen · LoRA · full fine-tuning · from scratch<br/>vs Sentinel-2 baselines"]
+    B --> C["<b>3 · Temporal and spatial transferability</b><br/>Utah 2024 → 2021<br/>Morocco and Utah"]
+    B -.-> E["<b>4 · Multi-model fusion</b><br/><i>optional</i>"]
+    C --> D["<b>5 · Annual maps</b><br/>Morocco 2021–2025<br/>temporal consistency"]
 ```
 
-How each step is carried out: [Method](phase2_models/overview.md).
+The phases are described in the [Research plan](research_plan.md).
 
 ## Expected outcomes
 
-1. A comprehensive evaluation of four geospatial foundation models for irrigated cropland mapping in North Africa,
+1. A comprehensive evaluation of six geospatial foundation models for irrigated cropland mapping in North Africa,
    against a strong Sentinel-based baseline under spatial validation.
-2. A comparison of frozen-encoder and parameter-efficient fine-tuning strategies for this task.
+2. A comparison of adaptation strategies for this task: frozen encoder, LoRA, full fine-tuning and training from
+   scratch.
 3. Annual irrigated cropland maps for Morocco at 10 m resolution for 2021–2025, checked against national statistics.
 4. An assessment of the temporal consistency of foundation-model predictions across years.
 5. An assessment of how far the best model transfers to a data-scarce region.

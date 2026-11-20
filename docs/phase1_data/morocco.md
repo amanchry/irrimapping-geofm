@@ -1,8 +1,15 @@
 # Morocco training data
 
 This page describes the construction of the **machine-learning-ready dataset for Morocco**: labelled parcels, spatial
-train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and derived
-views for the different model families.
+train / validation / test folds, a common store of monthly Sentinel-1/2 imagery with label rasters, and the
+labelled pixels (irrigated, rainfed, not cropland) from which every pixel-wise experiment starts
+([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)). The models use the Sentinel-2 bands only
+([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
+
+!!! note "Archived: parcel-wise set-up"
+    Parts of this page (the model views A–C of section 7 and their use in section 9) describe the archived
+    parcel-wise set-up. They are kept for reference and marked as archived; see the [Archive](../archive/index.md)
+    and [Parcel-wise classification](../archive/parcel_wise_classification/index.md).
 
 **Contents**
 
@@ -12,7 +19,7 @@ views for the different model families.
 4. [Script 01 — labels](#4-script-01--prepare_labels)
 5. [Script 02 — spatial folds](#5-script-02--make_spatial_folds)
 6. [Script 03 — tile store](#6-script-03--build_tiles)
-7. [Script 04 — model views](#7-script-04--make_views)
+7. [Script 04 — pixel samples (archived: model views)](#7-script-04--pixel-samples)
 8. [Output layout and file formats](#8-output-layout-and-file-formats)
 9. [How to use the dataset](#9-how-to-use-the-dataset)
 10. [Running, settings and run time](#10-running-settings-and-run-time)
@@ -38,12 +45,12 @@ flowchart TD
     SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>03_build_tiles.py</b><br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
     SPLIT -->|"2024/25 · 1,894 parcels<br/>imagery Sep 2024 – Aug 2025"| S03
     GEE --> S03
-    S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_views.py</b><br/>cut every model input from the same pixels"]
-
-    S04 --> VA["A · parcel feature tables<br/>(RF / boosting)"]
-    S04 --> VB["B · pixel sets<br/>(PSE-TAE)"]
-    S04 --> VC["C · patch-aligned chips<br/>chips_p8 · chips_p16<br/>(foundation models)"]
-    S03 --> VD["D · full tiles<br/>(segmentation, U-TAE)"]
+    CM["Cropland mask<br/>(union of 4 products)"]
+    S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_pixel_samples.py</b><br/>labelled pixels: irrigated · rainfed · not cropland<br/>12 months, fold, position"]
+    CM --> S04
+    S04 --> PX["Pixel models<br/>(E01, E02)"]
+    S03 --> VD["Full tiles<br/>(tile models E03–E05)"]
+    S03 -.->|"archived"| S04A["parcelwise_run/04_make_views.py<br/>views A–C (parcel-wise)"]
 ```
 
 | Step | Script |  What comes out |
@@ -51,7 +58,8 @@ flowchart TD
 | 1 | `01_prepare_labels_Morocco.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
 | 2 | `02_make_spatial_folds.py` | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
 | 3 | `03_build_tiles.py` | the tile store: monthly images + label rasters + QA |
-| 4 | `04_make_views.py` | model inputs A–C (D = the tiles themselves) |
+| 4 | `04_make_pixel_samples.py` | labelled pixels per agricultural year: 402,756 (2023/24) and 119,369 (2024/25) |
+| 4 (archived) | `parcelwise_run/04_make_views.py` | parcel-wise model views A–C |
 
 Steps 1–2 complete within minutes. Step 3 requires several hours and resumes from the last completed tile when restarted. Step 4 runs locally.
 
@@ -67,7 +75,7 @@ Steps 1–2 complete within minutes. Step 3 requires several hours and resumes f
 | **Honest validation** | Folds are made of whole 20 km blocks, so a test parcel never has its next-door neighbour in training (section 5). |
 | **Uncertain pixels kept, not dropped** | Label 0 = ignore (unlabelled or overlapping parcels), plus a separate edge flag for mixed boundary pixels. Users decide how to treat them. |
 | **Documented quality** | Clear-observation counts per pixel and month, scene IDs per tile and month, QA per tile, overlap list, patch-purity scores. |
-| **Patch-aware chips** | Chips for patch-based models are shifted so the parcel centroid sits at the centre of one model patch (section 7). |
+| **Patch-aware chips** (archived parcel-wise views) | Chips for patch-based models were shifted so the parcel centroid sits at the centre of one model patch (section 7). |
 
 The layout follows existing ML-ready crop datasets. PASTIS (Garnot & Landrieu 2021) and Sen4AgriNet (Sykas et al. 2022) use fixed tiles with dense label and parcel-ID rasters. Fields of The World (Kerner et al. 2025) keeps an "unlabelled" ignore class. The ClarkCGA / Prithvi crop chips report QA counts per chip.
 
@@ -338,7 +346,7 @@ flowchart TD
     X2 --> T2["804 tiles (2024/25)"]
     T1 --> S["One folder tiles/, one grid (same ix, iy),<br/>season in every tile name"]
     T2 --> S
-    S --> V["04_make_views.py reads each parcel<br/>from the tiles of its own season"]
+    S --> V["04_make_pixel_samples.py samples each parcel's pixels<br/>from the tiles of its own season"]
 ```
 
 How each part of the pipeline handles the season:
@@ -351,7 +359,7 @@ How each part of the pipeline handles the season:
 | Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
 | Imagery | one 12-month Earth Engine image per year, built over that year's tiles only. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
 | QA, `tiles.parquet` | one row per (season, tile), with an `ag_season` column |
-| Views (`04_make_views.py`) | every parcel is cut from the tiles of its own season; `ag_season` is kept in every output table |
+| Pixel samples (`04_make_pixel_samples.py`) | one sample set per season (`04c_pixel_samples/<season>/`); each parcel's pixels come from the tiles of its own season. (The archived `04_make_views.py` likewise cut every parcel from the tiles of its own season.) |
 | Folds (`02`) | blocks are defined by location only, so a place surveyed in both years falls in the **same** block and fold. No information leaks between years from training to test. |
 | Viewing (`tools/a4_build_vrt.py`) | one virtual raster per year, because the two years overlap in space |
 
@@ -409,7 +417,7 @@ flowchart TD
   - VV_DSC, VH_DSC, S1_N_DSC
 - **Months:** `m01` = September … `m12` = August of the parcel's agricultural year. Band names in the GeoTIFF look like `B4_m03` (red, November).
 - **Why linear power for Sentinel-1:** backscatter in dB is a logarithm. Averaging in dB gives the geometric mean and biases the composite downwards. Averaging is therefore done in linear power, and the result converted back to dB.
-- **Why the orbits are kept apart:** ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored, and the view script picks one.
+- **Why the orbits are kept apart:** ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored; the archived view script picked one. The current models use Sentinel-2 only (D14).
 - Each tile's `_scenes.json` lists the Sentinel-1/2 scene IDs used in each month, so every pixel can be traced to its source.
 
 ### 6.4 Label rasters (local, no Earth Engine)
@@ -482,7 +490,28 @@ with the most irrigated pixels and the tile with the most rainfed pixels (Sentin
 
 ---
 
-## 7. Script 04 — `make_views`
+## 7. Script 04 — pixel samples
+
+**Purpose:** turn the labelled parcels into labelled pixels for the pixel-wise models. The script
+`pixelwise_run/04_make_pixel_samples.py` runs locally and needs no Earth Engine. It reads the label rasters and
+images of the tile store and the cropland mask, and writes one table per agricultural year with the 12-month series,
+label, parcel, fold and position of every sampled pixel. Classes, sampling rules, output files and counts are
+documented on the page [Pixel samples](pixel_samples.md).
+
+| Season | Pixels | Irrigated | Rainfed | Not cropland |
+| --- | --- | --- | --- | --- |
+| 2023/24 | 402,756 | 336,211 | 31,671 | 34,874 |
+| 2024/25 | 119,369 | 83,672 | 22,121 | 13,576 |
+
+**Output:** `outputs/morocco/dataset/04c_pixel_samples/<season>/` (`pixels_X.npy`, `pixels.parquet`, `summary.csv`,
+`samples_info.json`).
+
+### Archived: model views (`parcelwise_run/04_make_views.py`)
+
+!!! note "Archived: parcel-wise set-up"
+    The model views below served the archived parcel-wise classification (parcel features, pixel sets, 64 px chips
+    for parcel embeddings). They are no longer used; see the
+    [Archive](../archive/parcel_wise_classification/index.md).
 
 **Purpose:** cut every model input from the tile store. It runs locally and needs no Earth Engine.
 
@@ -495,7 +524,7 @@ flowchart TD
     TS --> D["<b>View D · full tiles</b><br/>as they are, for<br/>segmentation models"]
 ```
 
-### 7.1 View A — parcel feature tables
+#### 7.1 View A — parcel feature tables
 
 - Per parcel and month: the **median** over the parcel's pixels of each of these:
   - the 12 Sentinel-2 bands (reflectance 0–1);
@@ -509,7 +538,7 @@ flowchart TD
 - Column names are `<variable>_m<month>`, e.g. `NDVI_m10` (NDVI in June). Each parcel has 19 variables × 12 months = 228 feature columns, plus counts and metadata (`parcel_id`, `label`, `ag_season`, `fold`, `n_px_used`, `used_inner`).
 - `parcel_features_inner.csv` leaves out edge pixels. A parcel with no inner pixel falls back to all of its pixels (`used_inner = False`).
 
-### 7.2 View B — pixel sets
+#### 7.2 View B — pixel sets
 
 All pixels of each parcel, unaggregated, for set-based temporal models such as PSE-TAE (Garnot et al. 2020).
 
@@ -517,7 +546,7 @@ All pixels of each parcel, unaggregated, for set-based temporal models such as P
 - `offsets [parcels + 1]`: parcel *i* = `pixels[offsets[i]:offsets[i+1]]`
 - `edge [N_pixels]`, `parcel_id`, `label`, `bands`
 
-### 7.3 View C — patch-aligned chips for the foundation models
+#### 7.3 View C — patch-aligned chips for the foundation models
 
 Vision-transformer foundation models partition an image into square patches: 8 × 8 px for Clay and 16 × 16 px (160 m) for Prithvi-EO-2.0, TerraMind and the output grid of AgriFM. Each patch is represented by one embedding.
 
@@ -535,7 +564,7 @@ flowchart LR
     OLD -.->|"replaced by"| NEW
 ```
 
-**Purity** measures this. A patch's weight is the share of its pixels inside the parcel, and those weights are also what the study uses to pool patch embeddings. Purity is the weighted share of parcel pixels in the pooled patches: Σ w² / Σ w, from 0 to 1. `index.csv` stores both `purity` (aligned) and `purity_centred` (old rule), so the gain is measurable.
+**Purity** measures this. A patch's weight is the share of its pixels inside the parcel, and those weights are also what the archived parcel-wise set-up used to pool patch embeddings. Purity is the weighted share of parcel pixels in the pooled patches: Σ w² / Σ w, from 0 to 1. `index.csv` stores both `purity` (aligned) and `purity_centred` (old rule), so the gain is measurable.
 
 Each chip folder holds:
 - `part_*.npz`: `chips [n, 12, 15, 64, 64]` int16, `mask [n, 64, 64]` (parcel pixels), `parcel_id`.
@@ -547,20 +576,21 @@ Each chip folder holds:
   <figcaption><b>Figure 1.10.</b> Patch purity, i.e. the share of the pooled patches that lies inside the parcel, for centred chips (grey) and patch-aligned chips (blue), at 8 px (80 m, left) and 16 px (160 m, right) patch size. Alignment markedly increases purity, in particular for 8 px patches.</figcaption>
 </figure>
 
-### 7.4 Sentinel-1 orbit for views B and C
+#### 7.4 Sentinel-1 orbit for views B and C
 
 `S1_ORBIT = "auto"` picks the orbit direction with more valid tile-months over the whole study area and writes it to `views_info.json` (`s1_orbit_for_chips_and_pixelsets`). That orbit's bands are named simply `VV` and `VH` in the chips. `"ASC"` or `"DSC"` force one orbit. View A keeps both orbits as separate columns.
 
-### 7.5 QA files
+#### 7.5 QA files
 
 - `qa_clear_obs.csv`: clear observations per parcel and month.
 - `qa_purity.csv`: purity distribution per patch size.
 - `views_info.json`: settings, the chosen orbit, and counts.
 
-### 7.6 Dataset inspection
+#### 7.6 Dataset inspection
 
-The checks of `parcelwise_run/05_inspect_dataset.py` ([Model training and inference §4](../phase2_models/frozen_encoders.md#4-script-01--inspect_dataset))
-characterise the final dataset before any model is trained.
+The checks of the archived `parcelwise_run/05_inspect_dataset.py`
+([archived models pipeline §4](../archive/parcel_wise_classification/models_pipeline.md#4-script-01--inspect_dataset))
+characterise the parcel-wise dataset before any model is trained.
 
 <figure markdown="span">
   ![Clear observations per month](figures/observations_per_month.png)
@@ -600,13 +630,18 @@ outputs/morocco/dataset/
     ├── parcel_overlaps.csv              overlapping parcel pairs, their labels and overlap share
     ├── tiles.parquet                    GeoParquet tile index: geometry, season, role, fold(s), QA
     ├── tiles_info.json                  grid, bands, months, scales, cloud settings
-    └── views/
+    └── views/                           archived parcel-wise views (parcelwise_run/04_make_views.py)
         ├── parcel_features_all.csv      view A
         ├── parcel_features_inner.csv    view A, edge pixels removed
         ├── pixelsets.npz                view B
         ├── chips_p8/  chips_p16/        view C: part_*.npz, index.csv, chips_info.json
         ├── qa_purity.csv, qa_clear_obs.csv
         └── views_info.json
+04c_pixel_samples/<season>/              (in outputs/morocco/dataset/) labelled pixels, one folder per year
+    ├── pixels_X.npy                     int16 [pixels, 12 months, 19 bands]
+    ├── pixels.parquet                   label, parcel, fold, block, zone, tile, position per pixel
+    ├── summary.csv                      pixels and parcels per class and fold
+    └── samples_info.json                settings, band order, class codes, CRS
 ```
 
 **Scales:**
@@ -621,22 +656,25 @@ outputs/morocco/dataset/
 
 | Model family | Use | Train / validation / test |
 | --- | --- | --- |
-| Random forest, gradient boosting, SVM | View A | `fold` (5 rounds: 3 train / 1 validation / 1 test) or `split` |
-| Pixel-set temporal models (PSE-TAE, L-TAE) | View B | same |
-| Foundation models / any CNN or ViT on chips | View C (`chips_p8` or `chips_p16`) with `mask` | same, from `index.csv` |
-| Segmentation (U-Net, U-TAE) | View D: `_img.tif` + `_lab.tif`, loss masked where `label = 0` | split by **tile**, using `tiles.parquet` (`fold`, `mixed_folds`) |
+| Pixel models: random forest, gradient boosting, TempCNN, L-TAE (E01, E02) | pixel samples (`04c_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test); fold −1 left out |
+| Tile models: frozen foundation models with L-TAE + UPerNet, U-TAE, fine-tuning (E03–E05) | full tiles: `_img.tif` (Sentinel-2 bands) + `_lab.tif`, loss only on the labelled pixels of the training folds | same folds; scored at the labelled pixels of the test fold |
+| Annual maps (Phase 5) | wall-to-wall Sentinel-2 tiles over the cropland mask (`s2_download/`) | – |
 
-Minimal example: read the chips.
+Minimal example: read the pixel samples.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/morocco/dataset/03_tiles_128px/agyear/views/chips_p16"
-index = pd.read_csv(f"{folder}/index.csv", dtype={"parcel_id": str})
-info = json.load(open(f"{folder}/chips_info.json"))
-d = np.load(f"{folder}/{index.part.iloc[0]}")
-chips, mask = d["chips"], d["mask"]            # [n, 12, 15, 64, 64], [n, 64, 64]
-red_june = chips[0, 9, info["bands"].index("B4")] / 10000
+folder = "outputs/morocco/dataset/04c_pixel_samples/2023-24"
+X = np.load(f"{folder}/pixels_X.npy")                  # [pixels, 12, 19] int16
+meta = pd.read_parquet(f"{folder}/pixels.parquet")      # label, fold, parcel_id, tile_id, row, col, ...
+info = json.load(open(f"{folder}/samples_info.json"))
+red_june = X[0, 9, info["month_bands"].index("B4")] / 10000
 ```
+
+!!! note "Archived: parcel-wise set-up"
+    In the parcel-wise set-up, random forest and gradient boosting used view A, pixel-set models (PSE-TAE) view B,
+    and the foundation models view C (`chips_p8` or `chips_p16` with `mask`, split by `index.csv`); see the
+    [Archive](../archive/parcel_wise_classification/index.md).
 
 ---
 
@@ -647,14 +685,15 @@ conda activate condaml
 python pixelwise_run/01_prepare_labels_Morocco.py   # minutes
 python pixelwise_run/02_make_spatial_folds.py      # minutes
 python pixelwise_run/03_build_tiles.py             # Earth Engine; a few hours; resumable
-python parcelwise_run/04_make_views.py              # local
+python pixelwise_run/04_make_pixel_samples.py      # local; SEASONS per region in the script
+# archived parcel-wise step: python parcelwise_run/04_make_views.py
 ```
 
 Scripts 02–04 serve both study regions: set `REGION = "morocco"` at the top of each (the default). The settings
 that differ between regions (projection, agricultural year, block size, map boundaries) are in
 `pixelwise_run/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
 
-Run 03 first with `N_TEST_TILES = 20`, then check the result with `parcelwise_run/05_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py` (QGIS) before the full run.
+Run 03 first with `N_TEST_TILES = 20`, then check the result with `pixelwise_run/03b_tile_quicklooks.py` before the full run (the archived parcel-wise checks used `parcelwise_run/05_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py`).
 
 To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/morocco/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 
@@ -665,7 +704,8 @@ The settings sit at the top of each script:
 | 01 | `SEASON_START_MONTH` (= 9, from `regions.py`), `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT`, `CHECK_WORLDCOVER` |
 | 02 | `REGION`, `N_FOLDS = 5`, `BLOCK_KM` (= 20, from `regions.py`), `CANDIDATE_KM`, `SEED = 42` |
 | 03 | `REGION`, `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG` (= 32629, from `regions.py`), `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `SEASONS = None` (all years; or one year at a time), `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
-| 04 | `REGION`, `SEASONS = None` (all years → `views/`; one year → `views_<year>/`), `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
+| 04 | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `MAX_PX_PER_PARCEL = 100`, `NONCROP_PX_PER_TILE = 100`, `NONCROP_BUFFER_PX = 2`, `SEED = 42` |
+| 04 (archived, `parcelwise_run/04_make_views.py`) | `REGION`, `SEASONS = None` (all years → `views/`; one year → `views_<year>/`), `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
 
 Earth Engine access uses a service-account key in `secrets/`, which is never committed.
 
@@ -676,7 +716,7 @@ Earth Engine access uses a service-account key in `secrets/`, which is never com
 - **Class balance and geography:** 14% of parcels are rainfed, and 94% of those are in Doukkala. A model can partly learn "region" rather than "irrigation". Per-zone results should be reported.
 - **Reprojection:** the few parcels in UTM 30N are resampled to 29N.
 - **Monthly composites:** in cloudy winter months some parcels have no clear Sentinel-2 view (NODATA). The counts show where.
-- **Segmentation with view D:** a tile can hold parcels of two folds (`mixed_folds`), and context tiles reach across fold borders. Tile-level models need their own tile split, or a loss mask restricted to the training fold.
+- **Tile models (full tiles):** a tile can hold parcels of two folds (`mixed_folds`), and context tiles reach across fold borders. Tile-level models need their own tile split, or a loss mask restricted to the training fold.
 - **Labels:** a single survey visit per parcel. Overlapping parcels are set to ignore and listed, but labels are not otherwise checked against imagery.
 
 ---

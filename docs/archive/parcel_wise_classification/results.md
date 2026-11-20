@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../experiments/index.md). About the archive: [Archive](../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../experiments/index.md). About the archive: [Archive](../index.md).
 
 This page summarises the completed experiments in chronological order, each with its principal finding and main
 figure. Full tables, per-fold results and caveats are given in the individual experiment reports. The list of all experiments, including those still to

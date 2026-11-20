@@ -63,7 +63,7 @@ The year of a product is the calendar year in which the agricultural year ends, 
    locally.
 3. **One raster per agricultural year.** `cropland_mask.vrt` joins all blocks into one seamless layer.
 4. **Tile table.** `tiles_cropland.parquet` lists every 128 px tile with its number of cropland pixels: the input
-   of the wall-to-wall tiles (`pixelwise_run/06_build_cropland_tiles.py`).
+   of the wall-to-wall tiles (`s2_download/`; earlier route `pixelwise_run/06_build_cropland_tiles.py`).
 
 **Bands of the mask** (uint16, NODATA 65535 outside the mapping area):
 
@@ -111,8 +111,21 @@ cropland" class of the classifier and the map accuracy assessment address it.
 Mapping the whole cropland means imagery for every tile that contains cropland: 132,616 tiles in Morocco (about
 370 GB of monthly Sentinel-2 composites per year) and 24,861 in Utah (about 69 GB), against 2,183 and 2,720 tiles
 around the labelled parcels. Morocco's cropland forms one continuous belt from Tangier to Agadir (a quarter of the
-country), and scattered fields pull in whole 1.64 km² tiles. These tiles are downloaded only for the mapping stage
-(`06_build_cropland_tiles.py`); model training and testing use the tiles around the labelled parcels.
+country), and scattered fields pull in whole 1.64 km² tiles.
+
+**STAC download.** The wall-to-wall tiles are downloaded with `s2_download/` from the public Earth Search STAC
+catalogue (collection `sentinel-2-c1-l2a`, cloud mask from the scene classification layer SCL, monthly median
+composites; details in `s2_download/README.md`). It keeps the tiles with **at least 1% cropland**: 112,536 tiles in
+Morocco and 18,472 in Utah for 2023/24 (Morocco 2024/25: 113,319). The tiles follow the grid and `tile_id` of the
+mask and serve training, experiments and maps of the STAC-based approach.
+
+| Region | Year | Tiles (≥ 1% cropland) | Status |
+| --- | --- | --- | --- |
+| Utah | 2023/24 | 18,472 | 🔄 17,278 downloaded; the rest to be rerun after a bug fix |
+| Morocco | 2023/24 | 112,536 | on hold |
+
+The earlier Earth Engine route for the same tiles (`pixelwise_run/06_build_cropland_tiles.py`) is still in the
+repository. The experiments E01–E05 use the Earth Engine tiles around the labelled parcels (`03_build_tiles.py`).
 
 ![Wall-to-wall tile extent, 2023/24](figures/cropland_tiles_extent_2023-24.png)
 

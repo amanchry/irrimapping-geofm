@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 
 > **Answer.** No frozen foundation model classifies irrigated vs rainfed parcels better than the Sentinel-1/2
 > baseline. The best pair, Clay + SVM (macro-F1 **0.910**), is level with the baseline + SVM (**0.906**;

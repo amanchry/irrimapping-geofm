@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 
 *First full comparison: frozen embeddings of four GeoFMs vs Sentinel-1/2 features, with nested spatial cross-validation. Done before D14; kept as the check of the validation design.*
 
@@ -57,7 +57,7 @@ the same monthly composites and the same parcels, so any difference comes from t
 | Inputs | S1/S2 baseline (204 parcel features) · Clay v1.5 (chips p8) · Prithvi-EO-2.0 · TerraMind · AgriFM (chips p16) |
 | Encoders | frozen; one embedding per parcel per month (AgriFM: per year), patch-share-weighted mean over the parcel |
 | Temporal aggregation | concat 12 months → standardise → PCA 128 (fitted on the training folds only) |
-| Classifiers | LogReg (linear probe), RF, HGB, SVM; grids in the [protocol](../../../phase2_models/evaluation.md#4-classifiers) |
+| Classifiers | LogReg (linear probe), RF, HGB, SVM; grids in the [protocol](../evaluation_protocol.md#4-classifiers) |
 | Validation | nested spatial CV: 5 outer folds (20 km blocks); inner spatial CV on the 4 training folds chooses the hyperparameters; refit on 4 folds |
 
 ## How to run again

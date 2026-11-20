@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 # E04 · Frozen GeoFMs + L-TAE temporal aggregation + MLP head — report
 
 > **Answer.** No. Learned temporal attention (L-TAE) over the 12 monthly embeddings classifies as well as concat + PCA

@@ -24,6 +24,8 @@ drip), built from state agricultural databases.
 
 ## What this research takes from it
 - **Not usable as our dataset** (no rainfed class), but its label sources are: eastern Washington (WSDA) and Utah
-  (WRLU) contain both irrigated and dryland fields — candidate transfer regions
-  ([data sources](../data_source/index.md), [decision D10](../decisions.md#d10-transfer-region-under-review)).
+  (WRLU) contain both irrigated and dryland fields. They were candidate transfer regions
+  ([decision D10](../decisions.md#d10-transfer-region-under-review)); Utah WRLU became the second, independent study
+  area ([decision D13](../decisions.md#d13-utah-as-a-second-independent-study-area),
+  [data sources](../data_source/index.md)).
 - A concrete example of why spatial folds are needed ([protocol §2](../phase2_models/evaluation.md#2-spatial-splits)).

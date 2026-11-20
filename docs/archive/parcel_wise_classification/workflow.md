@@ -1,12 +1,18 @@
-# Phase 2 · Model evaluation
+# Phase 2 workflow, parcel-wise (archived)
+
+!!! warning "Archived: parcel-wise set-up"
+    This page describes the parcel-wise benchmark, now in the [archive](../index.md). The current
+    pixel-wise work: [Phase 2 · Model evaluation](../../phase2_models/overview.md),
+    [evaluation protocol](../../phase2_models/evaluation.md)
+    ([D16](../../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 
 Phase 2 addresses Objective 1, the comparison of foundation models and adaptation strategies in Morocco, through two
-research questions. Both are evaluated on spatially independent areas under one [evaluation protocol](evaluation.md).
+research questions. Both are evaluated on spatially independent areas under one [evaluation protocol](evaluation_protocol.md).
 
 | RQ | Question | Approach | Status | Page |
 | --- | --- | --- | --- | --- |
-| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-2 feature baseline | ⏳ E01 done; E02–E05 planned (each with label efficiency) ([experiment plan](experiment_plan.md)) | [RQ1 · Frozen encoders](frozen_encoders.md) |
-| **RQ2** | To what extent does parameter-efficient fine-tuning improve on a frozen encoder? | segmentation head on frozen and LoRA-adapted encoders; neural baselines | 📝 planned | [RQ2 · Fine-tuning](fine_tuning.md) |
+| **RQ1** | What accuracy does each foundation model achieve, compared with a conventional Sentinel-based classifier? | frozen encoders → parcel embeddings → classifiers, vs a Sentinel-2 feature baseline | ⏳ E01 done; E02–E05 planned (each with label efficiency) ([experiment plan](../../phase2_models/experiment_plan.md)) | [RQ1 · Frozen encoders](models_pipeline.md) |
+| **RQ2** | To what extent does parameter-efficient fine-tuning improve on a frozen encoder? | segmentation head on frozen and LoRA-adapted encoders; neural baselines | 📝 planned | [RQ2 · Fine-tuning](../../phase2_models/fine_tuning.md) |
 
 The remainder of this page summarises the RQ1 workflow, which forms the reference for all later comparisons.
 
@@ -66,19 +72,19 @@ performance are attributable to the representation rather than to the input data
 **4. Parcel representations.**
 
 - *Feature baseline:* for each of the 12 months, the median of the parcel's inner pixels for the Sentinel-2 bands,
-  three spectral indices, yielding 180 features (Sentinel-2 only, [D14](../decisions.md#d14-sentinel-2-only-for-every-input)). Months without clear observations are
+  three spectral indices, yielding 180 features (Sentinel-2 only, [D14](../../decisions.md#d14-sentinel-2-only-for-every-input)). Months without clear observations are
   temporally interpolated.
 - *Foundation-model embedding:* a 64 × 64 px window (640 m) around the parcel is passed through the frozen encoder.
   The resulting patch embeddings are averaged with weights equal to the fraction of each patch inside the parcel.
   Clay, Prithvi-EO-2.0 and TerraMind are applied month by month; AgriFM processes the full year in one pass
-  ([Foundation models](../foundation_models.md)).
+  ([Foundation models](../../foundation_models.md)).
 
 **5. Temporal aggregation.** A foundation model yields up to 12 × 1,024 values per parcel. Two aggregation schemes
 are evaluated:
 
-- *PCA pipeline* ([E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md), [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md)):
+- *PCA pipeline* ([E02](E02_frozen_pca/index.md), [E03](E03_frozen_pca_mlp/index.md)):
   monthly embeddings are concatenated and reduced to 128 principal components, fitted on the training folds only.
-- *L-TAE pipeline* ([E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md)): a lightweight temporal attention encoder learns
+- *L-TAE pipeline* ([E04](E04_frozen_ltae/index.md)): a lightweight temporal attention encoder learns
   the relative importance of the months, following the PANGAEA benchmark protocol.
 
 ??? info "PCA pipeline: what it does"
@@ -108,9 +114,9 @@ are evaluated:
 ??? info "L-TAE pipeline: what it does"
 
     The **lightweight temporal attention encoder** (L-TAE; Garnot & Landrieu 2020,
-    [paper](https://arxiv.org/abs/2007.00586) · [summary](../references/ltae.md)) keeps the 12 months as a sequence
+    [paper](https://arxiv.org/abs/2007.00586) · [summary](../../references/ltae.md)) keeps the 12 months as a sequence
     and learns, together with the classifier, how much weight each month gets. PANGAEA (Marsocci et al. 2024,
-    [paper](https://arxiv.org/abs/2412.04204) · [summary](../references/pangaea.md)) uses the same module to combine the
+    [paper](https://arxiv.org/abs/2412.04204) · [summary](../../references/pangaea.md)) uses the same module to combine the
     dates of single-date GeoFMs; this study follows that protocol.
 
     ```mermaid
@@ -134,7 +140,7 @@ are evaluated:
 
 **6. Classifiers.** Three classical classifiers (logistic regression, random forest and a support vector machine)
 are trained on every representation with identical hyperparameter grids
-([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). Logistic regression on frozen embeddings
+([D6](../../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). Logistic regression on frozen embeddings
 corresponds to the standard linear probe and measures the information already present in the pretrained
 representation. Two neural heads are added: an MLP on the PCA input (E03) and the L-TAE with its own MLP (E04).
 PSE-TAE (E05) is a complete model trained from scratch on the pixels, the neural baseline.
@@ -203,7 +209,7 @@ PSE-TAE (E05) is a complete model trained from scratch on the pixels, the neural
     learns how much weight each month gets, and its output goes to an MLP (256 → 128 → 2). How it works: see
     *L-TAE pipeline: what it does* under step 5.
     Paper: Garnot & Landrieu (2020), [Lightweight temporal self-attention for classifying satellite images time
-    series](https://arxiv.org/abs/2007.00586) · [summary](../references/ltae.md).
+    series](https://arxiv.org/abs/2007.00586) · [summary](../../references/ltae.md).
 
     - **Training:** the same optimiser, loss, early stopping and 3 seeds as the MLP head; attention and head are
       trained together.
@@ -254,7 +260,7 @@ PSE-TAE (E05) is a complete model trained from scratch on the pixels, the neural
     - **Result (E05):** Morocco 0.911, the highest macro-F1 of RQ1, a tie with the best S2 and GeoFM runs. Utah
       0.755, equal to the S2 random forest but significantly below Clay (−0.03 to −0.04). It finds the most rainfed
       parcels of all models, but in Utah it also over-predicts them.
-      [E05 report](../archive/parcel_wise_classification/E05_psetae_scratch/report.md).
+      [E05 report](E05_psetae_scratch/report.md).
 
 **7. Evaluation.** Five rotations are performed: three folds for training, one for hyperparameter selection and one
 for testing. Each parcel thus receives exactly one out-of-fold prediction from a model that was not trained on its

@@ -56,10 +56,12 @@ non-irrigated reference points.
 
 ## What this research takes from it
 
-- **Independent test points** for the transfer test (RQ4) and for the accuracy assessment of the annual maps
-  ([Phase 5](../phase5_maps/index.md)); never used for training. Tunisia has 54 points (44 irrigated, 10 rainfed)
-  ([D10](../decisions.md#d10-transfer-region-under-review)); `tools/a1_gmia_next_points.py` checks the points of a
-  country and compares the Moroccan points with the survey parcels.
+- **Independent comparison points** for the accuracy assessment of the annual maps
+  ([Phase 5](../phase5_maps/index.md)); never used for training. They were first considered for a zero-shot transfer
+  test to Tunisia (54 points, 44 irrigated, 10 rainfed; [D10](../decisions.md#d10-transfer-region-under-review));
+  that test was dropped in favour of Utah as a second study area
+  ([D13](../decisions.md#d13-utah-as-a-second-independent-study-area)). `tools/a1_gmia_next_points.py` checks the
+  points of a country and compares the Moroccan points with the survey parcels.
 - **Comparison product** for the maps of Phase 5, alongside LGRIP30, GMIE and WorldCereal.
 - **Season definition:** irrigation is defined for one growing season, consistent with the agricultural-year design
   of this research ([dataset §6.2](../phase1_data/morocco.md#62-two-agricultural-years)).
@@ -69,7 +71,7 @@ non-irrigated reference points.
 ## Differences and limitations
 
 - **Resolution and sensor:** 30 m Landsat; the authors note spectral mixing for smallholder fields and point to
-  Sentinel or Planet data for such landscapes. This research uses 10 m Sentinel-1/2.
+  Sentinel or Planet data for such landscapes. This research uses 10 m Sentinel-2 ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 - **Labels by image interpretation,** not field visits, for the curated points; harmonisation of other years with an
   NDVI tolerance adds label noise.
 - **"Non-irrigated" is not strictly "rainfed cropland":** the label depends on the cropland mask; the check with

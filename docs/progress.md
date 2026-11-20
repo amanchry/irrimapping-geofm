@@ -7,13 +7,15 @@ change log).
 
 ---
 
-## Current status (2026-11-19)
+## Current status (2026-11-20)
 
 | Step | Where | Status |
 | --- | --- | --- |
 | Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
 | Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
 | Experiments E01–E04 (pixel-wise) | `experiments/` | E01–E04 done in both regions ([results](experiments/index.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); cropland macro-F1 Morocco 0.876 (RF) – 0.900 (AgriFM), differences not significant; Utah 0.729 (RF) → 0.766 (U-TAE) → 0.797 (TerraMind), significant. Presto and TESSERA (E03) still to run |
+| E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Utah, 10–100% of the training parcels: the 12 jobs of frozen, fine-tuned and from scratch running on the cluster; the 4 LoRA jobs later ([E05](experiments/E05_prithvi_strategies.md)) |
+| STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
 | Embeddings (Sentinel-2 only) | `parcelwise_run/06a–06d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
@@ -23,11 +25,10 @@ change log).
 Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. E03 with Presto and TESSERA; E05 (Prithvi frozen / fine-tuned / from scratch with 10–100% of the parcels,
-   Utah): quick test on the cluster, then 12 GPU jobs ([E05](experiments/E05_prithvi_strategies.md)).
-3. STAC approach (independent of the Earth Engine tiles): Sentinel-2 download of all cropland tiles
-   (`s2_download/`; Utah 2023/24 first, then Morocco 2023/24 and 2024/25), then training tiles, experiments and maps
-   on the STAC tiles; map accuracy sample.
+2. E03 with Presto and TESSERA; E05: finish the 12 running jobs, run `report.py`, then the 4 LoRA jobs
+   ([E05](experiments/E05_prithvi_strategies.md)).
+3. STAC approach (independent of the Earth Engine tiles): rerun the 78 missing Utah blocks, then Morocco 2023/24
+   and 2024/25 (`s2_download/`); then training tiles, experiments and maps on the STAC tiles; map accuracy sample.
 
 ---
 
@@ -91,6 +92,46 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-20 (E05: LoRA added as a fourth strategy)
+
+- E05 now compares four strategies: frozen, **LoRA**, full fine-tuning and from scratch (16 jobs; the 4 LoRA jobs
+  run later). LoRA: rank 16, α 32, on the `qkv`, `fc1` and `fc2` layers of all 24 Prithvi blocks (5.51 M adapter
+  weights + 2.48 M head), adapters at the head's learning rate 10⁻⁴, as Marti-Escofet et al. (2025) for Prithvi.
+  Local quick test passed (about 1.3 × the frozen time per epoch).
+- `GeoFMSegmenter(lora_targets=...)` chooses the adapted layers; `report.py` adds LoRA − frozen, fine-tuned − LoRA
+  and LoRA − scratch to the paired tests (Holm over 24 comparisons per metric).
+
+### 2026-11-20 (documentation)
+
+- [RQ2 · Fine-tuning](phase2_models/fine_tuning.md): six ways to adapt a GeoFM (frozen, full, partial, PEFT, LP-FT,
+  continued pretraining), figures (strategies, animation, LoRA), workflow, and six papers to read.
+- [Foundation models](foundation_models.md): configuration rewritten for the pixel-wise set-up (tiles, head, frozen
+  / LoRA / fine-tuned per experiment); the parcel-wise chip set-up kept as an archived subsection.
+- [RQ1 · Experiment plan](phase2_models/experiment_plan.md) rewritten for the pixel-wise experiments E01–E04; the
+  parcel-wise plan moved to the [archive](archive/parcel_wise_classification/experiment_plan.md).
+- Phase 3 renamed "Temporal and spatial transferability".
+- Whole documentation checked against the pixel-wise state; parcel-wise material kept and labelled as archived:
+  the Phase 2 workflow, models pipeline and parcel-level evaluation protocol moved to the
+  [archive](archive/index.md); new [Phase 2 overview](phase2_models/overview.md) and pixel-wise
+  [evaluation protocol](phase2_models/evaluation.md); [Results](results.md), [research plan](research_plan.md) and
+  [decisions](decisions.md) updated (D5, D6, D8, D11 marked as parcel-wise or superseded; new
+  [D18](decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps), STAC composites for the maps); Phase 1
+  pages (pixel samples of all sets, Utah status, STAC tiles), Phases 3–5, setup, data sources, introduction and the
+  reference pages brought up to date.
+- New weekly page [2026-W47](weekly/2026-W47.md); [progress report](progress_report.md) rewritten.
+- Reference pages: [Tomotaki-Dawoud et al. (2025)](references/tomotaki-dawoud-2025-prithvi-finetuning.md) (authors
+  and DOI corrected in the index) and [TESSERA](references/tessera.md).
+
+### 2026-11-20 (STAC download: crash fixed, safe logs)
+
+- Utah 2023/24: 29 of 32 parts finished (17,278 of 18,472 tiles, all readable); 3 parts crashed, leaving 78 blocks.
+  Cause: `stackstac` leaves out scenes whose footprint does not reach the block, but the reflectance offsets were
+  taken from all search results. Offsets are now matched to the stacked scenes by id.
+- Each part writes its own logs (`logs/`); the last part merges them into `tiles_qa.jsonl`, `blocks_done.jsonl`
+  and `blocks_failed.jsonl` (32 processes appending to one file over NFS had lost 19 QA rows).
+- New wrapper `s2_download/s2_dl.sbatch` (several parts per job) fails if any part fails; usage and memory
+  (about 6 GB per part) in its header.
 
 ### 2026-11-20 (E05: Prithvi frozen vs fine-tuned vs from scratch)
 
@@ -316,7 +357,7 @@ checked) and a docs check led to these fixes:
 
 ### 2026-11-12 (RQ1 experiment plan)
 
-- New page [RQ1 · Experiment plan](phase2_models/experiment_plan.md) (Phase 2): decisions, shared settings, inputs,
+- New page [RQ1 · Experiment plan](archive/parcel_wise_classification/experiment_plan.md) (Phase 2): decisions, shared settings, inputs,
   design (input × temporal handling × head), E02 PCA + LogReg/RF/SVM, E05 PCA + MLP, E03 L-TAE + MLP, E04 PSE-TAE,
   E06 label efficiency, ablations A1–A5 (incl. a location-shortcut test for Clay and Prithvi), analyses, the tables
   and figures of every experiment's report page, order of work and number of runs.
@@ -434,7 +475,7 @@ checked) and a docs check led to these fixes:
 - What: new script `models_run/05_breakdown_oof.py` splits the out-of-fold predictions of an experiment by zone,
   agricultural year, 16-px patch purity and parcel area, with Doukkala-only macro-F1 and the false-rainfed rate in the
   irrigated-only zones (block-bootstrap CIs). Run on E01; results in `experiments/E01_frozen_pca_nested/results/breakdown/`.
-  Described in [Frozen encoders §7.1](phase2_models/frozen_encoders.md#71-script-05--breakdown_oof-results-by-region-season-and-purity).
+  Described in [Frozen encoders §7.1](archive/parcel_wise_classification/models_pipeline.md#71-script-05--breakdown_oof-results-by-region-season-and-purity).
 - Why: a review of the dataset found that the class is confounded with the region (94% of the rainfed parcels in
   Doukkala) and that 78% of the parcels have a 16-px patch purity below 0.5.
 - Finding (E01): in Doukkala no frozen GeoFM exceeds the baseline; the GeoFM advantage in the hardest fold comes from

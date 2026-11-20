@@ -1,8 +1,14 @@
-# RQ1 · Frozen encoders: embeddings and classifiers
+# Models pipeline: embeddings and classifiers (archived)
 
-This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-2 feature baseline under an identical spatial validation design. Every input uses Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
+!!! warning "Archived: parcel-wise set-up"
+    This page describes the parcel-wise benchmark, now in the [archive](../index.md). The current
+    pixel-wise work: [Phase 2 · Model evaluation](../../phase2_models/overview.md),
+    [evaluation protocol](../../phase2_models/evaluation.md)
+    ([D16](../../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 
-It reads only the ML-ready dataset produced in [`pixelwise_run/`](../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation.md); reported results are produced as [experiments](../archive/parcel_wise_classification/index.md), which run these scripts with the settings of a config file.
+This page documents the frozen-encoder evaluation of Phase 2 (RQ1), which tests whether frozen embeddings of geospatial foundation models (GeoFMs) discriminate **irrigated** from **rainfed** cropland parcels in Morocco better than a conventional Sentinel-2 feature baseline under an identical spatial validation design. Every input uses Sentinel-2 only ([D14](../../decisions.md#d14-sentinel-2-only-for-every-input)).
+
+It reads only the ML-ready dataset produced in [`pixelwise_run/`](../../phase1_data/morocco.md). The rules of the comparison are summarised in the [evaluation protocol](evaluation_protocol.md); reported results are produced as [experiments](index.md), which run these scripts with the settings of a config file.
 
 **Contents**
 
@@ -52,9 +58,9 @@ flowchart TD
     CMP --> ANS(["Does a foundation model beat<br/>the Sentinel-2 baseline?"])
 ```
 
-Per-model bands, patches and temporal handling: [Foundation models](../foundation_models.md#configuration-in-this-study).
+Per-model bands, patches and temporal handling: [Foundation models](../../foundation_models.md#configuration-in-this-study).
 
-Classifier grids: [evaluation protocol §4](evaluation.md#4-classifiers). Optional sensitivity runs:
+Classifier grids: [evaluation protocol §4](evaluation_protocol.md#4-classifiers). Optional sensitivity runs:
 Sentinel-1 added to the baseline and to TerraMind (Morocco), embeddings averaged over the months instead of PCA.
 
 
@@ -90,7 +96,7 @@ The foundation models are used **frozen**, as fixed feature extractors, followin
 
 The five inputs (Sentinel-2 baseline and four frozen GeoFMs, all Sentinel-2 only), their bands, patch sizes and
 temporal handling, and the optional Sentinel-1 ablation are specified in
-[Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
+[Foundation models · Configuration](../../foundation_models.md#configuration-in-this-study).
 
 ---
 
@@ -120,7 +126,7 @@ What to look for:
 - `examples_irrigated.png`, `examples_rainfed.png`
 - `legacy_agreement.csv`
 
-The resulting figures are shown in [Dataset preparation §7.6](../phase1_data/morocco.md#76-dataset-inspection).
+The resulting figures are shown in [Dataset preparation §7.6](../../phase1_data/morocco.md#76-dataset-inspection).
 
 For a closer look in QGIS, `tools/a3_export_chips_geotiff.py` writes single chips as georeferenced GeoTIFFs to `01_inspection/chips_geotiff/`.
 
@@ -145,7 +151,7 @@ flowchart TD
     H --> O
 ```
 
-**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../phase1_data/morocco.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
+**Pooling.** Each patch token is weighted by the share of its pixels inside the parcel. Patches without any parcel pixel get weight 0. The parcel embedding is the weighted mean, so it describes the parcel and not the whole 640 m chip. The patch-aligned chips ([dataset §7.3](../../phase1_data/morocco.md#73-view-c--patch-aligned-chips-for-the-foundation-models)) put most of the weight on one patch centred on the parcel.
 
 **Cloudy pixels.** NODATA pixels are set to 0 after normalisation, which equals the band mean. A month with no clear pixel at all is flagged `valid = False`, and script 03 fills it with the training median.
 
@@ -162,11 +168,11 @@ flowchart TD
 
 AgriFM uses the patch size of its pretrained Sentinel-2 patch embedding (4 × 4 px, output stride 32 px), and the
 script stops unless every encoder weight is loaded from `AgriFM.pth`; embeddings produced before 6 Nov 2026 came
-from an untrained encoder ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
+from an untrained encoder ([D12](../../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
 
 Model-specific bands, normalisation, auxiliary inputs (date, location, wavelengths) and known limitations are
-described in [Foundation models · Model notes](../foundation_models.md#model-notes). AgriFM is normalised with the
-statistics of the region's own chips ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)).
+described in [Foundation models · Model notes](../../foundation_models.md#model-notes). AgriFM is normalised with the
+statistics of the region's own chips ([D15](../../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)).
 
 **Region.** Each script has `REGION` and `VIEWS_NAME` at the top; the environment variables `EMBED_REGION` and
 `EMBED_VIEWS` set them without editing the script (Slurm jobs):
@@ -224,7 +230,7 @@ and TerraMind.
 **AgriFM** is built like a video model (modified Video Swin Transformer; Li et al. 2025) and compresses time inside
 the network, as it compresses space. In the encoder code (`external/AgriFM/AgriFM/models/video_swin_transformer.py`):
 
-1. The pretrained patch embedding covers **4 months × 4 × 4 px** ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)),
+1. The pretrained patch embedding covers **4 months × 4 × 4 px** ([D12](../../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)),
    so 12 months become 3 time steps.
 2. With `mean_frame_down = True`, each downsampling stage also **averages neighbouring time steps** (padding an odd
    count): 3 → 2 → 1.
@@ -299,8 +305,8 @@ flowchart TD
 | `svm` | RBF support vector machine | maximum-margin boundary, made non-linear by the RBF kernel; used for irrigation mapping with Sentinel-1/2 (Gao et al., 2018; Elwan et al., 2022) | C ∈ {1, 10}; γ ∈ {scale, 0.01} | `class_weight = "balanced"`, standardised inputs; no probability calibration (the decision score is used for PR-AUC) |
 
 Histogram gradient boosting was a fourth classifier in E01 and is dropped from E02 on
-([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). The settings selected in each round are reported per experiment
-([E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md#selected-hyperparameters)).
+([D6](../../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). The settings selected in each round are reported per experiment
+([E01](E01_frozen_pca_nested/report.md#selected-hyperparameters)).
 
 The selection score is macro-F1, the mean of the irrigated F1 and rainfed F1. It treats the 14% rainfed class as equally important.
 
@@ -588,11 +594,11 @@ region that waits for them; the report is written on the Mac after copying `resu
 | --- | --- | --- |
 | Frozen encoders, no fine-tuning | all four GeoFMs | tests the pretrained representation; equal cost for all |
 | Parcel pooling | patch-share-weighted mean | describes the parcel, not the surroundings |
-| AgriFM patch size | 4 × 4 px (pretrained), stride 32 px | every pretrained weight is used; coarsest grid of the four models ([D12](../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)) |
+| AgriFM patch size | 4 × 4 px (pretrained), stride 32 px | every pretrained weight is used; coarsest grid of the four models ([D12](../../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)) |
 | Chips | 64 × 64 px, patch-aligned | centroid at a patch centre (see dataset §7.3) |
 | Time | 12 monthly composites, Sep–Aug | covers the winter rainfed cycle and summer irrigation |
 | Embedding reduction | concat + PCA 128, fitted on training folds | keeps the timing information; same dimension for every model |
-| Inputs | Sentinel-2 only for every model and the baseline | same optical data for all; S1 coverage of Utah changed between years ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
+| Inputs | Sentinel-2 only for every model and the baseline | same optical data for all; S1 coverage of Utah changed between years ([D14](../../decisions.md#d14-sentinel-2-only-for-every-input)) |
 | Baseline features | inner-pixel medians of 12 S2 bands, NDVI, NDWI, EVI | same pixels as the chips |
 | Validation | 5 spatial folds (20 km blocks), per round 3 train / 1 validation / 1 test, as PASTIS | estimates mapping of unseen areas; identical for classifiers and neural networks |
 | Uncertainty | block bootstrap, Holm | blocks are the independent units |

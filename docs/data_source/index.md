@@ -11,7 +11,7 @@ Catalogue of every dataset used in this research or planned for later phases: pr
 | **Crop and irrigation ground-truth dataset for Moroccan agricultural regions** | Ouassanouan et al. (2026), *Scientific Data* | ~10,000 geolocated parcels in El Gharb, Tadla, Doukkala, El Haouz, Souss; 45 crop types, 6 irrigation systems, a photo per parcel | Dec 2023 – Jan 2025 | labels of the first study area ([Morocco training data, §3](../phase1_data/morocco.md#3-source-data)) | open, citation required · [paper](https://doi.org/10.1038/s41597-026-06993-y) | ✅ |
 | **Water-Related Land Use (WRLU)** (Utah, USA) | Utah Division of Water Resources | field polygons; `IRR_Method` incl. *Dry Crop* (rainfed) | 2017 – 2025 (yearly) | **second study area** and temporal test (labels of the [Utah training data](../phase1_data/utah.md): WRLU 2024 and 2021); `data/Utah_field_data/` | open · [WRLU data portal](https://dwre-utahdnr.opendata.arcgis.com/pages/wrlu-data) | ✅ |
 | **GMIA-NEXT** reference points ([summary](../references/kebede-2026-gmia-next.md)) | Kebede et al. (2026) | 380,696 global irrigated / non-irrigated point labels (paper: 230,683 + 153,194) | 2023/24 | independent test points (Morocco check; Tunisia: 54 points, 44 irrigated, 10 rainfed) | open · [maps](https://doi.org/10.5281/zenodo.17627111) · [points](https://zenodo.org/records/20732681) | 🟦 |
-| **WSDA Agricultural Land Use** (Washington, USA) | Washington State Department of Agriculture | field polygons with crop and irrigation method; `Irrigation = None` for non-irrigated fields | 2025 (yearly) | candidate transfer region (eastern Washington) | open · [WSDA](https://agr.wa.gov/departments/land-and-water/natural-resources/agricultural-land-use) | 🔍 |
+| **WSDA Agricultural Land Use** (Washington, USA) | Washington State Department of Agriculture | field polygons with crop and irrigation method; `Irrigation = None` for non-irrigated fields | 2025 (yearly) | not used: candidate region of the earlier transfer design; Utah was chosen as second study area ([D13](../decisions.md#d13-utah-as-a-second-independent-study-area)) | open · [WSDA](https://agr.wa.gov/departments/land-and-water/natural-resources/agricultural-land-use) | – |
 | Verified irrigated agricultural lands, 2002–2017 | USGS | irrigated fields only, 14 US states | 2002 – 2017 | not usable (no rainfed class) | open · [ScienceBase](https://www.sciencebase.gov/catalog/item/5ece996d82ce30fd9808527b) | – |
 | CRDSS irrigated parcels, Division 5 (Colorado, USA) | Colorado Division of Water Resources | irrigated parcels only | 2000 – 2023 | not usable (no rainfed class) | open · [CDSS GIS](https://cdss.colorado.gov/gis-data/gis-data-by-category) | – |
 
@@ -25,6 +25,15 @@ Catalogue of every dataset used in this research or planned for later phases: pr
 
 Access: open (Copernicus data policy); Earth Engine account or service account needed. Compositing, cloud
 threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-script-03--build_tiles).
+
+## Satellite imagery (STAC)
+
+| Collection | Provider | Bands / variables | Resolution | Use here | STAC catalogue | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Sentinel-2 Level-2A, Collection 1** | ESA Copernicus, hosted by Element 84 on AWS | 12 bands and the scene classification layer (SCL) for the cloud mask | 10–60 m, resampled to 10 m | wall-to-wall monthly composites of every tile with ≥ 1% cropland (`s2_download/`) | [Earth Search](https://earth-search.aws.element84.com/v1), collection `sentinel-2-c1-l2a` | ✅ |
+
+Access: open, no account needed. Compositing and status: `s2_download/README.md` and
+[Cropland extent and mask §5](../phase1_data/cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
 
 ## Auxiliary and reference maps
 
@@ -43,5 +52,6 @@ threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-sc
 
 ## Pretrained models
 
-Clay v1.5, Prithvi-EO-2.0-300M-TL, TerraMind-1.0-base and AgriFM, with open weights. Developers, papers and download
+Six foundation models with open weights: Prithvi-EO-2.0-300M-TL, Clay v1.5, TerraMind-1.0-base, AgriFM, Presto
+and TESSERA v2 (Medium). Developers, papers and download
 locations are listed in [Foundation models](../foundation_models.md).

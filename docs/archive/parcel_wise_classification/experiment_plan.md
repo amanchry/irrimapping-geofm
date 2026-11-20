@@ -1,14 +1,14 @@
-# RQ1 · Experiment plan
+# Parcel-wise experiment plan (archived)
 
-!!! warning "Parcel-wise plan (archived experiments E01–E05)"
-    This plan describes the parcel-wise experiments, now in the [Archive](../archive/index.md). The current
-    experiments classify pixels: see the [pixel-wise experiment plan](../experiments/plan.md)
-    ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
+!!! warning "Archived: parcel-wise plan (experiments E01–E05)"
+    This plan describes the parcel-wise experiments, now in the [Archive](../index.md). The current
+    experiments classify pixels: see the [pixel-wise experiment plan](../../experiments/plan.md)
+    ([D16](../../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 
 This page is the complete plan of the frozen-encoder evaluation of Phase 2 · Model evaluation (RQ1): which experiments are run, what each one
 answers, and every setting. It is agreed before the runs start; an experiment page in
-[Experiments](../archive/parcel_wise_classification/index.md) is created from it when the experiment is implemented. Rules shared by all
-experiments (splits, metrics, fairness) are in the [evaluation protocol](evaluation.md).
+[Experiments](index.md) is created from it when the experiment is implemented. Rules shared by all
+experiments (splits, metrics, fairness) are in the [evaluation protocol](evaluation_protocol.md).
 
 **Contents:** [1 Decisions](#1-decisions-this-plan-rests-on) · [2 Shared settings](#2-settings-shared-by-every-experiment) ·
 [3 Inputs](#3-inputs) · [4 Design](#4-design-what-is-varied) · [5 Main experiments](#5-main-experiments) ·
@@ -20,14 +20,14 @@ experiments (splits, metrics, fairness) are in the [evaluation protocol](evaluat
 
 | ID | Experiment | Answers | Page |
 | --- | --- | --- | --- |
-| E02 | PCA + LogReg / RF / SVM | Q1 (main table of RQ1) | [E02 setup](../archive/parcel_wise_classification/E02_frozen_pca/index.md) |
-| E03 | PCA + MLP head | Q2 · does the head matter? | [E03 setup](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md) |
-| E04 | L-TAE + MLP head | Q3 · does attention over the months help? | [E04 setup](../archive/parcel_wise_classification/E04_frozen_ltae/index.md) |
-| E05 | PSE-TAE from scratch | Q4 · is a model trained from scratch enough? | [E05 setup](../archive/parcel_wise_classification/E05_psetae_scratch/index.md) |
-| E01 | PCA + classifiers, nested CV (done, before D14) | check of the validation design | [E01 setup](../archive/parcel_wise_classification/E01_frozen_pca_nested/index.md) · [report](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md) |
+| E02 | PCA + LogReg / RF / SVM | Q1 (main table of RQ1) | [E02 setup](E02_frozen_pca/index.md) |
+| E03 | PCA + MLP head | Q2 · does the head matter? | [E03 setup](E03_frozen_pca_mlp/index.md) |
+| E04 | L-TAE + MLP head | Q3 · does attention over the months help? | [E04 setup](E04_frozen_ltae/index.md) |
+| E05 | PSE-TAE from scratch | Q4 · is a model trained from scratch enough? | [E05 setup](E05_psetae_scratch/index.md) |
+| E01 | PCA + classifiers, nested CV (done, before D14) | check of the validation design | [E01 setup](E01_frozen_pca_nested/index.md) · [report](E01_frozen_pca_nested/report.md) |
 
 Label efficiency (Q5) is part of every experiment E02–E05: each one also trains on 10, 25 and 50% of the training
-blocks ([§6](#6-label-efficiency-inside-e02e05)). All experiments: [Experiments overview](../archive/parcel_wise_classification/index.md).
+blocks ([§6](#6-label-efficiency-inside-e02e05)). All experiments: [Experiments overview](index.md).
 
 ---
 
@@ -35,13 +35,13 @@ blocks ([§6](#6-label-efficiency-inside-e02e05)). All experiments: [Experiments
 
 | Decision | Choice | Reason |
 | --- | --- | --- |
-| Input data | **Sentinel-2 only** for every foundation model and every baseline | same optical data for all; Morocco and Utah treated alike; Sentinel-1 coverage of Utah changed between years ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)). Sentinel-1 is an ablation for later ([A5](#7-ablations)). |
+| Input data | **Sentinel-2 only** for every foundation model and every baseline | same optical data for all; Morocco and Utah treated alike; Sentinel-1 coverage of Utah changed between years ([D14](../../decisions.md#d14-sentinel-2-only-for-every-input)). Sentinel-1 is an ablation for later ([A5](#7-ablations)). |
 | Model inputs | each foundation model receives only the bands it was pretrained on; no fusion designed by us | the comparison tests the pretrained models, not a fusion scheme |
-| Classifier heads | three classical classifiers (**logistic regression, random forest, SVM**) and one neural head (**MLP**) | linear probe = standard test of frozen features; RF = standard remote-sensing classifier; SVM = strongest in E01; MLP = trainable head as in GeoFM benchmarks. Gradient boosting is dropped: in E01 it was never the best and always within the CI of SVM ([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). |
-| Temporal handling | **PCA** (concatenated months) and **L-TAE** (learned attention over the months) | [D8](../decisions.md#d8-two-temporal-aggregation-pipelines); L-TAE as in PANGAEA (Marsocci et al. 2024) |
+| Classifier heads | three classical classifiers (**logistic regression, random forest, SVM**) and one neural head (**MLP**) | linear probe = standard test of frozen features; RF = standard remote-sensing classifier; SVM = strongest in E01; MLP = trainable head as in GeoFM benchmarks. Gradient boosting is dropped: in E01 it was never the best and always within the CI of SVM ([D6](../../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). |
+| Temporal handling | **PCA** (concatenated months) and **L-TAE** (learned attention over the months) | [D8](../../decisions.md#d8-two-temporal-aggregation-pipelines); L-TAE as in PANGAEA (Marsocci et al. 2024) |
 | Neural baseline from scratch | **PSE-TAE** on the parcel pixel sets | built for parcel classification from satellite time series (Garnot et al. 2020) |
 | Most important extra | **label efficiency** | the main claim for foundation models is that they need fewer labels |
-| Regions | **Morocco** and **Utah 2023/24**, same protocol, analysed separately | [D13](../decisions.md#d13-utah-as-a-second-independent-study-area): two independent study areas |
+| Regions | **Morocco** and **Utah 2023/24**, same protocol, analysed separately | [D13](../../decisions.md#d13-utah-as-a-second-independent-study-area): two independent study areas |
 
 ---
 
@@ -76,7 +76,7 @@ All five inputs are cut from the same tile store. Sentinel-2 only.
 | **AgriFM** | 64 px chip, p16 grid | 10 S2 bands | 4 px patch, stride 32 px (320 m) | 1 × 1,024 (whole year) | 1 | `02d` |
 | **Pixel sets** (PSE-TAE only) | all inner pixels of the parcel | 10 S2 bands | pixel | N pixels × 12 × 10 | 12 | `03b` (view B) |
 
-Patch embeddings are pooled over the parcel with the patch-share weights ([models pipeline §5](frozen_encoders.md#5-scripts-06a06d--foundation-model-embeddings)).
+Patch embeddings are pooled over the parcel with the patch-share weights ([models pipeline §5](models_pipeline.md#5-scripts-06a06d--foundation-model-embeddings)).
 Clay and Prithvi also receive the parcel location and the date, as in their pretraining; [A4](#7-ablations) tests
 whether the location acts as a shortcut.
 
@@ -104,10 +104,10 @@ flowchart LR
 
 | Cell | Temporal handling | Head | S2 baseline | Clay | Prithvi | TerraMind | AgriFM | Experiment |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| a | PCA | LogReg · RF · SVM | ✓ (no PCA) | ✓ | ✓ | ✓ | ✓ | [**E02**](../archive/parcel_wise_classification/E02_frozen_pca/index.md) |
-| b | PCA | MLP | ✓ (no PCA) | ✓ | ✓ | ✓ | ✓ | [**E03**](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md) |
-| c | L-TAE | MLP | ✓ | ✓ | ✓ | ✓ | – | [**E04**](../archive/parcel_wise_classification/E04_frozen_ltae/index.md) |
-| d | from scratch | PSE-TAE | pixel sets | – | – | – | – | [**E05**](../archive/parcel_wise_classification/E05_psetae_scratch/index.md) |
+| a | PCA | LogReg · RF · SVM | ✓ (no PCA) | ✓ | ✓ | ✓ | ✓ | [**E02**](E02_frozen_pca/index.md) |
+| b | PCA | MLP | ✓ (no PCA) | ✓ | ✓ | ✓ | ✓ | [**E03**](E03_frozen_pca_mlp/index.md) |
+| c | L-TAE | MLP | ✓ | ✓ | ✓ | ✓ | – | [**E04**](E04_frozen_ltae/index.md) |
+| d | from scratch | PSE-TAE | pixel sets | – | – | – | – | [**E05**](E05_psetae_scratch/index.md) |
 
 **Which comparison answers which question**
 
@@ -130,7 +130,7 @@ embeddings.
 
 ### E02 · PCA + classical classifiers
 
-Setup page: [E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md)
+Setup page: [E02](E02_frozen_pca/index.md)
 
 | | |
 | --- | --- |
@@ -144,7 +144,7 @@ Setup page: [E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md)
 
 ### E03 · PCA + MLP
 
-Setup page: [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md)
+Setup page: [E03](E03_frozen_pca_mlp/index.md)
 
 | | |
 | --- | --- |
@@ -158,7 +158,7 @@ Setup page: [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index
 
 ### E04 · L-TAE + MLP
 
-Setup page: [E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md)
+Setup page: [E04](E04_frozen_ltae/index.md)
 
 | | |
 | --- | --- |
@@ -173,7 +173,7 @@ Setup page: [E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md
 
 ### E05 · PSE-TAE from scratch
 
-Setup page: [E05](../archive/parcel_wise_classification/E05_psetae_scratch/index.md)
+Setup page: [E05](E05_psetae_scratch/index.md)
 
 | | |
 | --- | --- |
@@ -241,12 +241,12 @@ From the out-of-fold predictions; no new training.
 
 ## 9. Results pages
 
-Every experiment gets its own pages in [Experiments](../archive/parcel_wise_classification/index.md), created when it is implemented and
+Every experiment gets its own pages in [Experiments](index.md), created when it is implemented and
 filled after each run:
 
 - `index.md` (setup): question, what changes against the previous experiment, all settings, how to run.
 - `report.md` (results): the answer in one or two sentences first, then the generated tables and figures, then the
-  interpretation, caveats and next steps ([protocol §9](evaluation.md#9-reporting-standard)).
+  interpretation, caveats and next steps ([protocol §9](evaluation_protocol.md#9-reporting-standard)).
 
 Tables and figures are written by `experiments/make_report.py` from the results, so a page always matches its run.
 With two regions, every table and figure appears once for Morocco and once for Utah.
@@ -254,13 +254,13 @@ With two regions, every table and figure appears once for Morocco and once for U
 | Experiment | Tables | Figures |
 | --- | --- | --- |
 | **every experiment** | metrics with 95% CI per input × head; macro-F1 per training fraction (label efficiency); differences vs the baseline (Δ macro-F1, CI, Holm) ; per-fold macro-F1 | macro-F1 with CI per input; learning curve (10–100% of the training blocks); macro-F1 per test fold; confusion matrices |
-| [E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md) · PCA + classical | the three classifiers side by side; results by zone (focus zone, irrigated-only zones) | month importance (permutation, random forest) per input; breakdown by zone and parcel area |
-| [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md) · PCA + MLP | MLP vs the E02 classifiers on the same input; macro-F1 per seed | training curves (validation macro-F1 per epoch) |
-| [E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md) · L-TAE + MLP | L-TAE vs PCA (E03) on the same input; macro-F1 per seed | attention weight per month and class; training curves |
-| [E05](../archive/parcel_wise_classification/E05_psetae_scratch/index.md) · PSE-TAE | PSE-TAE vs the E02 baseline and GeoFMs; macro-F1 per seed | training curves |
+| [E02](E02_frozen_pca/index.md) · PCA + classical | the three classifiers side by side; results by zone (focus zone, irrigated-only zones) | month importance (permutation, random forest) per input; breakdown by zone and parcel area |
+| [E03](E03_frozen_pca_mlp/index.md) · PCA + MLP | MLP vs the E02 classifiers on the same input; macro-F1 per seed | training curves (validation macro-F1 per epoch) |
+| [E04](E04_frozen_ltae/index.md) · L-TAE + MLP | L-TAE vs PCA (E03) on the same input; macro-F1 per seed | attention weight per month and class; training curves |
+| [E05](E05_psetae_scratch/index.md) · PSE-TAE | PSE-TAE vs the E02 baseline and GeoFMs; macro-F1 per seed | training curves |
 | Ablations | each ablation vs the setting it changes | one comparison figure each |
 
-The [Results](../archive/parcel_wise_classification/results.md) page collects the one-line answer of every experiment; the RQ1 synthesis (step 6
+The [Results](results.md) page collects the one-line answer of every experiment; the RQ1 synthesis (step 6
 below) compares the experiments and the two regions.
 
 ## 10. Order of work
@@ -269,12 +269,12 @@ One experiment at a time: implement, check on a small run, run in both regions, 
 
 | Step | Work | Needs |
 | --- | --- | --- |
-| 0a | ✅ AgriFM normalisation: chip statistics of each region ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)); config statistics as sensitivity run | – |
+| 0a | ✅ AgriFM normalisation: chip statistics of each region ([D15](../../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)); config statistics as sensitivity run | – |
 | 0b | ✅ Code (13 Nov 2026): region in scripts 02a–05; HGB removed; seeds and label efficiency in 03 / 03b / 03c; new `07c_train_ltae.py`; Holm rule in 04; per-region reports; Slurm submitter | – |
 | 0c | ✅ Embeddings, Sentinel-2 only (12 Nov 2026): **Morocco** TerraMind and AgriFM again, Clay and Prithvi reused; **Utah** all four (cluster GPU) | 0a, 0b |
-| 1 | [**E02**](../archive/parcel_wise_classification/E02_frozen_pca/index.md) Morocco + Utah; report page with tables and figures (`make_report.py` extended to two regions) | 0c |
-| 2 | Write `07c_train_ltae.py` (heads `mlp` and `ltae`); [**E03**](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md), then [**E04**](../archive/parcel_wise_classification/E04_frozen_ltae/index.md); reports | 1 |
-| 3 | [**E05**](../archive/parcel_wise_classification/E05_psetae_scratch/index.md) PSE-TAE (3 seeds) | – (can run any time on the cluster) |
+| 1 | [**E02**](E02_frozen_pca/index.md) Morocco + Utah; report page with tables and figures (`make_report.py` extended to two regions) | 0c |
+| 2 | Write `07c_train_ltae.py` (heads `mlp` and `ltae`); [**E03**](E03_frozen_pca_mlp/index.md), then [**E04**](E04_frozen_ltae/index.md); reports | 1 |
+| 3 | [**E05**](E05_psetae_scratch/index.md) PSE-TAE (3 seeds) | – (can run any time on the cluster) |
 | 5 | Ablations **A1**, **A4**, **A2** (A3, A5 if time allows) | 1 |
 | 6 | RQ1 synthesis over both regions | 1–5 |
 

@@ -23,9 +23,10 @@ a simple temporal CNN on Sentinel-2 time series transfers better.
   pretraining.
 
 ## What this research takes from it
-- A **temporal CNN (TempCNN) as neural baseline** next to the GeoFMs
-  ([decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).
-- An expectation for RQ4: transfer to a region with different practices may favour simpler temporal models.
+- A **temporal CNN (TempCNN) as neural baseline** next to the GeoFMs ([E02](../experiments/E02_temporal_nn.md)).
+- An expectation for RQ4: in a second region with different practices (Utah,
+  [D13](../decisions.md#d13-utah-as-a-second-independent-study-area)) simpler temporal models may compare better
+  with the GeoFMs than in Morocco.
 
 ## Differences and limitations
 - Crop types, not irrigation; pixel-level; different label sources per country.

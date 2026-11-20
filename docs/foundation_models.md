@@ -64,15 +64,14 @@ explains the strategies):
 | Experiment | Models | Encoder | Trained |
 | --- | --- | --- | --- |
 | [E03](experiments/E03_frozen_geofm.md) (RQ1) | all six | **frozen**: pretrained weights, no gradient updates, evaluation mode | head only (2.4–3.2 M weights with the image models) |
-| [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Utah | **frozen**, **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights) | head only (frozen) or all ≈ 306 M weights |
-| later | to be chosen after E05 | **LoRA** (low-rank adapters on the attention layers; `add_lora` in `tile_common.py`) | adapters + head |
+| [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Utah | **frozen**, **LoRA** (low-rank adapters, rank 16, on the attention and MLP layers), **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights) | head only (frozen), 5.5 M adapters + head (LoRA), or all ≈ 306 M weights |
 
 ### Earlier parcel-wise benchmark (archived)
 
 The first benchmark ([archive](archive/parcel_wise_classification/index.md)) classified whole parcels in Morocco
 with the four image models, all frozen. Each model received a 64 × 64 px chip (640 m) centred on the parcel, and the
 parcel embedding was the mean of the patch tokens covering the parcel, weighted by the fraction of each patch inside
-the parcel ([Models pipeline §5](phase2_models/frozen_encoders.md#5-scripts-06a06d--foundation-model-embeddings)).
+the parcel ([Models pipeline §5](archive/parcel_wise_classification/models_pipeline.md#5-scripts-06a06d--foundation-model-embeddings)).
 These embeddings cannot give wall-to-wall maps, which is why the study moved to the pixel-wise set-up
 ([D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 

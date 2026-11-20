@@ -2,14 +2,14 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 
 *The 12 monthly embeddings are combined by a trained attention model (L-TAE) instead of PCA; the same MLP head as E03, so E03 → E04 isolates the temporal aggregation.*
 
 | | |
 | --- | --- |
 | **Status** | done (13 Nov 2026), Morocco and Utah |
-| **Research question** | RQ1 — Q3 of the [experiment plan](../../../phase2_models/experiment_plan.md#4-design-what-is-varied): how the monthly embeddings are combined |
+| **Research question** | RQ1 — Q3 of the [experiment plan](../experiment_plan.md#4-design-what-is-varied): how the monthly embeddings are combined |
 | **Builds on** | [E03](../E03_frozen_pca_mlp/index.md) (same MLP head), [E02](../E02_frozen_pca/index.md) |
 | **Config** | [`config.yaml`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/parcel_wise_classification/E04_frozen_ltae/config.yaml) |
 | **Report** | **[REPORT.md](report.md)** |
@@ -44,7 +44,7 @@ Clay, Prithvi and TerraMind give one embedding per month. E01/E02 put the 12 mon
 with PCA (a fixed, unsupervised step). PANGAEA (Marsocci et al. 2024) combines the monthly encodings of
 single-date models with a trained L-TAE and found it better than a linear mapping. E04 tests whether that holds
 for irrigated vs rainfed mapping. The same L-TAE is trained on the monthly Sentinel-2 features, so the baseline gets
-the same temporal model ([protocol §5](../../../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines)).
+the same temporal model ([protocol §5](../evaluation_protocol.md#5-temporal-aggregation-two-pipelines)).
 
 ## What changes
 | | E03 (PCA + MLP) | E04 (L-TAE + MLP) |
@@ -77,7 +77,7 @@ parcels with the same bootstrap draws. Regions: Morocco and Utah 2023/24.
 ## Label efficiency (part of this experiment)
 
 Every input is also trained on **10, 25 and 50% of the training blocks**, so the report shows a learning curve next
-to the main result (Q5 of the [experiment plan](../../../phase2_models/experiment_plan.md#6-label-efficiency-inside-e02e05)).
+to the main result (Q5 of the [experiment plan](../experiment_plan.md#6-label-efficiency-inside-e02e05)).
 
 | Setting | Value |
 | --- | --- |

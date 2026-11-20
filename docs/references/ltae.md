@@ -17,9 +17,14 @@ the series into one vector.
 - Matches or beats the heavier attention and recurrent models with far fewer parameters and less compute.
 
 ## What this research takes from it
-- The temporal model of the **L-TAE pipeline**: attention over the 12 monthly embeddings of Clay, Prithvi and
-  TerraMind, and over the 12 months of the S1/S2 features, so the baseline gets the same temporal model
-  ([E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md), [protocol §5](../phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines)).
+- The **pixel L-TAE** of [E02](../experiments/E02_temporal_nn.md): attention over the 12 monthly Sentinel-2 values
+  of one pixel, trained from scratch.
+- The **temporal head** of the tile models: the L-TAE combines the 12 monthly features at every patch position of
+  the encoders that do not merge all 12 months themselves (Prithvi, Clay, TerraMind), before the UPerNet decoder ([E03](../experiments/E03_frozen_geofm.md),
+  [E05](../experiments/E05_prithvi_strategies.md)); U-TAE ([E04](../experiments/E04_utae.md)) uses the same
+  attention inside the network.
+- Archived parcel-wise set-up: attention over the 12 monthly parcel embeddings
+  ([archived E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md)).
 - Default size from the paper (16 heads, d_k 8, d_model 256, MLP 256–128).
 - PANGAEA uses the same module to aggregate dates for single-date GeoFMs ([PANGAEA](pangaea.md)).
 

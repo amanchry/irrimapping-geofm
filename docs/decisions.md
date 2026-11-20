@@ -9,19 +9,20 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D1](#d1-spatial-folds-instead-of-a-7030-split) | Train / test split | 70 / 30 stratified + validation subset | 5 spatial folds of 20 km blocks | Oct 2026 |
 | [D2](#d2-two-agricultural-years-per-parcel-season) | Imagery period | 2024 annual stack | each parcel's own agricultural year (2023/24 or 2024/25), Sep – Aug | Oct 2026 |
 | [D3](#d3-validation-pastis-rotation-instead-of-nested-cv) | Validation design | validation subset from the training data | PASTIS rotation: 3 train / 1 validation / 1 test | 4 Nov 2026 |
-| [D4](#d4-one-shared-tile-store-for-every-input) | Image preparation | annual stacks via STAC / xarray | one tile store from Google Earth Engine for every input | 27 Oct 2026 |
-| [D5](#d5-frozen-encoder--classical-classifiers) | Frozen-encoder strategy | frozen encoder + decoder / head | frozen encoder → parcel embedding → four classifiers | Oct 2026 |
-| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | three classifiers (LogReg, RF, SVM) and an MLP head on every input; gradient boosting dropped (12 Nov 2026) | Oct 2026 |
+| [D4](#d4-one-shared-tile-store-for-every-input) | Image preparation | annual stacks via STAC / xarray | one tile store from Google Earth Engine for every input (experiments); wall-to-wall composites from STAC for the maps (D18) | 27 Oct 2026 |
+| [D5](#d5-frozen-encoder--classical-classifiers) | Frozen-encoder strategy | frozen encoder + decoder / head | parcel-wise (archived): frozen encoder → parcel embedding → classifiers. Superseded by D16: frozen encoder + L-TAE + UPerNet per pixel (E03) | Oct 2026 |
+| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | parcel-wise (archived): LogReg, RF, SVM and an MLP head. Pixel-wise: random forest and gradient boosting (E01), TempCNN and L-TAE (E02) | Oct 2026 |
 | [D7](#d7-macro-f1-as-the-headline-metric) | Selection metric | mean F1 over folds ± SD | macro-F1 of the out-of-fold predictions, 95% block-bootstrap CI, per-fold mean ± SD | Oct 2026 |
-| [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | PCA pipeline now; L-TAE pipeline next | 4 Nov 2026 |
+| [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | parcel-wise (archived): PCA and L-TAE pipelines. Pixel-wise: L-TAE over the months for the image GeoFMs (E03) | 4 Nov 2026 |
 | [D9](#d9-cloud-score-instead-of-qa60) | Cloud mask | cloud-masked composites | Cloud Score+ (cs_cdf ≥ 0.60) | Oct 2026 |
 | [D10](#d10-transfer-region-under-review) | Transfer region | Tunisia, 54 GMIA-NEXT points | replaced by D13: no transfer region; Utah as a second study area | 12 Nov 2026 |
-| [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | parcel benchmark with classical heads (RQ1) + segmentation head and pixel models for the maps (RQ2–RQ4); neural baselines TempCNN and U-TAE | 6 Nov 2026 |
+| [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | superseded by D16: every model is pixel-wise (UPerNet head for the GeoFMs); neural baselines TempCNN, L-TAE and U-TAE | 6 Nov 2026 |
 | [D12](#d12-agrifm-with-its-pretrained-4-px-patch-embedding) | AgriFM encoder | not specified | pretrained 4 × 4 px patch embedding (output stride 32 px); all weights checked on loading | 6 Nov 2026 |
 | [D13](#d13-utah-as-a-second-independent-study-area) | RQ3 / RQ4: second region and temporal test | zero-shot transfer of the Morocco model to Tunisia (RQ4); temporal test within Morocco (RQ3) | Utah (WRLU) as an independent second study area, no transfer; temporal test in Utah: train on WRLU 2024, test on WRLU 2021 on held-out folds | 12 Nov 2026 |
 | [D14](#d14-sentinel-2-only-for-every-input) | Input data of the models | Sentinel-1 and Sentinel-2 | Sentinel-2 only for every GeoFM and the baselines; Sentinel-1 as an optional ablation (Morocco) | 12 Nov 2026 |
 | [D15](#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips) | AgriFM normalisation | not specified | per-band mean / std of the region's own chips; config statistics as sensitivity run | 12 Nov 2026 |
 | [D16](#d16-pixel-wise-classification-for-continuous-maps) | Unit of classification | one prediction per parcel (parcel embeddings / features) | one prediction per 10 m pixel; parcel-wise experiments E01–E05 archived | 18 Nov 2026 |
+| [D18](#d18-wall-to-wall-composites-from-stac-for-the-maps) | Imagery for the maps | annual stacks via STAC / xarray | monthly Sentinel-2 composites of every cropland tile from a STAC catalogue (Earth Search), per 10.24 km block | 19 Nov 2026 |
 | [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified | union of 4 cropland products per agricultural year; third class "not cropland"; mask applied to the map, never to the inputs | 19 Nov 2026 |
 
 ---
@@ -62,13 +63,20 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Where:** [dataset §6–7](phase1_data/morocco.md#6-script-03--build_tiles).
 
 ## D5. Frozen encoder + classical classifiers
+!!! note "Parcel-wise (archived); superseded by D16"
+    In the pixel-wise experiments the frozen encoder is followed by L-TAE and a UPerNet head (E03), and RQ2 compares
+    frozen, LoRA, full fine-tuning and training from scratch (E05).
+
 - **Proposal (§4.2.1):** frozen encoder, train a decoder and classification head.
 - **Now:** the task is per parcel, so the frozen encoder gives one embedding per parcel and the "head" is a
-  classifier (linear probe and three others). Fine-tuning (LoRA, RQ2) follows as planned.
+  classifier (linear probe and three others). Fine-tuning (RQ2) follows.
 - **Why:** tests what the pretrained representation already contains, at equal cost for every model; the linear
   probe is the standard test of frozen features.
 
 ## D6. Four classifiers instead of one Random Forest
+!!! note "Parcel-wise (archived)"
+    The pixel-wise baselines are the random forest and gradient boosting (E01) and TempCNN and L-TAE (E02).
+
 - **Proposal:** Random Forest baseline.
 - **Now:** logistic regression, random forest, gradient boosting and SVM on every input (RF stays the headline).
 - **Why:** a classifier that suits hand-built features (RF) may not suit dense embeddings (E01: RF is the weakest
@@ -76,7 +84,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Update (12 Nov 2026):** from E02 on, three classifiers: logistic regression (linear probe), random forest
   (standard remote-sensing classifier, the proposal's baseline) and SVM (strongest in E01), plus a trainable **MLP
   head** (E03, E04). Gradient boosting is dropped: in E01 it was never the best classifier and always within the
-  confidence interval of SVM. Plan: [RQ1 · Experiment plan](phase2_models/experiment_plan.md).
+  confidence interval of SVM. Plan: [parcel-wise experiment plan](archive/parcel_wise_classification/experiment_plan.md).
 
 ## D7. Macro-F1 as the headline metric
 - **Proposal (§4.2.4):** OA, precision, recall, F1; best model by mean F1 over the five folds, SD as consistency.
@@ -86,11 +94,14 @@ stating the original plan, the current approach and the rationale. Smaller metho
   rainfed class equally. Paired bootstrap differences say whether a gap is real.
 
 ## D8. Two temporal aggregation pipelines
+!!! note "Parcel-wise (archived)"
+    In the pixel-wise experiments the image GeoFMs use L-TAE over the months at every patch position (E03).
+
 - **Proposal:** not specified.
 - **Now:** PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E04.
 - **Why:** PANGAEA (Marsocci et al. 2024) found L-TAE better than linear mapping for single-date encoders; testing
   both shows whether the conclusion depends on how the months are combined.
-- **Where:** [protocol §5](phase2_models/evaluation.md#5-temporal-aggregation-two-pipelines).
+- **Where:** [protocol §5](archive/parcel_wise_classification/evaluation_protocol.md#5-temporal-aggregation-two-pipelines).
 
 ## D9. Cloud Score+ instead of QA60
 - **Now:** Sentinel-2 pixels kept when Cloud Score+ cs_cdf ≥ 0.60; scenes with up to 60% cloud admitted.
@@ -110,6 +121,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
   but an independent second study area.
 
 ## D11. Two kinds of head: parcel benchmark and mapping model
+!!! note "Superseded by D16 (18 Nov 2026)"
+    Every model now classifies pixels, so the parcel benchmark and the separate mapping model became one pixel-wise
+    set-up. "E05" below is the archived PSE-TAE experiment, not the current E05.
+
 - **Proposal (§4.2.1, §4.3):** frozen encoder with a decoder / head; annual irrigated maps 2021–2025 for Morocco.
 - **Problem:** the RQ1 pipeline pools the embeddings over the **parcel polygon**. Annual maps of Morocco (or of a
   transfer region) have no polygons, and the GeoFM patches (80 m Clay, 160 m the others) are too coarse for parcels of
@@ -194,7 +209,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   (`S1S2_VARIABLES = "all"`, PSE-TAE `morocco_s2s1`). E01 (done before this decision) used Sentinel-1 in the baseline
   and in TerraMind and is kept as it is.
 - **Where:** [Foundation models · Configuration](foundation_models.md#configuration-in-this-study),
-  [Models pipeline](phase2_models/frozen_encoders.md).
+  [Models pipeline](archive/parcel_wise_classification/models_pipeline.md).
 
 ## D15. AgriFM normalised with the statistics of the region's chips
 - **Before:** AgriFM inputs were normalised with the statistics of the repository's fine-tuning example
@@ -222,8 +237,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
   outline for every field it classifies, and outlines exist only for the surveyed parcels.
 - **Now:** every 10 m pixel is classified on its own. Training and test samples are the labelled pixels of the
   surveyed parcels (`pixelwise_run/04_make_pixel_samples.py`); a pixel takes its parcel's label and fold, so no
-  parcel is split between training and test. Parcel-level accuracy is still reported (majority of a parcel's
-  pixels) for comparison with E01–E05.
+  parcel is split between training and test. The pixel-wise results are not compared with the archived
+  parcel-wise E01–E05.
 - **Kept:** labels, spatial folds (20 km blocks, 5 folds, PASTIS rotation), the tile store and its compositing,
   Sentinel-2 only (D14), metrics and statistics.
 - **Archive:** E01–E05 with their pages, results and scripts are kept unchanged in the
@@ -245,3 +260,14 @@ stating the original plan, the current approach and the rationale. Smaller metho
   (`mask_check.csv`); accuracy of the final map from an independent sample over the map, including non-cropland.
 - **Where:** [Cropland extent and mask](phase1_data/cropland_mask.md), `cropland_extent/make_cropland_mask.py`.
 
+## D18. Wall-to-wall composites from STAC for the maps
+- **Proposal:** annual stacks via STAC and xarray.
+- **Before:** one Google Earth Engine tile store (D4), built around the surveyed parcels; too slow for every cropland
+  tile of Morocco (48 MB request limit, about 40 h per year on one stream).
+- **Now:** monthly Sentinel-2 composites of every tile with ≥ 1% cropland are downloaded from a public STAC catalogue
+  (Earth Search, `sentinel-2-c1-l2a`; SCL cloud mask; offset of processing baseline ≥ 04.00 removed), per
+  10.24 km block of 8 × 8 tiles, as many parallel jobs on the cluster. The STAC approach is independent of the Earth
+  Engine tiles: its models are trained, evaluated and mapped on STAC tiles only.
+- **Status (20 Nov 2026):** Utah 2023/24 17,278 of 18,472 tiles (the rest after a fix); Morocco on hold.
+- **Where:** [`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download),
+  [experiment plan §3](experiments/plan.md#3-after-the-experiments).

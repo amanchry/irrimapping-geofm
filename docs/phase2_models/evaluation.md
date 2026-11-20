@@ -1,31 +1,35 @@
 # Evaluation protocol
 
-This protocol defines the rules common to all experiments and ensures that results are comparable across inputs,
-classifiers and experiments. Any deviation must be declared in the experiment's *What changes* table.
+This protocol defines the rules common to all pixel-wise experiments (E01–E05) and makes their results comparable
+across inputs, models and experiments. Any deviation is stated on the experiment's page. The protocol of the earlier
+parcel-wise benchmark is kept in the [archive](../archive/parcel_wise_classification/evaluation_protocol.md).
 
-**Contents:** [1 Task](#1-task-and-unit) · [2 Splits](#2-spatial-splits) · [3 Inputs](#3-inputs) ·
-[4 Classifiers](#4-classifiers) · [5 Temporal aggregation](#5-temporal-aggregation-two-pipelines) ·
-[6 Fairness rules](#6-fairness-rules) · [7 Metrics](#7-metrics-and-uncertainty) ·
-[8 Reading a result](#8-how-a-result-is-read) · [9 Reporting](#9-reporting-standard) · [References](#references)
+**Contents:** [1 Task](#1-task-and-unit) · [2 Splits](#2-spatial-splits) · [3 Models](#3-models-and-inputs) ·
+[4 Fairness rules](#4-fairness-rules) · [5 Metrics](#5-metrics-and-uncertainty) ·
+[6 Reading a result](#6-how-a-result-is-read) · [7 Reporting](#7-reporting-standard) · [References](#references)
 
 ---
 
 ## 1. Task and unit
 
-The task is binary classification of **parcels** into irrigated (class 1) and rainfed (class 2), with one label
-and one prediction per surveyed parcel; all metrics are computed at parcel level. 8,781 parcels (7,585 irrigated, 1,196 rainfed); inputs are scored on
-the parcels present in every run (8,775: six parcels fully covered by overlapping polygons have no own pixel).
+Every **10 m pixel** is classified into one of three classes: **1 irrigated**, **2 rainfed**, **3 not cropland**
+([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps),
+[D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)). The labelled pixels are the
+inner pixels of the surveyed parcels (at most 100 per parcel) and not-cropland pixels taken where none of the four
+cropland products shows cropland ([pixel samples](../phase1_data/pixel_samples.md)). Every model is scored on the
+same labelled pixels. Regions: Morocco (2023/24 and 2024/25 pooled, each pixel with its own year) and Utah
+(2023/24), analysed separately.
 
 ## 2. Spatial splits
 
-Parcels are grouped into **20 km blocks**, and the blocks into **5 folds** with the same class balance (about
-1,530 irrigated and 240 rainfed parcels each). A block is never split. A place surveyed in both seasons stays in one
-fold. Block size and fold assignment: [dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds).
+Parcels are grouped into **20 km blocks**, and the blocks into **5 folds** with a similar class balance; a block is
+never split, and every labelled pixel takes the fold of its block. Pixels of blocks without labelled parcels (fold
+−1) are not used. Fold assignment: [Morocco dataset §5](../phase1_data/morocco.md#5-script-02--make_spatial_folds).
 
-**Main design: PASTIS rotation** (Garnot & Landrieu 2021). Five rounds; in each, 3 folds train, the next fold is
-the validation fold, one fold is the test fold:
+**PASTIS rotation** (Garnot & Landrieu 2021). Five rounds; in each, 3 folds train, the next fold is the validation
+fold, one fold is the test fold:
 
-| Round | Train | Validation (choose settings / early stopping) | Test |
+| Round | Train | Validation (early stopping, settings) | Test |
 | --- | --- | --- | --- |
 | 1 | 2, 3, 4 | 1 | 0 |
 | 2 | 3, 4, 0 | 2 | 1 |
@@ -33,139 +37,105 @@ the validation fold, one fold is the test fold:
 | 4 | 0, 1, 2 | 4 | 3 |
 | 5 | 1, 2, 3 | 0 | 4 |
 
-The model is trained on the 3 training folds with the setting that scored best on the validation fold. The test
-fold is never used for any choice. After 5 rounds every parcel has one **out-of-fold prediction** from a model that
-never saw its block. Classifiers and neural networks use the same rotation.
+The test fold is never used for any choice. After 5 rounds every labelled pixel has one **out-of-fold prediction**
+from a model that never saw its block. Models that work on whole 128 px tiles (E03–E05) predict the test tiles and
+are read at their labelled pixels; a tile with pixels of several folds contributes only its training-fold labels to
+the loss.
 
-**Why a rotation rather than one fixed split.** (i) Every parcel is tested once, so the rainfed scores rest on all
-1,196 rainfed parcels instead of the ~240 of a single test fold. (ii) Five different test areas reveal how strongly
-accuracy depends on the region, which a single test area would show only by chance. (iii) Hyperparameters are never
-chosen on the test fold, so the reported accuracy is not inflated by tuning (Varma & Simon, 2006). The same
-principle of spatially separated folds is implemented in blockCV (Valavi et al., 2019) and used for crop-type
-classification with Sentinel-1/2 by Orynbaikyzy et al. (2022); Schratz et al. (2019) recommend spatial folds for
-tuning as well as for testing.
+**Why a rotation rather than one fixed split.** (i) Every pixel is tested once, so the rainfed scores rest on all
+rainfed parcels instead of those of a single test fold. (ii) Five test areas show how strongly accuracy depends on
+the region. (iii) Settings are never chosen on the test fold, so the reported accuracy is not inflated by tuning
+(Varma & Simon 2006). Spatially separated folds follow Roberts et al. (2017) and Ploton et al. (2020): random splits
+of autocorrelated pixels overstate accuracy (Kattenborn et al. 2022).
 
-**Sensitivity design: nested spatial CV** (`VALIDATION: nested`, experiment [E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/index.md)):
-settings chosen by spatial CV on the 4 non-test folds, model refit on all 4.
+## 3. Models and inputs
 
-**Random CV** (stratified, ignoring blocks) is only used inside a run to show how much it overstates accuracy.
+All inputs come from the same tile store: 12 monthly Sentinel-2 composites of the agricultural year, Sentinel-2
+only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 
-## 3. Inputs
-
-Five inputs are compared, all Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)): a
-Sentinel-2 parcel-feature baseline (12 Sentinel-2 bands, NDVI, NDWI, EVI over 12 months; 180 features) and the embeddings of four frozen foundation models (Clay v1.5,
-Prithvi-EO-2.0, TerraMind, AgriFM). A parcel's embedding is the mean of the patch embeddings that cover it, weighted
-by the share of each patch inside the parcel; chips are 64 × 64 px and shifted so that the parcel centroid lies at a
-patch centre. Bands, patch size and temporal handling per model: [Foundation models · Configuration](../foundation_models.md#configuration-in-this-study).
-
-## 4. Classifiers
-
-| | Classifier | Grid (chosen on the validation fold, by macro-F1) | Fixed |
-| --- | --- | --- | --- |
-| `logreg` | logistic regression (**linear probe**) | C ∈ {0.01, 0.1, 1, 10} | balanced classes, standardised |
-| `rf` | random forest | max_features ∈ {√p, 0.3} · min_samples_leaf ∈ {1, 5} · class_weight ∈ {none, balanced_subsample} | 500 trees |
-| `svm` | RBF support vector machine | C ∈ {1, 10} · γ ∈ {scale, 0.01} | balanced classes, standardised |
-
-**Headline classifiers:** random forest (the proposal's baseline classifier) for every input, and logistic
-regression (linear probe) for the foundation models. SVM is always reported. Histogram gradient boosting was used in
-E01 and is dropped from E02 on ([D6](../decisions.md#d6-four-classifiers-instead-of-one-random-forest)). A trainable
-MLP head is added in E03 and E04 ([experiment plan](experiment_plan.md)).
-
-## 5. Temporal aggregation: two pipelines
-
-How the 12 monthly embeddings of a parcel become one input for the classifier is the step that differs between
-the two pipelines. Everything before (embeddings) and after (comparison, metrics) is shared.
-
-```mermaid
-flowchart LR
-    E["<b>Monthly embeddings</b><br/>12 × D per parcel<br/>(AgriFM: 1 × D)"] --> A["<b>PCA pipeline</b><br/>fill empty months (training median)<br/>→ concat 12 months → standardise<br/>→ PCA 128, fitted on the training folds"]
-    E --> B["<b>L-TAE pipeline</b><br/>standardise per channel<br/>→ L-TAE attention over the months<br/>(empty months masked)"]
-    A --> C["LogReg · RF · SVM (E02)<br/>or MLP (E03)"]
-    B --> D["MLP head, trained with the L-TAE<br/>early stopping on the validation fold<br/>3 seeds"]
-    C --> O["<b>oof_predictions.csv</b><br/>same format"]
-    D --> O
-    O --> CMP["compare: same parcels,<br/>same bootstrap draws"]
-```
-
-| | PCA pipeline | L-TAE pipeline |
+| Experiment | Input | Models |
 | --- | --- | --- |
-| Experiments | [E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/index.md), [E02](../archive/parcel_wise_classification/E02_frozen_pca/index.md), [E03](../archive/parcel_wise_classification/E03_frozen_pca_mlp/index.md) | [E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md) |
-| Learns which months matter | no (PCA is unsupervised) | yes (attention weights) |
-| Keeps the order of the months | only as positions in the vector | yes (positional encoding) |
-| Classifier | the three of §4 (E02) or an MLP (E03) | its own MLP head |
-| Applies to the baseline | yes (180 features, no PCA) | yes (15 variables × 12 months) |
-| Applies to AgriFM | yes | no (one vector per year) |
-| Reference | linear probing of frozen features | PANGAEA: single-date encoders + L-TAE (Marsocci et al. 2024); L-TAE (Garnot & Landrieu 2020) |
+| [E01](../experiments/E01_s2_pixel_baseline.md) | pixel time series, 12 months × 12 bands (+ NDVI, NDWI) | random forest, histogram gradient boosting |
+| [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN, L-TAE |
+| [E03](../experiments/E03_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models + L-TAE + UPerNet ([Foundation models](../foundation_models.md)) |
+| [E04](../experiments/E04_utae.md) | 128 × 128 px tiles | U-TAE from scratch |
+| [E05](../experiments/E05_prithvi_strategies.md) | 128 × 128 px tiles, 10–100% of the training parcels | Prithvi frozen, LoRA, fully fine-tuned, from scratch |
 
-The L-TAE pipeline is also trained on the monthly Sentinel-2 features, so that the baseline benefits from the same
-temporal model and the comparison remains balanced. Because both pipelines write the same out-of-fold predictions, E04 compares them
-directly with the E02 runs on the same parcels.
+Neural models: class-weighted cross-entropy (weights from the training pixels), early stopping on the validation
+fold, 3 seeds (42, 1042, 2042) per round; the out-of-fold prediction is the mean probability of the seeds. Settings
+per experiment are on its page; the shared settings are on the [experiment plan](../experiments/plan.md).
 
-## 6. Fairness rules
+## 4. Fairness rules
 
 ```mermaid
 flowchart LR
-    subgraph SAME["Identical for every input"]
-        P1["same parcels<br/>(common to all runs)"]
-        P2["same pixels<br/>(one tile store)"]
+    subgraph SAME["Identical for every model"]
+        P1["same labelled pixels"]
+        P2["same tile store<br/>(composites, cloud mask, months)"]
         P3["same folds<br/>and rotation"]
-        P4["same classifiers<br/>and grids"]
-        P5["same metrics and<br/>bootstrap draws"]
+        P4["same metrics and<br/>bootstrap draws"]
     end
-    SAME --> D["only the input<br/>(or the one setting the<br/>experiment varies) differs"]
+    SAME --> D["only the model<br/>(or the one setting the<br/>experiment varies) differs"]
     D --> C["paired difference<br/>with 95% CI"]
 ```
 
-1. Every fitted step (imputation, standardisation, PCA, tuning, early stopping) uses the **training folds only**;
-   the validation fold only chooses settings; the test fold is used once, for the prediction.
-2. All inputs come from the **same tile store**: same composites, cloud mask, months and parcels.
-3. Settings are chosen with the **same budget** for every input (the grids above).
-4. Inputs are compared on the **parcels common to all runs**, with the **same bootstrap draws**.
-5. An experiment varies **one thing** against the experiment it builds on, and says so in its README.
+1. Every fitted step (normalisation statistics, class weights, early stopping) uses the **training folds** (early
+   stopping: the validation fold); the test fold is used once, for the prediction.
+2. All inputs come from the **same tile store**.
+3. Models are compared on the **same out-of-fold pixels** with the **same bootstrap draws**.
+4. An experiment varies **one thing** against the experiment it builds on and states it.
 
-## 7. Metrics and uncertainty
+## 5. Metrics and uncertainty
 
 | Metric | Role |
 | --- | --- |
-| **Macro-F1** | headline: mean of irrigated F1 and rainfed F1, so the 14% rainfed class counts equally |
-| F1, precision, recall per class | rainfed recall: how many rainfed fields are found |
-| Balanced accuracy | mean recall of both classes |
-| Overall accuracy | for comparison with the literature (predicting "all irrigated" already gives 86%) |
-| PR-AUC (rainfed), Brier score, ECE | ranking quality and calibration of the predicted probabilities |
-| Macro-F1 per fold, mean ± SD | stability across regions (the proposal's selection criterion) |
+| **Cropland macro-F1** | headline: mean F1 of irrigated and rainfed over the parcel pixels; a parcel pixel predicted "not cropland" counts as missed. Comparable across experiments whatever the not-cropland performance |
+| 3-class macro-F1 | mean F1 of the three classes |
+| F1, precision, recall per class | e.g. rainfed recall: how many rainfed pixels are found |
+| Overall accuracy | for comparison with the literature only |
+| Confusion matrix | which classes are confused (e.g. rainfed → irrigated) |
 
-The kappa coefficient is not reported, as it is uninformative for accuracy assessment (Pontius & Millones, 2011).
+The kappa coefficient is not reported (Pontius & Millones 2011). Results are also given per region, per year
+(Morocco) and per zone.
 
-**95% confidence intervals: block bootstrap** (Künsch, 1989). The 91 blocks, not the parcels, are the independent
-units. Each of
-1,000 draws resamples whole blocks with replacement and recomputes the metric; the 2.5% and 97.5% quantiles give the
-interval. The same 1,000 draws are used for every run, so a difference between two inputs is measured on identical
-resamples (**paired**).
+**95% confidence intervals: block bootstrap** (Künsch 1989). The 20 km blocks, not the pixels, are the independent
+units. Each of 1,000 draws resamples whole blocks with replacement and recomputes the metric from the summed
+confusion matrices; the 2.5% and 97.5% quantiles give the interval. The same draws are used for every run, so a
+difference between two models is measured on identical resamples (**paired**; Foody 2009).
 
-## 8. How a result is read
+## 6. How a result is read
 
-- **Δ macro-F1** = input − baseline, with the **same classifier** (runs with their own model, such as L-TAE or
-  PSE-TAE, against the baseline random forest).
-- An input is **better** (or **worse**) than the baseline only if the 95% CI of Δ excludes 0 **and** the
-  Holm-adjusted p-value is below 0.05. Holm corrects for testing all inputs × classifiers together.
+- **Δ** = model − reference on the same pixels (references: E01 random forest and E04 U-TAE for E01–E04; within E05
+  the strategies against each other).
+- A model is **better** (or **worse**) only if the 95% CI of Δ excludes 0 **and** the Holm-adjusted p-value is
+  below 0.05 (Holm 1979; correction over all comparisons of a table and metric).
 - A CI that excludes 0 without surviving Holm is reported as "higher / lower, not significant after Holm".
-- Otherwise: **no clear difference**. With ~240 rainfed parcels per fold, differences below about 0.02 macro-F1 are
-  usually inside the noise.
+- Otherwise: **no clear difference**. With few large blocks per fold, the CIs are wide (0.09–0.14 in Morocco).
 
-## 9. Reporting standard
+## 7. Reporting standard
 
-Every experiment has a report page (`docs/experiments/<name>/report.md`) with, in this order: the **answer** in one or two sentences, the **key
-findings**, the setup, the result tables and figures (generated by `experiments/make_report.py` from the results),
-the **interpretation**, the **caveats** and the **next steps**. A finished experiment adds a one-line answer to its
-`config.yaml`, which appears on the [Results](../archive/parcel_wise_classification/results.md) page.
+Every experiment has one page (`docs/experiments/E0<N>_<name>.md`) with the question, what changes from the previous
+experiment, the set-up, how to run it, and, once run, the results with confidence intervals, figures, the paired
+tests and an interpretation. The comparison table and paired tests of E01–E04 come from
+`pixelwise_run/05_compare_experiments.py`; E05 has its own `report.py`. Finished results are summarised on the
+[Results](../results.md) page.
 
 ## References
 
-- Garnot, V. S. F., & Landrieu, L. (2020). Lightweight temporal self-attention for classifying satellite images time series. *AALTD workshop, ECML-PKDD*. https://arxiv.org/abs/2007.00586
-- Garnot, V. S. F., & Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional temporal attention networks. *ICCV*. https://arxiv.org/abs/2107.07933
-- Marsocci, V., et al. (2024). PANGAEA: A global and inclusive benchmark for geospatial foundation models. https://arxiv.org/abs/2412.04204
-- Foody, G. M. (2009). Classification accuracy comparison: hypothesis tests and the use of confidence intervals in evaluations of difference, equivalence and non-inferiority. *Remote Sensing of Environment*, 113, 1658–1663.
-- Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6, 65–70.
-- Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography*, 40, 913–929.
-- Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological mapping models. *Nature Communications*, 11, 4540.
-
+- Foody, G. M. (2009). Classification accuracy comparison: hypothesis tests and the use of confidence intervals in
+  evaluations of difference, equivalence and non-inferiority. *Remote Sensing of Environment* 113, 1658–1663.
+- Garnot, V. S. F., & Landrieu, L. (2021). Panoptic segmentation of satellite image time series with convolutional
+  temporal attention networks. *ICCV*. https://arxiv.org/abs/2107.07933
+- Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics* 6,
+  65–70.
+- Kattenborn, T., et al. (2022). Spatially autocorrelated training and validation samples inflate performance
+  assessment of convolutional neural networks. *ISPRS Open Journal of Photogrammetry and Remote Sensing* 5, 100018.
+- Künsch, H. R. (1989). The jackknife and the bootstrap for general stationary observations. *Annals of Statistics*
+  17, 1217–1241.
+- Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological
+  mapping models. *Nature Communications* 11, 4540.
+- Pontius, R. G., & Millones, M. (2011). Death to Kappa. *International Journal of Remote Sensing* 32, 4407–4429.
+- Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or
+  phylogenetic structure. *Ecography* 40, 913–929.
+- Varma, S., & Simon, R. (2006). Bias in error estimation when using cross-validation for model selection.
+  *BMC Bioinformatics* 7, 91.

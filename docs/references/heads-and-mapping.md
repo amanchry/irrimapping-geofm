@@ -1,7 +1,9 @@
 # Heads and mapping: what GeoFM crop studies use
 
 Literature search of 6 Nov 2026: which head is put on a GeoFM for crop classification, which neural baselines are
-used, and what wall-to-wall mapping requires. Result: [decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model).
+used, and what wall-to-wall mapping requires. Result: [decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model),
+since superseded by [D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps) (every model is
+pixel-wise).
 
 | Head | Used for | Papers |
 | --- | --- | --- |
@@ -12,17 +14,18 @@ used, and what wall-to-wall mapping requires. Result: [decision D11](../decision
 | Neural baseline (from scratch) | Input | Gives maps | Note |
 | --- | --- | --- | --- |
 | TempCNN (Pelletier et al. 2019) | pixel time series | yes, per pixel | 1D-CNN > RF for irrigated mapping (Bazzi et al. 2019); TempCNN-type models transfer better across regions than GeoFM embeddings (Tong & Wang 2025) |
-| L-TAE (Garnot & Landrieu 2020) | pixel or parcel time series | yes | same module as the E04 pipeline |
-| U-TAE (Garnot & Landrieu 2021) | image tiles | yes, 10 m | PASTIS baseline; counterpart of GeoFM + UPerNet |
-| PSE-TAE (Garnot et al. 2020) | parcel pixel sets | no (needs polygons) | parcel-level only |
+| L-TAE (Garnot & Landrieu 2020) | pixel or parcel time series | yes | pixel L-TAE in E02; temporal head of E03 / E05 |
+| U-TAE (Garnot & Landrieu 2021) | image tiles | yes, 10 m | PASTIS baseline; counterpart of GeoFM + UPerNet (E04) |
+| PSE-TAE (Garnot et al. 2020) | parcel pixel sets | no (needs polygons) | parcel-level only (archived parcel-wise baseline) |
 | LSTM, Transformer (BreizhCrops, Rußwurm et al. 2020) | pixel time series | yes | similar to TempCNN in benchmarks |
 
 **Main points**
 - Several 2025–26 studies find the head choice matters little on frozen embeddings (LogReg within 0.3 pp of a
-  boosted ensemble, Mughees et al. 2026), but E01 shows RF is weaker on dense PCA embeddings, so the linear probe
-  is the fairer headline for GeoFMs.
+  boosted ensemble, Mughees et al. 2026). In the archived parcel-wise E01, RF was weaker on dense PCA embeddings.
+  The current pixel-wise design uses one head for every GeoFM (L-TAE + UPerNet, E03)
+  ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 - GeoFM embeddings degrade under large geographic shifts (cross-continent) more than simple temporal CNNs
-  (Tong & Wang 2025): relevant for RQ4.
+  (Tong & Wang 2025): relevant when the conclusions are compared between Morocco and Utah (RQ4).
 - Fine-tuning helps in operational crop mapping (WorldCereal) but can collapse pretrained features without care
   (Nedungadi et al. 2026): relevant for RQ2.
 

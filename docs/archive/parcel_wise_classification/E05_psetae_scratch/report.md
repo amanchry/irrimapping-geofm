@@ -2,7 +2,7 @@
 
 !!! warning "Archive: parcel-wise classification"
     Part of the archived parcel-wise experiments (one label per parcel, Sep – Nov 2026). The current
-    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../../archive/index.md).
+    experiments classify every pixel: see [Experiments](../../../experiments/index.md). About the archive: [Archive](../../index.md).
 # E05 · PSE-TAE trained from scratch on Sentinel-2 pixel sets (neural baseline) — report
 
 > **Answer.** In Morocco, yes. PSE-TAE trained from scratch on Sentinel-2 pixels scores 0.911, the highest macro-F1 of

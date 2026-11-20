@@ -24,11 +24,15 @@ they do not consistently beat supervised models trained from scratch.
 ## What this research takes from it
 - Frozen-encoder evaluation with an identical head for every model as the main comparison
   ([protocol](../phase2_models/evaluation.md)).
-- The **L-TAE pipeline** next to the PCA pipeline ([E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md),
+- The set-up of [E03](../experiments/E03_frozen_geofm.md), as in PANGAEA: the frozen encoder encodes the months, an
+  **L-TAE** combines them at every patch position (for the encoders that do not model time themselves), a 4-scale
+  feature pyramid and a **UPerNet** decoder predict every pixel of the 128 px tile.
+- A result where GeoFMs only equal a strong baseline is a plausible outcome, not a failure; E03 is compared with
+  the Sentinel-2 baselines E01, E02 and the U-TAE trained from scratch (E04).
+- Archived parcel-wise set-up: the L-TAE pipeline next to the PCA pipeline
+  ([archived E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md),
   [decision D8](../decisions.md#d8-two-temporal-aggregation-pipelines)).
-- A result where GeoFMs only equal a strong baseline is a plausible outcome, not a failure ([E01](../archive/parcel_wise_classification/E01_frozen_pca_nested/report.md)).
-- For maps: a segmentation head (UPerNet) on the frozen encoder ([decision D11](../decisions.md#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model)).
 
 ## Differences and limitations
-- Pixel-level segmentation benchmarks; this research classifies parcels (one label per field), so the "head" is a
-  classifier on a pooled parcel embedding.
+- Dense segmentation benchmarks; here the labels are sparse (labelled pixels inside surveyed parcels and
+  not-cropland pixels), so the loss is computed on the labelled pixels only.
