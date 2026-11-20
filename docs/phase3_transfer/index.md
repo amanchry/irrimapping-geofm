@@ -1,4 +1,4 @@
-# Phase 3 · Temporal transferability and a second region
+# Phase 3 · Temporal and spatial transferability
 
 !!! note "Starter page"
     Planned for February – March 2027. This page will be extended into an overview and component pages when the work

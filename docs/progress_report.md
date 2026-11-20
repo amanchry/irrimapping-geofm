@@ -51,7 +51,7 @@ gantt
 | 2 | Parameter-efficient fine-tuning, LoRA (RQ2) | Nov – Dec 2026 | 📝  | [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 | 4 | Full fine-tuning, multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
-| 3 | Temporal test and second region (RQ3, RQ4) | Feb – Mar 2027 | 🔄 Utah dataset in preparation ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | [Phase 3](phase3_transfer/index.md) |
+| 3 | Temporal and spatial transferability (RQ3, RQ4) | Feb – Mar 2027 | 🔄 Utah dataset in preparation ([D13](decisions.md#d13-utah-as-a-second-independent-study-area)) | [Phase 3](phase3_transfer/index.md) |
 | 5 | Annual irrigated maps 2021–2025 | Mar 2027 | 📝 | [Phase 5](phase5_maps/index.md) |
 | 6 | Analysis, writing, revision | Apr – May 2027 | 📝 | |
 | 6 | Submission | Jun 2027 | 📝 | |

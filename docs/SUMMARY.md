@@ -16,7 +16,7 @@
     * [RQ1 · Frozen encoders](phase2_models/frozen_encoders.md)
     * [RQ2 · Fine-tuning](phase2_models/fine_tuning.md)
     * [Evaluation protocol](phase2_models/evaluation.md)
-* [Phase 3 · Temporal test and second region](phase3_transfer/index.md)
+* [Phase 3 · Temporal and spatial transferability](phase3_transfer/index.md)
 * [Phase 4 · Multi-model fusion](phase4_fusion/index.md)
 * [Phase 5 · Annual maps](phase5_maps/index.md)
 * Experiments

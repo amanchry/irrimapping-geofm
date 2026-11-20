@@ -1,8 +1,9 @@
 # Foundation models
 
-Six geospatial foundation models (GeoFMs) are evaluated in this study: four image models and two pixel time-series models. It
-summarises their design and pretraining, specifies how each model is applied to the Moroccan parcels, and lists the
-primary sources. Other pages refer to this page rather than repeating its content.
+Six geospatial foundation models (GeoFMs) are evaluated in this study: four image models and two pixel time-series
+models. This page summarises their design and pretraining, specifies how each model is applied in the pixel-wise
+experiments in Morocco and Utah, and lists the primary sources. Other pages refer to this page rather than repeating
+its content.
 
 ## Selection
 
@@ -27,12 +28,53 @@ two pixel models work at the 10 m resolution of the maps, which matches the pixe
 
 ## Configuration in this study
 
-All encoders are used **frozen**, i.e. as fixed feature extractors without gradient updates. Each model receives a
-64 × 64 px chip (640 m) centred on the parcel, with the bands and normalisation statistics of its own pretraining.
-The parcel embedding is the mean of the patch tokens covering the parcel, weighted by the fraction of each patch
-inside the parcel ([Models pipeline §5](phase2_models/frozen_encoders.md#5-scripts-06a06d--foundation-model-embeddings)). The Sentinel-2
-feature baseline is listed for comparison. **Every input uses Sentinel-2 only**
-([D14](decisions.md#d14-sentinel-2-only-for-every-input)).
+Every model classifies **every 10 m pixel** ([D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
+The encoders see whole **128 × 128 px tiles** (1.28 km) of **12 monthly Sentinel-2 composites** of the agricultural
+year, with the bands, band order, normalisation and weights of their own pretraining. **Every input uses Sentinel-2
+only** ([D14](decisions.md#d14-sentinel-2-only-for-every-input)): every model sees the same optical data, and
+Sentinel-1 coverage of Utah changed between the years. All six encoders are loaded by `pixelwise_run/encoders.py`.
+
+```mermaid
+flowchart LR
+    A["128 px tile<br/>12 months, Sentinel-2"] --> B["Encoder<br/>(frozen, fine-tuned<br/>or from scratch)"]
+    B --> C["L-TAE over the months<br/>(image models)"]
+    C --> D["Feature pyramid<br/>+ UPerNet head"]
+    D --> E["irrigated / rainfed /<br/>not cropland<br/>per 10 m pixel"]
+```
+
+### Inputs and outputs per model
+
+| Model | Bands | Unit encoded | Temporal handling | Encoder output | Into the head |
+| --- | --- | --- | --- | --- | --- |
+| Prithvi-EO-2.0 | 6 (HLS set: B2 B3 B4 B8A B11 B12) | 16 px patch (160 m) | 4 months per pass with date and location, 3 passes; L-TAE | 1024 per patch and month (8 × 8 grid) | L-TAE → 4-scale pyramid → UPerNet |
+| Clay v1.5 | 10 (no B1, B9) | 8 px patch (80 m) | 1 month per pass with week and location; L-TAE | 1024 per patch and month (16 × 16 grid) | L-TAE → 4-scale pyramid → UPerNet |
+| TerraMind | 12 (S2L2A) | 16 px patch (160 m) | 1 month per pass; L-TAE | 768 per patch and month (8 × 8 grid) | L-TAE → 4-scale pyramid → UPerNet |
+| AgriFM | 10 | 4 px patch, pyramid to 32 px | all 12 months in the encoder | 4-level multi-scale maps | straight into UPerNet |
+| Presto | 10 + NDVI | 1 pixel | all 12 months in the encoder | 128 per pixel (10 m map) | average-pooled to 4 scales → UPerNet |
+| TESSERA v2 Medium | 10 | 1 pixel | the clear months, dated by day of year | 128 per pixel (10 m map) | average-pooled to 4 scales → UPerNet |
+
+The head (L-TAE where used, feature pyramid and UPerNet; 2.4–3.2 M weights with the image models) is the same for every model; its
+design and the training settings are on the [E03](experiments/E03_frozen_geofm.md) page.
+
+### Frozen, fine-tuned or trained from scratch
+
+How much of the encoder is trained differs between the experiments ([RQ2 · Fine-tuning](phase2_models/fine_tuning.md)
+explains the strategies):
+
+| Experiment | Models | Encoder | Trained |
+| --- | --- | --- | --- |
+| [E03](experiments/E03_frozen_geofm.md) (RQ1) | all six | **frozen**: pretrained weights, no gradient updates, evaluation mode | head only (2.4–3.2 M weights with the image models) |
+| [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Utah | **frozen**, **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights) | head only (frozen) or all ≈ 306 M weights |
+| later | to be chosen after E05 | **LoRA** (low-rank adapters on the attention layers; `add_lora` in `tile_common.py`) | adapters + head |
+
+### Earlier parcel-wise benchmark (archived)
+
+The first benchmark ([archive](archive/parcel_wise_classification/index.md)) classified whole parcels in Morocco
+with the four image models, all frozen. Each model received a 64 × 64 px chip (640 m) centred on the parcel, and the
+parcel embedding was the mean of the patch tokens covering the parcel, weighted by the fraction of each patch inside
+the parcel ([Models pipeline §5](phase2_models/frozen_encoders.md#5-scripts-06a06d--foundation-model-embeddings)).
+These embeddings cannot give wall-to-wall maps, which is why the study moved to the pixel-wise set-up
+([D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 
 | Input | Chips | Bands | Patch | Temporal handling | Output per parcel | Script |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -42,27 +84,9 @@ feature baseline is listed for comparison. **Every input uses Sentinel-2 only**
 | TerraMind | p16 | 12 S2 bands | 16 px (160 m) | one month per forward pass | 12 × 768 | `02c` |
 | AgriFM | p16 | 10 S2 bands | 4 px pretrained patch embedding; output stride 32 px (320 m) | full 12-month stack in one pass | 1 × 1024 | `02d` |
 
-Sentinel-1 is left out of the main comparison ([D14](decisions.md#d14-sentinel-2-only-for-every-input)): every model
-then sees the same optical data, and Sentinel-1 coverage of Utah changed between the years. An optional ablation
-(Morocco only) adds it back where a model was pretrained on it: TerraMind with Sentinel-1 (`MODALITIES = ["S2L2A",
-"S1GRD"]` in script 02c, written as `terramind-s1s2_agyear_tiles.npz`) and the baseline with radar features
-(`S1S2_VARIABLES = "all"` in script 03).
-
-### Pixel-wise experiments (E03)
-
-In the pixel-wise experiments every encoder sees whole 128 × 128 px tiles of 12 monthly Sentinel-2 composites and
-is followed by the same UPerNet head ([E03](experiments/E03_frozen_geofm.md)). The image models give patch features
-that an L-TAE combines over the months (AgriFM combines them itself); Presto and TESSERA encode every pixel's
-12-month series into a 128-d vector, so they give a 10 m feature map directly. Loader of all six: `pixelwise_run/encoders.py`.
-
-| Model | Bands | Unit encoded | Temporal handling | Output |
-| --- | --- | --- | --- | --- |
-| Prithvi-EO-2.0 | 6 (HLS set) | 16 px patch | 4 months per pass + L-TAE | 1024 per patch and month |
-| Clay v1.5 | 10 | 8 px patch | 1 month per pass + L-TAE | 1024 per patch and month |
-| TerraMind | 12 | 16 px patch | 1 month per pass + L-TAE | 768 per patch and month |
-| AgriFM | 10 | 4 px patch, pyramid to 32 px | 12 months in the encoder | multi-scale maps |
-| Presto | 10 + NDVI | 1 pixel | 12 months in the encoder | 128 per pixel |
-| TESSERA v2 Medium | 10 | 1 pixel | clear months in the encoder | 128 per pixel |
+An optional ablation of that benchmark (Morocco only) added Sentinel-1 where a model was pretrained on it: TerraMind
+with Sentinel-1 (`MODALITIES = ["S2L2A", "S1GRD"]` in script 02c, written as `terramind-s1s2_agyear_tiles.npz`) and
+the baseline with radar features (`S1S2_VARIABLES = "all"` in script 03).
 
 ## Model notes
 
@@ -73,7 +97,7 @@ different sensors. Ten Sentinel-2 bands (B2–B8A, B11, B12) are standardised wi
 `metadata.yaml`. Additional inputs are the pixel size (10 m), the acquisition date (week of year, sine/cosine
 encoded; monthly composites are dated mid-month) and the location (latitude and longitude, sine/cosine encoded).
 The model processes one date per forward pass, so the twelve months are embedded independently. With 8 px patches,
-a chip yields an 8 × 8 token grid.
+a 128 px tile yields a 16 × 16 token grid (8 × 8 for the 64 px chips of the archived parcel benchmark).
 
 ### Prithvi-EO-2.0-300M-TL
 
@@ -88,9 +112,11 @@ at native resolution.
 ### TerraMind-1.0-base
 
 TerraMind is trained to generate any of nine modalities from any other and therefore learns a joint representation
-of optical, radar and auxiliary data. Two modalities are supplied: `S2L2A` (B1–B12) and `S1GRD` (VV, VH in dB), each
-standardised with TerraMind's pretraining statistics. The tokens of the two modalities are averaged
-(`merge_method = "mean"`). One date is processed per pass, and 16 px patches give a 4 × 4 token grid.
+of optical, radar and auxiliary data. The pixel-wise experiments supply only `S2L2A` (B1–B12), standardised with
+TerraMind's pretraining statistics ([D14](decisions.md#d14-sentinel-2-only-for-every-input)). The Sentinel-1
+ablation of the archived parcel benchmark also supplied `S1GRD` (VV, VH in dB) and averaged the tokens of the two
+modalities (`merge_method = "mean"`). One date is processed per pass; 16 px patches give an 8 × 8 token grid on a
+128 px tile (4 × 4 on a 64 px chip).
 
 ### AgriFM
 
@@ -98,8 +124,9 @@ AgriFM is designed for crop mapping and models the temporal dimension within the
 of ten Sentinel-2 bands is processed in a single pass. Input tokens span four time steps and 4 × 4 px (the
 pretrained patch embedding); the final feature map has a stride of 32 px
 ([D12](decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)). Because time is compressed inside the
-network, the output is one vector per parcel and season. Only the encoder is used, through the mmengine registries of
-the cloned repository.
+network, there is one set of features per season: in the pixel-wise experiments its four-level feature pyramid goes
+directly to the UPerNet head; the archived parcel benchmark pooled it to one vector per parcel. Only the encoder is
+used, through the mmengine registries of the cloned repository.
 
 **Normalisation** ([D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)). Neither
 the AgriFM paper nor the repository documents the normalisation of the pretraining data; the only published
