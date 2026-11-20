@@ -46,5 +46,16 @@ proxy); the script is resumable, finished tiles are skipped:
 EXPERIMENT_REGION=utah S2_PART=<k> S2_N_PARTS=<n> python s2_download/02_download_s2_stac.py
 ```
 
+`s2_dl.sbatch` runs several parts in parallel in one Slurm job and fails if any part fails (usage and memory in its
+header; about 6 GB per part):
+
+```bash
+for P0 in 0 8 16 24; do sbatch --job-name=s2_ut_p$P0 -c 64 --mem=56G --time=12:00:00 \
+    --export=ALL,EXPERIMENT_REGION=utah,S2_N_PARTS=32,PART0=$P0,NP=8 s2_download/s2_dl.sbatch; done
+```
+
 Output: `outputs/<region>/s2_download/cropland/<season>/` (`tiles/`, `tiles_qa.jsonl`, `blocks_done.jsonl`,
 `blocks_failed.jsonl`, `tiles_info.json`); grid overview: `outputs/<region>/s2_download/grid/<season>/`.
+While the parts run, each one logs to its own files in `logs/` (appends by many nodes to one shared file on NFS lose
+lines); once every tile exists, the part that finishes last merges them into the three `.jsonl` files and recomputes
+any QA row that is still missing.

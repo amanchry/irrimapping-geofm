@@ -35,6 +35,13 @@ tiles_qa.jsonl            per tile: s2_nodata_pct, months_with_data, mean_nclear
 blocks_done.jsonl         per block: scenes found / used / not readable (ids), seconds, tiles written
 blocks_failed.jsonl       blocks skipped because more than MAX_FAILED_FRAC of the scenes could not be read
 tiles_info.json           grid, bands, months, source, cloud mask
+logs/<name>_p<part>.jsonl the same three logs, written by each part to its own file while it runs
+
+Many parts on several nodes write to the same folder (NFS), where appends to one shared file are not safe, so each
+part logs to its own files. Once every tile of the season exists, the part that finishes last merges them into the
+three files above: one QA row per tile (rows still missing are recomputed from the tiles), one entry per block in
+blocks_done.jsonl, and only the blocks that still miss tiles in blocks_failed.jsonl (none). Merged files are written
+to a temporary file and renamed, never appended.
 
 Run (from the project folder; CPU, internet; resumable: finished tiles are skipped)
 ----------------------------------------------------------------------------------
@@ -152,25 +159,40 @@ def baseline_offset(item):
     return 1000 if float(pb) >= float(OFFSET_FROM_BASELINE) else 0
 
 
+def empty_stack():
+    return np.zeros((0, len(S2_BANDS) + 1, BLOCK_PX, BLOCK_PX), np.uint16)
+
+
 def stack(items, bounds):
-    """[n_items, 13, H, W] uint16 (12 bands + SCL) on the block grid; raises if any read fails."""
+    """[n, 13, H, W] uint16 (12 bands + SCL) on the block grid and the n items of its scenes, in the same order;
+    raises if any read fails.
+    stackstac leaves out scenes whose footprint (asset proj:bbox) does not reach the block: the STAC search uses the
+    lon/lat box around the block, which is larger than the block. The scenes kept are therefore matched to the items
+    by id, never by position; n = 0 if no scene reaches the block."""
     import stackstac
     assets = [ASSETS[b] for b in S2_BANDS] + ["scl"]
     da = stackstac.stack(items, assets=assets, epsg=CRS_EPSG, resolution=GSD_M, bounds=bounds,
                          resampling=getattr(Resampling, RESAMPLING), dtype="uint16", fill_value=np.uint16(0),
                          rescale=False, snap_bounds=False, chunksize=BLOCK_PX)
+    if da.sizes["time"] == 0:
+        return empty_stack(), []
+    if list(da["band"].values) != assets:          # stackstac also drops an asset missing from every scene
+        raise RuntimeError(f"bands {list(da['band'].values)} instead of {assets}")
     arr = np.asarray(da.compute(scheduler="threads", num_workers=THREADS))
     if arr.shape[-2:] != (BLOCK_PX, BLOCK_PX):
         raise RuntimeError(f"unexpected block shape {arr.shape}")
-    return arr
+    by_id = {it.id: it for it in items}
+    return arr, [by_id[i] for i in np.atleast_1d(da["id"].values)]
 
 
 def read_scenes(items, bounds):
-    """All scenes of one month. A failed read is retried; if the month still fails, the scenes are read one by one
-    and the ones that cannot be read are left out and returned as failed (never silently treated as cloud)."""
+    """All scenes of one month that reach the block. A failed read is retried; if the month still fails, the scenes
+    are read one by one and the ones that cannot be read are left out and returned as failed (never silently
+    treated as cloud). Returns the array, the items of its scenes in the same order, and the failed ids."""
     for attempt in range(READ_RETRIES):
         try:
-            return stack(items, bounds), items, []
+            arr, kept = stack(items, bounds)
+            return arr, kept, []
         except Exception as err:                                            # noqa: BLE001
             print(f"    read failed ({str(err)[:120]}), retry {attempt + 1}/{READ_RETRIES}")
             time.sleep(15 * (attempt + 1))
@@ -178,8 +200,9 @@ def read_scenes(items, bounds):
     for it in items:
         for attempt in range(READ_RETRIES):
             try:
-                arrs.append(stack([it], bounds))
-                ok.append(it)
+                a, kept = stack([it], bounds)
+                arrs.append(a)
+                ok += kept
                 break
             except Exception as err:                                        # noqa: BLE001
                 if attempt == READ_RETRIES - 1:
@@ -187,7 +210,7 @@ def read_scenes(items, bounds):
                     failed.append(it.id)
                 else:
                     time.sleep(10 * (attempt + 1))
-    arr = np.concatenate(arrs) if arrs else np.zeros((0, len(S2_BANDS) + 1, BLOCK_PX, BLOCK_PX), np.uint16)
+    arr = np.concatenate(arrs) if arrs else empty_stack()
     return arr, ok, failed
 
 
@@ -195,6 +218,8 @@ def read_month(items, bounds):
     """[n_items, 12 bands, H, W] float32 reflectance x 10000 with NaN where not clear, for one month;
     plus the clear mask and the ids of scenes that could not be read."""
     arr, items, failed = read_scenes(items, bounds)
+    if len(items) != len(arr):
+        raise RuntimeError(f"{len(arr)} scenes stacked but {len(items)} items matched")
     scl = arr[:, -1]
     refl = arr[:, :-1].astype(np.float32)
     clear = ~np.isin(scl, SCL_INVALID) & (arr[:, S2_BANDS.index("B4")] > 0)
@@ -221,7 +246,7 @@ def block_cube(items, bounds, months):
         failed += bad
         if len(failed) > MAX_FAILED_FRAC * len(items):
             raise TooManyFailed(f"{len(failed)} of {len(items)} scenes not readable")
-        used += len(sel) - len(bad)
+        used += len(refl)                                                   # scenes read that reach the block
         if not len(refl):
             continue
         n = clear.sum(0)
@@ -295,9 +320,8 @@ def main():
                 cube, used, failed = block_cube(items, bounds, months)
             except TooManyFailed as err:
                 print(f"  block {bx}_{by}: SKIPPED, {err}; no tiles written (rerun later)")
-                with open(out / "blocks_failed.jsonl", "a") as fh:
-                    fh.write(json.dumps({"bx": int(bx), "by": int(by), "scenes": len(items), "error": str(err),
-                                         "time": time.strftime("%Y-%m-%d %H:%M:%S")}) + "\n")
+                append(part_log(out, "blocks_failed"), {"bx": int(bx), "by": int(by), "scenes": len(items),
+                                                        "error": str(err), "time": time.strftime("%Y-%m-%d %H:%M:%S")})
                 continue
             members = blocks.get_group((bx, by))
             for t in members.itertuples():
@@ -307,19 +331,82 @@ def main():
                 win = from_bounds(t.ix * TILE_M, t.iy * TILE_M, (t.ix + 1) * TILE_M, (t.iy + 1) * TILE_M,
                                   mask_vrt.transform)
                 qa = tile_qa(tc, mask_vrt.read(1, window=win, boundless=True, fill_value=65535))
-                with open(out / "tiles_qa.jsonl", "a") as fh:
-                    fh.write(json.dumps({"tile_id": t.tile_id, **qa}) + "\n")
+                append(part_log(out, "tiles_qa"), {"tile_id": t.tile_id, **qa})
             sec = time.time() - t0
-            with open(out / "blocks_done.jsonl", "a") as fh:
-                fh.write(json.dumps({"bx": int(bx), "by": int(by), "scenes": len(items), "scenes_used": used,
-                                     "scenes_failed": len(failed), "failed_ids": failed, "tiles": len(members),
-                                     "seconds": round(sec, 1)}) + "\n")
+            append(part_log(out, "blocks_done"), {"bx": int(bx), "by": int(by), "scenes": len(items),
+                                                  "scenes_used": used, "scenes_failed": len(failed),
+                                                  "failed_ids": failed, "tiles": len(members),
+                                                  "seconds": round(sec, 1)})
             rate = (time.time() - t_start) / n
             print(f"  block {bx}_{by}: {len(items)} scenes ({len(failed)} not readable), {len(members)} tiles, {sec:.0f} s "
                   f"({n}/{len(todo)}, ~{rate * (len(todo) - n) / 3600:.1f} h left)")
-        mask_vrt.close()
         done = sum(p.exists() for p in tiles["path"])
         print(f"Tiles written: {done:,} of {len(tiles):,} | {out}")
+        if done == len(tiles):
+            finalise(out, tiles, blocks, mask_vrt)
+        mask_vrt.close()
+
+
+def part_log(out, name):
+    """This part's own log file (one writer per file; see the docstring)."""
+    return out / "logs" / f"{name}_p{PART:03d}.jsonl"
+
+
+def append(path, row):
+    path.parent.mkdir(exist_ok=True)
+    with open(path, "a") as fh:
+        fh.write(json.dumps(row) + "\n")
+
+
+def write_jsonl(path, rows):
+    tmp = path.with_suffix(f".p{PART:03d}.tmp")              # own temporary file per part
+    tmp.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    tmp.replace(path)
+
+
+def merged(out, name):
+    """Rows of <name>.jsonl (merged earlier, or appended by older runs) and of every part's log file."""
+    rows = read_jsonl(out / f"{name}.jsonl")
+    for f in sorted((out / "logs").glob(f"{name}_p*.jsonl")):
+        rows += read_jsonl(f)
+    return rows
+
+
+def read_jsonl(path):
+    """Rows of a jsonl file; lines that do not parse (e.g. cut by a crash) are left out."""
+    rows = []
+    if path.exists():
+        for line in path.read_text().splitlines():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return rows
+
+
+def finalise(out, tiles, blocks, mask_vrt):
+    """Once every tile of the season exists (whichever part finishes last): merges the part logs into one QA row per
+    tile (recomputed from the tile for any tile without a row), one blocks_done entry per block (the latest) and the
+    blocks that still miss tiles in blocks_failed.jsonl (none). Each file is written once, atomically."""
+    qa = {r["tile_id"]: r for r in merged(out, "tiles_qa") if "tile_id" in r}
+    missing = [t for t in tiles.itertuples() if t.tile_id not in qa]
+    for t in missing:
+        with rasterio.open(t.path) as src:
+            tc = src.read()
+        win = from_bounds(t.ix * TILE_M, t.iy * TILE_M, (t.ix + 1) * TILE_M, (t.iy + 1) * TILE_M, mask_vrt.transform)
+        qa[t.tile_id] = {"tile_id": t.tile_id,
+                         **tile_qa(tc, mask_vrt.read(1, window=win, boundless=True, fill_value=65535))}
+    keep = set(tiles["tile_id"])
+    rows = [qa[k] for k in sorted(qa) if k in keep]
+    write_jsonl(out / "tiles_qa.jsonl", rows)
+    done = {(r["bx"], r["by"]): r for r in merged(out, "blocks_done") if "bx" in r}
+    write_jsonl(out / "blocks_done.jsonl", [done[k] for k in sorted(done)])
+    failed = merged(out, "blocks_failed")
+    still = [r for r in failed if (r["bx"], r["by"]) in blocks.groups
+             and not all(p.exists() for p in blocks.get_group((r["bx"], r["by"]))["path"])]
+    write_jsonl(out / "blocks_failed.jsonl", still)
+    print(f"Merged logs: {len(rows):,} QA rows ({len(missing)} recomputed), {len(done):,} blocks done, "
+          f"{len(still)} failed ({len(failed) - len(still)} resolved)")
 
 
 if __name__ == "__main__":
