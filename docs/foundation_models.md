@@ -54,7 +54,7 @@ flowchart LR
 | TESSERA v2 Medium | 10 | 1 pixel | the clear months, dated by day of year | 128 per pixel (10 m map) | average-pooled to 4 scales → UPerNet |
 
 The head (L-TAE where used, feature pyramid and UPerNet; 2.4–3.2 M weights with the image models) is the same for every model; its
-design and the training settings are on the [E03](experiments/E03_frozen_geofm.md) page.
+design and the training settings are on the [E04](experiments/E04_frozen_geofm.md) page.
 
 ### Frozen, fine-tuned or trained from scratch
 
@@ -63,7 +63,7 @@ explains the strategies):
 
 | Experiment | Models | Encoder | Trained |
 | --- | --- | --- | --- |
-| [E03](experiments/E03_frozen_geofm.md) (RQ1) | all six | **frozen**: pretrained weights, no gradient updates, evaluation mode | head only (2.4–3.2 M weights with the image models) |
+| [E04](experiments/E04_frozen_geofm.md) (RQ1) | all six | **frozen**: pretrained weights, no gradient updates, evaluation mode | head only (2.4–3.2 M weights with the image models) |
 | [E05](experiments/E05_prithvi_strategies.md) (RQ2) | Prithvi-EO-2.0, Utah | **frozen**, **LoRA** (low-rank adapters, rank 16, on the attention and MLP layers), **fully fine-tuned** (every weight, encoder learning rate 10⁻⁵, head 10⁻⁴) or **from scratch** (same network from random weights) | head only (frozen), 5.5 M adapters + head (LoRA), or all ≈ 306 M weights |
 
 ### Earlier parcel-wise benchmark (archived)

@@ -14,7 +14,7 @@ Reads the finished runs results/<region>/<strategy>_p<percent>/ and writes
   docs/experiments/figures/e05_curves.png          training loss, validation loss, validation macro-F1 per epoch
                                                    (100% of the labels; mean over rounds and seeds, band = range)
   docs/experiments/figures/e05_label_fraction.png  out-of-fold macro-F1 against the share of training parcels, with
-                                                   E04 U-TAE and E01 random forest (100%) as reference lines
+                                                   E03 U-TAE and E01 random forest (100%) as reference lines
   docs/experiments/figures/e05_confusion.png       confusion matrices at 100%
 
 Run (Mac, after the results are copied from the cluster)
@@ -42,7 +42,7 @@ FRACTIONS = [0.1, 0.25, 0.5, 1.0]
 COMPARISONS = [("finetune", "frozen"), ("finetune", "scratch"), ("frozen", "scratch"),
                ("lora", "frozen"), ("finetune", "lora"), ("lora", "scratch")]
 METRICS = ["cropland_macro_f1", "macro_f1_3class"]
-REFERENCE_RUNS = {"E04 U-TAE": "E04_utae/results/{region}/utae", "E01 random forest": "E01_s2_pixel_baseline/results/{region}/rf"}
+REFERENCE_RUNS = {"E03 U-TAE": "E03_utae/results/{region}/utae", "E01 random forest": "E01_s2_pixel_baseline/results/{region}/rf"}
 CURVE_FRACTION = 1.0                               # training share shown in the learning curves
 # ==========================================================================
 

@@ -20,7 +20,22 @@ sampled pixels per class; (6) the output table.*
 | --- | --- | --- |
 | 1 | Irrigated | inner pixels of irrigated parcels |
 | 2 | Rainfed | inner pixels of rainfed parcels |
-| 3 | Not cropland | pixels in the same tiles that lie outside every parcel, that none of the 4 cropland products calls cropland (0 votes in the [cropland mask](cropland_mask.md)), that are not built-up, water or snow, and that are at least 2 pixels from any parcel pixel |
+| 3 | Not cropland | pixels that **none of the 4 cropland products calls cropland** (0 votes in the [cropland mask](cropland_mask.md)) **and that are not built-up, snow/ice or permanent water** (WorldCover 2021 classes 50, 70, 80); in practice natural vegetation, scrub, grassland, bare soil or rock. Of these, at most 100 random pixels per tile are taken that lie outside every surveyed parcel and at least 2 pixels (20 m) from any parcel pixel, so that no mixed edge pixel or unsurveyed part of a field is labelled not cropland |
+| – | Built-up, snow/ice, water | **not sampled**: removed from the mask by rule (`excluded` band), so they never reach the model and are not cropland on every map |
+
+Both the class-3 pixels and the excluded pixels lie outside the cropland mask, so both are "not cropland" on the
+final map by rule. Class 3 is sampled for a different reason: the model predicts only **inside** the mask, and the
+union of four products also includes false cropland (scrub, bare or natural land that one product took for fields).
+The class-3 pixels are examples of that kind of land, so the model learns to recognise it inside the mask. Built-up
+and water never reach the model, so they are not used as examples: they would only teach an easy distinction the
+model never has to make.
+
+```
+all land
+├── built-up / water / snow (excluded)  → not cropland by rule; never seen by the model
+├── 0 votes, not excluded               → not cropland by rule; ALSO the training examples of class 3
+└── cropland mask (≥ 1 vote)            → the model decides: irrigated · rainfed · not cropland
+```
 
 Cropland pixels outside the surveyed parcels are not used: their class is unknown.
 
@@ -58,7 +73,7 @@ Cropland pixels outside the surveyed parcels are not used: their class is unknow
 
 Counts from `summary.csv` of each set. The experiments leave out the pixels of fold −1: Morocco pools both years
 (522,003 pixels in 2,230 tiles), Utah 2023/24 gives 654,382 pixels in 2,405 tiles
-([E01](../experiments/E01_s2_pixel_baseline.md), [E03](../experiments/E03_frozen_geofm.md)).
+([E01](../experiments/E01_s2_pixel_baseline.md), [E04](../experiments/E04_frozen_geofm.md)).
 
 ### Morocco 2023/24 in detail
 

@@ -9,7 +9,7 @@
 
 | Strategy | Description |
 | --- | --- |
-| Early fusion | concatenation of the pixel / patch features of several frozen encoders ([E03](../experiments/E03_frozen_geofm.md)) before the decoder |
+| Early fusion | concatenation of the pixel / patch features of several frozen encoders ([E04](../experiments/E04_frozen_geofm.md)) before the decoder |
 | Late fusion | combination of the per-pixel class probabilities of the single-model runs (averaging or stacking) |
 | Learned fusion | a small network that weights the features of the encoders, trained under the same protocol |
 

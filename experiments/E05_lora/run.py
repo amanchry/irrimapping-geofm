@@ -1,16 +1,16 @@
 """
-E05_lora/run.py  —  E05: fine-tuning the best E03 encoder with LoRA (RQ2)
+E05_lora/run.py  —  E05: fine-tuning the best E04 encoder with LoRA (RQ2)
 ========================================================================
 
 Question: does adapting the encoder (low-rank adapters, LoRA; Hu et al. 2022) improve on the frozen encoder of
-E03 with the same decoder, data and training?
+E04 with the same decoder, data and training?
 
-Model: exactly the E03 model of ENCODER (pixelwise_run/tile_common.py, GeoFMSegmenter), with LoRA adapters of rank
+Model: exactly the E04 model of ENCODER (pixelwise_run/tile_common.py, GeoFMSegmenter), with LoRA adapters of rank
 LORA_RANK on the attention projections (qkv / to_qkv) of every encoder block; TESSERA: on the feed-forward
 layers (linear1 / linear2), because its nn.MultiheadAttention packs q, k, v in one weight. The pretrained weights stay frozen;
-the adapters, the temporal head and the decoder are trained. Set ENCODER to the best encoder of E03.
+the adapters, the temporal head and the decoder are trained. Set ENCODER to the best encoder of E04.
 
-Output: experiments/E05_lora/results/<region>/<encoder>_lora<rank>/ (as E03)
+Output: experiments/E05_lora/results/<region>/<encoder>_lora<rank>/ (as E04)
 
 Run (GPU)
 ---------
@@ -27,11 +27,11 @@ from tile_common import GeoFMSegmenter, run_tile_experiment  # noqa: E402
 # ================================ SETTINGS ================================
 EXP_DIR = Path(__file__).resolve().parent
 REGION = env_setting("REGION", "morocco")
-ENCODER = env_setting("ENCODER", "clay")           # the best encoder of E03 (any of the six)
+ENCODER = env_setting("ENCODER", "clay")           # the best encoder of E04 (any of the six)
 LORA_RANK, LORA_ALPHA = 8, 16
 LR = 1e-4
 WEIGHT_DECAY = 1e-4
-BATCH = 4                                          # smaller than E03: gradients flow through the encoder
+BATCH = 4                                          # smaller than E04: gradients flow through the encoder
 EPOCHS, PATIENCE = 50, 8
 N_SEEDS = 3
 WORKERS = 8

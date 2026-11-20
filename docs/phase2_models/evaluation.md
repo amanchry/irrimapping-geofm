@@ -56,9 +56,9 @@ only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 | Experiment | Input | Models |
 | --- | --- | --- |
 | [E01](../experiments/E01_s2_pixel_baseline.md) | pixel time series, 12 months × 12 bands (+ NDVI, NDWI) | random forest, histogram gradient boosting |
-| [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN, L-TAE |
-| [E03](../experiments/E03_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models + L-TAE + UPerNet ([Foundation models](../foundation_models.md)) |
-| [E04](../experiments/E04_utae.md) | 128 × 128 px tiles | U-TAE from scratch |
+| [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN |
+| [E03](../experiments/E03_utae.md) | 128 × 128 px tiles | U-TAE from scratch |
+| [E04](../experiments/E04_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models + L-TAE + UPerNet ([Foundation models](../foundation_models.md)) |
 | [E05](../experiments/E05_prithvi_strategies.md) | 128 × 128 px tiles, 10–100% of the training parcels | Prithvi frozen, LoRA, fully fine-tuned, from scratch |
 
 Neural models: class-weighted cross-entropy (weights from the training pixels), early stopping on the validation
@@ -105,7 +105,7 @@ difference between two models is measured on identical resamples (**paired**; Fo
 
 ## 6. How a result is read
 
-- **Δ** = model − reference on the same pixels (references: E01 random forest and E04 U-TAE for E01–E04; within E05
+- **Δ** = model − reference on the same pixels (references: E01 random forest and E03 U-TAE for E01–E04; within E05
   the strategies against each other).
 - A model is **better** (or **worse**) only if the 95% CI of Δ excludes 0 **and** the Holm-adjusted p-value is
   below 0.05 (Holm 1979; correction over all comparisons of a table and metric).

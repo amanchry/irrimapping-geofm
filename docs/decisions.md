@@ -10,10 +10,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D2](#d2-two-agricultural-years-per-parcel-season) | Imagery period | 2024 annual stack | each parcel's own agricultural year (2023/24 or 2024/25), Sep – Aug | Oct 2026 |
 | [D3](#d3-validation-pastis-rotation-instead-of-nested-cv) | Validation design | validation subset from the training data | PASTIS rotation: 3 train / 1 validation / 1 test | 4 Nov 2026 |
 | [D4](#d4-one-shared-tile-store-for-every-input) | Image preparation | annual stacks via STAC / xarray | one tile store from Google Earth Engine for every input (experiments); wall-to-wall composites from STAC for the maps (D18) | 27 Oct 2026 |
-| [D5](#d5-frozen-encoder--classical-classifiers) | Frozen-encoder strategy | frozen encoder + decoder / head | parcel-wise (archived): frozen encoder → parcel embedding → classifiers. Superseded by D16: frozen encoder + L-TAE + UPerNet per pixel (E03) | Oct 2026 |
-| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | parcel-wise (archived): LogReg, RF, SVM and an MLP head. Pixel-wise: random forest and gradient boosting (E01), TempCNN and L-TAE (E02) | Oct 2026 |
+| [D5](#d5-frozen-encoder--classical-classifiers) | Frozen-encoder strategy | frozen encoder + decoder / head | parcel-wise (archived): frozen encoder → parcel embedding → classifiers. Superseded by D16: frozen encoder + L-TAE + UPerNet per pixel (E04) | Oct 2026 |
+| [D6](#d6-four-classifiers-instead-of-one-random-forest) | Baseline classifier | Random Forest | parcel-wise (archived): LogReg, RF, SVM and an MLP head. Pixel-wise: random forest and gradient boosting (E01), TempCNN (E02) | Oct 2026 |
 | [D7](#d7-macro-f1-as-the-headline-metric) | Selection metric | mean F1 over folds ± SD | macro-F1 of the out-of-fold predictions, 95% block-bootstrap CI, per-fold mean ± SD | Oct 2026 |
-| [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | parcel-wise (archived): PCA and L-TAE pipelines. Pixel-wise: L-TAE over the months for the image GeoFMs (E03) | 4 Nov 2026 |
+| [D8](#d8-two-temporal-aggregation-pipelines) | Combining the months | not specified | parcel-wise (archived): PCA and L-TAE pipelines. Pixel-wise: L-TAE over the months for the image GeoFMs (E04) | 4 Nov 2026 |
 | [D9](#d9-cloud-score-instead-of-qa60) | Cloud mask | cloud-masked composites | Cloud Score+ (cs_cdf ≥ 0.60) | Oct 2026 |
 | [D10](#d10-transfer-region-under-review) | Transfer region | Tunisia, 54 GMIA-NEXT points | replaced by D13: no transfer region; Utah as a second study area | 12 Nov 2026 |
 | [D11](#d11-two-kinds-of-head-parcel-benchmark-and-mapping-model) | Classifier head and mapping | frozen encoder + head; maps 2021–2025 | superseded by D16: every model is pixel-wise (UPerNet head for the GeoFMs); neural baselines TempCNN, L-TAE and U-TAE | 6 Nov 2026 |
@@ -64,7 +64,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 
 ## D5. Frozen encoder + classical classifiers
 !!! note "Parcel-wise (archived); superseded by D16"
-    In the pixel-wise experiments the frozen encoder is followed by L-TAE and a UPerNet head (E03), and RQ2 compares
+    In the pixel-wise experiments the frozen encoder is followed by L-TAE and a UPerNet head (E04), and RQ2 compares
     frozen, LoRA, full fine-tuning and training from scratch (E05).
 
 - **Proposal (§4.2.1):** frozen encoder, train a decoder and classification head.
@@ -75,7 +75,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 
 ## D6. Four classifiers instead of one Random Forest
 !!! note "Parcel-wise (archived)"
-    The pixel-wise baselines are the random forest and gradient boosting (E01) and TempCNN and L-TAE (E02).
+    The pixel-wise baselines are the random forest and gradient boosting (E01) and TempCNN (E02).
 
 - **Proposal:** Random Forest baseline.
 - **Now:** logistic regression, random forest, gradient boosting and SVM on every input (RF stays the headline).
@@ -95,7 +95,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 
 ## D8. Two temporal aggregation pipelines
 !!! note "Parcel-wise (archived)"
-    In the pixel-wise experiments the image GeoFMs use L-TAE over the months at every patch position (E03).
+    In the pixel-wise experiments the image GeoFMs use L-TAE over the months at every patch position (E04).
 
 - **Proposal:** not specified.
 - **Now:** PCA pipeline (concat 12 months → PCA 128) in E01 / E02; L-TAE pipeline in E04.

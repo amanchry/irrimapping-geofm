@@ -23,7 +23,7 @@
   ([decision D3](../decisions.md#d3-validation-pastis-rotation-instead-of-nested-cv),
   [protocol §2](../phase2_models/evaluation.md#2-spatial-splits)).
 - **Non-overlapping 128 px tiles** as the shared image store ([dataset pipeline](../phase1_data/morocco.md)).
-- **U-TAE as a neural baseline** trained from scratch on the same tiles ([E04](../experiments/E04_utae.md)).
+- **U-TAE as a neural baseline** trained from scratch on the same tiles ([E03](../experiments/E03_utae.md)).
 
 ## Differences and limitations
 - Dense labels in France, many crop classes; this research has sparse labels and three classes (irrigated, rainfed,

@@ -1,9 +1,9 @@
 """
-E03_frozen_geofm/run.py  —  E03: frozen geospatial foundation models + L-TAE + UPerNet decoder (RQ1)
+E04_frozen_geofm/run.py  —  E04: frozen geospatial foundation models + L-TAE + UPerNet decoder (RQ1)
 =====================================================================================================
 
 Question: do frozen geospatial foundation models with a light decoder classify the pixels better than the pixel
-models (E01-E03) and a spatio-temporal network trained from scratch (E04)?
+models (E01-E03) and a spatio-temporal network trained from scratch (E03)?
 
 Model (pixelwise_run/tile_common.py, GeoFMSegmenter)
 --------------------------------------------------
@@ -23,12 +23,12 @@ Training: masked cross-entropy at the sampled pixels of the training folds (clas
 rotations, early stopping on the validation pixels' 3-class macro-F1; N_SEEDS seeds per round. Scored on the same
 out-of-fold pixels as every other experiment.
 
-Output: experiments/E03_frozen_geofm/results/<region>/<encoder>/ (as E01, plus training_history.csv)
+Output: experiments/E04_frozen_geofm/results/<region>/<encoder>/ (as E01, plus training_history.csv)
 
 Run (GPU; one encoder per job)
 ------------------------------
-    python experiments/E03_frozen_geofm/run.py
-    # cluster: sbatch --export=ALL,SCRIPT=experiments/E03_frozen_geofm/run.py,EXPERIMENT_REGION=morocco,EXPERIMENT_ENCODER=clay jobs/step_gpu.sbatch
+    python experiments/E04_frozen_geofm/run.py
+    # cluster: sbatch --export=ALL,SCRIPT=experiments/E04_frozen_geofm/run.py,EXPERIMENT_REGION=morocco,EXPERIMENT_ENCODER=clay jobs/step_gpu.sbatch
 """
 import sys
 from pathlib import Path
@@ -59,7 +59,7 @@ def build(train_rows, df, X, info):
 
 
 if __name__ == "__main__":
-    run_tile_experiment(EXP_DIR, "E03", REGION, ENCODER, build,
+    run_tile_experiment(EXP_DIR, "E04", REGION, ENCODER, build,
                         {"encoder": ENCODER, "frozen": True, "temporal_head": "ltae" if ENCODER in ("prithvi", "clay", "terramind") else "none",
                          "decoder": "UPerNet"},
                         lr=LR, weight_decay=WEIGHT_DECAY, batch=BATCH, epochs=EPOCHS, patience=PATIENCE,

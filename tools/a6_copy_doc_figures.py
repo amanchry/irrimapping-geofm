@@ -36,7 +36,6 @@ FIGURES = {                                              # source (in the projec
     "outputs/utah/cropland_extent/esa_worldcover/ESA_WorldCover_10m_2021_Utah.png":       "phase1_data/figures/worldcover_2021_utah.jpg",
     "outputs/morocco/cropland_extent/lgrip30/LGRIP30_2015_Morocco.png":                   "phase1_data/figures/lgrip30_2015_morocco.png",
     "outputs/utah/cropland_extent/lgrip30/LGRIP30_2015_Utah.png":                         "phase1_data/figures/lgrip30_2015_utah.png",
-    "outputs/morocco/dataset/04c_pixel_samples/2023-24/explainer_2023-24_391_2832.png":   "phase1_data/figures/pixel_samples_explainer.png",
 }
 # --------------------------------------------------------------------------
 

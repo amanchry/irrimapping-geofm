@@ -1,5 +1,5 @@
 # Documentation website of the project (MkDocs + Material theme). ALL documentation lives in docs/.
-#   pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-literate-nav     (or: conda env update -f environment.yml)
+#   pip install "mkdocs>=1.6,<2" mkdocs-material mkdocs-literate-nav mkdocs-glightbox   (or: conda env update -f environment.yml)
 #   mkdocs serve            preview at http://127.0.0.1:8000 (reloads on every change)
 #   mkdocs build --strict   check: stops on broken links or pages missing from the navigation
 #   mkdocs gh-deploy        publish to GitHub Pages (also done automatically on every push to main)
@@ -63,6 +63,11 @@ plugins:
       lang: en
   - literate-nav:
       nav_file: SUMMARY.md
+  - glightbox:                         # click an image to open it full size (zoom, arrows between a page's images)
+      zoomable: true
+      draggable: true
+      skip_classes:
+        - no-lightbox                  # ![...](x.png){ .no-lightbox } keeps an image unclickable
 
 markdown_extensions:
   - tables

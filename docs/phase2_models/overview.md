@@ -26,9 +26,9 @@ flowchart TD
     end
     subgraph P2["Phase 2 · Experiments"]
         E1["E01 · random forest,<br/>gradient boosting"]
-        E2["E02 · TempCNN, L-TAE"]
-        E3["E03 · frozen GeoFMs<br/>+ L-TAE + UPerNet"]
-        E4["E04 · U-TAE<br/>from scratch"]
+        E2["E02 · TempCNN"]
+        E3["E04 · frozen GeoFMs<br/>+ L-TAE + UPerNet"]
+        E4["E03 · U-TAE<br/>from scratch"]
         E5["E05 · Prithvi frozen / LoRA /<br/>fine-tuned / from scratch"]
     end
     S --> E1

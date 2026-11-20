@@ -2,7 +2,7 @@
 encoders.py  —  the six geospatial foundation models of the pixel-wise experiments (not run on its own)
 =======================================================================================================
 
-Loads each pretrained encoder with its bands, normalisation and weights. Used by tile_common.GeoFMSegmenter (E03
+Loads each pretrained encoder with its bands, normalisation and weights. Used by tile_common.GeoFMSegmenter (E04
 frozen, E05 LoRA). Weights are kept in checkpoints/<model>/ and downloaded on the first use; model code that is not
 a pip package is cloned into external/<model>.
 

@@ -13,7 +13,7 @@ change log).
 | --- | --- | --- |
 | Cropland mask (union of 4 products) | `cropland_extent/make_cropland_mask.py` | 2023/24 done for both regions (Morocco 103,068 km², Utah 9,979 km²); Morocco 2024/25 and Utah 2020/21 running on the cluster ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)) |
 | Pixel samples | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 done (402,756 pixels); Morocco 2024/25 and Utah on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E04 (pixel-wise) | `experiments/` | E01–E04 done in both regions ([results](experiments/index.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); cropland macro-F1 Morocco 0.876 (RF) – 0.900 (AgriFM), differences not significant; Utah 0.729 (RF) → 0.766 (U-TAE) → 0.797 (TerraMind), significant. Presto and TESSERA (E03) still to run |
+| Experiments E01–E04 (pixel-wise) | `experiments/` | E01–E04 done in both regions ([results](experiments/index.md), [D16](decisions.md#d16-pixel-wise-classification-for-continuous-maps)); cropland macro-F1 Morocco 0.876 (RF) – 0.900 (AgriFM), differences not significant; Utah 0.729 (RF) → 0.766 (U-TAE) → 0.797 (TerraMind), significant. Presto and TESSERA (E04) still to run |
 | E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Utah, 10–100% of the training parcels: the 12 jobs of frozen, fine-tuned and from scratch running on the cluster; the 4 LoRA jobs later ([E05](experiments/E05_prithvi_strategies.md)) |
 | STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
@@ -25,7 +25,7 @@ change log).
 Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. E03 with Presto and TESSERA; E05: finish the 12 running jobs, run `report.py`, then the 4 LoRA jobs
+2. E04 with Presto and TESSERA; E05: finish the 12 running jobs, run `report.py`, then the 4 LoRA jobs
    ([E05](experiments/E05_prithvi_strategies.md)).
 3. STAC approach (independent of the Earth Engine tiles): rerun the 78 missing Utah blocks, then Morocco 2023/24
    and 2024/25 (`s2_download/`); then training tiles, experiments and maps on the STAC tiles; map accuracy sample.
@@ -93,6 +93,23 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-11-20 (experiments renumbered: E03 U-TAE, E04 frozen GeoFMs)
+
+- E03 and E04 swapped so the numbering follows the logic of the study: E01 simple classifiers, E02 temporal network
+  on pixels (TempCNN), **E03 U-TAE** (temporal network on tiles, from scratch), **E04 frozen GeoFMs** + decoder,
+  E05 fine-tuning. Folders `experiments/E03_utae/`, `experiments/E04_frozen_geofm/`, pages, figures
+  (`confusion_e04.png`), comparison tables (`paired_vs_E03_utae_utae.csv`) and all current pages renamed. Older
+  change-log entries and meeting notes keep the numbers of their time (there, E03 = frozen GeoFMs, E04 = U-TAE).
+
+### 2026-11-20 (pixel L-TAE on hold; comparison page)
+
+- The pixel-wise L-TAE of E02 is on hold (set-up under review): left out of `05_compare_experiments.py` (`EXCLUDE`),
+  the figures (`experiments/report_figures.py`) and every page; E02 reports TempCNN only. The Holm family of the
+  E01–E04 tests now has seven runs; the p-values were recomputed (conclusions unchanged).
+- New page [Comparison of the experiments](experiments/comparison.md): all runs of E01–E04, paired tests against
+  the random forest and U-TAE, findings. The E03 page now reports only its four encoders (new figure
+  `confusion_e03.png`), with a collapsible explanation of UPerNet; E02 has one for TempCNN.
+
 ### 2026-11-20 (E05: LoRA added as a fourth strategy)
 
 - E05 now compares four strategies: frozen, **LoRA**, full fine-tuning and from scratch (16 jobs; the 4 LoRA jobs
@@ -155,7 +172,7 @@ Next steps
 ### 2026-11-19 (E03 and E04 results)
 
 - E04 U-TAE and E03 with Prithvi, Clay, TerraMind and AgriFM finished in both regions; result pages written
-  ([E03](experiments/E03_frozen_geofm.md), [E04](experiments/E04_utae.md)). Utah: U-TAE +0.037 and the foundation
+  ([E03](experiments/E04_frozen_geofm.md), [E04](experiments/E03_utae.md)). Utah: U-TAE +0.037 and the foundation
   models +0.055 to +0.068 cropland macro-F1 over the random forest, three encoders also significantly above U-TAE.
   Morocco: no significant difference on the cropland metric.
 - `05_compare_experiments.py` also tests every run against E04 U-TAE (`paired_vs_E04_utae_utae.csv`); the Holm
@@ -185,7 +202,7 @@ Next steps
   Both are E03 / E05 encoders like the other four: every pixel of a tile is encoded (128-d), the 10 m map goes to the
   same UPerNet head; Sentinel-2 only (Presto: S1 / ERA5 / SRTM / Dynamic World tokens masked; TESSERA: empty
   Sentinel-1 branch). LoRA on TESSERA's feed-forward layers (its attention packs q, k, v). Checked on a small tile
-  subset on the Mac. Pages: [Foundation models](foundation_models.md), [E03](experiments/E03_frozen_geofm.md),
+  subset on the Mac. Pages: [Foundation models](foundation_models.md), [E03](experiments/E04_frozen_geofm.md),
   E05 (deferred).
 - **Experiment scripts E01–E05** in `experiments/` (one folder per experiment with `run.py`): shared code
   `pixel_common.py` (samples, features, PASTIS rotation, metrics, block bootstrap from per-block confusion matrices),

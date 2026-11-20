@@ -65,7 +65,13 @@ when it became part of the RQ1 experiment plan).
   (`https://github.com/amanchry/irrimapping-geofm/blob/main/...`). Keep figures of a page next to it (`figures/`).
 - Headings: anchors follow GitHub's style (`#d3-validation-pastis-rotation-instead-of-nested-cv`).
 
-## 4. Before finishing a task
+## 4. Running on the UT HPC cluster
+
+Read `SERVER.md` before planning or starting any run on the cluster (`ssh ut-hpc`). All computation goes through
+Slurm (`sbatch`), never on the head node. Compute nodes reach the internet (Earth Engine, model weights) only
+through the UT proxy (`SERVER.md` §3.2b). Change or sync the server, and pull or push code, only when asked.
+
+## 5. Before finishing a task
 
 - `mkdocs build --strict` must pass (no broken links, no page missing from the navigation).
 - The progress log has an entry for the change.

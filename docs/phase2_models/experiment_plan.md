@@ -19,21 +19,21 @@ flowchart LR
     S["Labelled pixels<br/>Morocco 2023/24 + 2024/25<br/>Utah 2023/24"] --> P["Pixel time series<br/>12 months × 12 bands"]
     S --> T["128 px tiles<br/>12 months"]
     P --> E01["E01 · random forest,<br/>gradient boosting"]
-    P --> E02["E02 · TempCNN, L-TAE"]
-    T --> E04["E04 · U-TAE<br/>from scratch"]
-    T --> E03["E03 · frozen GeoFM<br/>+ L-TAE + UPerNet"]
+    P --> E02["E02 · TempCNN"]
+    T --> E03["E03 · U-TAE<br/>from scratch"]
+    T --> E04["E04 · frozen GeoFM<br/>+ L-TAE + UPerNet"]
     E01 --> C["Same out-of-fold pixels →<br/>paired block-bootstrap tests"]
     E02 --> C
-    E03 --> C
     E04 --> C
+    E03 --> C
 ```
 
 | Question | Comparison | Experiments |
 | --- | --- | --- |
-| Q1 · Do frozen GeoFMs beat a classifier on the raw Sentinel-2 time series? | each GeoFM vs the random forest | E03 vs E01 |
-| Q2 · Do they beat a neural network trained from scratch on the same tiles? | each GeoFM vs U-TAE | E03 vs E04 |
-| Q3 · Does a temporal neural network beat the random forest on the same pixels? | L-TAE, TempCNN vs random forest | E02 vs E01 |
-| Q4 · Which GeoFM family works best: image models or pixel time-series models? | Prithvi, Clay, TerraMind, AgriFM vs Presto, TESSERA | within E03 |
+| Q1 · Do frozen GeoFMs beat a classifier on the raw Sentinel-2 time series? | each GeoFM vs the random forest | E04 vs E01 |
+| Q2 · Do they beat a neural network trained from scratch on the same tiles? | each GeoFM vs U-TAE | E04 vs E03 |
+| Q3 · Does a temporal neural network beat the random forest on the same pixels? | TempCNN vs random forest | E02 vs E01 |
+| Q4 · Which GeoFM family works best: image models or pixel time-series models? | Prithvi, Clay, TerraMind, AgriFM vs Presto, TESSERA | within E04 |
 | Q5 · Do the conclusions hold in a second region? | every question in Morocco and in Utah | all |
 
 Headline metric: **cropland macro-F1** (mean F1 of irrigated and rainfed); a difference counts when its 95%
@@ -43,23 +43,23 @@ block-bootstrap CI excludes 0 and the Holm-corrected p < 0.05 ([evaluation proto
 
 | ID | Model | Status | Cropland macro-F1 Morocco | Cropland macro-F1 Utah |
 | --- | --- | --- | --- | --- |
-| [E01](../experiments/E01_s2_pixel_baseline.md) | random forest, gradient boosting on the pixel time series | ✅ done | 0.876 (RF) | 0.729 (RF) |
-| [E02](../experiments/E02_temporal_nn.md) | TempCNN, L-TAE on the pixel time series | ✅ done | 0.890 (L-TAE) | 0.741 (L-TAE) |
-| [E03](../experiments/E03_frozen_geofm.md) | frozen Prithvi, Clay, TerraMind, AgriFM + L-TAE + UPerNet | ✅ done (4 of 6 encoders) | best 0.900 (AgriFM) | best 0.797 (TerraMind) |
-| [E03](../experiments/E03_frozen_geofm.md) | frozen Presto, TESSERA + UPerNet | ⏳ to run | – | – |
-| [E04](../experiments/E04_utae.md) | U-TAE from scratch | ✅ done | 0.897 | 0.766 |
+| [E01](../experiments/E01_s2_pixel_baseline.md) | random forest, gradient boosting on the pixel time series | done | 0.876 (RF) | 0.729 (RF) |
+| [E02](../experiments/E02_temporal_nn.md) | TempCNN on the pixel time series | done | 0.886 | 0.721 |
+| [E03](../experiments/E03_utae.md) | U-TAE from scratch | done | 0.897 | 0.766 |
+| [E04](../experiments/E04_frozen_geofm.md) | frozen Prithvi, Clay, TerraMind, AgriFM + L-TAE + UPerNet | done | best 0.900 (AgriFM) | best 0.797 (TerraMind) |
 
 **So far (cropland macro-F1):**
 
 - **Morocco:** all models lie between 0.876 and 0.900; no model differs significantly from the random forest, and no
   GeoFM from U-TAE.
 - **Utah:** the frozen GeoFMs are clearly better. All four beat the random forest by 0.055–0.068 (TerraMind +0.068,
-  significant), and U-TAE is the first model trained from scratch to beat it significantly (+0.037). Details and the paired tests are on the
-[experiment pages](../experiments/index.md) and the [results](../results.md) page.
+  significant), and U-TAE is the first model trained from scratch to beat it significantly (+0.037).
+
+All runs side by side with the paired tests: [comparison of the experiments](../experiments/comparison.md).
 
 ## Remaining work for RQ1
 
-1. E03 with Presto and TESSERA (both regions), then the comparison table and paired tests again
+1. E04 with Presto and TESSERA (both regions), then the comparison table and paired tests again
    (`pixelwise_run/05_compare_experiments.py`).
 2. Label efficiency: whether GeoFMs need fewer labels is tested in [E05](../experiments/E05_prithvi_strategies.md)
    for Prithvi in Utah (10–100% of the training parcels); extending it to the other models is an optional ablation

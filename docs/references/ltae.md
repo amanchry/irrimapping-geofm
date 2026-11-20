@@ -17,11 +17,11 @@ the series into one vector.
 - Matches or beats the heavier attention and recurrent models with far fewer parameters and less compute.
 
 ## What this research takes from it
-- The **pixel L-TAE** of [E02](../experiments/E02_temporal_nn.md): attention over the 12 monthly Sentinel-2 values
-  of one pixel, trained from scratch.
+- A **pixel L-TAE** (attention over the 12 monthly Sentinel-2 values of one pixel, trained from scratch) was run in
+  [E02](../experiments/E02_temporal_nn.md); it is on hold and not reported.
 - The **temporal head** of the tile models: the L-TAE combines the 12 monthly features at every patch position of
-  the encoders that do not merge all 12 months themselves (Prithvi, Clay, TerraMind), before the UPerNet decoder ([E03](../experiments/E03_frozen_geofm.md),
-  [E05](../experiments/E05_prithvi_strategies.md)); U-TAE ([E04](../experiments/E04_utae.md)) uses the same
+  the encoders that do not merge all 12 months themselves (Prithvi, Clay, TerraMind), before the UPerNet decoder ([E04](../experiments/E04_frozen_geofm.md),
+  [E05](../experiments/E05_prithvi_strategies.md)); U-TAE ([E03](../experiments/E03_utae.md)) uses the same
   attention inside the network.
 - Archived parcel-wise set-up: attention over the 12 monthly parcel embeddings
   ([archived E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md)).

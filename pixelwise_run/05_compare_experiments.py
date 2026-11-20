@@ -31,8 +31,10 @@ ROOT = Path(__file__).resolve().parents[1] / "experiments"   # experiment folder
 EXPERIMENTS = "E0[1-4]_*"                          # E05 has its own tables and tests (E05_prithvi_strategies/report.py)
 REGIONS = ["morocco", "utah"]
 REFERENCES = ["E01_s2_pixel_baseline/rf",          # runs every other run is compared with (one table each)
-              "E04_utae/utae"]
+              "E03_utae/utae"]
 METRICS = ["cropland_macro_f1", "macro_f1_3class"]
+EXCLUDE = ["E02_temporal_nn/ltae"]                 # runs left out of the table and the Holm family (pixel L-TAE:
+                                                   # on hold, under review)
 OUT_DIR = ROOT / "comparison"
 # ==========================================================================
 
@@ -57,6 +59,7 @@ def boot_metrics(oof, blocks, draws):
 def main():
     for region in REGIONS:
         runs = {f"{p.parents[3].name}/{p.parent.name}": p for p in sorted(ROOT.glob(f"{EXPERIMENTS}/results/{region}/*/oof_predictions.parquet"))}
+        runs = {k: p for k, p in runs.items() if k not in EXCLUDE}
         if not runs:
             print(f"{region}: no results yet")
             continue

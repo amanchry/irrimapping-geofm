@@ -233,6 +233,28 @@ script (no command-line arguments), so edit the script (e.g. `EXPERIMENT = "E02_
 `QUICK_TEST: true` in the config) and then submit. `jobs/logs/` must exist before submitting (Slurm does not create
 it): `mkdir -p jobs/logs`.
 
+### 3.2b Earth Engine downloads (masks, tiles)
+
+Compute nodes have **no direct internet**: a plain `curl` from a CPU node fails. They reach Earth Engine only
+through the UT proxy, so every Earth Engine script (`cropland_extent/make_cropland_mask.py`,
+`ml_dataset_prep/03_build_tiles.py`, `03c_build_cropland_tiles.py`) runs as a Slurm job with the proxy lines of §3.2
+(CPU partition, no GPU). Do **not** run them on the head node: it has direct internet, but heavy or long work there
+is against the HPC rules.
+
+Example: `jobs/tiles_utah.sbatch` (CPU, 8 cores, 16 GB, proxy set) runs `jobs/run_tiles_utah.py`, which sets
+`REGION = "utah"` and `SEASONS` from the job's environment without editing the tracked script:
+
+```bash
+sbatch --job-name=tiles_utah_2020-21 --export=ALL,SEASON=2020/21 jobs/tiles_utah.sbatch
+```
+
+Needs `secrets/waterinfor-service-account.json` and, for the mask, `data/admin_boundaries/FAO_GAUL_*.geojson`
+(region outlines, not in git; copy from the Mac). Speed on the cluster: mask 0.5 s per 1024-px block; Utah tiles
+about 1.4 s per tile.
+
+(19 Nov 2026: the four cropland masks were run on the head node under `nohup` because the proxy route was
+overlooked. That worked, but use a Slurm job next time.)
+
 ### 3.3 Submitting
 
 ```bash

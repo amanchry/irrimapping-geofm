@@ -68,7 +68,7 @@ python pixelwise_run/01_prepare_labels_Morocco.py      # 01 labels (01_prepare_l
 python pixelwise_run/02_make_spatial_folds.py          # 02 spatial folds
 python pixelwise_run/03_build_tiles.py                 # 03 tile store (Earth Engine)
 python pixelwise_run/04_make_pixel_samples.py          # 04 labelled pixels
-python experiments/E01_s2_pixel_baseline/run.py        # experiments, one at a time: E01, E02, E04, E03, E05
+python experiments/E01_s2_pixel_baseline/run.py        # experiments, one at a time: E01, E02, E03, E04, E05
 python pixelwise_run/05_compare_experiments.py         # 05 comparison table and paired tests
 python pixelwise_run/06_build_cropland_tiles.py        # 06 earlier Earth Engine route for wall-to-wall tiles
 

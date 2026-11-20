@@ -4,7 +4,7 @@ nn_common.py  —  neural building blocks and the pixel training loop of the pix
 
 LTAE        lightweight temporal attention encoder (Garnot & Landrieu 2020): channels -> d_model, sinusoidal
             encoding of the day in the agricultural year, one learned master query per head; masked months get
-            no attention. Returns the aggregated feature vector and the attention per head (used by E02, E03, E04).
+            no attention. Returns the aggregated feature vector and the attention per head (used by E02, E04, E03).
 TempCNN     three 1-D convolutions over the months + dense layer (Pelletier et al. 2019) (E02).
 train_pixel_model   weighted cross-entropy, AdamW, early stopping on the validation fold's 3-class macro-F1;
                     the best epoch is kept.

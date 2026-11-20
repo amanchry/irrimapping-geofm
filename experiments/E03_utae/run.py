@@ -1,9 +1,9 @@
 """
-E04_utae/run.py  —  E04: U-TAE trained from scratch on the 128 px tiles
+E03_utae/run.py  —  E03: U-TAE trained from scratch on the 128 px tiles
 ======================================================================
 
 Question: does a spatio-temporal network of the same input, trained from scratch, match the frozen foundation
-models (E03)? It also tests the tile training pipeline before the large encoders.
+models (E04)? It also tests the tile training pipeline before the large encoders.
 
 Model (pixelwise_run/tile_common.py, UTAE; Garnot & Landrieu 2021)
 ----------------------------------------------------------------
@@ -15,12 +15,12 @@ level (the PASTIS configuration).
 Training: masked cross-entropy at the sampled pixels of the training folds (class weights), AdamW lr 1e-3,
 random flips / rotations, early stopping on the validation pixels' 3-class macro-F1; N_SEEDS seeds per round.
 
-Output: experiments/E04_utae/results/<region>/utae/ (as E01, plus training_history.csv)
+Output: experiments/E03_utae/results/<region>/utae/ (as E01, plus training_history.csv)
 
 Run (GPU)
 ---------
-    python experiments/E04_utae/run.py
-    # cluster: sbatch --export=ALL,SCRIPT=experiments/E04_utae/run.py,EXPERIMENT_REGION=morocco jobs/step_gpu.sbatch
+    python experiments/E03_utae/run.py
+    # cluster: sbatch --export=ALL,SCRIPT=experiments/E03_utae/run.py,EXPERIMENT_REGION=morocco jobs/step_gpu.sbatch
 """
 import sys
 from pathlib import Path
@@ -51,7 +51,7 @@ def build(train_rows, df, X, info):
 
 
 if __name__ == "__main__":
-    run_tile_experiment(EXP_DIR, "E04", REGION, "utae", build,
+    run_tile_experiment(EXP_DIR, "E03", REGION, "utae", build,
                         {"model": "U-TAE", "encoder_widths": [64, 64, 64, 128], "decoder_widths": [32, 32, 64, 128],
                          "n_head": 16, "d_k": 4, "d_model": 256},
                         lr=LR, weight_decay=WEIGHT_DECAY, batch=BATCH, epochs=EPOCHS, patience=PATIENCE,

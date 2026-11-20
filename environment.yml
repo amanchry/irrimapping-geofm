@@ -20,7 +20,10 @@ dependencies:
   - pyproj
   - pyogrio
   - pyarrow                 # GeoParquet tile index (04_build_tiles.py)
+  - gdal                    # osgeo Python bindings + gdalbuildvrt (cropland_extent/, cropland mask VRTs)
   - earthengine-api
+  - planetary-computer      # ESA WorldCover download (cropland_extent/download_esa_worldcover.py)
+  - pystac-client           # STAC search for the same download
   # data + machine learning
   - numpy
   - pandas
@@ -29,6 +32,7 @@ dependencies:
   - joblib
   - pyyaml
   - requests
+  - tqdm                    # download progress bars
   - pillow
   # deep learning (CPU, CUDA or Apple Silicon)
   - pytorch
@@ -51,3 +55,4 @@ dependencies:
       - mkdocs>=1.6,<2        # MkDocs 2 drops plugins and themes
       - mkdocs-material
       - mkdocs-literate-nav
+      - mkdocs-glightbox      # click an image to enlarge it

@@ -24,11 +24,11 @@ they do not consistently beat supervised models trained from scratch.
 ## What this research takes from it
 - Frozen-encoder evaluation with an identical head for every model as the main comparison
   ([protocol](../phase2_models/evaluation.md)).
-- The set-up of [E03](../experiments/E03_frozen_geofm.md), as in PANGAEA: the frozen encoder encodes the months, an
+- The set-up of [E04](../experiments/E04_frozen_geofm.md), as in PANGAEA: the frozen encoder encodes the months, an
   **L-TAE** combines them at every patch position (for the encoders that do not model time themselves), a 4-scale
   feature pyramid and a **UPerNet** decoder predict every pixel of the 128 px tile.
-- A result where GeoFMs only equal a strong baseline is a plausible outcome, not a failure; E03 is compared with
-  the Sentinel-2 baselines E01, E02 and the U-TAE trained from scratch (E04).
+- A result where GeoFMs only equal a strong baseline is a plausible outcome, not a failure; E04 is compared with
+  the Sentinel-2 baselines E01, E02 and the U-TAE trained from scratch (E03).
 - Archived parcel-wise set-up: the L-TAE pipeline next to the PCA pipeline
   ([archived E04](../archive/parcel_wise_classification/E04_frozen_ltae/index.md),
   [decision D8](../decisions.md#d8-two-temporal-aggregation-pipelines)).

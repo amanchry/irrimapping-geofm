@@ -656,7 +656,7 @@ outputs/morocco/dataset/
 
 | Model family | Use | Train / validation / test |
 | --- | --- | --- |
-| Pixel models: random forest, gradient boosting, TempCNN, L-TAE (E01, E02) | pixel samples (`04c_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test); fold −1 left out |
+| Pixel models: random forest, gradient boosting, TempCNN (E01, E02) | pixel samples (`04c_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test); fold −1 left out |
 | Tile models: frozen foundation models with L-TAE + UPerNet, U-TAE, fine-tuning (E03–E05) | full tiles: `_img.tif` (Sentinel-2 bands) + `_lab.tif`, loss only on the labelled pixels of the training folds | same folds; scored at the labelled pixels of the test fold |
 | Annual maps (Phase 5) | wall-to-wall Sentinel-2 tiles over the cropland mask (`s2_download/`) | – |
 

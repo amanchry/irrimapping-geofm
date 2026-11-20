@@ -5,7 +5,7 @@ E05_prithvi_strategies/run.py  —  E05: Prithvi frozen vs LoRA vs fully fine-tu
 Questions
 ---------
 1. How do the four training strategies behave (loss and F1 per epoch, overfitting)?
-2. What does training the encoder (LoRA adapters or every weight) cost and add over the frozen encoder of E03?
+2. What does training the encoder (LoRA adapters or every weight) cost and add over the frozen encoder of E04?
 3. Does fine-tuning beat the frozen encoder and the same network trained from scratch, does the parameter-efficient
    LoRA keep the gain of full fine-tuning, and do the answers change with the number of labelled parcels
    (10 / 25 / 50 / 100% of the training parcels)?
@@ -15,11 +15,11 @@ Model (pixelwise_run/tile_common.py, GeoFMSegmenter), the same network in every 
 Encoder  Prithvi-EO-2.0-300M-TL (ViT-Large, 24 blocks, 1024-d, 16 px patches; B2 B3 B4 B8A B11 B12; 4 months per
          pass with date and location), output of the last block: an 8 x 8 patch grid per month
 Head     L-TAE over the 12 months at every patch position -> 4-scale pyramid (x4, x2, x1, x1/2; ViTDet / the
-         Feature2Pyramid neck of PANGAEA) -> UPerNet -> class scores on 32 x 32, bilinear to 128 x 128 (as E03)
+         Feature2Pyramid neck of PANGAEA) -> UPerNet -> class scores on 32 x 32, bilinear to 128 x 128 (as E04)
 
 Strategies (STRATEGY)
 ---------------------
-  frozen     pretrained encoder, locked (= E03); only the head is trained
+  frozen     pretrained encoder, locked (= E04); only the head is trained
   lora       pretrained encoder, locked; low-rank adapters (LoRA, Hu et al. 2021) on the attention (qkv) and MLP
              (fc1, fc2) layers of all 24 blocks, rank 16, alpha 32 (as Marti-Escofet et al. 2025 for Prithvi:
              about 5.5 M adapter weights); adapters and head trained, adapters at the head's learning rate
@@ -33,7 +33,7 @@ Training (identical for the four strategies): masked class-weighted cross-entrop
 tiles, bfloat16, flips / rotations, 1 epoch linear warm-up, gradient clipping at norm 1, early stopping on the
 validation 3-class macro-F1 (patience 15, at most 60 epochs), 3 seeds per round.
 
-Output: experiments/E05_prithvi_strategies/results/<region>/<strategy>_p<percent>/ (as E03, plus label_subset.csv
+Output: experiments/E05_prithvi_strategies/results/<region>/<strategy>_p<percent>/ (as E04, plus label_subset.csv
 for fractions < 1). Figures and paired tests: experiments/E05_prithvi_strategies/report.py.
 
 Run (GPU; one job per strategy and fraction, 16 jobs)

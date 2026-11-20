@@ -1,5 +1,5 @@
 """
-tile_common.py  —  shared code of the tile experiments E03 (frozen GeoFMs + decoder), E04 (U-TAE),
+tile_common.py  —  shared code of the tile experiments E04 (frozen GeoFMs + decoder), E03 (U-TAE),
                    E05 (Prithvi: frozen / fully fine-tuned / from scratch, with fewer labels)
 =============================================================================================================
 
@@ -231,7 +231,7 @@ LORA_TARGETS = {"tessera": ("linear1", "linear2")}
 
 class GeoFMSegmenter(nn.Module):
     """Foundation-model encoder + temporal L-TAE + UPerNet head -> logits [B, 3, H, W].
-    Encoder modes: frozen = True (E03: pretrained, locked); lora_rank > 0 (pretrained, locked, low-rank adapters
+    Encoder modes: frozen = True (E04: pretrained, locked); lora_rank > 0 (pretrained, locked, low-rank adapters
     trained); frozen = False (every encoder weight trained: fine-tuning with pretrained = True, training from
     scratch with pretrained = False)."""
 

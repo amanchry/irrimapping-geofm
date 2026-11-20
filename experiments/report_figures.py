@@ -7,7 +7,6 @@ Reads the finished runs in experiments/E0*/results/<region>/<run>/ and writes, f
   confusion_<tag>.png     row-normalised confusion matrices of the runs in "confusion"
 and once:
   e01_importance.png      E01 random forest: permutation importance per month and per band
-  e02_attention.png       E02 L-TAE: mean attention per month and class (test folds)
 
 Run (Mac, after the results are copied from the cluster)
 --------------------------------------------------------
@@ -27,14 +26,16 @@ from regions import settings  # noqa: E402
 FIGURES = {
     "e01_e02": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf",
                            "E01 gradient boosting": "E01_s2_pixel_baseline/hgb",
-                           "E02 TempCNN": "E02_temporal_nn/tempcnn", "E02 L-TAE": "E02_temporal_nn/ltae"},
-                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 L-TAE": "E02_temporal_nn/ltae"}},
-    "e03_e04": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 L-TAE": "E02_temporal_nn/ltae",
-                           "E04 U-TAE": "E04_utae/utae", "E03 Prithvi": "E03_frozen_geofm/prithvi",
-                           "E03 Clay": "E03_frozen_geofm/clay", "E03 TerraMind": "E03_frozen_geofm/terramind",
-                           "E03 AgriFM": "E03_frozen_geofm/agrifm"},
-                "confusion": {"E02 L-TAE": "E02_temporal_nn/ltae", "E04 U-TAE": "E04_utae/utae",
-                              "E03 TerraMind": "E03_frozen_geofm/terramind"}},
+                           "E02 TempCNN": "E02_temporal_nn/tempcnn"},
+                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn"}},
+    "e03_e04": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn",
+                           "E03 U-TAE": "E03_utae/utae", "E04 Prithvi": "E04_frozen_geofm/prithvi",
+                           "E04 Clay": "E04_frozen_geofm/clay", "E04 TerraMind": "E04_frozen_geofm/terramind",
+                           "E04 AgriFM": "E04_frozen_geofm/agrifm"},
+                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E03 U-TAE": "E03_utae/utae",
+                              "E04 TerraMind": "E04_frozen_geofm/terramind"}},
+    "e04": {"confusion": {"Prithvi": "E04_frozen_geofm/prithvi", "Clay": "E04_frozen_geofm/clay",
+                          "TerraMind": "E04_frozen_geofm/terramind", "AgriFM": "E04_frozen_geofm/agrifm"}},
 }
 REGIONS = {"morocco": "Morocco", "utah": "Utah"}
 # ==========================================================================
@@ -55,8 +56,8 @@ def month_labels(region):
     return [MONTHS[(s - 1 + k) % 12] for k in range(12)]
 
 
-COLORS = {"E01": ["#9ecae1", "#3182bd"], "E02": ["#fdae6b", "#e6550d"], "E04": ["#74c476"],
-          "E03": ["#bcbddc", "#9e9ac8", "#756bb1", "#54278f"]}
+COLORS = {"E01": ["#9ecae1", "#3182bd"], "E02": ["#fdae6b", "#e6550d"], "E03": ["#74c476"],
+          "E04": ["#bcbddc", "#9e9ac8", "#756bb1", "#54278f"]}
 
 
 def run_colors(runs):
@@ -157,8 +158,8 @@ def attention():
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     for tag, f in FIGURES.items():
-        scores(tag, f["scores"])
+        if "scores" in f:
+            scores(tag, f["scores"])
         confusion(tag, f["confusion"])
-    importance()
-    attention()
+    importance()                                   # (the E02 L-TAE attention figure is on hold with the pixel L-TAE)
     print(f"Figures in {OUT}")

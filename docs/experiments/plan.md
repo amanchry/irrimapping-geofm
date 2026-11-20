@@ -14,7 +14,7 @@ cluster; the results are copied to the Mac for the reports.
 | **Regions and years** | Morocco: 2023/24 and 2024/25 pooled, each pixel with its own year (as in [D2](../decisions.md#d2-two-agricultural-years-per-parcel-season)). Utah: train and test on 2023/24 (WRLU 2024); 2020/21 only for the temporal test (RQ3) |
 | **Input imagery** | Sentinel-2 only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)): 12 monthly composites of the agricultural year × 12 bands, from the same tile store for every model |
 | **Validation** | PASTIS rotation over the 5 spatial folds (20 km blocks): 3 folds train, the next fold validation (early stopping, hyperparameters), 1 fold test; 5 rounds, so every pixel is tested once. Pixels of fold −1 are not used |
-| **Same test pixels** | every experiment is scored on the same out-of-fold pixels. Models that work on whole tiles (E03, E04) predict the tile and are read at the sampled pixels |
+| **Same test pixels** | every experiment is scored on the same out-of-fold pixels. Models that work on whole tiles (E03–E05) predict the tile and are read at the sampled pixels |
 | **Class imbalance** | class weights inversely proportional to the training-pixel counts (rainfed ≈ 1 : 11 irrigated in Morocco) |
 | **Seeds** | neural models: 3 seeds (42, 1042, 2042), mean probability; classical models: seed 42 |
 
@@ -33,13 +33,13 @@ cluster; the results are copied to the Mac for the reports.
 | ID | Question | Input | Model | Compute | Order |
 | --- | --- | --- | --- | --- | --- |
 | **E01** | How well do the raw Sentinel-2 pixel time series separate the classes? (baseline) | 12 months × 12 bands per pixel (144 values) + NDVI, NDWI per month | random forest; histogram gradient boosting | CPU | 1 |
-| **E02** | Does a temporal neural network beat the classical baseline on the same pixels? | same pixel time series | TempCNN (Pelletier et al. 2019); L-TAE on single pixels (Garnot & Landrieu 2020) | GPU | 2 |
-| **E03** | Do frozen geospatial foundation models with a light decoder beat the pixel models? (RQ1) | 128 × 128 px tiles, 12 months | frozen Prithvi-EO-2.0, Clay v1.5, TerraMind, AgriFM and the pixel time-series models Presto, TESSERA + UPerNet decoder (PANGAEA; Marsocci et al. 2024), L-TAE over time for the single-date image models | GPU | 4 |
-| **E04** | Does a spatio-temporal network trained from scratch match the foundation models? | 128 × 128 px tiles, 12 months | U-TAE (Garnot & Landrieu 2021) | GPU | 3 |
-| **E05** | Does fine-tuning (LoRA or full) beat the frozen encoder and the same network trained from scratch, and how does this depend on the number of labelled parcels? (RQ2; Utah) | 128 × 128 px tiles, 12 months; 10 / 25 / 50 / 100% of the training parcels | Prithvi-EO-2.0 + L-TAE + UPerNet (as E03): frozen, LoRA, fully fine-tuned, from scratch | GPU | 5 |
+| **E02** | Does a temporal neural network beat the classical baseline on the same pixels? | same pixel time series | TempCNN (Pelletier et al. 2019) | GPU | 2 |
+| **E03** | Does a spatio-temporal network trained from scratch on the whole tile beat the pixel models? | 128 × 128 px tiles, 12 months | U-TAE (Garnot & Landrieu 2021) | GPU | 3 |
+| **E04** | Do frozen geospatial foundation models with a light decoder beat the pixel models? (RQ1) | 128 × 128 px tiles, 12 months | frozen Prithvi-EO-2.0, Clay v1.5, TerraMind, AgriFM and the pixel time-series models Presto, TESSERA + UPerNet decoder (PANGAEA; Marsocci et al. 2024), L-TAE over time for the single-date image models | GPU | 4 |
+| **E05** | Does fine-tuning (LoRA or full) beat the frozen encoder and the same network trained from scratch, and how does this depend on the number of labelled parcels? (RQ2; Utah) | 128 × 128 px tiles, 12 months; 10 / 25 / 50 / 100% of the training parcels | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04): frozen, LoRA, fully fine-tuned, from scratch | GPU | 5 |
 
 Run order: E01 first (it fixes the evaluation code and gives the reference numbers), then the other pixel model
-(E02), then the tile models (E04 before E03, because U-TAE tests the tile training pipeline without the large
+(E02), then the tile models (E03 before E04, because U-TAE tests the tile training pipeline without the large
 encoders), then E05 (frozen, fine-tuned and from scratch first, LoRA after them).
 
 ### Details per experiment
@@ -50,11 +50,16 @@ month; months without a clear observation are filled by linear interpolation in 
 validation fold. Permutation importance per month and band. This answers how far a per-pixel time series alone
 goes; random forests are the standard in operational irrigation mapping (Ketchum et al. 2020; Xie et al. 2021).
 
-**E02 · temporal neural networks.** The same 12-step input, normalised per band with training-fold statistics.
-TempCNN (three 1-D convolution layers) and L-TAE applied to single pixels; trained with weighted cross-entropy and
-early stopping on the validation fold; 3 seeds. Tests whether learnt temporal features beat the random forest.
+**E02 · temporal neural network.** The same 12-step input, normalised per band with training-fold statistics.
+TempCNN (three 1-D convolution layers over the months); trained with weighted cross-entropy and early stopping on
+the validation fold; 3 seeds. Tests whether learnt temporal features beat the random forest. (A pixel-wise L-TAE was
+also run; it is on hold and not reported.) All runs are compared on the [comparison page](comparison.md).
 
-**E03 · frozen foundation models + decoder.** The encoders see whole 128 px tiles (16 px patches for Prithvi and
+**E03 · U-TAE from scratch.** The PASTIS segmentation baseline: U-Net encoder with L-TAE attention over the 12
+months, trained on the same tiles with the same masked loss. Shows how much the pretrained encoders add over a
+spatio-temporal network of the same input.
+
+**E04 · frozen foundation models + decoder.** The encoders see whole 128 px tiles (16 px patches for Prithvi and
 AgriFM's settings, 8 px for Clay), one month at a time or all months as the model allows; the patch features are
 combined over time with L-TAE and brought back to 10 m by a UPerNet decoder, trained with a masked loss on the
 labelled pixels of each tile (irrigated, rainfed and the not-cropland samples; all other pixels ignored). Only the
@@ -63,12 +68,8 @@ decoder and temporal head are trained. Same normalisations and band choices as i
 encode the 12-month series of every pixel of the tile into a 128-d vector; the 10 m feature map goes to the same
 UPerNet head ([Foundation models](../foundation_models.md)).
 
-**E04 · U-TAE from scratch.** The PASTIS segmentation baseline: U-Net encoder with L-TAE attention over the 12
-months, trained on the same tiles with the same masked loss. Shows how much the pretrained encoders add over a
-spatio-temporal network of the same input.
-
-**E05 · Prithvi: frozen, LoRA, fine-tuned or from scratch.** The E03 network with Prithvi, trained four ways:
-encoder frozen (E03), low-rank adapters (LoRA, rank 16, on the attention and MLP layers) trained on the frozen
+**E05 · Prithvi: frozen, LoRA, fine-tuned or from scratch.** The E04 network with Prithvi, trained four ways:
+encoder frozen (E04), low-rank adapters (LoRA, rank 16, on the attention and MLP layers) trained on the frozen
 encoder, every encoder weight trained from the pretrained weights (encoder learning rate 10⁻⁵, head 10⁻⁴), or every
 weight trained from random weights. Each with 10, 25, 50 and 100% of the training-fold parcels (per class,
 nested draws; validation and test folds complete). Loss and F1 per epoch, score against the share of parcels, and

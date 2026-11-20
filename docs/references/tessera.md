@@ -60,7 +60,7 @@ available; the embeddings are released for the whole globe.
 
 ## What this research takes from it
 
-- **An encoder of [E03](../experiments/E03_frozen_geofm.md):** TESSERA is one of the two pixel time-series models
+- **An encoder of [E04](../experiments/E04_frozen_geofm.md):** TESSERA is one of the two pixel time-series models
   (with Presto). Its 128-d embedding of every pixel of a tile goes to the same UPerNet head as the image models
   ([Foundation models](../foundation_models.md#tessera-v2)).
 - **Evidence for the frozen-encoder question (RQ2, [E05](../experiments/E05_prithvi_strategies.md)):** for a pixel

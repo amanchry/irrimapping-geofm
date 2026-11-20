@@ -11,10 +11,10 @@ therefore uses a pixel-level model that serves both as the fine-tuning experimen
 
 | Component | Description | Where |
 | --- | --- | --- |
-| Frozen encoder + segmentation head | each GeoFM with an L-TAE over the months and a UPerNet head trained on the labelled pixels of the tiles, as in PANGAEA | [E03](../experiments/E03_frozen_geofm.md) |
+| Frozen encoder + segmentation head | each GeoFM with an L-TAE over the months and a UPerNet head trained on the labelled pixels of the tiles, as in PANGAEA | [E04](../experiments/E04_frozen_geofm.md) |
 | Fine-tuning and training from scratch | Prithvi-EO-2.0 with the same head: frozen, LoRA (low-rank adapters), fully fine-tuned, or trained from random weights, with 10–100% of the training parcels | [E05](../experiments/E05_prithvi_strategies.md) |
 | Classical baseline | random forest on the per-pixel Sentinel-2 time series | [E01](../experiments/E01_s2_pixel_baseline.md) |
-| Neural baselines | TempCNN and L-TAE (pixel time series), U-TAE (image time series), trained from scratch | [E02](../experiments/E02_temporal_nn.md), [E04](../experiments/E04_utae.md) |
+| Neural baselines | TempCNN (pixel time series), U-TAE (image time series), trained from scratch | [E02](../experiments/E02_temporal_nn.md), [E03](../experiments/E03_utae.md) |
 
 Training, tuning and testing follow the [evaluation protocol](evaluation.md): the same spatial folds and the PASTIS
 rotation, and the same out-of-fold pixels for every model ([experiment plan](../experiments/plan.md)).
@@ -54,7 +54,7 @@ has 24).*
 probe* is the smallest head (one linear layer, Alain & Bengio 2016); in segmentation a decoder such as UPerNet is
 common (PANGAEA). *Embeddings as data* is the extreme case: the features are computed once and any classifier is
 trained on them (TESSERA, AlphaEarth). Cheap, hard to overfit, and a direct test of what pretraining learnt; but if
-the task needs features the encoder never learnt, the head cannot create them. This is E03 and the "frozen" run of
+the task needs features the encoder never learnt, the head cannot create them. This is E04 and the "frozen" run of
 E05.
 
 **2 · Full fine-tuning.** Every encoder and head weight is trained, starting from the pretrained weights. It can
@@ -109,7 +109,7 @@ encoder (Marti-Escofet et al. 2025).
 
 ```mermaid
 flowchart TD
-    A["E03 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs LoRA vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Utah<br/>(strategies 1, 4 and 2)"]
+    A["E04 · frozen encoders + L-TAE + UPerNet<br/>(strategy 1, six GeoFMs)"] --> B["E05 · Prithvi frozen vs LoRA vs fully fine-tuned vs from scratch<br/>10 / 25 / 50 / 100% of the training parcels, Utah<br/>(strategies 1, 4 and 2)"]
     B --> C{"Does fine-tuning (LoRA or full) beat the frozen encoder<br/>(paired CI excludes 0 and Holm p below 0.05)?"}
     C -- "yes" --> D["Cheapest strategy that keeps the gain<br/>(LoRA if it matches full fine-tuning);<br/>optional LP-FT (5)"]
     C -- "no, or only with many labels" --> E["Frozen encoder for the maps;<br/>fine-tuning not needed"]
