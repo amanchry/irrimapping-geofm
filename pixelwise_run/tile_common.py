@@ -236,7 +236,7 @@ class GeoFMSegmenter(nn.Module):
     scratch with pretrained = False)."""
 
     def __init__(self, name, region, frozen=True, lora_rank=0, lora_alpha=16, ltae_dim=256, decoder_ch=128,
-                 pretrained=True):
+                 pretrained=True, lora_targets=None):
         super().__init__()
         if not pretrained and (frozen or lora_rank):
             raise SystemExit("pretrained = False needs frozen = False and no LoRA (a frozen random encoder is useless)")
@@ -249,7 +249,8 @@ class GeoFMSegmenter(nn.Module):
             p.requires_grad = full
         self.adapted = 0
         if lora_rank:
-            self.adapted = add_lora(self.encoder, lora_rank, lora_alpha, LORA_TARGETS.get(name, ("qkv", "to_qkv")))
+            targets = lora_targets or LORA_TARGETS.get(name, ("qkv", "to_qkv"))
+            self.adapted = add_lora(self.encoder, lora_rank, lora_alpha, targets)
         self.frozen = frozen and not lora_rank
         if name in PIXEL_ENCODERS:                     # Presto / TESSERA: raw reflectance in, per-pixel features out
             self.pyramid = PixelPyramid()

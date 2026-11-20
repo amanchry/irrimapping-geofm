@@ -1,14 +1,16 @@
 """
-E05_prithvi_strategies/report.py  —  tables, paired tests and figures of E05 (frozen / fine-tuned / from scratch)
-================================================================================================================
+E05_prithvi_strategies/report.py  —  tables, paired tests and figures of E05 (frozen / LoRA / fine-tuned / scratch)
+==================================================================================================================
 
 Reads the finished runs results/<region>/<strategy>_p<percent>/ and writes
   results/<region>/summary.csv   one row per run: scores with 95% block-bootstrap CI, trainable parameters, epochs,
                                  time per epoch, GPU hours, labelled parcels used
   results/<region>/paired.csv    paired differences at every training share: fine-tuned - frozen (effect of training
                                  the encoder), fine-tuned - scratch (effect of the pretrained weights), frozen -
-                                 scratch; same pixels and block-bootstrap draws as 05_compare_experiments.py, Holm
-                                 correction per metric over all comparisons of this table
+                                 scratch, LoRA - frozen (effect of the adapters), fine-tuned - LoRA (full vs
+                                 parameter-efficient), LoRA - scratch; same pixels and block-bootstrap draws as
+                                 05_compare_experiments.py, Holm correction per metric over all comparisons of this
+                                 table (only the finished runs enter)
   docs/experiments/figures/e05_curves.png          training loss, validation loss, validation macro-F1 per epoch
                                                    (100% of the labels; mean over rounds and seeds, band = range)
   docs/experiments/figures/e05_label_fraction.png  out-of-fold macro-F1 against the share of training parcels, with
@@ -35,9 +37,10 @@ from pixel_common import block_confusions, bootstrap_draws, metrics_from_confusi
 # ================================ SETTINGS ================================
 REGION = "utah"
 STRATEGIES = {"scratch": ("From scratch", "#969696"), "frozen": ("Frozen", "#3182bd"),
-              "finetune": ("Full fine-tuning", "#e6550d")}
+              "lora": ("LoRA", "#31a354"), "finetune": ("Full fine-tuning", "#e6550d")}
 FRACTIONS = [0.1, 0.25, 0.5, 1.0]
-COMPARISONS = [("finetune", "frozen"), ("finetune", "scratch"), ("frozen", "scratch")]
+COMPARISONS = [("finetune", "frozen"), ("finetune", "scratch"), ("frozen", "scratch"),
+               ("lora", "frozen"), ("finetune", "lora"), ("lora", "scratch")]
 METRICS = ["cropland_macro_f1", "macro_f1_3class"]
 REFERENCE_RUNS = {"E04 U-TAE": "E04_utae/results/{region}/utae", "E01 random forest": "E01_s2_pixel_baseline/results/{region}/rf"}
 CURVE_FRACTION = 1.0                               # training share shown in the learning curves
