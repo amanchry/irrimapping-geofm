@@ -104,10 +104,12 @@ class Prithvi:
     WEIGHTS_DIR = ROOT / "checkpoints" / "prithvi"
 
     @classmethod
-    def load_encoder(cls):
+    def load_encoder(cls, pretrained=True):
+        """pretrained = False: the same architecture with random initial weights (E05, training from scratch)."""
         _hf_cache(cls.WEIGHTS_DIR)
         from terratorch.registry import BACKBONE_REGISTRY
-        return BACKBONE_REGISTRY.build("prithvi_eo_v2_300_tl", pretrained=True, num_frames=cls.FRAMES_PER_PASS).eval()
+        return BACKBONE_REGISTRY.build("prithvi_eo_v2_300_tl", pretrained=pretrained,
+                                       num_frames=cls.FRAMES_PER_PASS).eval()
 
 
 class Clay:

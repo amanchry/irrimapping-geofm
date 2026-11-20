@@ -4,7 +4,8 @@
 
 What it does
 ------------
-Collects every run with results in experiments/E0*/results/<region>/<run>/ (oof_predictions.parquet), checks that
+Collects every run of E01-E04 with results in experiments/E0*/results/<region>/<run>/ (oof_predictions.parquet;
+E05 is compared within itself by experiments/E05_prithvi_strategies/report.py), checks that
 all runs of a region were scored on the same pixels, and writes for each region:
   comparison.csv        one row per run: cropland macro-F1 and 3-class macro-F1 with 95% CI
   paired_vs_<ref>.csv   paired difference of every run to each reference run (same pixels, same block-bootstrap
@@ -27,6 +28,7 @@ from pixel_common import block_confusions, bootstrap_draws, metrics_from_confusi
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1] / "experiments"   # experiment folders E0*/results/
+EXPERIMENTS = "E0[1-4]_*"                          # E05 has its own tables and tests (E05_prithvi_strategies/report.py)
 REGIONS = ["morocco", "utah"]
 REFERENCES = ["E01_s2_pixel_baseline/rf",          # runs every other run is compared with (one table each)
               "E04_utae/utae"]
@@ -54,7 +56,7 @@ def boot_metrics(oof, blocks, draws):
 
 def main():
     for region in REGIONS:
-        runs = {f"{p.parents[3].name}/{p.parent.name}": p for p in sorted(ROOT.glob(f"E0*/results/{region}/*/oof_predictions.parquet"))}
+        runs = {f"{p.parents[3].name}/{p.parent.name}": p for p in sorted(ROOT.glob(f"{EXPERIMENTS}/results/{region}/*/oof_predictions.parquet"))}
         if not runs:
             print(f"{region}: no results yet")
             continue

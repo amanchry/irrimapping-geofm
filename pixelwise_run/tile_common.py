@@ -1,5 +1,6 @@
 """
-tile_common.py  —  shared code of the tile experiments E03 (frozen GeoFMs + decoder), E04 (U-TAE), E05 (LoRA)
+tile_common.py  —  shared code of the tile experiments E03 (frozen GeoFMs + decoder), E04 (U-TAE),
+                   E05 (Prithvi: frozen / fully fine-tuned / from scratch, with fewer labels)
 =============================================================================================================
 
 The tile models see whole 128 x 128 px tiles (12 months) of the parcel tile store (03_build_tiles.py) and predict a
@@ -14,7 +15,8 @@ Contents
 TileDataset       reads <tile_id>_img.tif, keeps the 12 Sentinel-2 bands of the 12 months (reflectance x 10,000;
                   NaN where the month has no clear observation) and builds the target map of the allowed folds
                   (-1 = ignored); random flips / 90 degree rotations for training.
-GeoFMSegmenter    frozen (or LoRA-adapted) foundation-model encoder + L-TAE over the months at every patch
+GeoFMSegmenter    frozen, LoRA-adapted or fully trained (fine-tuned or, for Prithvi, randomly initialised)
+                  foundation-model encoder + L-TAE over the months at every patch
                   position + simple feature pyramid + UPerNet head (Xiao et al. 2018), as in PANGAEA's
                   multi-temporal set-up (Marsocci et al. 2024). AgriFM merges the months itself and gives a
                   multi-scale pyramid, so it goes straight to the UPerNet head. Encoder loading and normalisation
@@ -26,7 +28,9 @@ add_lora          low-rank adapters (Hu et al. 2022) on the attention projection
                   TESSERA on the feed-forward layers (linear1 / linear2), because nn.MultiheadAttention packs q, k, v
                   in one weight that an adapter cannot wrap.
 run_tile_experiment   PASTIS rotation, seeds, early stopping on the validation pixels, out-of-fold predictions,
-                  metrics (pixelwise_run/pixel_common.py).
+                  metrics (pixelwise_run/pixel_common.py). Optional: a share of the training parcels only
+                  (label_subset; validation and test folds unchanged), a separate learning rate for the encoder,
+                  learning-rate warm-up and gradient clipping (E05).
 """
 import importlib.util
 import json
@@ -44,8 +48,8 @@ from sklearn.metrics import f1_score
 
 from nn_common import DEVICE, LTAE
 from encoders import IMAGE_ENCODERS, PIXEL_ENCODERS
-from pixel_common import (CLASSES, ROOT, S2_BANDS, class_weights, get_logger, load_samples, month_dates,
-                          month_positions, results_dir, rounds, s2_series, save_run, standardiser)
+from pixel_common import (CLASSES, ROOT, S2_BANDS, class_weights, get_logger, load_samples, metrics_from_confusion,
+                          month_dates, month_positions, results_dir, rounds, s2_series, save_run, standardiser)
 
 AMP = DEVICE == "cuda"
 
@@ -71,7 +75,10 @@ class TileTable:
 
 
 class TileDataset(torch.utils.data.Dataset):
-    def __init__(self, region, table, tiles, folds, augment=False):
+    """keep: optional boolean array over the rows of table.df; only rows with keep = True enter the target map
+    (E05: a share of the training parcels; the pixels of the other parcels stay in the image, unlabelled)."""
+
+    def __init__(self, region, table, tiles, folds, augment=False, keep=None):
         self.dir = tile_root(region) / "tiles"
         info = json.loads((tile_root(region) / "tiles_info.json").read_text())
         mb = info["month_bands"]
@@ -82,6 +89,7 @@ class TileDataset(torch.utils.data.Dataset):
         d = table.df
         self.rows, self.cols = d["row"].to_numpy(), d["col"].to_numpy()
         self.labels, self.fold = d["label"].to_numpy(), d["fold"].to_numpy()
+        self.keep = keep
 
     def __len__(self):
         return len(self.tiles)
@@ -102,6 +110,8 @@ class TileDataset(torch.utils.data.Dataset):
         target = np.full(x.shape[-2:], -1, dtype=np.int64)
         idx = self.table.groups[tile_id]
         idx = idx[np.isin(self.fold[idx], self.folds)]
+        if self.keep is not None:
+            idx = idx[self.keep[idx]]
         target[self.rows[idx], self.cols[idx]] = self.labels[idx] - 1
         if self.augment:
             k = np.random.randint(4)
@@ -166,10 +176,16 @@ class ViTPyramid(nn.Module):
 _ENCODERS = {}
 
 
-def cached_encoder(name):
+def cached_encoder(name, pretrained=True):
     """(module, encoder) of a foundation model, loaded once per process; every model gets its own deep copy, so
-    LoRA adapters of one round never reach the next."""
+    LoRA adapters or fine-tuned weights of one round never reach the next. pretrained = False (Prithvi only, E05):
+    a new random initialisation for every model, drawn from the seed set before the model is built."""
     import copy
+    if not pretrained:
+        if name != "prithvi":
+            raise SystemExit(f"{name}: training from scratch is only set up for prithvi")
+        spec = IMAGE_ENCODERS[name]
+        return spec, spec.load_encoder(pretrained=False).cpu()
     if name not in _ENCODERS:
         if name in PIXEL_ENCODERS:
             _ENCODERS[name] = (None, PIXEL_ENCODERS[name]().cpu())
@@ -214,16 +230,23 @@ LORA_TARGETS = {"tessera": ("linear1", "linear2")}
 
 
 class GeoFMSegmenter(nn.Module):
-    """Foundation-model encoder (frozen, or with LoRA adapters) + temporal L-TAE + UPerNet head -> logits [B, 3, H, W]."""
+    """Foundation-model encoder + temporal L-TAE + UPerNet head -> logits [B, 3, H, W].
+    Encoder modes: frozen = True (E03: pretrained, locked); lora_rank > 0 (pretrained, locked, low-rank adapters
+    trained); frozen = False (every encoder weight trained: fine-tuning with pretrained = True, training from
+    scratch with pretrained = False)."""
 
-    def __init__(self, name, region, frozen=True, lora_rank=0, lora_alpha=16, ltae_dim=256, decoder_ch=128):
+    def __init__(self, name, region, frozen=True, lora_rank=0, lora_alpha=16, ltae_dim=256, decoder_ch=128,
+                 pretrained=True):
         super().__init__()
+        if not pretrained and (frozen or lora_rank):
+            raise SystemExit("pretrained = False needs frozen = False and no LoRA (a frozen random encoder is useless)")
         self.name = name
         self.start_month = json.loads((tile_root(region) / "tiles_info.json").read_text())["start_month"]
-        mod, self.encoder = cached_encoder(name)
+        mod, self.encoder = cached_encoder(name, pretrained)
         self.mod = mod
+        full = not frozen and not lora_rank                 # every encoder weight trained
         for p in self.encoder.parameters():
-            p.requires_grad = False
+            p.requires_grad = full
         self.adapted = 0
         if lora_rank:
             self.adapted = add_lora(self.encoder, lora_rank, lora_alpha, LORA_TARGETS.get(name, ("qkv", "to_qkv")))
@@ -448,15 +471,32 @@ def predict_tiles(model, ds, pixel_folds, workers, batch):
 
 
 def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weight_decay, batch, epochs, patience,
-                     workers, log):
+                     workers, log, encoder_lr=None, warmup_epochs=0, grad_clip=None):
+    """Masked, class-weighted cross-entropy; early stopping on the validation pixels' 3-class macro-F1. Logged per
+    epoch: training loss, validation loss (the same weighted cross-entropy), validation 3-class and cropland
+    macro-F1. Trainable encoder weights (LoRA or full) get encoder_lr (default lr) and are kept in the best state."""
     torch.manual_seed(seed)
     np.random.seed(seed)
     model = model.to(DEVICE)
-    params = [p for p in model.parameters() if p.requires_grad]
-    log.info(f"    trainable parameters: {sum(p.numel() for p in params) / 1e6:.2f} M")
-    opt = torch.optim.AdamW(params, lr=lr, weight_decay=weight_decay)
+    named = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+    enc = [p for n, p in named if n.startswith("encoder.")]
+    head = [p for n, p in named if not n.startswith("encoder.")]
+    log.info(f"    trainable parameters: {sum(p.numel() for _, p in named) / 1e6:.2f} M "
+             f"(encoder {sum(p.numel() for p in enc) / 1e6:.2f} M, head {sum(p.numel() for p in head) / 1e6:.2f} M)")
+    groups = [{"params": head, "lr": lr}]
+    if enc:                                       # LoRA adapters or the whole encoder (E05)
+        groups.append({"params": enc, "lr": encoder_lr or lr})
+    opt = torch.optim.AdamW(groups, weight_decay=weight_decay)
+    steps_per_epoch = max(1, len(train_ds) // batch)
+    sched = None
+    if warmup_epochs:                             # linear warm-up over the first epoch(s), then constant
+        warm = warmup_epochs * steps_per_epoch
+        sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda step: min(1.0, (step + 1) / warm))
+    params = [p for _, p in named]
+    trainable = {n for n, _ in named}
+    w = np.asarray(weights, dtype=np.float64)
     loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(weights, dtype=torch.float32, device=DEVICE), ignore_index=-1)
-    y_val = None
+    y_all = train_ds.labels
     best, best_state, wait, history = -1.0, None, 0, []
     for epoch in range(1, epochs + 1):
         model.train()
@@ -469,31 +509,75 @@ def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weigh
             loss = loss_fn(logits.float(), y.to(DEVICE))
             opt.zero_grad()
             loss.backward()
+            if grad_clip:
+                torch.nn.utils.clip_grad_norm_(params, grad_clip)
             opt.step()
+            if sched is not None:
+                sched.step()
             losses.append(loss.item())
+        t_train = time.time() - t0
         rows, p = predict_tiles(model, val_ds, [val_fold], workers, batch)
-        if y_val is None:
-            y_val = train_ds.labels
-        f1 = f1_score(y_val[rows] - 1, p.argmax(1), labels=[0, 1, 2], average="macro", zero_division=0)
-        history.append({"epoch": epoch, "loss": float(np.mean(losses)), "val_macro_f1": float(f1),
-                        "seconds": round(time.time() - t0)})
+        yv = y_all[rows] - 1
+        pred = p.argmax(1)
+        f1 = f1_score(yv, pred, labels=[0, 1, 2], average="macro", zero_division=0)
+        cm = np.zeros((3, 3))
+        np.add.at(cm, (yv, pred), 1)
+        crop_f1 = metrics_from_confusion(cm)["cropland_macro_f1"]
+        nll = -np.log(np.clip(p[np.arange(len(yv)), yv], 1e-7, 1.0))      # same weighted loss as in training
+        val_loss = float((w[yv] * nll).sum() / w[yv].sum())
+        history.append({"epoch": epoch, "loss": float(np.mean(losses)), "val_loss": val_loss,
+                        "val_macro_f1": float(f1), "val_cropland_f1": float(crop_f1),
+                        "seconds": round(time.time() - t0), "seconds_train": round(t_train)})
         if f1 > best:
             best, wait = f1, 0
-            best_state = {k: v.detach().clone() for k, v in model.state_dict().items() if not k.startswith("encoder.")
-                          or "lora" in k or k.endswith((".a", ".b"))}
+            best_state = {k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()
+                          if not k.startswith("encoder.") or k in trainable}
         else:
             wait += 1
-        log.info(f"    epoch {epoch:3d} loss {np.mean(losses):.4f} val macro-F1 {f1:.4f} "
-                 f"({time.time() - t0:.0f}s){' *' if wait == 0 else ''}")
+        log.info(f"    epoch {epoch:3d} loss {np.mean(losses):.4f} val loss {val_loss:.4f} val macro-F1 {f1:.4f} "
+                 f"cropland {crop_f1:.4f} ({time.time() - t0:.0f}s){' *' if wait == 0 else ''}")
         if wait >= patience:
             break
     model.load_state_dict(best_state, strict=False)
     return model, history
 
 
+def label_subset(df, train_mask, fraction, seed):
+    """Rows of the training folds that keep their label when only `fraction` of the training parcels is used (E05).
+    Every parcel gets one fixed random number (seed); per class (irrigated, rainfed) the training parcels with the
+    smallest numbers are kept, so a smaller share is always a subset of a larger one and the class shares stay as in
+    the full set. Not-cropland pixels are kept in the tiles that still hold a kept parcel. Validation and test folds
+    are not touched. Returns (keep [N] bool, one-row summary dict)."""
+    lab, keys = df["label"].to_numpy(), df["parcel_key"].to_numpy()
+    if fraction >= 1:
+        keep = train_mask.copy()
+    else:
+        all_keys = np.unique(keys[keys != ""])
+        u = dict(zip(all_keys, np.random.default_rng(seed).random(len(all_keys))))
+        keep = np.zeros(len(df), dtype=bool)
+        for c in (1, 2):
+            ks = np.unique(keys[train_mask & (lab == c)])
+            n = max(1, int(round(fraction * len(ks))))
+            chosen = ks[np.argsort([u[k] for k in ks])][:n]
+            keep |= train_mask & np.isin(keys, chosen)
+        tiles = np.unique(df["tile_id"].to_numpy()[keep])
+        keep |= train_mask & (lab == 3) & np.isin(df["tile_id"].to_numpy(), tiles)
+    summary = {"fraction": fraction}
+    for c, name in ((1, "irrigated"), (2, "rainfed"), (3, "not_cropland")):
+        if c < 3:
+            summary[f"parcels_{name}"] = len(np.unique(keys[keep & (lab == c)]))
+            summary[f"parcels_{name}_all"] = len(np.unique(keys[train_mask & (lab == c)]))
+        summary[f"pixels_{name}"] = int((keep & (lab == c)).sum())
+    summary["tiles"] = len(np.unique(df["tile_id"].to_numpy()[keep]))
+    return keep, summary
+
+
 def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings, lr, weight_decay=1e-4, batch=8,
-                        epochs=50, patience=8, n_seeds=3, seed=42, workers=8, quick=False, quick_tiles=60):
-    """PASTIS rotation with a tile model; build_model(train_rows, df, info) returns a new model for one round / seed."""
+                        epochs=50, patience=8, n_seeds=3, seed=42, workers=8, quick=False, quick_tiles=60,
+                        label_fraction=1.0, subset_seed=7, encoder_lr=None, warmup_epochs=0, grad_clip=None):
+    """PASTIS rotation with a tile model; build_model(train_rows, df, info) returns a new model for one round / seed.
+    label_fraction < 1: only that share of the training-fold parcels is labelled (label_subset); the validation and
+    test folds are unchanged, so every run is scored on the same out-of-fold pixels."""
     out_dir = results_dir(exp_dir, region, run_name, quick)
     log = get_logger(out_dir)
     df, X, info = load_samples(region)
@@ -509,10 +593,21 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
     y, folds = df["label"].to_numpy(), df["fold"].to_numpy()
     log.info(f"{exp_id} {region} {run_name}: {len(df):,} pixels in {len(table.groups):,} tiles, device {DEVICE}")
     proba = np.zeros((len(df), 3), dtype=np.float32)
-    history = []
+    history, subsets = [], []
     for k, train_f, val_f, test_f in rounds():
-        tr_rows = np.flatnonzero(np.isin(folds, train_f))
-        train_ds = TileDataset(region, table, table.tiles_with(train_f), train_f, augment=True)
+        if label_fraction < 1:
+            keep, summ = label_subset(df, np.isin(folds, train_f), label_fraction, subset_seed)
+            subsets.append(dict(summ, round=k + 1))
+            tr_rows = np.flatnonzero(keep)
+            train_tiles = sorted(df["tile_id"].iloc[tr_rows].unique())
+            train_ds = TileDataset(region, table, train_tiles, train_f, augment=True, keep=keep)
+            log.info(f"  round {k + 1}: {label_fraction:.0%} of the training parcels: irrigated "
+                     f"{summ['parcels_irrigated']:,}/{summ['parcels_irrigated_all']:,}, rainfed "
+                     f"{summ['parcels_rainfed']:,}/{summ['parcels_rainfed_all']:,}, not-cropland pixels "
+                     f"{summ['pixels_not_cropland']:,}")
+        else:
+            tr_rows = np.flatnonzero(np.isin(folds, train_f))
+            train_ds = TileDataset(region, table, table.tiles_with(train_f), train_f, augment=True)
         val_ds = TileDataset(region, table, table.tiles_with([val_f]), [val_f])
         test_ds = TileDataset(region, table, table.tiles_with([test_f]), [test_f])
         w = class_weights(y[tr_rows])
@@ -520,9 +615,10 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
         acc = np.zeros((len(df), 3), dtype=np.float32)
         for s in range(n_seeds):
             sd = seed + 1000 * s
+            torch.manual_seed(sd)                     # head (and, from scratch, encoder) initialisation per seed
             model = build_model(tr_rows, df, X, info)
             model, hist = train_tile_model(model, train_ds, val_ds, val_f, w, sd, lr, weight_decay, batch, epochs,
-                                           patience, workers, log)
+                                           patience, workers, log, encoder_lr, warmup_epochs, grad_clip)
             history += [dict(h, round=k + 1, seed=sd) for h in hist]
             rows, p = predict_tiles(model, test_ds, [test_f], workers, batch)
             acc[rows] += p
@@ -532,8 +628,13 @@ def run_tile_experiment(exp_dir, exp_id, region, run_name, build_model, settings
         te = np.flatnonzero(folds == test_f)
         proba[te] = acc[te] / n_seeds
     settings = dict(settings, experiment=exp_id, region=region, lr=lr, weight_decay=weight_decay, batch=batch,
-                    epochs=epochs, patience=patience, n_seeds=n_seeds, tiles=len(table.groups))
-    save_run(out_dir, df, proba, settings, log, {"training_history.csv": pd.DataFrame(history)}, quick)
+                    epochs=epochs, patience=patience, n_seeds=n_seeds, tiles=len(table.groups),
+                    label_fraction=label_fraction, subset_seed=subset_seed, encoder_lr=encoder_lr,
+                    warmup_epochs=warmup_epochs, grad_clip=grad_clip)
+    tables = {"training_history.csv": pd.DataFrame(history)}
+    if subsets:
+        tables["label_subset.csv"] = pd.DataFrame(subsets)
+    save_run(out_dir, df, proba, settings, log, tables, quick)
 
 
 def s2_stats(df, X, info, rows):

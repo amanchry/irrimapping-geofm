@@ -36,10 +36,11 @@ cluster; the results are copied to the Mac for the reports.
 | **E02** | Does a temporal neural network beat the classical baseline on the same pixels? | same pixel time series | TempCNN (Pelletier et al. 2019); L-TAE on single pixels (Garnot & Landrieu 2020) | GPU | 2 |
 | **E03** | Do frozen geospatial foundation models with a light decoder beat the pixel models? (RQ1) | 128 × 128 px tiles, 12 months | frozen Prithvi-EO-2.0, Clay v1.5, TerraMind, AgriFM and the pixel time-series models Presto, TESSERA + UPerNet decoder (PANGAEA; Marsocci et al. 2024), L-TAE over time for the single-date image models | GPU | 4 |
 | **E04** | Does a spatio-temporal network trained from scratch match the foundation models? | 128 × 128 px tiles, 12 months | U-TAE (Garnot & Landrieu 2021) | GPU | 3 |
+| **E05** | Does full fine-tuning beat the frozen encoder and the same network trained from scratch, and how does this depend on the number of labelled parcels? (RQ2; Utah) | 128 × 128 px tiles, 12 months; 10 / 25 / 50 / 100% of the training parcels | Prithvi-EO-2.0 + L-TAE + UPerNet (as E03): frozen, fully fine-tuned, from scratch | GPU | 5 |
 
 Run order: E01 first (it fixes the evaluation code and gives the reference numbers), then the other pixel model
 (E02), then the tile models (E04 before E03, because U-TAE tests the tile training pipeline without the large
-encoders). Fine-tuning with LoRA (RQ2) is deferred until after E01–E04.
+encoders), then E05. LoRA fine-tuning is left for later.
 
 ### Details per experiment
 
@@ -66,6 +67,12 @@ UPerNet head ([Foundation models](../foundation_models.md)).
 months, trained on the same tiles with the same masked loss. Shows how much the pretrained encoders add over a
 spatio-temporal network of the same input.
 
+**E05 · Prithvi: frozen, fine-tuned or from scratch.** The E03 network with Prithvi, trained three ways: encoder
+frozen (E03), every encoder weight trained from the pretrained weights (encoder learning rate 10⁻⁵, head 10⁻⁴), or
+every weight trained from random weights. Each with 10, 25, 50 and 100% of the training-fold parcels (per class,
+nested draws; validation and test folds complete). Loss and F1 per epoch, score against the share of parcels, and
+paired tests per share ([E05](E05_prithvi_strategies.md)).
+
 ## 3. After the experiments
 
 1. **Temporal test (RQ3), Utah:** the best models trained on 2023/24 and applied to 2020/21 on the test folds.
@@ -80,7 +87,7 @@ spatio-temporal network of the same input.
 ## 4. Optional ablations
 
 - Sentinel-1 added to E01 / E02 (the tile store has it).
-- Fewer labels: 10 / 25 / 50% of the training blocks.
+- Fewer labels for the other models: 10 / 25 / 50% of the training parcels, as in E05 (Prithvi only).
 - Two classes only (no not-cropland class): how much the third class costs on irrigated / rainfed.
 - Stricter mask (≥ 2 votes) for the maps.
 

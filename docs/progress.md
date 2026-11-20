@@ -23,7 +23,8 @@ change log).
 Next steps
 1. Cluster: finish the masks, re-run `01_prepare_labels_*` (mask check) and `04_make_pixel_samples` for every region and year; copy
    the results to the Mac.
-2. E03 with Presto and TESSERA; LoRA fine-tuning (RQ2) deferred ([plan](experiments/plan.md)).
+2. E03 with Presto and TESSERA; E05 (Prithvi frozen / fine-tuned / from scratch with 10–100% of the parcels,
+   Utah): quick test on the cluster, then 12 GPU jobs ([E05](experiments/E05_prithvi_strategies.md)).
 3. STAC approach (independent of the Earth Engine tiles): Sentinel-2 download of all cropland tiles
    (`s2_download/`; Utah 2023/24 first, then Morocco 2023/24 and 2024/25), then training tiles, experiments and maps
    on the STAC tiles; map accuracy sample.
@@ -90,6 +91,19 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-20 (E05: Prithvi frozen vs fine-tuned vs from scratch)
+
+- New experiment [E05](experiments/E05_prithvi_strategies.md) (`experiments/E05_prithvi_strategies/run.py`,
+  `report.py`), Utah: the E03 Prithvi network with the encoder frozen, fully fine-tuned (encoder learning rate
+  10⁻⁵) or trained from random weights, each with 10 / 25 / 50 / 100% of the training-fold parcels.
+- `tile_common.py`: `GeoFMSegmenter(frozen=False, pretrained=...)` trains every encoder weight; `label_subset`
+  keeps a nested, per-class share of the training parcels (validation and test folds unchanged); the training
+  loop logs validation loss and cropland macro-F1 per epoch, gives the encoder its own learning rate, optional
+  warm-up and gradient clipping, and keeps trained encoder weights in the best model; the seed is set before each
+  model is built. `encoders.Prithvi.load_encoder(pretrained=False)` builds the random-weight encoder.
+- `05_compare_experiments.py` reads E01–E04 only, so their Holm family and p-values stay as reported.
+- LoRA moved out of the RQ2 plan: E05 compares full fine-tuning with frozen and from scratch; LoRA can be added later.
 
 ### 2026-11-20 (STAC download: parity mode removed)
 
