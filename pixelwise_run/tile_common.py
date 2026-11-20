@@ -448,15 +448,18 @@ def collate(batch):
     return x, y, meta, [b[3] for b in batch]
 
 
+LOADER_TIMEOUT = 600   # s; a batch that takes longer means a loader worker died: fail the job instead of hanging
+
+
 def loader(ds, batch, shuffle, workers):
     return torch.utils.data.DataLoader(ds, batch_size=batch, shuffle=shuffle, num_workers=workers, collate_fn=collate,
                                        drop_last=shuffle and len(ds) > batch, pin_memory=DEVICE == "cuda",
-                                       persistent_workers=workers > 0)
+                                       persistent_workers=workers > 0, timeout=LOADER_TIMEOUT if workers > 0 else 0)
 
 
 @torch.no_grad()
 def predict_tiles(model, ds, pixel_folds, workers, batch):
-    """Class probabilities of the labelled pixels of `pixel_folds` in the tiles of ds: (row numbers of df, [n, 3])."""
+    """Class probabilities of the labelled pixels of `pixel_folds` in the tiles of ds: (row numbers of df, [n, N_CLASSES])."""
     model.eval()
     rows, probs = [], []
     table = ds.table
