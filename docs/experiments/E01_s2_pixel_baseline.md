@@ -1,8 +1,9 @@
 # E01 · Sentinel-2 pixel baseline
 
-!!! info "Status: planned (Morocco first, Utah later)"
+!!! success "Status: Morocco done (20 November 2026); Utah later"
     Two classes (irrigated, rainfed) on the labelled pixels of the surveyed parcels: Morocco 2023/24 and 2024/25
-    pooled, 473,675 pixels of 8,775 parcels. Code ready and tested; results follow after the run.
+    pooled, 473,675 pixels of 8,775 parcels. Random forest **macro-F1 0.894** [0.834, 0.940], rainfed F1 0.810;
+    gradient boosting the same (0.893). [Results](#results)
 
 **Question.** How well do the Sentinel-2 time series of single pixels separate irrigated from rainfed pixels? E01
 is the reference for every later experiment: the paired tests compare each run with the E01 random forest.
@@ -78,9 +79,100 @@ CPU only; the random-forest grid dominates the run time.
 
 ## Results
 
-_To be filled after the Morocco run._ Planned: scores with 95% CI, confusion matrix, scores per year and zone,
-permutation importance per month and band, chosen hyperparameters and run time. The comparison with the other
+Morocco, 2023/24 and 2024/25 pooled: 473,675 out-of-fold pixels (419,883 irrigated, 53,792 rainfed). Every pixel is
+predicted once, by the model of the round in which its fold was the test fold. The comparison with the other
 experiments is on the [comparison page](comparison.md).
+
+### Scores
+
+| Model | Macro-F1 [95% CI] | Irrigated F1 | Rainfed F1 [95% CI] | Rainfed precision | Rainfed recall | Overall accuracy |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Random forest** (reference) | **0.894** [0.834, 0.940] | 0.977 | **0.810** [0.697, 0.894] | 0.850 | 0.774 | 0.959 |
+| Gradient boosting | 0.893 [0.822, 0.946] | 0.977 | 0.809 [0.673, 0.903] | 0.850 | 0.773 | 0.959 |
+
+95% confidence intervals from the block bootstrap over the 20 km blocks. The two models are practically identical:
+gradient boosting minus random forest is −0.000 macro-F1 [−0.017, 0.014] (paired test, Holm-adjusted p = 0.98).
+
+![E01 and E02 scores](figures/scores_e01_e02.png)
+
+![Confusion matrices](figures/confusion_e01_e02.png)
+
+*Row-normalised confusion matrices (share of the reference pixels of each class; pixel counts in brackets).*
+
+**Errors are one-sided.** 98% of the irrigated pixels are classified correctly, but 23% of the rainfed pixels
+(12,166 of 53,792) are classified as irrigated. Rainfed precision (0.85) is higher than rainfed recall (0.77): when
+the random forest says "rainfed" it is mostly right, but it misses about one rainfed pixel in four.
+
+### Scores per year and zone
+
+![Rainfed recall and F1 per season and zone](figures/groups_e01_e02.png)
+
+*Rainfed recall and F1 per season and per zone with rainfed parcels (number of rainfed pixels in brackets).*
+
+| Group | Rainfed pixels | Random forest: rainfed recall | Random forest: rainfed F1 | Gradient boosting: rainfed F1 |
+| --- | --- | --- | --- | --- |
+| 2023/24 | 31,671 | 0.857 | 0.828 | 0.822 |
+| 2024/25 | 22,121 | **0.655** | 0.779 | 0.788 |
+| Doukkala | 46,608 | 0.843 | 0.858 | 0.864 |
+| Souss | 6,869 | **0.322** | 0.485 | 0.363 |
+| Statte | 312 | 0.458 | 0.485 | 0.526 |
+
+- **The rainfed class comes almost entirely from Doukkala.** 87% of the rainfed pixels (1,122 of 1,196 rainfed
+  parcels) lie in Doukkala, 13% in Souss and Statte; Gharb and Tadla have no rainfed parcel and el Haouz one. In the
+  three irrigation-only zones the classifier marks almost every pixel irrigated (accuracy ≥ 0.985), so the rainfed
+  score of E01 is in practice a score of Doukkala and, to a lesser extent, Souss.
+- **2024/25 is harder for rainfed.** Rainfed recall falls from 0.86 (2023/24) to 0.66 (2024/25), while rainfed
+  precision rises to 0.96. In 2024/25 more rainfed pixels are taken for irrigated. A plausible reason is the rainfall
+  of the two years: 2023/24 was a drought year, while in a wetter winter rainfed cereals stay green longer and look
+  more like irrigated fields in the winter months. This is an interpretation; the rainfall of the two years has not
+  been checked here.
+- **Souss is the weakest zone.** Only 32% of the rainfed pixels of Souss are found (gradient boosting: 22%). Its
+  69 rainfed parcels are few, and the random forest learns rainfed mostly from Doukkala.
+
+**Per test fold.** Macro-F1 of the random forest per test fold: 0.762 (fold 0), 0.911, 0.921, 0.942, 0.928 (folds
+1–4). Fold 0 is the hardest: it holds the 5,869 rainfed pixels of Souss in 2024/25, of which only 31% are found,
+and 2,617 irrigated pixels of Doukkala classified as rainfed. Round 5, which validates on fold 0, also had the lowest
+validation scores (0.73–0.76), so the spread between folds is a property of the data, not of the model.
+
+### Which months and bands matter
+
+![Permutation importance of the random forest](figures/e01_importance.png)
+
+*Drop in macro-F1 when the features of one month (left) or one band over all months (right) are shuffled; mean and
+standard deviation over the 5 rounds.*
+
+- **Months:** February (0.17), July (0.17), August (0.15), June (0.12) and January (0.11) matter most; March and
+  November hardly at all (≤ 0.03). The winter peak (January–February) is when rainfed cereals and irrigated crops
+  are both green but differ in vigour; the summer months (June–August) are when rainfed fields are bare and many
+  irrigated fields still carry a crop or orchard.
+- **Bands:** the two shortwave-infrared bands dominate: B12 (0.24) and B11 (0.20), then NDVI (0.11) and the red-edge
+  band B7 (0.10). SWIR responds to the water content of soil and vegetation, which is what irrigation changes. The
+  visible bands B3, B4 and B5 add almost nothing once the other bands are known (correlated bands share their
+  importance).
+
+### Chosen settings and run time
+
+| Round (test fold) | Random forest `max_features`, `min_samples_leaf` | Validation macro-F1 | Gradient boosting learning rate, `max_leaf_nodes` | Validation macro-F1 |
+| --- | --- | --- | --- | --- |
+| 1 (0) | √p, 5 | 0.893 | 0.05, 31 | 0.915 |
+| 2 (1) | √p, 5 | 0.968 | 0.1, 63 | 0.967 |
+| 3 (2) | √p, 5 | 0.891 | 0.05, 31 | 0.909 |
+| 4 (3) | 0.33, 5 | 0.941 | 0.1, 31 | 0.944 |
+| 5 (4) | 0.33, 5 | 0.761 | 0.05, 63 | 0.729 |
+
+`min_samples_leaf = 5` won in every round. Run time on one CPU node: random forest 45 min, gradient boosting 4 min
+(including the grid search).
+
+### Interpretation
+
+- A pixel classifier on the Sentinel-2 time series already reaches macro-F1 0.89 for irrigated vs rainfed in
+  Morocco. Every later model is measured against this reference on the same pixels.
+- Random forest and gradient boosting give the same answer, so the result reflects the information in the input,
+  not the choice of tree ensemble.
+- The weak point is the rainfed class outside Doukkala and in the wetter year 2024/25: the errors are rainfed
+  pixels taken for irrigated. Whether temporal or spatial context (E02–E04) helps is tested on these pixels.
+- Because rainfed parcels exist in only three of six zones, part of what any model learns may be "which zone"
+  rather than "how the crop behaves". The per-zone scores are reported for every experiment to keep this visible.
 
 ## References
 

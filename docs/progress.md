@@ -13,7 +13,7 @@ change log).
 | --- | --- | --- |
 | Cropland mask (mapping phase only) | `cropland_extent/` | Union of 4 products: 2023/24 for both regions; Dynamic World download script added (`download_dynamic_world.py`); not used by the experiments ([D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
 | Pixel samples (2 classes) | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 and 2024/25 done (473,675 pixels of 8,775 parcels, `04_pixel_samples/`); Utah to be rebuilt on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Redesigned 2026-11-20; code ready and tested; earlier 3-class results removed; Morocco first ([experiments](experiments/index.md)) |
+| Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Morocco: E01 done (RF macro-F1 0.894, GB 0.893), E02 done (TempCNN 0.912, not significantly better); E03, E04 running ([experiments](experiments/index.md)) |
 | E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Moved to Morocco, 2 classes; code ready and tested; 16 jobs to run ([E05](experiments/E05_prithvi_strategies.md)) |
 | STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
@@ -23,7 +23,7 @@ change log).
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Cluster (Morocco): pull, quick tests, then E01, E02, E03, E04 (six encoders) and E05 (16 jobs).
+1. Cluster (Morocco): finish E03, E04 (six encoders) and E05 (16 jobs); E01 and E02 are done.
 2. Utah: `04_make_pixel_samples.py` on the cluster, then the same experiments.
 3. STAC approach: rerun the 78 missing Utah blocks, then Morocco 2023/24 and 2024/25 (`s2_download/`).
 
@@ -89,6 +89,19 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-21 (E01 and E02 results, Morocco)
+
+- E01 and E02 Morocco results copied from the cluster (`experiments/E01_s2_pixel_baseline/results/morocco/`,
+  `experiments/E02_temporal_nn/results/morocco/`); comparison tables rebuilt (`experiments/comparison/morocco/`).
+- Results written on the [E01](experiments/E01_s2_pixel_baseline.md#results) and
+  [E02](experiments/E02_temporal_nn.md#results) pages, the [comparison](experiments/comparison.md) page and
+  [Results](results.md): random forest 0.894, gradient boosting 0.893, TempCNN 0.912 macro-F1; no difference
+  significant. Rainfed parcels lie almost only in Doukkala, Souss and Statte, which limits the rainfed scores.
+- `experiments/report_figures.py`: new figure `groups_<tag>.png` (rainfed recall and F1 per season and zone); a
+  figure is drawn only when all its runs are finished.
+- `pixelwise_run/tile_common.py`: a 600 s data-loader timeout, and an epoch or prediction pass is redone (up to 3
+  times) after a crashed loader worker; the cluster's shared-memory crash had hung two tile-model jobs.
 
 ### 2026-11-20 (experiments redesigned: two classes, Morocco first)
 

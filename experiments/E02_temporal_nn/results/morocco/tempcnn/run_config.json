@@ -1,0 +1,18 @@
+{
+  "experiment": "E02",
+  "region": "morocco",
+  "model": "tempcnn",
+  "n_seeds": 3,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 512,
+  "epochs": 100,
+  "patience": 10,
+  "ltae": null,
+  "input": "12 months x (12 S2 bands + NDVI + NDWI)",
+  "git_commit": "37ce0e7 (uncommitted changes)",
+  "finished": "2026-11-20 18:45",
+  "machine": "hpc-node07",
+  "pixels": 473675,
+  "quick": false
+}

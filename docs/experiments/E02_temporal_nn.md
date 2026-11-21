@@ -1,8 +1,9 @@
 # E02 · Temporal neural network (TempCNN)
 
-!!! info "Status: planned (Morocco first, Utah later)"
+!!! success "Status: Morocco done (20 November 2026); Utah later"
     Same pixels as [E01](E01_s2_pixel_baseline.md): Morocco 2023/24 and 2024/25 pooled, 473,675 pixels, two classes
-    (irrigated, rainfed); 3 seeds per round on one GPU. Code ready and tested; results follow after the run.
+    (irrigated, rainfed); 3 seeds per round on one GPU. TempCNN **macro-F1 0.912** [0.848, 0.955], rainfed F1 0.845;
+    +0.018 over the E01 random forest, not significant. [Results](#results)
 
 **Question.** Does a temporal neural network beat the classical baseline (E01) on the same pixels and the same
 input?
@@ -91,9 +92,76 @@ sbatch --export=ALL,SCRIPT=experiments/E02_temporal_nn/run.py,EXPERIMENT_REGION=
 
 ## Results
 
-_To be filled after the Morocco run._ Planned: scores with 95% CI and the paired difference to the E01 random
-forest, confusion matrix, scores per year and zone, training curves and run time. The comparison with the other
+Morocco, 2023/24 and 2024/25 pooled: the same 473,675 out-of-fold pixels as E01. The comparison with the other
 experiments is on the [comparison page](comparison.md).
+
+### Scores
+
+| Model | Macro-F1 [95% CI] | Irrigated F1 | Rainfed F1 [95% CI] | Rainfed precision | Rainfed recall | Overall accuracy |
+| --- | --- | --- | --- | --- | --- | --- |
+| E01 random forest (reference) | 0.894 [0.834, 0.940] | 0.977 | 0.810 [0.697, 0.894] | 0.850 | 0.774 | 0.959 |
+| **E02 TempCNN** | **0.912** [0.848, 0.955] | 0.979 | **0.845** [0.722, 0.922] | 0.815 | **0.877** | 0.963 |
+
+**Paired difference to the E01 random forest** (same pixels, same bootstrap draws, Holm correction over the runs of
+E01–E04 finished so far):
+
+| Metric | TempCNN − random forest | 95% CI | Holm-adjusted p | Counts as a difference? |
+| --- | --- | --- | --- | --- |
+| Macro-F1 | +0.018 | [−0.017, +0.053] | 0.65 | no |
+| Rainfed F1 | +0.035 | [−0.030, +0.097] | 0.62 | no |
+
+The Holm-adjusted p-values will change when E03 and E04 join the family; the differences and CIs will not.
+
+![E01 and E02 scores](figures/scores_e01_e02.png)
+
+![Confusion matrices](figures/confusion_e01_e02.png)
+
+*Row-normalised confusion matrices (share of the reference pixels of each class; pixel counts in brackets).*
+
+**A different balance of errors.** TempCNN finds more rainfed pixels than the random forest (recall 0.88 vs 0.77;
+missed rainfed pixels 6,594 vs 12,166) at the cost of more irrigated pixels taken for rainfed (10,734 vs 7,318), so
+its rainfed precision is lower (0.81 vs 0.85). Overall it makes fewer errors (17,328 vs 19,484 pixels).
+
+### Scores per year and zone
+
+![Rainfed recall and F1 per season and zone](figures/groups_e01_e02.png)
+
+| Group | Rainfed pixels | Random forest: rainfed recall | TempCNN: rainfed recall | Random forest: rainfed F1 | TempCNN: rainfed F1 |
+| --- | --- | --- | --- | --- | --- |
+| 2023/24 | 31,671 | 0.857 | 0.890 | 0.828 | 0.832 |
+| 2024/25 | 22,121 | 0.655 | **0.860** | 0.779 | **0.864** |
+| Doukkala | 46,608 | 0.843 | 0.909 | 0.858 | 0.869 |
+| Souss | 6,869 | 0.322 | **0.684** | 0.485 | **0.776** |
+| Statte | 312 | 0.458 | 0.468 | 0.485 | 0.365 |
+
+- **The gain comes from the two weak spots of E01.** In 2024/25 TempCNN finds 86% of the rainfed pixels against 66%
+  for the random forest, and in Souss 68% against 32%. In 2023/24 and in Doukkala, where the random forest is
+  already good, the two are close.
+- **Statte** (312 rainfed pixels of 4 parcels) is too small to judge.
+- **Not better everywhere.** In fold 0 TempCNN finds only 35% of the rainfed pixels of Doukkala 2023/24 (4,130
+  pixels), against 74% for the random forest; it makes up for it in the Souss pixels of the same fold (63% vs 31%).
+  Per test fold, TempCNN's macro-F1 is 0.780, 0.916, 0.944, 0.970 and 0.936 (random forest: 0.762, 0.911, 0.921,
+  0.942, 0.928): higher in every fold, but by 0.005 to 0.028.
+
+### Training
+
+- 15 models (5 rounds × 3 seeds). Early stopping ended training after 11 to 45 epochs (median 21); the best epoch
+  was between 1 and 35 (median 11). The network reaches most of its validation score within the first few epochs.
+- Best validation macro-F1 per round (mean of the 3 seeds): 0.921, 0.952, 0.961, 0.940 and 0.820. Round 5 validates on
+  fold 0, the hardest fold also for E01.
+- Run time: 14 min on one GPU for all 15 models.
+
+### Interpretation
+
+- Reading the 12 months as a sequence helps a little: TempCNN is ahead of the random forest overall (+0.018 macro-F1)
+  and in every test fold, and clearly ahead for the rainfed pixels of 2024/25 and Souss. But the difference over all
+  pixels is within the uncertainty of the block bootstrap (CI includes 0), so E02 does **not** show that the
+  temporal network is better than the tree ensemble.
+- The block bootstrap is wide because the rainfed pixels sit in few blocks, mainly in Doukkala; differences of a
+  few hundredths will be hard to establish in Morocco with any model. This holds for all comparisons of E01–E05.
+- TempCNN moves the decision towards rainfed (more recall, less precision). Both experiments use balanced class weights, so
+  the shift comes from the model; the map phase will need to check which balance holds outside
+  the surveyed parcels.
 
 ## References
 

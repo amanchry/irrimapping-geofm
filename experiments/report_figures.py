@@ -5,6 +5,8 @@ report_figures.py  —  figures for the experiment pages (docs/experiments/figur
 Reads the finished runs in experiments/E0*/results/<region>/<run>/ and writes, for every <tag> in FIGURES:
   scores_<tag>.png        macro-F1 (irrigated, rainfed) and rainfed F1 with 95% block-bootstrap CI, per region and run
   confusion_<tag>.png     row-normalised confusion matrices of the runs in "confusion"
+  groups_<tag>.png        rainfed recall and F1 per season and per zone with rainfed parcels, runs in "groups"
+A figure is drawn only when all its runs are finished (metrics.csv present); the others are skipped.
 and once:
   e01_importance.png      E01 random forest: permutation importance per month and per band
 
@@ -27,7 +29,10 @@ FIGURES = {
     "e01_e02": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf",
                            "E01 gradient boosting": "E01_s2_pixel_baseline/hgb",
                            "E02 TempCNN": "E02_temporal_nn/tempcnn"},
-                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn"}},
+                "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn"},
+                "groups": {"E01 random forest": "E01_s2_pixel_baseline/rf",
+                           "E01 gradient boosting": "E01_s2_pixel_baseline/hgb",
+                           "E02 TempCNN": "E02_temporal_nn/tempcnn"}},
     "e03_e04": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn",
                            "E03 U-TAE": "E03_utae/utae", "E04 Prithvi": "E04_frozen_geofm/prithvi",
                            "E04 Clay": "E04_frozen_geofm/clay", "E04 TerraMind": "E04_frozen_geofm/terramind",
@@ -122,6 +127,41 @@ def confusion(tag, RUNS_CONFUSION):
     plt.close(fig)
 
 
+def groups(tag, RUNS):
+    """Rainfed recall and F1 per season and per zone (zones with at least MIN_RAINFED rainfed pixels)."""
+    MIN_RAINFED = 200
+    for region, name in REGIONS.items():
+        g = {label: pd.read_csv(res(run, region) / "metrics_by_group.csv") for label, run in RUNS.items()}
+        o = pd.read_parquet(res(next(iter(RUNS.values())), region) / "oof_predictions.parquet",
+                            columns=["season", "zone", "label"])
+        n_rain = {**o[o.label == 2].groupby("season").size().to_dict(), **o[o.label == 2].groupby("zone").size().to_dict()}
+        keys = [("season", v) for v in sorted(o.season.unique())] + \
+               [("zone", v) for v, n in sorted(o[o.label == 2].groupby("zone").size().items(), key=lambda t: -t[1])
+                if n >= MIN_RAINFED]
+        fig, ax = plt.subplots(1, 2, figsize=(13, 3.9), sharey=True)
+        colors = run_colors(RUNS)
+        w = 0.8 / len(RUNS)
+        for a, metric, title in zip(ax, ["recall_rainfed", "f1_rainfed"], ["rainfed recall", "rainfed F1"]):
+            for i, (label, d) in enumerate(g.items()):
+                d = d.set_index(["group", "value"])
+                vals = [d.loc[k, metric] for k in keys]
+                a.bar(np.arange(len(keys)) + (i - (len(RUNS) - 1) / 2) * w, vals, w, color=colors[i],
+                      label=label if a is ax[0] else None)
+            a.set_xticks(range(len(keys)), [f"{v}\n({n_rain[v]:,} rainfed px)" for _, v in keys], fontsize=8)
+            a.axvline(len([k for k in keys if k[0] == "season"]) - 0.5, color="0.5", lw=0.8, ls="--")
+            a.set_title(f"{name}: {title} per season | per zone", fontsize=10)
+            a.set_ylim(0, 1)
+            a.grid(axis="y", alpha=0.3)
+        fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=len(RUNS), fontsize=8, frameon=False)
+        fig.tight_layout(rect=(0, 0.07, 1, 1))
+        fig.savefig(OUT / f"groups_{tag}.png", dpi=130)
+        plt.close(fig)
+
+
+def finished(runs):
+    return all((res(run, region) / "metrics.csv").exists() for run in runs.values() for region in REGIONS)
+
+
 def importance():
     fig, ax = plt.subplots(len(REGIONS), 2, figsize=(12, 3.3 * len(REGIONS)), squeeze=False)
     for r, (region, name) in enumerate(REGIONS.items()):
@@ -162,8 +202,14 @@ def attention():
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     for tag, f in FIGURES.items():
+        runs = {k: v for part in f.values() for k, v in part.items()}
+        if not finished(runs):
+            print(f"{tag}: not all runs finished, skipped")
+            continue
         if "scores" in f:
             scores(tag, f["scores"])
         confusion(tag, f["confusion"])
+        if "groups" in f:
+            groups(tag, f["groups"])
     importance()                                   # (the E02 L-TAE attention figure is on hold with the pixel L-TAE)
     print(f"Figures in {OUT}")

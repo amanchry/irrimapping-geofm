@@ -449,6 +449,25 @@ def collate(batch):
 
 
 LOADER_TIMEOUT = 600   # s; a batch that takes longer means a loader worker died: fail the job instead of hanging
+LOADER_RETRIES = 3     # times an epoch (or a prediction pass) is redone after a crashed loader worker
+
+
+def loader_failed(e):
+    """True for errors of the DataLoader workers, not of the model: a worker that died, timed out or lost its
+    shared-memory file (seen on the cluster when another job starts or ends on the same node)."""
+    msg = str(e)
+    return any(k in msg for k in ("DataLoader worker", "DataLoader timed out", "shared memory", "torch_shm"))
+
+
+def cpu_copy(obj):
+    """Deep copy of a (nested) state dict with every tensor on the CPU."""
+    if torch.is_tensor(obj):
+        return obj.detach().to("cpu", copy=True)
+    if isinstance(obj, dict):
+        return {k: cpu_copy(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return type(obj)(cpu_copy(v) for v in obj)
+    return obj
 
 
 def loader(ds, batch, shuffle, workers):
@@ -461,17 +480,24 @@ def loader(ds, batch, shuffle, workers):
 def predict_tiles(model, ds, pixel_folds, workers, batch):
     """Class probabilities of the labelled pixels of `pixel_folds` in the tiles of ds: (row numbers of df, [n, N_CLASSES])."""
     model.eval()
-    rows, probs = [], []
     table = ds.table
-    for x, _, meta, ids in loader(ds, batch, False, workers):
-        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=AMP):
-            p = torch.softmax(model(x.to(DEVICE), meta).float(), 1).cpu().numpy()
-        for j, i in enumerate(ids):
-            idx = table.groups[ds.tiles[i]]
-            idx = idx[np.isin(ds.fold[idx], pixel_folds)]
-            rows.append(idx)
-            probs.append(p[j][:, ds.rows[idx], ds.cols[idx]].T)
-    return np.concatenate(rows), np.concatenate(probs)
+    for attempt in range(LOADER_RETRIES + 1):
+        rows, probs = [], []
+        try:
+            for x, _, meta, ids in loader(ds, batch, False, workers):
+                with torch.autocast("cuda", dtype=torch.bfloat16, enabled=AMP):
+                    p = torch.softmax(model(x.to(DEVICE), meta).float(), 1).cpu().numpy()
+                for j, i in enumerate(ids):
+                    idx = table.groups[ds.tiles[i]]
+                    idx = idx[np.isin(ds.fold[idx], pixel_folds)]
+                    rows.append(idx)
+                    probs.append(p[j][:, ds.rows[idx], ds.cols[idx]].T)
+            return np.concatenate(rows), np.concatenate(probs)
+        except RuntimeError as e:             # the prediction has no state: simply run it again
+            if attempt == LOADER_RETRIES or not loader_failed(e):
+                raise
+            print(f"    WARNING prediction: data loader failed ({str(e).splitlines()[0][:150]}); "
+                  f"retry {attempt + 1}/{LOADER_RETRIES}", flush=True)
 
 
 def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weight_decay, batch, epochs, patience,
@@ -502,9 +528,9 @@ def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weigh
     loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(weights, dtype=torch.float32, device=DEVICE), ignore_index=-1)
     y_all = train_ds.labels
     best, best_state, wait, history = -1.0, None, 0, []
-    for epoch in range(1, epochs + 1):
+    def train_epoch():
         model.train()
-        t0, losses = time.time(), []
+        losses = []
         for x, y, meta, _ in loader(train_ds, batch, True, workers):
             if (y >= 0).sum() == 0:
                 continue
@@ -519,6 +545,28 @@ def train_tile_model(model, train_ds, val_ds, val_fold, weights, seed, lr, weigh
             if sched is not None:
                 sched.step()
             losses.append(loss.item())
+        return losses
+
+    for epoch in range(1, epochs + 1):
+        t0 = time.time()
+        # state at the start of the epoch, so an epoch broken by a crashed loader worker is redone from the same point
+        snap = (cpu_copy({k: v for k, v in model.state_dict().items() if not k.startswith("encoder.") or k in trainable}),
+                cpu_copy(opt.state_dict()), cpu_copy(sched.state_dict()) if sched is not None else None,
+                torch.get_rng_state())
+        for attempt in range(LOADER_RETRIES + 1):
+            try:
+                losses = train_epoch()
+                break
+            except RuntimeError as e:
+                if attempt == LOADER_RETRIES or not loader_failed(e):
+                    raise
+                log.warning(f"    epoch {epoch}: data loader failed ({str(e).splitlines()[0][:150]}); "
+                            f"epoch redone from its start, retry {attempt + 1}/{LOADER_RETRIES}")
+                model.load_state_dict(snap[0], strict=False)
+                opt.load_state_dict(snap[1])
+                if sched is not None:
+                    sched.load_state_dict(snap[2])
+                torch.set_rng_state(snap[3])
         t_train = time.time() - t0
         rows, p = predict_tiles(model, val_ds, [val_fold], workers, batch)
         yv = y_all[rows] - 1
