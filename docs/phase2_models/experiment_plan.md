@@ -44,16 +44,16 @@ block-bootstrap CI excludes 0 and the Holm-corrected p < 0.05 ([evaluation proto
 
 | ID | Model | Status |
 | --- | --- | --- |
-| [E01](../experiments/E01_s2_pixel_baseline.md) | random forest, gradient boosting on the pixel time series | planned (Morocco first) |
-| [E02](../experiments/E02_temporal_nn.md) | TempCNN on the pixel time series | planned (Morocco first) |
-| [E03](../experiments/E03_utae.md) | U-TAE from scratch | planned (Morocco first) |
-| [E04](../experiments/E04_frozen_geofm.md) | frozen Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + L-TAE + UPerNet | planned (Morocco first) |
+| [E01](../experiments/E01_s2_pixel_baseline.md) | random forest, gradient boosting on the pixel time series | Morocco done: RF 0.894, GB 0.893 |
+| [E02](../experiments/E02_temporal_nn.md) | TempCNN on the pixel time series | Morocco done: 0.912 |
+| [E03](../experiments/E03_utae.md) | U-TAE from scratch | Morocco done: 0.900 |
+| [E04](../experiments/E04_frozen_geofm.md) | frozen Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + L-TAE + UPerNet | Morocco done: TerraMind 0.927 best |
 
-All runs side by side with the paired tests, once finished: [comparison of the experiments](../experiments/comparison.md).
+All runs side by side with the paired tests and the Morocco answers to Q1–Q4: [comparison of the experiments](../experiments/comparison.md#answers-to-the-rq1-questions-morocco).
 
 ## Remaining work for RQ1
 
-1. Run E01–E04 for Morocco; comparison table and paired tests (`pixelwise_run/05_compare_experiments.py`).
+1. Run E01–E04 for Morocco; comparison table and paired tests: done (22 November 2026).
 2. The same for Utah.
 3. Label efficiency: whether GeoFMs need fewer labels is tested in [E05](../experiments/E05_prithvi_strategies.md)
    for Prithvi (10–100% of the training parcels); extending it to the other models is an optional ablation

@@ -91,7 +91,7 @@ experiments is on the [comparison page](comparison.md).
 | Gradient boosting | 0.893 [0.822, 0.946] | 0.977 | 0.809 [0.673, 0.903] | 0.850 | 0.773 | 0.959 |
 
 95% confidence intervals from the block bootstrap over the 20 km blocks. The two models are practically identical:
-gradient boosting minus random forest is −0.000 macro-F1 [−0.017, 0.014] (paired test, Holm-adjusted p = 0.98).
+gradient boosting minus random forest is −0.000 macro-F1 [−0.017, 0.014] (paired test, Holm-adjusted p = 1.0 over the nine runs of E01–E04).
 
 ![E01 and E02 scores](figures/scores_e01_e02.png)
 

@@ -1,6 +1,11 @@
 # E05 · Prithvi: frozen, LoRA, fine-tuned or from scratch (RQ2)
 
-!!! info "Status: planned (Morocco first, Utah later)"
+!!! success "Status: Morocco done, all 16 runs (22 November 2026); Utah later"
+    **Pretraining matters, training the encoder does not:** frozen, LoRA and full fine-tuning all reach macro-F1
+    0.90–0.92 at every share of the labels, about 0.09 above the same network trained from scratch (0.80–0.83;
+    significant at every share, except frozen at 50%). Frozen vs LoRA vs full fine-tuning: no difference counts. [Results](#results)
+
+!!! info "Set-up"
     Code: [`experiments/E05_prithvi_strategies/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/E05_prithvi_strategies)
     and [`pixelwise_run/tile_common.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/tile_common.py),
     ready and tested. Same labelled pixels as [E01](E01_s2_pixel_baseline.md)–[E04](E04_frozen_geofm.md): Morocco
@@ -237,7 +242,113 @@ seconds) and `label_subset.csv` (parcels, pixels and tiles kept per round, for s
 
 ## Results
 
-_To be filled after the Morocco runs._
+Morocco, 2023/24 and 2024/25 pooled: the same 473,675 out-of-fold pixels as E01–E04 at every share (the share only
+reduces the training parcels; validation and test folds are complete). Tables from `report.py`
+(`results/morocco/summary.csv`, `paired.csv`).
+
+### Scores
+
+Macro-F1 [95% CI] (rainfed F1 in brackets below):
+
+| Strategy | Trained weights | 10% | 25% | 50% | 100% |
+| --- | --- | --- | --- | --- | --- |
+| From scratch | 306.4 M | 0.804 [0.684, 0.885]<br>(0.648) | 0.811 [0.679, 0.894]<br>(0.659) | 0.828 [0.729, 0.898]<br>(0.693) | 0.825 [0.712, 0.900]<br>(0.685) |
+| Frozen | 2.5 M | 0.907 [0.846, 0.952]<br>(0.836) | **0.912** [0.854, 0.958]<br>(0.845) | 0.903 [0.836, 0.955]<br>(0.829) | **0.920** [0.867, 0.960]<br>(0.858) |
+| LoRA | 8.0 M | 0.909 [0.850, 0.955]<br>(0.838) | 0.908 [0.854, 0.952]<br>(0.837) | **0.910** [0.855, 0.953]<br>(0.840) | 0.916 [0.864, 0.959]<br>(0.851) |
+| Full fine-tuning | 306.4 M | **0.912** [0.855, 0.957]<br>(0.843) | 0.904 [0.847, 0.953]<br>(0.829) | 0.908 [0.855, 0.955]<br>(0.837) | 0.911 [0.852, 0.965]<br>(0.842) |
+| Training parcels per round (irrigated + rainfed) | | 527 (455 + 72) | 1,316 | 2,632 | about 5,265 |
+
+References at 100%: E01 random forest 0.894, E03 U-TAE 0.900, E04 Prithvi (frozen) 0.917. The frozen run at 100%
+(0.920) matches E04 Prithvi (0.917), as expected for the same network with a longer patience: a check of the code.
+
+![Macro-F1 and rainfed F1 against the share of training parcels](figures/e05_label_fraction.png)
+
+*Out-of-fold scores against the share of training parcels, with the E03 U-TAE and E01 random forest (100%) as
+reference lines.*
+
+### Paired tests
+
+Paired differences at every share (same pixels and bootstrap draws), Holm correction per metric over the 24
+comparisons (6 pairs × 4 shares):
+
+| Comparison | 10% | 25% | 50% | 100% |
+| --- | --- | --- | --- | --- |
+| **Fine-tuned − scratch** (pretrained weights) | **+0.108** [+0.051, +0.197] | **+0.093** [+0.036, +0.197] | **+0.080** [+0.027, +0.151] | **+0.087** [+0.035, +0.171] |
+| **Frozen − scratch** | **+0.103** [+0.043, +0.200] | **+0.102** [+0.034, +0.207] | +0.075 [+0.020, +0.151] (p<sub>Holm</sub> 0.16) | **+0.095** [+0.034, +0.188] |
+| **LoRA − scratch** | **+0.105** [+0.049, +0.198] | **+0.097** [+0.033, +0.204] | **+0.081** [+0.030, +0.155] | **+0.091** [+0.032, +0.183] |
+| Fine-tuned − frozen (training the encoder) | +0.004 [−0.012, +0.019] | −0.008 [−0.031, +0.015] | +0.005 [−0.027, +0.043] | −0.008 [−0.047, +0.016] |
+| LoRA − frozen (adapters) | +0.002 [−0.006, +0.012] | −0.004 [−0.016, +0.008] | +0.006 [−0.012, +0.030] | −0.004 [−0.015, +0.006] |
+| Fine-tuned − LoRA (full vs parameter-efficient) | +0.003 [−0.010, +0.017] | −0.004 [−0.024, +0.014] | −0.001 [−0.020, +0.017] | −0.004 [−0.041, +0.022] |
+
+Bold: counts (CI excludes 0 and p<sub>Holm</sub> < 0.05). Rainfed F1 gives the same picture, with differences to
+scratch of +0.14 to +0.20 and no difference among frozen, LoRA and fine-tuned (all |Δ| ≤ 0.015, p<sub>Holm</sub> = 1).
+
+### Learning curves
+
+![Training loss, validation loss and validation macro-F1 per epoch](figures/e05_curves.png)
+
+*100% of the labels; mean over the 5 rounds × 3 seeds, band = range.*
+
+- **Pretrained (frozen, LoRA, fine-tuned):** validation macro-F1 is about 0.85 after the first epoch and close to
+  its final value within 5–10 epochs. The training loss falls towards 0 while the validation loss stays flat and
+  noisy (0.3–0.8): the head (and the adapters or encoder) fit the training pixels almost perfectly without further
+  gain on new blocks. Fine-tuning and LoRA drive the training loss down faster than the frozen encoder, but do not
+  reach a better validation score.
+- **From scratch:** the training loss falls slowly (0.6 to 0.2 in 60 epochs), and the validation macro-F1 climbs from
+  about 0.55 with a wide spread between runs; some runs stay near the all-irrigated solution (about 0.47) for many
+  epochs. The pretrained weights give the network a useful starting point that 300 M weights trained on these labels
+  do not find.
+
+### Cost
+
+| Strategy (100%) | Trained weights | Seconds per epoch | Mean epochs (best epoch) | GPU hours |
+| --- | --- | --- | --- | --- |
+| Frozen | 2.5 M | 54 | 36 (22) | 8.2 |
+| LoRA | 8.0 M | 98 | 31 (17) | 12.9 |
+| Full fine-tuning | 306.4 M | 81 | 30 (15) | 10.4 |
+| From scratch | 306.4 M | 80 | 29 (16) | 9.6 |
+
+All 16 runs: 112 GPU hours (frozen 24, LoRA 33, fine-tuning 28, scratch 27). LoRA trains 3% of the weights of full
+fine-tuning but is slower per epoch here: the adapters add computation in every block and the backward pass still
+runs through the whole encoder.
+
+### Errors
+
+![Confusion matrices at 100%](figures/e05_confusion.png)
+
+| Strategy (100%) | Rainfed precision | Rainfed recall | Rainfed recall 2024/25 | Rainfed recall Souss | Fold 0 macro-F1 |
+| --- | --- | --- | --- | --- | --- |
+| From scratch | 0.784 | 0.610 | 0.271 | 0.214 | 0.684 |
+| Frozen | 0.868 | 0.849 | 0.794 | 0.782 | 0.861 |
+| LoRA | 0.861 | 0.841 | 0.774 | 0.755 | 0.856 |
+| Full fine-tuning | **0.900** | 0.792 | 0.700 | 0.392 | 0.761 |
+
+- Fully fine-tuned Prithvi is the most conservative about rainfed: the highest rainfed precision (0.90) but a lower
+  recall, and it loses most of the frozen encoder's gain in Souss (39% vs 78% of the rainfed pixels found) and in
+  fold 0 (0.761 vs 0.861). Training all 300 M weights on rainfed parcels that come almost only from Doukkala seems to
+  move the encoder towards Doukkala's rainfed fields; the frozen encoder keeps more general features.
+- From scratch, 39% of the rainfed pixels are taken for irrigated, and only 27% of the rainfed pixels of 2024/25 are
+  found.
+
+### Interpretation
+
+1. **How the strategies behave.** The three pretrained strategies learn within a few epochs and then overfit the
+   training pixels without losing validation score; training from scratch is slow and unstable between seeds.
+2. **Cost and effect of training the encoder.** LoRA (8 M weights) and full fine-tuning (306 M) cost 1.3–1.6 times
+   the GPU time of the frozen encoder and change the score by less than 0.01 in either direction. Full fine-tuning
+   shifts the errors (more precise, less complete for rainfed) and is weaker in the zone with few rainfed parcels.
+3. **Whether fine-tuning wins: no, but pretraining does.** At every share, the pretrained network beats the same
+   network trained from scratch by 0.08–0.11 macro-F1 (0.14–0.20 rainfed F1). Frozen, LoRA and full fine-tuning
+   cannot be told apart. This differs from Tomotaki-Dawoud et al. (2025), where full fine-tuning clearly beat the
+   frozen encoder; possible reasons are the 10 m Sentinel-2 input close to Prithvi's pretraining data (they upsampled
+   30 m HLS to 0.5 m), the simpler two-class task, and the separate test fold and block bootstrap here.
+4. **Fewer labels.** The pretrained strategies hardly change from 100% down to 10% of the training parcels (527
+   parcels per round, of which 72 rainfed): 0.907–0.912 at 10% against 0.911–0.920 at 100%. With 10% of the
+   parcels, the frozen encoder (0.907) still scores above the E01 random forest (0.894) and E03 U-TAE (0.900)
+   trained on all parcels, though within their confidence intervals. From scratch, the network gains little from more parcels either (0.804 → 0.825): with at most 718
+   rainfed parcels per round, 300 M weights cannot be trained from random initialisation.
+5. **For the maps:** a frozen encoder with a light head is the cheapest strategy and as good as any; fine-tuning
+   does not justify its cost on these labels.
 
 ## Limitations
 

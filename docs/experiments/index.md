@@ -4,7 +4,7 @@ The experiments classify the **10 m pixels of the surveyed parcels** as irrigate
 ways of adapting foundation models; the best model will later produce the annual, continuous maps (where cropland is
 is decided in the mapping phase, [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)).
 
-!!! info "Status: Morocco E01 and E02 done; E03–E05 running (Utah later)"
+!!! success "Status: Morocco done, all experiments E01–E05 (22 November 2026); Utah next"
     Redesigned on 20 November 2026: two classes, no cropland mask, earlier 3-class results removed. Code ready and
     tested; the plan is on the [experiment plan](plan.md) page. Pixel samples: Morocco 2023/24 and 2024/25
     (473,675 pixels of 8,775 parcels).
@@ -15,10 +15,10 @@ is decided in the mapping phase, [D19](../decisions.md#d19-two-class-experiments
 | --- | --- | --- | --- | --- |
 | [E01](E01_s2_pixel_baseline.md) | Sentinel-2 pixel baseline | pixel time series, 12 months × 12 bands | random forest, gradient boosting | Morocco done: macro-F1 0.894 (RF), 0.893 (GB) |
 | [E02](E02_temporal_nn.md) | Temporal neural network | pixel time series | TempCNN | Morocco done: macro-F1 0.912 |
-| [E03](E03_utae.md) | U-TAE from scratch | 128 px tiles | U-TAE | Morocco running |
-| [E04](E04_frozen_geofm.md) | Frozen GeoFMs + decoder (RQ1) | 128 px tiles | Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + L-TAE + UPerNet | Morocco running |
+| [E03](E03_utae.md) | U-TAE from scratch | 128 px tiles | U-TAE | Morocco done: macro-F1 0.900 |
+| [E04](E04_frozen_geofm.md) | Frozen GeoFMs + decoder (RQ1) | 128 px tiles | Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA + L-TAE + UPerNet | Morocco done: best TerraMind 0.927, then Clay 0.923, AgriFM 0.921, Prithvi 0.917 |
 | [Comparison](comparison.md) | all runs of E01–E04 side by side, paired tests (RQ1) | | | |
-| [E05](E05_prithvi_strategies.md) | Prithvi frozen, LoRA, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04) | Morocco running / queued |
+| [E05](E05_prithvi_strategies.md) | Prithvi frozen, LoRA, fully fine-tuned or from scratch, with 10–100% of the training parcels (RQ2) | 128 px tiles | Prithvi-EO-2.0 + L-TAE + UPerNet (as E04) | Morocco done: frozen, LoRA, fine-tuned 0.90–0.92 at every share; from scratch 0.80–0.83 |
 
 Common set-up, metrics and run order: [experiment plan](plan.md). Data: [pixel samples](../phase1_data/pixel_samples.md).
 

@@ -36,11 +36,15 @@ FIGURES = {
     "e03_e04": {"scores": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn",
                            "E03 U-TAE": "E03_utae/utae", "E04 Prithvi": "E04_frozen_geofm/prithvi",
                            "E04 Clay": "E04_frozen_geofm/clay", "E04 TerraMind": "E04_frozen_geofm/terramind",
-                           "E04 AgriFM": "E04_frozen_geofm/agrifm"},
+                           "E04 AgriFM": "E04_frozen_geofm/agrifm", "E04 Presto": "E04_frozen_geofm/presto",
+                           "E04 TESSERA": "E04_frozen_geofm/tessera"},
                 "confusion": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E03 U-TAE": "E03_utae/utae",
-                              "E04 TerraMind": "E04_frozen_geofm/terramind"}},
+                              "E04 TerraMind": "E04_frozen_geofm/terramind"},
+                "groups": {"E01 random forest": "E01_s2_pixel_baseline/rf", "E02 TempCNN": "E02_temporal_nn/tempcnn",
+                           "E03 U-TAE": "E03_utae/utae", "E04 TerraMind": "E04_frozen_geofm/terramind"}},
     "e04": {"confusion": {"Prithvi": "E04_frozen_geofm/prithvi", "Clay": "E04_frozen_geofm/clay",
-                          "TerraMind": "E04_frozen_geofm/terramind", "AgriFM": "E04_frozen_geofm/agrifm"}},
+                          "TerraMind": "E04_frozen_geofm/terramind", "AgriFM": "E04_frozen_geofm/agrifm",
+                          "Presto": "E04_frozen_geofm/presto", "TESSERA": "E04_frozen_geofm/tessera"}},
 }
 REGIONS = {"morocco": "Morocco"}                   # Utah added later: {"morocco": "Morocco", "utah": "Utah"}
 METRICS = {"macro_f1": "macro-F1\n(irrigated, rainfed)", "f1_rainfed": "rainfed F1"}
@@ -63,7 +67,7 @@ def month_labels(region):
 
 
 COLORS = {"E01": ["#9ecae1", "#3182bd"], "E02": ["#fdae6b", "#e6550d"], "E03": ["#74c476"],
-          "E04": ["#bcbddc", "#9e9ac8", "#756bb1", "#54278f"]}
+          "E04": ["#3f007d", "#54278f", "#6a51a3", "#807dba", "#9e9ac8", "#bcbddc"]}
 
 
 def run_colors(runs):
@@ -97,8 +101,8 @@ def scores(tag, RUNS):
         a.set_title(name)
         a.grid(axis="y", alpha=0.3)
     ax[0].set_ylabel("out-of-fold score (95% block-bootstrap CI)")
-    fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=len(RUNS), fontsize=8, frameon=False)
-    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=min(len(RUNS), 5), fontsize=8, frameon=False)
+    fig.tight_layout(rect=(0, 0.06 if len(RUNS) <= 5 else 0.11, 1, 1))
     fig.savefig(OUT / f"scores_{tag}.png", dpi=130)
     plt.close(fig)
 
@@ -152,7 +156,7 @@ def groups(tag, RUNS):
             a.set_title(f"{name}: {title} per season | per zone", fontsize=10)
             a.set_ylim(0, 1)
             a.grid(axis="y", alpha=0.3)
-        fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=len(RUNS), fontsize=8, frameon=False)
+        fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=min(len(RUNS), 5), fontsize=8, frameon=False)
         fig.tight_layout(rect=(0, 0.07, 1, 1))
         fig.savefig(OUT / f"groups_{tag}.png", dpi=130)
         plt.close(fig)

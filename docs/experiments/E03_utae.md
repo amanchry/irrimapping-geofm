@@ -1,9 +1,10 @@
 # E03 · U-TAE from scratch
 
-!!! info "Status: planned (Morocco first, Utah later)"
+!!! success "Status: Morocco done (21 November 2026); Utah later"
     Same labelled pixels as [E01](E01_s2_pixel_baseline.md) (Morocco 2023/24 and 2024/25 pooled, 473,675 pixels in
-    2,015 tiles; two classes), but the model sees the whole 128 px tile; 3 seeds per round on one GPU. Code ready
-    and tested; results follow after the run.
+    2,015 tiles; two classes), but the model sees the whole 128 px tile; 3 seeds per round on one GPU. U-TAE
+    **macro-F1 0.900** [0.845, 0.941], rainfed F1 0.823: on a par with the pixel models; the frozen foundation models
+    of E04 beat it. [Results](#results)
 
 **Question.** Does a spatio-temporal network trained from scratch on the whole tile beat the pixel models (E01,
 E02)? It is also the reference for the frozen foundation models of [E04](E04_frozen_geofm.md): it shows how much the
@@ -94,9 +95,70 @@ validation loss, validation macro-F1 and rainfed F1, seconds).
 
 ## Results
 
-_To be filled after the Morocco run._ Planned: scores with 95% CI and the paired difference to the E01 random
-forest, confusion matrix, scores per year and zone, training curves and run time. The comparison with the other
-experiments is on the [comparison page](comparison.md).
+Morocco, 2023/24 and 2024/25 pooled: the same 473,675 out-of-fold pixels as E01 and E02. The comparison with all
+other runs is on the [comparison page](comparison.md).
+
+### Scores
+
+| Model | Macro-F1 [95% CI] | Irrigated F1 | Rainfed F1 [95% CI] | Rainfed precision | Rainfed recall |
+| --- | --- | --- | --- | --- | --- |
+| E01 random forest (reference) | 0.894 [0.834, 0.940] | 0.977 | 0.810 [0.697, 0.894] | 0.850 | 0.774 |
+| E02 TempCNN | 0.912 [0.848, 0.955] | 0.979 | 0.845 [0.722, 0.922] | 0.815 | 0.877 |
+| **E03 U-TAE** | **0.900** [0.845, 0.941] | 0.977 | **0.823** [0.716, 0.896] | 0.808 | 0.839 |
+
+**Paired difference to the E01 random forest** (Holm correction over the nine runs of E01–E04): +0.006 macro-F1
+[−0.027, +0.043], Holm-adjusted p = 1.0; rainfed F1 +0.012 [−0.047, +0.080], p = 1.0. U-TAE is neither better nor
+worse than the pixel random forest.
+
+![Scores of E01–E04](figures/scores_e03_e04.png)
+
+![Confusion matrices](figures/confusion_e03_e04.png)
+
+*Row-normalised confusion matrices of the E01 random forest, E03 U-TAE and the best frozen foundation model (E04
+TerraMind).*
+
+### Scores per year, zone and fold
+
+![Rainfed recall and F1 per season and zone](figures/groups_e03_e04.png)
+
+| Group | Rainfed pixels | RF: rainfed recall | U-TAE: rainfed recall | RF: rainfed F1 | U-TAE: rainfed F1 |
+| --- | --- | --- | --- | --- | --- |
+| 2023/24 | 31,671 | 0.857 | 0.911 | 0.828 | 0.826 |
+| 2024/25 | 22,121 | 0.655 | 0.736 | 0.779 | 0.819 |
+| Doukkala | 46,608 | 0.843 | 0.870 | 0.858 | 0.843 |
+| Souss | 6,869 | 0.322 | 0.641 | 0.485 | 0.774 |
+| Statte | 312 | 0.458 | 0.468 | 0.485 | 0.506 |
+
+| Test fold | 0 | 1 | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- | --- |
+| E01 random forest | 0.762 | **0.911** | 0.921 | 0.942 | **0.928** |
+| E03 U-TAE | **0.855** | 0.865 | **0.935** | **0.957** | 0.893 |
+
+- **Spatial context helps where the pixel models fail.** In fold 0, which holds the Souss rainfed parcels of 2024/25,
+  U-TAE reaches 0.855 against 0.762 for the random forest; in Souss as a whole it finds 64% of the rainfed pixels
+  against 32%.
+- **But it loses elsewhere.** In folds 1 and 4 U-TAE is 0.035–0.046 below the random forest. Over all pixels the
+  gains and losses cancel out, which is why the paired difference is close to zero with a wide interval.
+- More rainfed pixels are found (recall 0.84 vs 0.77) at a lower precision (0.81 vs 0.85), the same shift as with
+  TempCNN.
+
+### Training
+
+- 15 models (5 rounds × 3 seeds), 1.15 M weights, all trained from random initialisation. Early stopping after a
+  median of 19 epochs, 34 s per epoch; 3.6 GPU hours in total.
+- The first job hung after a crashed data-loader worker on the cluster and was restarted; the scores are from the
+  complete second run.
+
+### Interpretation
+
+- A spatio-temporal network trained from scratch on these labels does not beat the pixel models: 0.900 against
+  0.894 (random forest) and 0.912 (TempCNN), with intervals that overlap almost entirely.
+- Seeing the neighbourhood changes *which* pixels are right (fold 0 and Souss better, folds 1 and 4 worse) more than
+  how many. With 1,196 rainfed parcels, most of them in one zone, a network of 1.15 M weights trained from scratch
+  has little to learn the spatial patterns of rainfed land from.
+- E03 is the reference that isolates the effect of pretraining: [E04](E04_frozen_geofm.md) keeps the tiles, the
+  labelled pixels, the temporal head and the training, and replaces the encoder trained from scratch by a
+  pretrained, frozen one.
 
 ## References
 

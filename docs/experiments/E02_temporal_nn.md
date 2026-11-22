@@ -102,15 +102,13 @@ experiments is on the [comparison page](comparison.md).
 | E01 random forest (reference) | 0.894 [0.834, 0.940] | 0.977 | 0.810 [0.697, 0.894] | 0.850 | 0.774 | 0.959 |
 | **E02 TempCNN** | **0.912** [0.848, 0.955] | 0.979 | **0.845** [0.722, 0.922] | 0.815 | **0.877** | 0.963 |
 
-**Paired difference to the E01 random forest** (same pixels, same bootstrap draws, Holm correction over the runs of
-E01–E04 finished so far):
+**Paired difference to the E01 random forest** (same pixels, same bootstrap draws, Holm correction over the nine runs of
+E01–E04):
 
 | Metric | TempCNN − random forest | 95% CI | Holm-adjusted p | Counts as a difference? |
 | --- | --- | --- | --- | --- |
-| Macro-F1 | +0.018 | [−0.017, +0.053] | 0.65 | no |
-| Rainfed F1 | +0.035 | [−0.030, +0.097] | 0.62 | no |
-
-The Holm-adjusted p-values will change when E03 and E04 join the family; the differences and CIs will not.
+| Macro-F1 | +0.018 | [−0.017, +0.053] | 1.0 | no |
+| Rainfed F1 | +0.035 | [−0.030, +0.097] | 1.0 | no |
 
 ![E01 and E02 scores](figures/scores_e01_e02.png)
 

@@ -1,9 +1,10 @@
 # E04 · Frozen foundation models + decoder (RQ1)
 
-!!! info "Status: planned (Morocco first, Utah later)"
+!!! success "Status: Morocco done, all six encoders (21 November 2026); Utah later"
     Same labelled pixels and tiles as [E03](E03_utae.md) (Morocco 2023/24 and 2024/25 pooled, 473,675 pixels in
-    2,015 tiles; two classes); six encoders, one GPU job each, 3 seeds per round. Code ready and tested (Prithvi);
-    results follow after the runs.
+    2,015 tiles; two classes); six encoders, one GPU job each, 3 seeds per round. Best: **TerraMind macro-F1 0.927**
+    [0.880, 0.964], then Clay 0.923, AgriFM 0.921, Prithvi 0.917. These four beat U-TAE trained from scratch
+    (significant); none is significantly better than the E01 random forest. [Results](#results)
 
 **Question (RQ1).** Do frozen geospatial foundation models with a light decoder classify the pixels better than the
 pixel models (E01, E02) and a spatio-temporal network trained from scratch (E03)? (Answered on the [comparison page](comparison.md).)
@@ -148,9 +149,95 @@ only checks the code) and read the epoch time in the log to check the job time l
 
 ## Results
 
-_To be filled after the Morocco runs._ Planned for the six encoders: scores with 95% CI, confusion matrices, scores
-per year and zone, training curves and GPU time. The comparison with E01–E03 (paired tests) is on the
+Morocco, 2023/24 and 2024/25 pooled: the same 473,675 out-of-fold pixels as E01–E03. All runs side by side:
 [comparison page](comparison.md).
+
+### Scores
+
+| Encoder | Macro-F1 [95% CI] | Rainfed F1 [95% CI] | Rainfed precision | Rainfed recall | Trained weights | GPU hours |
+| --- | --- | --- | --- | --- | --- | --- |
+| **TerraMind** | **0.927** [0.880, 0.964] | **0.872** [0.783, 0.937] | 0.850 | 0.894 | 2.41 M | 1.8 |
+| Clay | 0.923 [0.874, 0.960] | 0.864 [0.769, 0.930] | 0.836 | 0.894 | 2.48 M | 3.3 |
+| AgriFM | 0.921 [0.868, 0.956] | 0.861 [0.758, 0.922] | 0.840 | 0.882 | 3.23 M | 1.9 |
+| Prithvi | 0.917 [0.865, 0.957] | 0.853 [0.749, 0.924] | 0.838 | 0.867 | 2.48 M | 5.1 |
+| TESSERA | 0.912 [0.853, 0.958] | 0.844 [0.733, 0.928] | 0.849 | 0.838 | 1.72 M | 24.7 |
+| Presto | 0.903 [0.848, 0.942] | 0.828 [0.720, 0.899] | 0.806 | 0.852 | 1.72 M | 14.1 |
+| *E03 U-TAE (from scratch)* | *0.900* [0.845, 0.941] | *0.823* [0.716, 0.896] | 0.808 | 0.839 | 1.15 M | 3.6 |
+| *E01 random forest* | *0.894* [0.834, 0.940] | *0.810* [0.697, 0.894] | 0.850 | 0.774 | – | CPU |
+
+Trained weights = temporal head and decoder (the encoder is frozen). GPU hours = sum of the epoch times of the 15
+models; Presto and TESSERA encode every pixel's time series separately, which makes them the slowest.
+
+![Scores of E01–E04](figures/scores_e03_e04.png)
+
+### Paired tests
+
+Paired differences on the same pixels and block-bootstrap draws; Holm correction over the nine runs of E01–E04
+against each reference. A difference counts when its 95% CI excludes 0 and p<sub>Holm</sub> < 0.05.
+
+| Encoder | vs E03 U-TAE: Δ macro-F1 [95% CI] | p<sub>Holm</sub> | vs E01 random forest: Δ macro-F1 [95% CI] | p<sub>Holm</sub> |
+| --- | --- | --- | --- | --- |
+| TerraMind | **+0.027** [+0.013, +0.052] | < 0.01 | +0.034 [+0.004, +0.076] | 0.29 |
+| Clay | **+0.023** [+0.010, +0.042] | 0.01 | +0.029 [−0.002, +0.071] | 0.45 |
+| AgriFM | **+0.021** [+0.009, +0.036] | < 0.01 | +0.028 [−0.001, +0.064] | 0.45 |
+| Prithvi | **+0.017** [+0.004, +0.036] | 0.04 | +0.023 [−0.007, +0.061] | 0.76 |
+| TESSERA | +0.012 [−0.020, +0.043] | 1.0 | +0.018 [+0.000, +0.039] | 0.37 |
+| Presto | +0.003 [−0.008, +0.011] | 1.0 | +0.009 [−0.022, +0.044] | 1.0 |
+
+For rainfed F1 the pattern is the same: TerraMind (+0.048), Clay (+0.040), AgriFM (+0.037) and Prithvi (+0.029) are
+significantly better than U-TAE; against the random forest no difference counts (TerraMind +0.061 [+0.008,
++0.141], p<sub>Holm</sub> = 0.25).
+
+- **Against U-TAE (the effect of the pretrained encoder):** the four image encoders (TerraMind, Clay, AgriFM,
+  Prithvi) improve on the same network trained from scratch, by 0.017–0.027 macro-F1. The intervals are narrow
+  because the two models see the same tiles and make similar errors, so the paired differences vary little between
+  blocks.
+- **Against the random forest:** the differences are larger (+0.023 to +0.034) but vary much more between blocks
+  (large gains in fold 0, small or negative in fold 1), so the intervals are wide. TerraMind's interval excludes 0,
+  but not after the Holm correction for nine comparisons.
+
+### Scores per year, zone and fold
+
+![Rainfed recall and F1 per season and zone](figures/groups_e03_e04.png)
+
+| Run | Rainfed recall 2023/24 | Rainfed recall 2024/25 | Rainfed recall Souss | Rainfed F1 Souss | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| E01 random forest | 0.857 | 0.655 | 0.322 | 0.485 | 0.762 | 0.911 | 0.921 | 0.942 | 0.928 |
+| E03 U-TAE | 0.911 | 0.736 | 0.641 | 0.774 | 0.855 | 0.865 | 0.935 | 0.957 | 0.893 |
+| TerraMind | 0.926 | 0.849 | 0.839 | 0.903 | 0.878 | 0.899 | 0.951 | 0.971 | 0.944 |
+| Clay | 0.928 | 0.845 | 0.814 | 0.889 | 0.878 | 0.892 | 0.955 | 0.971 | 0.923 |
+| AgriFM | 0.939 | 0.801 | 0.669 | 0.794 | 0.868 | 0.900 | 0.958 | 0.965 | 0.921 |
+| Prithvi | 0.914 | 0.800 | 0.772 | 0.862 | 0.862 | 0.886 | 0.950 | 0.953 | 0.935 |
+| TESSERA | 0.905 | 0.743 | 0.455 | 0.619 | 0.766 | 0.908 | 0.961 | 0.967 | 0.943 |
+| Presto | 0.923 | 0.750 | 0.638 | 0.772 | 0.860 | 0.867 | 0.946 | 0.958 | 0.891 |
+
+Macro-F1 per test fold in the last five columns.
+
+- **The gain is in the hard cases.** TerraMind and Clay find about 85% of the rainfed pixels of 2024/25 (random
+  forest 66%) and over 80% of those of Souss (random forest 32%). In 2023/24 and Doukkala all models are close.
+- **Fold 0** (Souss 2024/25) rises from 0.762 (random forest) to 0.86–0.88 with the image encoders. TESSERA stays at the level of the pixel models there (0.766). TESSERA and Presto both encode one pixel's time
+  series, but Presto reaches 0.860 in fold 0, so the per-pixel design alone does not explain TESSERA's weakness.
+- **Fold 1** is the one fold where every tile model is below the random forest (0.865–0.908 vs 0.911).
+- **Irrigation-only zones** (Gharb, Tadla, el Haouz): irrigated F1 ≥ 0.988 for every encoder.
+- **Statte** (312 rainfed pixels in 4 parcels) is too small to judge: TerraMind finds 12 of the 312 rainfed pixels
+  there, U-TAE 146.
+
+![Confusion matrices of the six encoders](figures/confusion_e04.png)
+
+### Interpretation
+
+- **RQ1, Morocco.** Frozen foundation-model features with a light decoder (1.7–3.2 M trained weights) give the best
+  scores so far: TerraMind 0.927, Clay 0.923, AgriFM 0.921, Prithvi 0.917. They are significantly better than the
+  same pipeline trained from scratch (U-TAE), so the pretrained features carry information that 1,196 rainfed
+  parcels are not enough to learn. They are **not** significantly better than a random forest on the pixel time
+  series, because the gain is concentrated in a few blocks (Souss, 2024/25) and the block bootstrap is wide.
+- **The four image encoders are close to each other** (0.917–0.927, overlapping intervals); the ranking among them
+  is not established. The two encoders that see one pixel's time series (Presto, TESSERA) are weaker and 3–14 times
+  slower here.
+- **What the encoders add is mostly rainfed recall in the difficult places:** in the wetter year and in the zone
+  with few rainfed parcels, where the pixel models confuse rainfed with irrigated.
+- **Caveat:** rainfed parcels lie in three of six zones, mostly Doukkala. The scores measure the separation of
+  irrigated and rainfed where both occur; Utah (rainfed spread more widely) is the test of whether the result holds.
 
 ## References
 

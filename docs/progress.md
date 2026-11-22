@@ -13,8 +13,8 @@ change log).
 | --- | --- | --- |
 | Cropland mask (mapping phase only) | `cropland_extent/` | Union of 4 products: 2023/24 for both regions; Dynamic World download script added (`download_dynamic_world.py`); not used by the experiments ([D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
 | Pixel samples (2 classes) | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 and 2024/25 done (473,675 pixels of 8,775 parcels, `04_pixel_samples/`); Utah to be rebuilt on the cluster ([page](phase1_data/pixel_samples.md)) |
-| Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Morocco: E01 done (RF macro-F1 0.894, GB 0.893), E02 done (TempCNN 0.912, not significantly better); E03, E04 running ([experiments](experiments/index.md)) |
-| E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Moved to Morocco, 2 classes; code ready and tested; 16 jobs to run ([E05](experiments/E05_prithvi_strategies.md)) |
+| Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Morocco done: RF 0.894, TempCNN 0.912, U-TAE 0.900, frozen GeoFMs 0.903–0.927 (TerraMind best; image encoders significantly above U-TAE, none above RF) ([comparison](experiments/comparison.md)) |
+| E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Morocco done (16 runs): frozen, LoRA, fine-tuned tie at 0.90–0.92 at every share; from scratch 0.80–0.83 ([E05](experiments/E05_prithvi_strategies.md)) |
 | STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
@@ -23,9 +23,8 @@ change log).
 | Documentation | `docs/` (all pages), `mkdocs.yml` | Website https://amanchry.github.io/irrimapping-geofm/ ; rules in `CLAUDE.md` |
 
 Next steps
-1. Cluster (Morocco): finish E03, E04 (six encoders) and E05 (16 jobs); E01 and E02 are done.
-2. Utah: `04_make_pixel_samples.py` on the cluster, then the same experiments.
-3. STAC approach: rerun the 78 missing Utah blocks, then Morocco 2023/24 and 2024/25 (`s2_download/`).
+1. Utah: `04_make_pixel_samples.py` on the cluster, then E01–E05 as in Morocco.
+2. STAC approach: rerun the 78 missing Utah blocks, then Morocco 2023/24 and 2024/25 (`s2_download/`).
 
 ---
 
@@ -89,6 +88,17 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-22 (E03, E04, E05 results, Morocco)
+
+- E03, E04 (six encoders) and E05 (16 runs) Morocco results copied from the cluster; comparison tables rebuilt
+  (`experiments/comparison/morocco/`, nine runs per Holm family) and E05 tables (`summary.csv`, `paired.csv`).
+- Results written on the [E03](experiments/E03_utae.md#results), [E04](experiments/E04_frozen_geofm.md#results),
+  [E05](experiments/E05_prithvi_strategies.md#results) and [comparison](experiments/comparison.md) pages, with the
+  Morocco answers to the RQ1 questions; final Holm p-values on the E01 and E02 pages; [Results](results.md),
+  experiment list, RQ1 plan and research plan updated.
+- `experiments/report_figures.py`: all six encoders in the E03/E04 figures, per-zone figure for E01–E04, darker
+  colours for the encoders, legend in rows of five.
 
 ### 2026-11-21 (E01 and E02 results, Morocco)
 
