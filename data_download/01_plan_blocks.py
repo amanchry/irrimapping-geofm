@@ -5,10 +5,10 @@
 What it does
 ------------
 Plans, once per region, every block of 1024 x 1024 px (10.24 km at 10 m) that touches the region's mapping area
-(regions.py: map_file / map_where). No cropland mask is used here. The grid is the same for every agricultural year;
-only the data in the blocks change. Each block also records, per agricultural year, how many tiles of the
-training-tile plan (data_training_prep/03_plan_tiles.py) it holds, so 02b/02c always download the blocks of the
-training data; a training tile outside the mapping area is reported (it should not happen).
+(regions.py: map_file / map_where). No cropland mask and no training data are used here: the grid is the same for
+every agricultural year and only the data in the blocks change. The training tiles per block are counted when the
+downloads load the grid (download_common.load_blocks, from data_training_prep/03_plan_tiles.py), so 02b/02c always
+download the blocks of the current training data.
 Everything after this works block by block:
   02a_dynamic_world.py   binary cropland image (Dynamic World) for every block
   02b_s2.py, 02c_s1.py   (later ERA5) only the blocks with cropland (>= MIN_CROP_PIXELS) or a training tile
@@ -20,14 +20,13 @@ x = bx * 10240 m ... + 10240 m and y = by * 10240 m ... + 10240 m in the region'
 Output (outputs/<REGION>/data_download/grid/)
 -----------------------------------------
 blocks.parquet            one row per block: bx, by, block, x0, y0 (top-left), area_frac (share inside the mapping
-                          area), n_training_tiles_<season> (one column per agricultural year of the tile plan),
-                          geometry
+                          area), geometry
 blocks.geojson            the same in EPSG:4326 (to view in QGIS)
 blocks.png                map of the block extents over the mapping area (the cropland of each year is drawn by
                           02a_dynamic_world.py)
 
-Run (from the project folder; after data_training_prep/03_plan_tiles.py)
------------------------------------------------------------------------
+Run (from the project folder; first step of data_download/, independent of data_training_prep/)
+-------------------------------------------------------------------------------------------
     python data_download/01_plan_blocks.py
 """
 import geopandas as gpd
@@ -39,8 +38,8 @@ import pandas as pd
 from shapely.geometry import box
 from shapely.prepared import prep
 
-from download_common import BLOCK_M, TILES_PER_BLOCK, block_name, download_dir, grid_file, training_column
-from regions import admin_boundaries, dataset_dir, map_area, settings
+from download_common import BLOCK_M, block_name, download_dir, grid_file
+from regions import admin_boundaries, map_area, settings
 
 # ================================ SETTINGS ================================
 REGION = "utah"             # "morocco" | "utah" (regions.py)
@@ -48,7 +47,6 @@ MAKE_PNG = True                # map of the block extents (blocks.png)
 # ==========================================================================
 
 CRS_EPSG = settings(REGION)["crs_epsg"]
-TRAINING_PLAN = dataset_dir(REGION) / "03_tiles_128px" / "agyear" / "tiles.parquet"   # data_training_prep/03_plan_tiles.py
 
 
 def area_blocks(area):
@@ -65,21 +63,10 @@ def area_blocks(area):
 
 
 def plan_grid(in_area):
-    """The block grid, with the training tiles per block of every agricultural year of the tile plan."""
+    """The block grid: extents and share of each block inside the mapping area."""
     df = pd.DataFrame([{"bx": bx, "by": by, "area_frac": v} for (bx, by), v in sorted(in_area.items())])
     df["block"] = [block_name(bx, by) for bx, by in zip(df["bx"], df["by"])]
     df["x0"], df["y0"] = df["bx"] * BLOCK_M, (df["by"] + 1) * BLOCK_M                 # top-left corner
-    if not TRAINING_PLAN.exists():
-        print(f"  no training-tile plan ({TRAINING_PLAN}); run data_training_prep/03_plan_tiles.py first")
-    else:
-        tp = pd.read_parquet(TRAINING_PLAN, columns=["ag_season", "ix", "iy"])
-        for ag_season, t in tp.groupby("ag_season"):
-            n_train = t.groupby([t["ix"] // TILES_PER_BLOCK, t["iy"] // TILES_PER_BLOCK]).size().to_dict()
-            outside = {k: n for k, n in n_train.items() if k not in in_area}
-            if outside:
-                print(f"  WARNING {ag_season}: {sum(outside.values())} training tiles in {len(outside)} blocks lie "
-                      f"outside the mapping area: {sorted(outside)[:10]} (check map_file / map_where in regions.py)")
-            df[training_column(ag_season)] = [int(n_train.get((bx, by), 0)) for bx, by in zip(df["bx"], df["by"])]
     geom = [box(x, y - BLOCK_M, x + BLOCK_M, y) for x, y in zip(df["x0"], df["y0"])]
     return gpd.GeoDataFrame(df, geometry=geom, crs=CRS_EPSG)
 
@@ -116,9 +103,6 @@ def main():
     grid.to_crs(4326).to_file(path.with_suffix(".geojson"), driver="GeoJSON")
     print(f"{REGION}: {len(grid):,} blocks of {BLOCK_M / 1000:.2f} km "
           f"({grid['area_frac'].sum() * (BLOCK_M / 1000) ** 2:,.0f} km² of mapping area), the same for every year")
-    for col in [c for c in grid.columns if c.startswith("n_training_tiles_")]:
-        print(f"  {col[len('n_training_tiles_'):]}: training tiles in {int((grid[col] > 0).sum()):,} blocks "
-              f"({int(grid[col].sum()):,} tiles)")
     if MAKE_PNG:
         make_png(grid)
     print(f"Saved in {download_dir(REGION) / 'grid'}. Next: 02a_dynamic_world.py (binary cropland image per block), "

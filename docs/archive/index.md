@@ -6,6 +6,7 @@ unchanged, so every archived result can still be read, checked and re-run.
 | Archive | Period | What it is | Pages | Code and results |
 | --- | --- | --- | --- | --- |
 | **Parcel-wise classification** (E01–E05) | Sep – Nov 2026 | RQ1 on **one label per parcel**: frozen GeoFM embeddings (or Sentinel-2 features) averaged inside each parcel, then PCA or L-TAE and a classifier; PSE-TAE from scratch as the neural baseline. Morocco and Utah 2023/24. | [Results](parcel_wise_classification/results.md) · [Experiment plan](parcel_wise_classification/experiment_plan.md) · [Workflow](parcel_wise_classification/workflow.md) · [Models pipeline](parcel_wise_classification/models_pipeline.md) · [Evaluation protocol](parcel_wise_classification/evaluation_protocol.md) · [Experiments](parcel_wise_classification/index.md) | [`experiments/parcel_wise_classification/`](https://github.com/amanchry/irrimapping-geofm/tree/main/experiments/parcel_wise_classification) |
+| **Union cropland mask** | Nov 2026 | A cropland mask per region and agricultural year from the union of four products (ESA WorldCover, Esri LULC, GCEP30, GLAD). Replaced by the annual Dynamic World cropland ([Cropland extent](../phase1_data/cropland_extent.md)). | [Union cropland mask](cropland_union_mask.md) | [`data_download/archive/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download/archive) |
 
 ## Why the parcel-wise experiments were archived
 

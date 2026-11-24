@@ -16,7 +16,7 @@ from download_common import download_dir, season_tag
 
 # ================================ SETTINGS ================================
 REGION = "morocco"             # "morocco" | "utah" (regions.py)
-SOURCES = ["dynamic_world", "s2", "s1"]
+SOURCES = ["s2", "s1"]                 # Dynamic World cropland is one region-wide file already (02a)
 SEASONS = {"morocco": ["2023/24", "2024/25"],
            "utah": ["2023/24", "2020/21"]}[REGION]
 # ==========================================================================

@@ -16,7 +16,7 @@
     * [Overview](phase1_data/overview.md)
     * [Morocco training data](phase1_data/morocco.md)
     * [Utah training data](phase1_data/utah.md)
-    * [Cropland extent and mask](phase1_data/cropland_mask.md)
+    * [Cropland extent (Dynamic World)](phase1_data/cropland_extent.md)
     * [Pixel samples](phase1_data/pixel_samples.md)
 * Phase 2 · Model evaluation
     * [Overview](phase2_models/overview.md)
@@ -46,6 +46,7 @@
     * [Weeks 2026-W43–44](weekly/2026-W43-44.md)
 * Archive
     * [Overview](archive/index.md)
+    * [Union cropland mask](archive/cropland_union_mask.md)
     * Parcel-wise classification (E01–E05)
         * [Results](archive/parcel_wise_classification/results.md)
         * [Experiment plan](archive/parcel_wise_classification/experiment_plan.md)

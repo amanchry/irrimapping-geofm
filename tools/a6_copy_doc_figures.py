@@ -28,7 +28,7 @@ FIGURES = {                                              # source (in the projec
     "outputs/morocco/study/01_inspection/examples_rainfed.png":          "phase1_data/figures/examples_rainfed.jpg",
     "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/cv_random_vs_spatial.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/cv_random_vs_spatial_baseline.png",
     "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/importance.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/importance_baseline.png",
-    # cropland extent and pixel samples (pixel-wise classification)
+    # archived union cropland mask (docs/archive/cropland_union_mask.md)
     "outputs/morocco/data_download/reference/cropland_mask/2023-24/cropland_mask_quicklook.png": "phase1_data/figures/cropland_mask_morocco_2023-24.png",
     "outputs/utah/data_download/reference/cropland_mask/2023-24/cropland_mask_quicklook.png":    "phase1_data/figures/cropland_mask_utah_2023-24.png",
     "outputs/cropland_tiles_extent_2023-24.png":                                         "phase1_data/figures/cropland_tiles_extent_2023-24.png",

@@ -9,8 +9,10 @@ tile and every map window is an exact cut-out of a block.
 
     outputs/<region>/data_download/
         grid/blocks.parquet, .geojson               the block grid over the whole mapping area, the same for every
-                                                    year, with the training tiles per block and year (01_plan_blocks.py)
-        dynamic_world/<season>/<bx>_<by>.tif        binary cropland image per block (02a_dynamic_world.py)
+                                                    year (01_plan_blocks.py); the training tiles per block are counted
+                                                    when the blocks are loaded (load_blocks)
+        dynamic_world/cropland_<season>.tif         binary cropland of the whole region, 10 m, on the block grid
+                                                    (02a_dynamic_world.py; one download per year with geemap)
         <source>/<season>/<bx>_<by>.tif             one file per block, 12 months x bands of the source
         <source>/<season>/<bx>_<by>_scenes.json     scene IDs per month (provenance), where available
 
@@ -28,9 +30,10 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
+import rasterio.windows
 from rasterio.transform import Affine
 
-from regions import settings
+from regions import dataset_dir, settings
 
 ROOT = Path(__file__).resolve().parents[1]                          # project folder
 # KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"     # Earth Engine key (never commit)
@@ -71,18 +74,40 @@ def grid_file(region):
     return download_dir(region) / "grid" / "blocks.parquet"
 
 
-def training_column(ag_season):
-    """Column of the grid with the number of training tiles per block in one agricultural year."""
-    return f"n_training_tiles_{season_tag(ag_season)}"
+def training_plan_file(region):
+    """The training-tile plan of data_training_prep/03_plan_tiles.py (ix, iy and ag_season of every tile)."""
+    return dataset_dir(region) / "03_tiles_128px" / "agyear" / "tiles.parquet"
+
+
+DW_NODATA = 255                # no-data of the Dynamic World cropland file (uint8)
+
+
+def dw_cropland_file(region, ag_season):
+    """Region-wide binary Dynamic World cropland of one agricultural year (02a_dynamic_world.py)."""
+    return download_dir(region) / "dynamic_world" / f"cropland_{season_tag(ag_season)}.tif"
+
+
+def read_dw_window(src, x0, y1, size_px):
+    """size_px x size_px pixels of the open cropland file with top-left corner (x0, y1); 255 outside the file."""
+    col = int(round((x0 - src.transform.c) / GSD_M))
+    row = int(round((src.transform.f - y1) / GSD_M))
+    win = rasterio.windows.Window(col, row, size_px, size_px)
+    return src.read(1, window=win, boundless=True, fill_value=DW_NODATA)
+
+
+def block_crop_pixels(region, ag_season, blocks):
+    """Cropland pixels per block (list, same order as blocks); None for all if 02a has not run yet."""
+    path = dw_cropland_file(region, ag_season)
+    if not path.exists():
+        return [None] * len(blocks)
+    with rasterio.open(path) as src:
+        return [int((read_dw_window(src, bx * BLOCK_M, (by + 1) * BLOCK_M, BLOCK_PX) == 1).sum())
+                for bx, by in zip(blocks["bx"], blocks["by"])]
 
 
 def crop_pixels(region, ag_season, bx, by):
-    """Number of cropland pixels in the binary Dynamic World image of a block (02a); None if not downloaded."""
-    path = block_file(region, "dynamic_world", ag_season, bx, by)
-    if not path.exists():
-        return None
-    with rasterio.open(path) as src:
-        return int((src.read(1) == 1).sum())
+    """Cropland pixels of one block in the Dynamic World cropland file (02a); None if it is not there."""
+    return block_crop_pixels(region, ag_season, pd.DataFrame({"bx": [bx], "by": [by]}))[0]
 
 
 def block_transform(bx, by):
@@ -130,13 +155,26 @@ def write_block(path, array, bx, by, descriptions, crs_epsg, nodata=None, size_p
 
 
 def load_blocks(region, ag_season):
-    """The block grid of 01_plan_blocks.py, with n_training_tiles / has_training_tiles of one agricultural year."""
+    """The block grid of 01_plan_blocks.py, with the training tiles of one agricultural year counted per block
+    (n_training_tiles, has_training_tiles) from the current tile plan of data_training_prep/03_plan_tiles.py.
+    Blocks with training tiles are always downloaded (02b, 02c), so every training tile can be cut out."""
     path = grid_file(region)
     if not path.exists():
         raise SystemExit(f"{path} not found: run data_download/01_plan_blocks.py first")
     blocks = gpd.read_parquet(path)
-    col = training_column(ag_season)
-    blocks["n_training_tiles"] = blocks[col] if col in blocks else 0
+    plan = training_plan_file(region)
+    n_train = {}
+    if plan.exists():
+        tp = pd.read_parquet(plan, columns=["ag_season", "ix", "iy"])
+        tp = tp[tp["ag_season"] == ag_season]
+        n_train = tp.groupby([tp["ix"] // TILES_PER_BLOCK, tp["iy"] // TILES_PER_BLOCK]).size().to_dict()
+        outside = {k: n for k, n in n_train.items() if k not in set(zip(blocks["bx"], blocks["by"]))}
+        if outside:
+            print(f"  WARNING {ag_season}: {sum(outside.values())} training tiles in {len(outside)} blocks lie outside "
+                  f"the block grid: {sorted(outside)[:10]} (check map_file / map_where in regions.py)")
+    else:
+        print(f"  {ag_season}: no training-tile plan yet ({plan}); blocks are selected by cropland only")
+    blocks["n_training_tiles"] = [int(n_train.get((bx, by), 0)) for bx, by in zip(blocks["bx"], blocks["by"])]
     blocks["has_training_tiles"] = blocks["n_training_tiles"] > 0
     return blocks
 
@@ -203,21 +241,22 @@ def download_blocks(region, source, make_image, names, seasons, dtype=np.int16, 
     scenes      optional f(ee, ag_season, ee_region, block_geometry) -> ee object of scene IDs (provenance)
     size_px     pixels per block side (1024 at 10 m; fewer for coarse sources such as weather data)
     only_blocks optional list of (bx, by) to download (tests)
-    require_cropland  only blocks with >= MIN_CROP_PIXELS cropland pixels in their binary Dynamic World image
-                (02a_dynamic_world.py), plus every block with training tiles (S2, S1, ERA5, ...); blocks whose
-                Dynamic World is not downloaded yet wait
+    require_cropland  only blocks with >= MIN_CROP_PIXELS cropland pixels in the Dynamic World cropland file
+                (02a_dynamic_world.py), plus every block with training tiles (S2, S1, ERA5, ...)
     """
     crs = settings(region)["crs_epsg"]
     ee = init_gee()
     for ag_season in seasons:
         blocks = load_blocks(region, ag_season)
         if require_cropland:
-            n = [crop_pixels(region, ag_season, bx, by) for bx, by in zip(blocks["bx"], blocks["by"])]
+            n = block_crop_pixels(region, ag_season, blocks)
             has_crop = np.array([v is not None and v >= MIN_CROP_PIXELS for v in n])
             keep = has_crop | blocks["has_training_tiles"].to_numpy()
-            waiting = int(sum(v is None for v in n))
-            print(f"{source} {ag_season}: {int(keep.sum()):,} of {len(blocks):,} blocks hold cropland or training "
-                  f"tiles" + (f"; {waiting:,} blocks have no Dynamic World yet (run 02a first)" if waiting else ""))
+            if n[0] is None:
+                print(f"{source} {ag_season}: no Dynamic World cropland yet ({dw_cropland_file(region, ag_season)}): "
+                      f"run 02a_dynamic_world.py first")
+                continue
+            print(f"{source} {ag_season}: {int(keep.sum()):,} of {len(blocks):,} blocks hold cropland or training tiles")
             blocks = blocks[keep]
         if only_blocks:
             blocks = blocks[[(bx, by) in set(only_blocks) for bx, by in zip(blocks["bx"], blocks["by"])]]

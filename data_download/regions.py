@@ -70,8 +70,8 @@ def dataset_dir(region):
 
 
 def cropland_dir(region):
-    """outputs/<region>/data_download/reference/ — cropland layers of data_download/ 00 and 04a-04c (cropland_mask/<season>/, esa_worldcover/,
-    lgrip30/)."""
+    """outputs/<region>/data_download/reference/ — reference maps of data_download/04a-04c (esa_worldcover/, lgrip30/,
+    dynamic_world/) and the archived union mask (cropland_mask/<season>/)."""
     return ROOT / "outputs" / region / "data_download" / "reference"
 
 
@@ -100,9 +100,3 @@ def map_area(region):
     if gdf.empty:
         raise ValueError(f"no feature matches {s['map_where']!r} in {s['map_file']}")
     return gdf.geometry.union_all()
-
-
-def mask_dir(region, ag_season):
-    """Cropland mask of one agricultural year (data_download/00_union_cropland_mask.py; used by the archived
-    parcel-wise pipeline only)."""
-    return cropland_dir(region) / "cropland_mask" / ag_season.replace("/", "-")

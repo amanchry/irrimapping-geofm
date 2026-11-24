@@ -1,31 +1,40 @@
 """
-02a_dynamic_world.py  —  binary cropland image (Dynamic World) for every planned 10.24 km block
-================================================================================================
+02a_dynamic_world.py  —  binary Dynamic World cropland of the whole region, one 10 m GeoTIFF per agricultural year
+==================================================================================================================
 
 What it does
 ------------
-Downloads, for EVERY block of the plan (01_plan_blocks.py: the whole mapping area, no mask), one binary image from
-Dynamic World (Earth Engine), block by block (blocks in parallel, resumable):
+Downloads, for each agricultural year, one binary cropland image of the whole mapping area from Dynamic World
+(Earth Engine, service account), with geemap.download_ee_image (geedim splits it into tiles below Earth Engine's
+request limit, downloads them in parallel and joins them), like the reference maps 04a-04c. The file covers exactly
+the blocks of 01_plan_blocks.py (10 m pixels on the block grid), so every block and every 128 px tile is a window of
+it:
 
-  CROPLAND   1 = cropland, 0 = other, 255 = no Dynamic World image
-             cropland = the most frequent Dynamic World class over the calendar year in which the agricultural
-             year ends (2023/24 -> 2024) is "crops" (class 4)
+  CROPLAND   1 = cropland, 0 = other, 255 = no Dynamic World image in the whole year
+             cropland = "crops" (class 4) is the most frequent Dynamic World class in at least MIN_CROP_MONTHS (2)
+             of the 12 months of the agricultural year (Morocco September - August, Utah October - September:
+             the months of the Sentinel-2 / Sentinel-1 composites and of the labels)
+
+Why monthly and not the class of the whole year: Dynamic World classifies every Sentinel-2 image (it has no annual
+product). A rainfed cereal field is green for a few months (Morocco about December - April) and bare or dry grass
+for the rest of the year, so its most frequent class of the year is often "bare" or "grass". Counting the months in
+which "crops" dominates keeps short seasons, and two months guard against a single misclassified scene.
 
 This image decides what comes next:
   - 02b_s2.py, 02c_s1.py (later ERA5) download only the blocks with at least MIN_CROP_PIXELS cropland pixels
     (download_common.py), plus every block with training tiles;
+  - data_training_prep/04_cut_tiles.py cuts it into the training tiles (_dw.tif);
   - the maps classify only the cropland pixels of a block.
 
 Output (outputs/<REGION>/data_download/dynamic_world/)
-  <season>/<bx>_<by>.tif           uint8, 1 band, 1024 x 1024 px
-  cropland_map_<season>.png        cropland share of each cell (OVERVIEW_PX cells per block side, 320 m) of all
-                                   downloaded blocks over the mapping area, with legend
+  cropland_<season>.tif            uint8, 1 band CROPLAND, 10 m, NODATA 255, overviews for QGIS
+  cropland_map_<season>.png        cropland share of each 320 m cell (OVERVIEW_PX per block side) over the mapping
+                                   area, with legend
   cropland_blocks_<season>.png     the block extents (as in 01_plan_blocks.py): blocks with cropland highlighted,
-                                   blocks without cropland, blocks not downloaded yet; blocks with training tiles
-                                   outlined
+                                   blocks without cropland; blocks with training tiles outlined
 The full Dynamic World land cover (all 9 classes) of each year is drawn by 04c_ref_dynamic_world_annual.py.
 
-Run (from the project folder; after 01_plan_blocks.py; on the cluster for a whole region)
+Run (from the project folder; after 01_plan_blocks.py)
     python data_download/02a_dynamic_world.py
 """
 import geopandas as gpd
@@ -35,43 +44,81 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 from matplotlib.colors import ListedColormap
+from rasterio.enums import Resampling
 from matplotlib.patches import Patch
 
-from download_common import (BLOCK_M, BLOCK_PX, MIN_CROP_PIXELS, block_file, crop_pixels, download_blocks,
-                             download_dir, load_blocks)
+from download_common import (BLOCK_M, BLOCK_PX, DW_NODATA, GSD_M, MIN_CROP_PIXELS, block_crop_pixels, download_dir,
+                             dw_cropland_file, init_gee, load_blocks, month_bounds, month_starts, read_dw_window)
 from regions import admin_boundaries, map_area, settings
 
 # ================================ SETTINGS ================================
 REGION = "morocco"             # "morocco" | "utah" (regions.py)
 SEASONS = {"morocco": ["2023/24", "2024/25"],
            "utah": ["2023/24", "2020/21"]}[REGION]          # agricultural years (block plan of each from 01)
-DOWNLOAD_WORKERS = 4           # blocks fetched in parallel
-N_TEST_BLOCKS = None           # e.g. 1 block per agricultural year for a quick test; None = all
-ONLY_BLOCKS = None             # e.g. [(46, 349)] for a test on given blocks; None = all
-DOWNLOAD = True                # False: only draw the maps from the blocks already downloaded (no Earth Engine)
+MIN_CROP_MONTHS = 2            # cropland = "crops" is the most frequent class in at least this many months
+NUM_THREADS = 4                # tiles downloaded in parallel (geedim)
+MAX_TILE_SIZE = 4              # MB per tile request (geedim; Earth Engine limit 32 MB)
+MAX_TILE_DIM = 2048            # pixels per tile side (geedim)
+OVERWRITE = False              # False: skip a year whose GeoTIFF exists
+DOWNLOAD = True                # False: only draw the maps from the GeoTIFFs already there (no Earth Engine)
 MAKE_PNG = True                # the two maps per agricultural year
 OVERVIEW_PX = 32               # pixels per block side in the cropland map (32 -> 320 m)
 # ==========================================================================
 
 NAMES = ["CROPLAND"]
 CROPS = 4                      # Dynamic World class "crops"
-NODATA_U8 = 255
+NODATA_U8 = DW_NODATA
 
 
 def make_image(ee, ag_season, region):
-    year = int(ag_season[:4]) + 1                                   # calendar year in which the agricultural year ends
+    """Binary cropland of one agricultural year: crops dominant in >= MIN_CROP_MONTHS of its 12 months."""
+    months = month_starts(REGION, ag_season)
     dw = (ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1").filterBounds(region)
-          .filterDate(f"{year}-01-01", f"{year + 1}-01-01"))
-    label = dw.select("label").reduce(ee.Reducer.mode())
-    return label.eq(CROPS).unmask(NODATA_U8).rename(NAMES).toUint8()
+          .filterDate(month_bounds(months[0])[0], month_bounds(months[-1])[1]).select("label"))
+    crop_months = ee.Image.constant(0)
+    for m in months:                                                # month without an image counts as not crops
+        mode = dw.filterDate(*month_bounds(m)).reduce(ee.Reducer.mode())
+        crop_months = crop_months.add(mode.eq(CROPS).unmask(0))
+    has_image = dw.count().gt(0)                                    # any Dynamic World image in the year
+    cropland = crop_months.gte(MIN_CROP_MONTHS).updateMask(has_image)
+    return cropland.clip(region).unmask(NODATA_U8, sameFootprint=False).rename(NAMES).toUint8()
+
+
+def ee_region(ee):
+    """The mapping area as an Earth Engine geometry (EPSG:4326, simplified to ~100 m to keep the request small)."""
+    crs = settings(REGION)["crs_epsg"]
+    geom = gpd.GeoSeries([map_area(REGION)], crs=crs).to_crs(4326).simplify(0.001).iloc[0]
+    return ee.Geometry(geom.__geo_interface__)
+
+
+def download_year(ee, ag_season, region):
+    """One GeoTIFF over the extent of all blocks (10 m, origin on the block grid)."""
+    import geemap
+    blocks = load_blocks(REGION, ag_season)
+    x0, y1 = int(blocks["bx"].min()) * BLOCK_M, (int(blocks["by"].max()) + 1) * BLOCK_M
+    width = (int(blocks["bx"].max()) - int(blocks["bx"].min()) + 1) * BLOCK_PX
+    height = (int(blocks["by"].max()) - int(blocks["by"].min()) + 1) * BLOCK_PX
+    out = dw_cropland_file(REGION, ag_season)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    crs = settings(REGION)["crs_epsg"]
+    print(f"  {ag_season}: {width:,} x {height:,} px at {GSD_M} m (EPSG:{crs}) -> {out}")
+    geemap.download_ee_image(image=make_image(ee, ag_season, region), filename=str(out), crs=f"EPSG:{crs}",
+                             crs_transform=[GSD_M, 0, float(x0), 0, -GSD_M, float(y1)], shape=(height, width),
+                             dtype="uint8", num_threads=NUM_THREADS, max_tile_size=MAX_TILE_SIZE,
+                             max_tile_dim=MAX_TILE_DIM, overwrite=True)
+    with rasterio.open(out, "r+") as dst:                           # band name, no-data, overviews for QGIS
+        dst.nodata = NODATA_U8
+        dst.set_band_description(1, NAMES[0])
+        dst.build_overviews([4, 16, 64, 256], Resampling.mode)
+    print(f"  {ag_season}: {out.stat().st_size / 1024 ** 3:.2f} GB")
 
 
 def summary(ag_season):
     blocks = load_blocks(REGION, ag_season)
-    n = [crop_pixels(REGION, ag_season, bx, by) for bx, by in zip(blocks["bx"], blocks["by"])]
+    n = block_crop_pixels(REGION, ag_season, blocks)
     blocks["crop_px"] = [np.nan if v is None else float(v) for v in n]
     done = blocks[blocks["crop_px"].notna()]
-    print(f"{REGION} {ag_season}: Dynamic World in {len(done):,} of {len(blocks):,} blocks | with cropland "
+    print(f"{REGION} {ag_season}: Dynamic World cropland for {len(done):,} of {len(blocks):,} blocks | with cropland "
           f"(>= {MIN_CROP_PIXELS} px) {int((done['crop_px'] >= MIN_CROP_PIXELS).sum()):,}")
     return blocks
 
@@ -99,15 +146,16 @@ def cropland_map(blocks, ag_season, out):
     h = (by1 - int(blocks["by"].min()) + 1) * OVERVIEW_PX
     share = np.full((h, w), np.nan, np.float32)                     # NaN = not downloaded
     noimg = np.zeros((h, w), bool)
-    for b in blocks[blocks["crop_px"].notna()].itertuples():
-        with rasterio.open(block_file(REGION, "dynamic_world", ag_season, b.bx, b.by)) as src:
-            a = src.read(1)
-        k = BLOCK_PX // OVERVIEW_PX                                 # block pixels per map cell
-        cells = lambda m: m.reshape(OVERVIEW_PX, k, OVERVIEW_PX, k).sum(axis=(1, 3))
-        n_valid, n_crop = cells(a != NODATA_U8), cells(a == 1)
-        r, c = (by1 - b.by) * OVERVIEW_PX, (b.bx - bx0) * OVERVIEW_PX
-        share[r:r + OVERVIEW_PX, c:c + OVERVIEW_PX] = np.where(n_valid > 0, n_crop / np.maximum(n_valid, 1), np.nan)
-        noimg[r:r + OVERVIEW_PX, c:c + OVERVIEW_PX] = n_valid == 0
+    k = BLOCK_PX // OVERVIEW_PX                                     # block pixels per map cell
+    cells = lambda m: m.reshape(OVERVIEW_PX, k, OVERVIEW_PX, k).sum(axis=(1, 3))
+    with rasterio.open(dw_cropland_file(REGION, ag_season)) as src:
+        for b in blocks[blocks["crop_px"].notna()].itertuples():
+            a = read_dw_window(src, b.bx * BLOCK_M, (b.by + 1) * BLOCK_M, BLOCK_PX)
+            n_valid, n_crop = cells(a != NODATA_U8), cells(a == 1)
+            r, c = (by1 - b.by) * OVERVIEW_PX, (b.bx - bx0) * OVERVIEW_PX
+            share[r:r + OVERVIEW_PX, c:c + OVERVIEW_PX] = np.where(n_valid > 0, n_crop / np.maximum(n_valid, 1),
+                                                                   np.nan)
+            noimg[r:r + OVERVIEW_PX, c:c + OVERVIEW_PX] = n_valid == 0
     fig, ax = plt.subplots(figsize=(10, 10))
     background(ax, blocks)
     extent = (bx0 * BLOCK_M, (bx0 * BLOCK_M) + w / OVERVIEW_PX * BLOCK_M, (by1 + 1) * BLOCK_M - h / OVERVIEW_PX * BLOCK_M,
@@ -123,12 +171,12 @@ def cropland_map(blocks, ag_season, out):
     cb.ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
     n_done = int(blocks["crop_px"].notna().sum())
     total = blocks["crop_px"].sum() / (n_done * BLOCK_PX ** 2) if n_done else 0
-    year = int(ag_season[:4]) + 1
     ax.legend(handles=[Patch(fc="#ece6d6", label="no cropland in the cell"),
                        Patch(fc="#9e9e9e", label="no Dynamic World image"),
                        Patch(fc="#f4f4f4", ec="0.55", label="block not downloaded yet")],
               loc="upper center", bbox_to_anchor=(0.5, -0.01), ncol=3, fontsize=9, frameon=False)
-    ax.set_title(f"{REGION.capitalize()} {ag_season}: Dynamic World cropland (most frequent class of {year} = crops)\n"
+    ax.set_title(f"{REGION.capitalize()} {ag_season}: Dynamic World cropland (crops the most frequent class in >= "
+                 f"{MIN_CROP_MONTHS} months)\n"
                  f"{n_done:,} of {len(blocks):,} blocks downloaded; cropland {total:.1%} of their area", fontsize=11)
     fig.savefig(out, dpi=130, bbox_inches="tight")
     plt.close(fig)
@@ -166,14 +214,20 @@ def cropland_blocks(blocks, ag_season, out):
 if __name__ == "__main__":
     print(f"Dynamic World cropland for {REGION}")
     if DOWNLOAD:
-        download_blocks(REGION, "dynamic_world", make_image, NAMES, SEASONS, dtype=np.uint8, nodata=NODATA_U8,
-                        workers=DOWNLOAD_WORKERS, n_test_blocks=N_TEST_BLOCKS, only_blocks=ONLY_BLOCKS)
+        ee = init_gee()
+        region = ee_region(ee)
+        for s in SEASONS:
+            if dw_cropland_file(REGION, s).exists() and not OVERWRITE:
+                print(f"  {s}: {dw_cropland_file(REGION, s).name} exists (OVERWRITE = True to download again)")
+                continue
+            download_year(ee, s, region)
     for s in SEASONS:
+        if not dw_cropland_file(REGION, s).exists():
+            print(f"  {s}: {dw_cropland_file(REGION, s).name} not there yet; no maps")
+            continue
         blocks = summary(s)
         if MAKE_PNG:
             folder = download_dir(REGION) / "dynamic_world"
-            folder.mkdir(parents=True, exist_ok=True)
             tag = s.replace("/", "-")
             cropland_map(blocks, s, folder / f"cropland_map_{tag}.png")
             cropland_blocks(blocks, s, folder / f"cropland_blocks_{tag}.png")
-    print("Next: 02b_s2.py and 02c_s1.py (blocks with cropland or training tiles)")

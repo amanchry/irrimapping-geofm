@@ -157,8 +157,8 @@ flowchart LR
    - `ag_season`: agricultural year of the survey date (1 Sep – 31 Aug, e.g. `2023/24`). This decides which imagery a parcel gets.
    - `nn_dist_m`: distance to the nearest other parcel.
 
-   No cropland mask is used: every surveyed parcel is cropland. The cropland mask serves the mapping phase only
-   ([Cropland extent and mask](cropland_mask.md)).
+   No cropland mask is used: every surveyed parcel is cropland. The annual Dynamic World cropland serves the download
+   and the mapping phase only ([Cropland extent](cropland_extent.md)).
 6. Save the parcels, a summary table and four figures.
 
 **Result**
@@ -484,8 +484,8 @@ Only parcels of the tile's own agricultural year are burnt in.
 
 `data_download/01_plan_blocks.py` then plans every block of the mapping area (4,199 per year in Morocco, no
 cropland mask) and marks the blocks that hold a planned tile (169 in 2023/24, 65 in 2024/25).
-`02a_dynamic_world.py` downloads Dynamic World for every block and flags the 128 px tiles with ≥ 1% cropland;
-`02b_s2.py` and `02c_s1.py` download the blocks with at least one such tile or with training tiles from Earth Engine with `computePixels` (in groups of months below the 48 MB
+`02a_dynamic_world.py` downloads the binary Dynamic World cropland of the whole region, one 10 m GeoTIFF per year;
+`02b_s2.py` and `02c_s1.py` download the blocks with at least 164 cropland pixels (1% of a 128 px tile) or with training tiles from Earth Engine with `computePixels` (in groups of months below the 48 MB
 request limit, blocks in parallel, finished blocks skipped on a restart).
 
 `data_training_prep/04_cut_tiles.py` (local):
@@ -729,8 +729,8 @@ conda activate condaml
 python data_training_prep/01_prepare_labels_Morocco.py   # minutes
 python data_training_prep/02_make_spatial_folds.py       # minutes
 python data_training_prep/03_plan_tiles.py               # tile plan + label rasters (seconds)
-python data_download/01_plan_blocks.py              # every block of the mapping area (no mask); training tiles counted per block
-python data_download/02a_dynamic_world.py           # binary Dynamic World cropland image for every block (Earth Engine)
+python data_download/01_plan_blocks.py              # every block of the mapping area (no mask, no labels needed)
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of the whole region (Earth Engine)
 python data_download/02b_s2.py                      # Sentinel-2 per cropland / training block (Earth Engine; resumable; cluster for a whole region)
 python data_download/02c_s1.py                      # Sentinel-1 per cropland / training block (Earth Engine)
 python data_download/03_build_vrt.py                # VRT mosaic per source and year

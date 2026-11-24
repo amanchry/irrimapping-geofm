@@ -15,7 +15,7 @@ Per tile and month (12 months, month-major: all bands of m01, then m02, ...)
   VV_ASC VH_ASC S1_N_ASC                   Sentinel-1 ascending (dB x 100, scenes)    from download/s1/
   VV_DSC VH_DSC S1_N_DSC                   Sentinel-1 descending                      from download/s1/
 = 19 bands x 12 months = 228 bands, int16, NODATA -32768: the layout of the tiles downloaded before, so all
-pixelwise_run/ scripts and experiments read them unchanged. Dynamic World (download/dynamic_world/) is written as
+pixelwise_run/ scripts and experiments read them unchanged. Dynamic World (data_download/dynamic_world/cropland_<season>.tif) is written as
 a separate file where downloaded.
 
 Tiles that already exist are kept (OVERWRITE = False): the earlier training tiles stay as they are.
@@ -42,7 +42,7 @@ import rasterio
 from rasterio.windows import Window
 
 from tile_store import N_MONTHS, NODATA, S2_BANDS, TILE_PX, load_plan, out_dir, tile_dir, tile_file, write_tif
-from download_common import block_file, block_name, block_of_tile  # noqa: E402  (data_download/, via tile_store)
+from download_common import DW_NODATA, TILE_M, block_file, block_name, block_of_tile, dw_cropland_file, read_dw_window  # noqa: E402  (data_download/, via tile_store)
 from regions import settings  # noqa: E402
 
 # ================================ SETTINGS ================================
@@ -136,12 +136,12 @@ def main():
                 with open(qa_file, "a") as fh:
                     fh.write(json.dumps({"tile_id": t.tile_id, **qa}) + "\n")
                 done += 1
-        dw_block = block_file(REGION, "dynamic_world", t.ag_season, bx, by)
+        dw_file = dw_cropland_file(REGION, t.ag_season)
         dw_tile = tile_file(REGION, t.tile_id, "dw")
-        if dw_block.exists() and (not dw_tile.exists() or OVERWRITE):
-            with rasterio.open(dw_block) as src:                    # binary cropland image of 02a (uint8)
-                names, dw_nodata = list(src.descriptions), src.nodata
-            write_tif(dw_tile, cut(dw_block, row, col), int(t.ix), int(t.iy), names, CRS_EPSG, nodata=dw_nodata)
+        if dw_file.exists() and (not dw_tile.exists() or OVERWRITE):
+            with rasterio.open(dw_file) as src:                     # region-wide binary cropland of 02a (uint8)
+                arr = read_dw_window(src, int(t.ix) * TILE_M, (int(t.iy) + 1) * TILE_M, TILE_PX)
+            write_tif(dw_tile, arr[None], int(t.ix), int(t.iy), ["CROPLAND"], CRS_EPSG, nodata=DW_NODATA)
             dw += 1
     print(f"Cut {done:,} image tiles and {dw:,} Dynamic World tiles; {missing:,} tiles wait for their block "
           f"(run data_download/02a, 02b and 02c)")

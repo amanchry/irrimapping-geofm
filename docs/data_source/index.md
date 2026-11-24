@@ -27,7 +27,7 @@ Access: open (Copernicus data policy); Earth Engine service account needed. Ever
 region and agricultural year on one grid of 10.24 km blocks (`data_download/`); the training tiles are cut from
 these blocks and the maps are predicted from them ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Compositing, cloud
 threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-script-03--build_tiles); extent of the
-download: [Cropland extent and mask §5](../phase1_data/cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
+download: [Cropland extent §2](../phase1_data/cropland_extent.md#2-blocks-and-downloads).
 
 !!! note "Retired: Sentinel-2 from STAC"
     Wall-to-wall Sentinel-2 composites were at first downloaded from the Earth Search STAC catalogue (Element 84,
@@ -37,20 +37,22 @@ download: [Cropland extent and mask §5](../phase1_data/cropland_mask.md#5-exten
 
 ## Auxiliary and reference maps
 
-The cropland products serve the download and the mapping phase only: the experiments classify the surveyed parcels
-as irrigated or rainfed and use no cropland mask ([Cropland extent and mask](../phase1_data/cropland_mask.md)).
+The cropland layer serves the download and the mapping phase only: the experiments classify the surveyed parcels
+as irrigated or rainfed and use no cropland mask. The maps use the annual Dynamic World cropland; ESA WorldCover,
+GLAD, Esri LULC and GCEP30 were the four products of the archived union cropland mask
+([Cropland extent](../phase1_data/cropland_extent.md)).
 
 | Dataset | Provider | Content | Resolution | Use here | Access | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | **FAO GAUL** (2015 level 0 Morocco; 2024 level 1 Utah) | FAO | country and state boundaries | vector | outlines on the maps | open · [FAO GAUL](https://data.apps.fao.org/catalog/dataset/global-administrative-unit-layers-gaul) | ✅ |
-| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md); reference map (`data_download/04a_ref_esa_worldcover.py`) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
+| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | reference map (`data_download/04a_ref_esa_worldcover.py`, [Cropland extent §5](../phase1_data/cropland_extent.md#5-reference-layers)); earlier one of the 4 products of the [archived union cropland mask](../archive/cropland_union_mask.md) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
 | **LGRIP30** | Teluguntla et al. (2023), USGS / NASA LP DAAC | irrigated and rainfed cropland | 30 m, nominal 2015 | reference map (`data_download/04b_ref_lgrip30.py`); comparison of the final maps | open · [LP DAAC](https://doi.org/10.5067/COMMUNITY/LGRIP/LGRIP30.001) | 🟦 |
 | **GMIE** | Wu et al. (2023) | global maximum irrigation extent | 30 m | comparison of the final maps | open, citation required · [paper](https://doi.org/10.1016/j.gloenvcha.2023.102652) | 📝 |
 | **WorldCereal** cropland / irrigation | Van Tricht et al. (2023) | cropland and irrigation products | 10 m | comparison; cropland mask for mapping | open · [ESSD paper](https://doi.org/10.5194/essd-15-5491-2023) | 📝 |
-| **GLAD global cropland** | Potapov et al. (2022) | cropland extent and change (2003–2019) | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [paper](https://doi.org/10.1038/s43016-021-00429-z) · [GLAD](https://glad.umd.edu/dataset/croplands) | ✅ |
-| **Esri / Impact Observatory LULC** | Karra et al. (2021) | annual land use / land cover (crops = class 5), 2017–2025 | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [GEE community catalogue](https://gee-community-catalog.org/projects/S2TSLULC/) | ✅ |
-| **GCEP30** (GFSAD) | Thenkabail et al. (2021), USGS | global cropland extent, nominal 2015 | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [USGS PP 1868](https://doi.org/10.3133/pp1868) · [GEE community catalogue](https://gee-community-catalog.org/projects/gcep30/) | ✅ |
-| **Dynamic World V1** | Brown et al. (2022) | 9 land-cover classes with per-class probabilities, per Sentinel-2 image | 10 m | cropland layer that selects the downloads and the map pixels: for every 10.24 km block of the mapping area, a binary cropland image (most frequent class of the year = crops) (`data_download/02a_dynamic_world.py`); annual layer per calendar year (most frequent class, mean crop probability, image count; `04c_ref_dynamic_world_annual.py`); candidate cropland mask for the maps, compared with the union of 4 products | open · [GEE catalogue](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) | ✅ |
+| **GLAD global cropland** | Potapov et al. (2022) | cropland extent and change (2003–2019) | 30 m | used only by the [archived union cropland mask](../archive/cropland_union_mask.md); not used now | open · [paper](https://doi.org/10.1038/s43016-021-00429-z) · [GLAD](https://glad.umd.edu/dataset/croplands) | – |
+| **Esri / Impact Observatory LULC** | Karra et al. (2021) | annual land use / land cover (crops = class 5), 2017–2025 | 10 m | used only by the [archived union cropland mask](../archive/cropland_union_mask.md); not used now | open · [GEE community catalogue](https://gee-community-catalog.org/projects/S2TSLULC/) | – |
+| **GCEP30** (GFSAD) | Thenkabail et al. (2021), USGS | global cropland extent, nominal 2015 | 30 m | used only by the [archived union cropland mask](../archive/cropland_union_mask.md); not used now | open · [USGS PP 1868](https://doi.org/10.3133/pp1868) · [GEE community catalogue](https://gee-community-catalog.org/projects/gcep30/) | – |
+| **Dynamic World V1** | Brown et al. (2022) | 9 land-cover classes with per-class probabilities, per Sentinel-2 image | 10 m | cropland layer that selects the downloads and the map pixels: for every 10.24 km block of the mapping area, a binary cropland image of the whole region per agricultural year (crops the most frequent class in at least 2 of its 12 months) (`data_download/02a_dynamic_world.py`); annual layer per calendar year (most frequent class, mean crop probability, image count; `04c_ref_dynamic_world_annual.py`); the only cropland layer of the maps (the union of 4 products is archived) | open · [GEE catalogue](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) | ✅ |
 | **FAO WaPOR** | FAO | evapotranspiration, water productivity | 20–250 m | interpretation of irrigation patterns; optional extra variables | open (registration) · [WaPOR](https://www.fao.org/in-action/remote-sensing-for-water-productivity/en) | 📝 |
 | **FAO AQUASTAT** | FAO | national irrigated-area statistics | country | check of the annual map series (RQ3) | open · [AQUASTAT](https://www.fao.org/aquastat/en/) | 📝 |
 | **FAO AQUASTAT irrigated crop calendars** | FAO (2023) | months of growth per irrigated crop and country (about 60 crops, 165 countries; one Excel file) | country (USA in four regions) | check of the agricultural year ([Morocco](../phase1_data/morocco.md), [Utah](../phase1_data/utah.md)) | open · [AQUASTAT crop calendars](https://www.fao.org/aquastat/en/databases/crop-calendar) | ✅ |

@@ -17,7 +17,7 @@ experiments run in Morocco first; Utah follows later with the same plan.
     `04c_pixel_samples/` and are no longer used. The 2020/21 data are prepared for the temporal test (RQ3). The
     wall-to-wall imagery is downloaded per 10.24 km block by `data_download/` (Earth Engine), which replaces the
     retired STAC download ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them));
-    see [Cropland extent and mask §5](cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
+    see [Cropland extent §2](cropland_extent.md#2-blocks-and-downloads).
 
 **Contents**
 
@@ -418,8 +418,8 @@ python data_training_prep/01_prepare_labels_Utah.py      # ~1 min; YEARS = [2024
 # in every further script set REGION = "utah" at the top, then:
 python data_training_prep/02_make_spatial_folds.py       # seconds
 python data_training_prep/03_plan_tiles.py               # tile plan + label rasters
-python data_download/01_plan_blocks.py              # every block of the mapping area (no mask); training tiles counted per block
-python data_download/02a_dynamic_world.py           # binary Dynamic World cropland image for every block
+python data_download/01_plan_blocks.py              # every block of the mapping area (no mask, no labels needed)
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of the whole region
 python data_download/02b_s2.py                      # cropland / training blocks; SEASONS per region in the script; first N_TEST_BLOCKS = 1; resumable
 python data_download/02c_s1.py
 python data_download/03_build_vrt.py
@@ -468,5 +468,5 @@ boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`
   classes are affected alike.
 - **Sentinel-1:** 2021 has both Sentinel-1 satellites, 2024 only Sentinel-1A, so about twice as many Sentinel-1
   scenes per month in the test year.
-- **No cropland mask in the labels:** every WRLU field is cropland, so no mask check is made; the cropland mask
-  serves the mapping phase only ([Cropland extent and mask](cropland_mask.md)).
+- **No cropland mask in the labels:** every WRLU field is cropland, so no mask check is made; the annual Dynamic World
+  cropland serves the download and the mapping phase only ([Cropland extent](cropland_extent.md)).

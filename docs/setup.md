@@ -25,8 +25,7 @@ A GPU (CUDA or Apple Silicon) is recommended for the tile models (experiments E0
 ### 2. Earth Engine
 
 Every download of `data_download/` uses Earth Engine with a service account: the block downloads
-(`02a_dynamic_world.py`, `02b_s2.py`, `02c_s1.py`), the union cropland mask (`00_union_cropland_mask.py`, kept for
-later) and the annual Dynamic World reference layer (`04c_ref_dynamic_world_annual.py`). Put the service-account key in `secrets/` (path
+(`02a_dynamic_world.py`, `02b_s2.py`, `02c_s1.py`) and the annual Dynamic World reference layer (`04c_ref_dynamic_world_annual.py`). Put the service-account key in `secrets/` (path
 set in `data_download/download_common.py` and at the top of the scripts that log in themselves). ESA WorldCover
 (`04a_ref_esa_worldcover.py`) is read from the Planetary Computer STAC catalogue and LGRIP30
 (`04b_ref_lgrip30.py`) from NASA Earthdata, which needs a token in `secrets/earthdata_token.txt` or in the
@@ -61,11 +60,12 @@ see *Environment* above); TerraTorch (Prithvi, TerraMind) and mmengine (AgriFM) 
 Run every script from the project folder. Each script has its **settings at the top**. A description at the top of each script explains what it does and what it writes.
 
 The scripts are grouped in folders and numbered in run order within each folder. `data_training_prep/` builds the
-labels, the spatial folds and the training tiles; `data_download/` downloads all imagery and the cropland mask on
+labels, the spatial folds and the training tiles; `data_download/` downloads all imagery and the annual Dynamic World cropland on
 the 10.24 km block grid ([D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)); `pixelwise_run/` makes the pixel samples and compares the
 experiments (current pipeline); `parcelwise_run/` is the archived parcel-wise pipeline, which uses the labels, folds
-and tiles of `data_training_prep/`. The block plan reads the tile plan (blocks with training tiles are always downloaded)
-and the training tiles are cut from the downloaded blocks, so the two folders run interleaved:
+and tiles of `data_training_prep/`. The block grid (01) and the Dynamic World cropland (02a) need no labels; the Sentinel downloads (02b, 02c) read
+the tile plan, so blocks with training tiles are always downloaded, and the training tiles are cut from the
+downloaded blocks, so the two folders run interleaved:
 
 ```bash
 # 1. Labels, folds and tile plan (data_training_prep/; no download)
@@ -74,8 +74,8 @@ python data_training_prep/02_make_spatial_folds.py          # spatial folds
 python data_training_prep/03_plan_tiles.py                  # tile plan, label rasters, tile index
 
 # 2. Downloads on the 10.24 km block grid (data_download/; Earth Engine)
-python data_download/01_plan_blocks.py                 # every block of the mapping area (no mask); training tiles counted per block
-python data_download/02a_dynamic_world.py              # binary Dynamic World cropland image for every block
+python data_download/01_plan_blocks.py                 # every block of the mapping area (no mask, no labels needed)
+python data_download/02a_dynamic_world.py              # binary Dynamic World cropland of the whole region
 python data_download/02b_s2.py                         # Sentinel-2 monthly composites (Cloud Score+), cropland/training blocks only
 python data_download/02c_s1.py                         # Sentinel-1 monthly composites, ascending / descending, same blocks
 python data_download/03_build_vrt.py                   # one VRT mosaic per source and year
@@ -92,8 +92,7 @@ python pixelwise_run/05_compare_experiments.py         # comparison table and pa
 # Reference maps (data_download/; documentation and map comparison only)
 python data_download/04a_ref_esa_worldcover.py         # ESA WorldCover 2021
 python data_download/04b_ref_lgrip30.py                # LGRIP30 (Earthdata token)
-python data_download/04c_ref_dynamic_world_annual.py   # annual Dynamic World layer (candidate mask)
-python data_download/00_union_cropland_mask.py         # union of 4 cropland products (kept for later; not used by the download)
+python data_download/04c_ref_dynamic_world_annual.py   # annual Dynamic World land cover (reference)
 ```
 
 On the cluster each run is a Slurm job (`jobs/step_cpu.sbatch` / `jobs/step_gpu.sbatch` with `SCRIPT=<script>`;
@@ -102,7 +101,9 @@ commands on each experiment page). `N_TEST_BLOCKS` in the download scripts and `
 experiment on a small subset first.
 The archived parcel-wise pipeline (`parcelwise_run/`, steps 01–09; experiments in
 `experiments/parcel_wise_classification/`) is described in `parcelwise_run/README.md` and the
-[Archive](archive/index.md).
+[Archive](archive/index.md). The union cropland mask of four products is archived as well
+(`data_download/archive/00_union_cropland_mask.py`, [Union cropland mask](archive/cropland_union_mask.md)); the maps
+use the annual Dynamic World cropland of `02a_dynamic_world.py`.
 
 ## Project structure
 
@@ -120,9 +121,9 @@ irrigated_area_mapping_code/
 │   ├── data_source/ · references/   data catalogue · literature summaries
 │   ├── weekly/                  one page per review meeting
 │   ├── results.md · progress.md results overview · change log
-│   ├── archive/                 archived parcel-wise classification
+│   ├── archive/                 archived parcel-wise classification and union cropland mask
 │   └── assets/                  style sheet and scripts of the website
-├── data_download/           all downloads on the 10.24 km block grid (00–04c), regions.py, download_common.py
+├── data_download/           all downloads on the 10.24 km block grid (01–04c), regions.py, download_common.py; archive/
 ├── data_training_prep/           labels, spatial folds, tile plan, training tiles cut from the blocks (01–05)
 ├── pixelwise_run/           pixel samples (04), comparison (05) + shared code (six encoders, models, metrics)
 ├── experiments/             E01–E05: one folder per experiment with run.py + results/; comparison/
@@ -137,7 +138,7 @@ irrigated_area_mapping_code/
 └── outputs/<region>/        outputs per region, morocco or utah (not in git)
     ├── data_training_prep/      01_labels · 02_folds · 03_tiles_128px/agyear · 04_pixel_samples/<season>
     ├── data_download/           grid/blocks (one grid per region) · <source>/<season>/<bx>_<by>.tif (one folder
-    │                            per source) · reference/ (cropland mask, reference layers)
+    │                            per source) · reference/ (reference layers)
     ├── study/                   01_inspection · 02_embeddings (archived parcel-wise runs)
     └── analysis/                figures and pages from tools/ (Morocco)
 ```

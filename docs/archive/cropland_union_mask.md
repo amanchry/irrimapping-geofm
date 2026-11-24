@@ -1,4 +1,11 @@
-# Cropland extent and mask
+# Union cropland mask (archived)
+
+!!! warning "Archived"
+    This union of four cropland products is **not used**. The project uses the annual Dynamic World cropland of
+    `data_download/02a_dynamic_world.py` only ([Cropland extent](../phase1_data/cropland_extent.md)). The script is
+    kept in `data_download/archive/00_union_cropland_mask.py`, and the page is kept as the record of the products,
+    the method and the 2023/24 results.
+
 
 The annual irrigated / rainfed maps are **continuous (wall-to-wall)**: every 10 m pixel of a region's cropland gets a
 class, not only the surveyed parcels. This page describes the area those maps cover, the cropland mask, and the
@@ -8,7 +15,7 @@ the reference layers are written to `outputs/<region>/data_download/reference/`.
 !!! note "Mapping phase only"
     The cropland mask belongs to the **mapping phase** ([Phase 5](../phase5_maps/index.md)). The labels, the pixel
     samples and the experiments E01–E05 do not use it: they classify the labelled pixels of the surveyed parcels,
-    which are all cropland, as irrigated or rainfed ([pixel samples](pixel_samples.md)). The download of the
+    which are all cropland, as irrigated or rainfed ([pixel samples](../phase1_data/pixel_samples.md)). The download of the
     wall-to-wall imagery is restricted to the blocks with Dynamic World cropland (`02a_dynamic_world.py`), not to the
     union mask described here
     (§5; [D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Which mask the maps
@@ -113,9 +120,9 @@ GCEP30 is the most generous product and adds most of the area seen by one produc
 the cropland belts (right-hand panels below). Most of the union's false cropland is expected there; the choice of
 mask in the mapping phase and the map accuracy assessment address it.
 
-![Cropland mask, Morocco 2023/24](figures/cropland_mask_morocco_2023-24.png)
+![Cropland mask, Morocco 2023/24](../phase1_data/figures/cropland_mask_morocco_2023-24.png)
 
-![Cropland mask, Utah 2023/24](figures/cropland_mask_utah_2023-24.png)
+![Cropland mask, Utah 2023/24](../phase1_data/figures/cropland_mask_utah_2023-24.png)
 
 *Left: share of cropland per 1.28 km tile. Right: share of the mask's pixels that only one product calls cropland.*
 
@@ -135,9 +142,14 @@ even where Dynamic World finds no cropland, so every training tile can be cut ou
 area; 169 of them hold training tiles in 2023/24 and 65 in 2024/25.
 
 The cropland layer that selects the further downloads is **Dynamic World**. `02a_dynamic_world.py` downloads it for
-every planned block as one binary image, `CROPLAND` (1 where the most frequent Dynamic World class over the
-calendar year in which the agricultural year ends, 2023/24 → 2024, is "crops", 0 elsewhere, 255 without an image;
-uint8). For each year it also draws two maps in `outputs/<region>/data_download/dynamic_world/`: the cropland share
+the whole mapping area as one binary 10 m GeoTIFF per agricultural year, downloaded with
+`geemap.download_ee_image` like the reference maps and covering exactly the blocks, so every block and training
+tile is a window of it. `CROPLAND` is 1 where "crops" is the most frequent Dynamic World class in at least two of the
+12 months of the agricultural year (Morocco September – August, Utah October – September), 0 elsewhere and 255
+without an image (uint8). Dynamic World classifies every Sentinel-2 image and has no annual product; a rainfed
+cereal field is green for a few months and bare or dry grass for the rest of the year, so the most frequent class of
+the whole year often misses it. On three Morocco blocks with rainfed parcels the two-month rule flagged 100% of the
+rainfed parcel pixels (the class of the whole calendar year: 98–100%) and found no cropland in two desert blocks. For each year it also draws two maps in `outputs/<region>/data_download/dynamic_world/`: the cropland share
 of every 320 m cell of the downloaded blocks (`cropland_map_<season>.png`) and the block extents with the blocks
 that hold cropland highlighted (`cropland_blocks_<season>.png`). The full Dynamic World land cover with all nine
 classes is drawn by `04c_ref_dynamic_world_annual.py`. `02b_s2.py` (Sentinel-2 monthly composites, Cloud Score+) and
@@ -153,7 +165,7 @@ Measured on one Morocco block (2023/24):
 | --- | --- | --- |
 | Sentinel-2 | 159 MB | 164 s |
 | Sentinel-1 | 82 MB | 92 s |
-| Dynamic World (binary cropland) | 3–25 KB (3 test blocks) | about 6 s |
+| Dynamic World (binary cropland) | one region-wide file per year | 2 test blocks: 64 s |
 
 The training tiles are cut from the planned blocks (`data_training_prep/04_cut_tiles.py`). For the maps, each block is
 classified on its own, on its cropland pixels only (tile models read 128 px windows from the block, pixel models read
@@ -171,7 +183,7 @@ and `.geojson`, with a map of the block extents (`blocks.png`).
 
 The figure below shows the tile extent of the retired STAC download (2023/24).
 
-![Wall-to-wall tile extent, 2023/24](figures/cropland_tiles_extent_2023-24.png)
+![Wall-to-wall tile extent, 2023/24](../phase1_data/figures/cropland_tiles_extent_2023-24.png)
 
 ## 6. Check against the labelled parcels
 
@@ -199,8 +211,8 @@ for display (mode resampling) from the original 10 m and 30 m GeoTIFFs.
 
 | | Morocco | Utah |
 | --- | --- | --- |
-| ESA WorldCover 2021 | ![WorldCover Morocco](figures/worldcover_2021_morocco.jpg) | ![WorldCover Utah](figures/worldcover_2021_utah.jpg) |
-| LGRIP30 (nominal 2015) | ![LGRIP30 Morocco](figures/lgrip30_2015_morocco.png) | ![LGRIP30 Utah](figures/lgrip30_2015_utah.png) |
+| ESA WorldCover 2021 | ![WorldCover Morocco](../phase1_data/figures/worldcover_2021_morocco.jpg) | ![WorldCover Utah](../phase1_data/figures/worldcover_2021_utah.jpg) |
+| LGRIP30 (nominal 2015) | ![LGRIP30 Morocco](../phase1_data/figures/lgrip30_2015_morocco.png) | ![LGRIP30 Utah](../phase1_data/figures/lgrip30_2015_utah.png) |
 
 LGRIP30 calls 11.7% of Morocco irrigated and 8.7% rainfed, including large parts of the rainfed Gharb and Chaouia
 plains; it is a reference layer, not ground truth.

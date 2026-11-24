@@ -2,6 +2,9 @@
 00_union_cropland_mask.py  —  one cropland mask per region and agricultural year, from several cropland products
 =================================================================================================================
 
+ARCHIVED (not used): the project uses the annual Dynamic World cropland of data_download/02a_dynamic_world.py only.
+Kept for reference; it still runs from this folder (python data_download/archive/00_union_cropland_mask.py).
+
 What it does
 ------------
 Builds the area that the continuous (wall-to-wall) irrigated / rainfed maps cover: every 10 m pixel that at
@@ -100,13 +103,15 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from shapely.geometry import box
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))       # data_download/ (regions.py)
 from regions import admin_boundaries, cropland_dir, map_area, settings  # noqa: E402
 
 # ================================ SETTINGS ================================
 REGION = "morocco"                      # "morocco" | "utah" (regions.py)
 SEASONS = {"morocco": ["2023/24", "2024/25"],
            "utah": ["2020/21", "2023/24"]}[REGION]   # agricultural years; one mask per year
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]                          # project folder
 KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"     # Earth Engine key (never commit)
 
 PRODUCTS = ["worldcover", "esri_lulc", "gcep30", "glad"]   # products used (all options in the table above;

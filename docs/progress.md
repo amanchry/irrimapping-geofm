@@ -11,7 +11,7 @@ change log).
 
 | Step | Where | Status |
 | --- | --- | --- |
-| Cropland mask (mapping phase only) | `cropland_extent/` | Union of 4 products: 2023/24 for both regions; Dynamic World download script added (`download_dynamic_world.py`); not used by the experiments ([D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
+| Cropland extent (mapping phase only) | `data_download/02a_dynamic_world.py` | Annual Dynamic World cropland (one binary 10 m GeoTIFF of the region per agricultural year), the only cropland layer; the union of 4 products is archived (24 Nov 2026); not used by the experiments ([Cropland extent](phase1_data/cropland_extent.md), [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
 | Pixel samples (2 classes) | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 and 2024/25 done (473,675 pixels of 8,775 parcels, `04_pixel_samples/`); Utah to be rebuilt on the cluster ([page](phase1_data/pixel_samples.md)) |
 | Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Morocco done: RF 0.894, TempCNN 0.912, U-TAE 0.900, frozen GeoFMs 0.903–0.927 (TerraMind best; image encoders significantly above U-TAE, none above RF) ([comparison](experiments/comparison.md)) |
 | E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Morocco done (16 runs): frozen, LoRA, fine-tuned tie at 0.90–0.92 at every share; from scratch 0.80–0.83 ([E05](experiments/E05_prithvi_strategies.md)) |
@@ -80,8 +80,7 @@ Next steps
 - [ ] Utah: download WRLU 2024 tiles (`SEASONS = ["2023/24"]`), views, embeddings, RQ1 comparison; then 2021 and the temporal test (training script: train on one year, test on another).
 - [ ] Agree the new wording of RQ3 / RQ4 (D13) with the supervisors.
 - [ ] Prediction / wall-to-wall mapping step: STAC composites per block (`s2_download/`; cluster proxy access to the STAC hosts; reflectance offset from processing baseline 04.00), map of the best model, map accuracy sample (Olofsson et al. 2014).
-- [ ] Not-cropland samples are mostly easy (bare land, rangeland, riverside vegetation): false cropland inside the union mask has no label yet; consider a small labelled sample of union-only pixels.
-- [ ] Re-run `01_prepare_labels_*` with the mask check once all masks exist (cluster).
+- [ ] Check the Dynamic World cropland against all surveyed parcels (omission) and the reference maps (commission) before the maps ([Cropland extent §4](phase1_data/cropland_extent.md#4-check-against-the-labelled-parcels)); the union-mask open points are dropped with the archived mask.
 - [ ] Optional: ET (WaPOR), LST, precipitation (CHIRPS) as extra baseline variables, as ablations only.
 - [ ] **Phase 2 (after Morocco is complete): US transfer study** - see the change-log entry of 2026-11-04 (future phase). First step: one-day data check of the original state label sources.
 
@@ -93,12 +92,12 @@ Next steps
 
 - Decision [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them):
   every source is downloaded once per region and agricultural year from Earth Engine on one grid of 10.24 km blocks
-  over the whole mapping area; Dynamic World first, as a binary cropland image per block; Sentinel-2
+  over the whole mapping area; Dynamic World first, as one binary cropland image of the region per year; Sentinel-2
   and Sentinel-1 only for blocks with cropland or training tiles; the training tiles are cut out of the blocks; the
   maps classify block by block and merge the block maps. Supersedes D18 (STAC).
-- New folder `data_download/`: `01_plan_blocks.py` (every block of the mapping area, training tiles counted per block, map
-  of the blocks), `02a_dynamic_world.py` (binary cropland image per block: 1 where "crops" is the most
-  frequent Dynamic World class of the year), `02b_s2.py`, `02c_s1.py` (blocks with cropland or training
+- New folder `data_download/`: `01_plan_blocks.py` (every block of the mapping area, no labels needed, map
+  of the blocks), `02a_dynamic_world.py` (binary cropland of the whole region per agricultural year with
+  geemap: 1 where "crops" is the most frequent Dynamic World class in at least 2 of the 12 months), `02b_s2.py`, `02c_s1.py` (blocks with cropland or training
   tiles), `03_build_vrt.py`, reference maps `04a`–`04c` and `00_union_cropland_mask.py` (union of four products, kept
   for later, not used), all from `cropland_extent/`; shared `regions.py` (the only copy) and `download_common.py`.
   Morocco: 4,199 blocks over 414,906 km², Utah 2,213 over 219,809 km² (one grid per region, the same every year).
@@ -106,7 +105,7 @@ Next steps
   tiles cut from the blocks (`04_cut_tiles.py`), quick-looks (05). The duplicated scripts 01–03b and `regions.py` of
   `pixelwise_run/` and `parcelwise_run/` were removed.
 - Checked: one Morocco block of every source downloaded (Sentinel-2 159 MB in 164 s, Sentinel-1 82 MB in 92 s,
-  binary Dynamic World cropland 3–25 KB in about 6 s); the training tiles cut from it are identical to the existing
+  binary Dynamic World cropland of two blocks in 64 s); the training tiles cut from it are identical to the existing
   ones; of three Dynamic World test blocks, the coastal one without cropland is skipped for Sentinel-2 and
   Sentinel-1; the planning step
   reproduces `parcels.csv` and the label rasters exactly; all scripts import.
@@ -117,6 +116,10 @@ Next steps
   `outputs/<region>/data_training_prep/` (labels, folds, training tiles, pixel samples; formerly
   `outputs/<region>/dataset/`). The previous dataset of both regions was moved to `tmp_trash/old_outputs/` to be
   rebuilt with the new pipeline.
+- **Union cropland mask archived:** the page moved to [Union cropland mask](archive/cropland_union_mask.md) and the
+  script to `data_download/archive/00_union_cropland_mask.py`; the annual Dynamic World cropland of `02a` is the only
+  cropland layer of the downloads and the maps (new page [Cropland extent](phase1_data/cropland_extent.md); D17 marked
+  as superseded).
 
 ### 2026-11-24 (Foundation models section; explainer figures)
 
@@ -299,7 +302,7 @@ Next steps
   `outputs/<region>/cropland_extent/` (`cropland_mask/<season>/`, `esa_worldcover/`, `lgrip30/`) and use the
   region's mapping area of `regions.py` (`map_file`, `map_where`; new helpers `map_area()`, `cropland_dir()`,
   `mask_dir()`).
-- **Cropland mask** ([page](phase1_data/cropland_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)):
+- **Cropland mask** ([page](archive/cropland_union_mask.md), [D17](decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)):
   union of 4 products in Earth Engine, downloaded in 1024 px blocks on the tile grid (0.5 s per block), one VRT per
   year, vote count and per-product bit flags kept, tile table with the cropland pixels per 128 px tile. GCEP30
   continental tiles combined with max() (the overlapping tiles disagree in Morocco). Dynamic World dropped (25 s per
@@ -316,7 +319,7 @@ Next steps
   parcel tile store and the mask ([page](phase1_data/pixel_samples.md)); Morocco 2023/24: 402,756 pixels.
 - **WorldCover and LGRIP30 PNG maps** with legend and AOI boundary (`MAKE_PNG`, `PNG_ONLY`); WorldCover with its
   official palette.
-- **Docs:** new pages [Cropland extent and mask](phase1_data/cropland_mask.md), [Pixel samples](phase1_data/pixel_samples.md)
+- **Docs:** new pages [Cropland extent and mask](archive/cropland_union_mask.md), [Pixel samples](phase1_data/pixel_samples.md)
   and [Pixel-wise experiment plan](experiments/plan.md); decisions D16 and D17; Phase 1 overview, data sources
   (Esri LULC, GCEP30, GLAD now used), experiments overview; the parcel-wise plan marked as archived;
   `tools/a6_copy_doc_figures.py` copies the new figures and the archived E01 figures from their new paths.

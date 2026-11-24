@@ -82,9 +82,10 @@ paired tests per share ([E05](E05_prithvi_strategies.md)).
 ## 3. After the experiments
 
 1. **Temporal test (RQ3), Utah:** the best models trained on 2023/24 and applied to 2020/21 on the test folds.
-2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites; the cropland extent is decided here
-   (candidate masks such as the union of products or Dynamic World, compared on the omission of surveyed irrigated
-   and rainfed parcels and on commission; [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase));
+2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites; the cropland extent is the annual
+   Dynamic World cropland ([Cropland extent](../phase1_data/cropland_extent.md#1-annual-dynamic-world-cropland); the union
+   of products is archived), checked on the omission of surveyed irrigated and rainfed parcels and on commission
+   ([D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase));
    irrigated and rainfed area per region and year. The maps are predicted from the 10.24 km blocks of
    [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download) (Earth Engine, the same
    compositing as the training tiles, which are cut from the same blocks): each block is classified on its own, on

@@ -24,7 +24,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D16](#d16-pixel-wise-classification-for-continuous-maps) | Unit of classification | one prediction per parcel (parcel embeddings / features) | one prediction per 10 m pixel; parcel-wise experiments E01–E05 archived | 18 Nov 2026 |
 | [D18](#d18-wall-to-wall-composites-from-stac-for-the-maps) | Imagery for the maps | annual stacks via STAC / xarray | monthly Sentinel-2 composites of every cropland tile from a STAC catalogue (Earth Search), per 10.24 km block | 19 Nov 2026 |
 | [D19](#d19-two-class-experiments-cropland-extent-in-the-mapping-phase) | Classes of the experiments | irrigated / rainfed | two classes (irrigated, rainfed) on the surveyed parcel pixels; no cropland mask and no not-cropland class in the experiments; Morocco first, then Utah | 20 Nov 2026 |
-| [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified | mapping phase only (D19): union of 4 cropland products per agricultural year, to be compared with single products such as Dynamic World; the not-cropland class is no longer used in the experiments | 19 Nov 2026 |
+| [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified union of 4 cropland products per agricultural year and a not-cropland class. Superseded: the not-cropland class left the experiments (D19), the union mask is archived; the maps use the annual Dynamic World cropland (D20) | 19 Nov 2026 |
 
 ---
 
@@ -247,9 +247,13 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Where:** [Pixel samples](phase1_data/pixel_samples.md), [pixel-wise experiment plan](experiments/plan.md).
 
 ## D17. Cropland mask from four products and a "not cropland" class
-!!! note "Experiments changed by D19 (20 Nov 2026)"
-    The experiments no longer use the mask or the not-cropland class (two classes on the surveyed parcels). The
-    mask below stays the candidate for the mapping phase, where it will be compared with single products.
+!!! warning "Superseded (24 Nov 2026)"
+    The union mask is archived and not used; the cropland of the maps is the annual Dynamic World cropland of
+    `data_download/02a_dynamic_world.py`
+    ([Cropland extent](phase1_data/cropland_extent.md#1-annual-dynamic-world-cropland),
+    [D20](#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). The experiments had
+    already dropped the mask and the not-cropland class on 20 Nov 2026
+    ([D19](#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)).
 
 - **Before:** not specified; WorldCover 2021 was used only to check the survey parcels.
 - **Now:** the mapped area of each agricultural year is the **union** of 4 cropland products (ESA WorldCover 2021,
@@ -263,7 +267,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
   A mask that uses no field labels has the same quality in labelled and unlabelled areas.
 - **Reporting:** accuracy of the classifier on labelled pixels; omission of the mask on the surveyed parcels
   (`mask_check.csv`); accuracy of the final map from an independent sample over the map, including non-cropland.
-- **Where:** [Cropland extent and mask](phase1_data/cropland_mask.md), `cropland_extent/make_cropland_mask.py`.
+- **Where:** [Union cropland mask (archived)](archive/cropland_union_mask.md), `data_download/archive/00_union_cropland_mask.py`
+  (earlier `cropland_extent/make_cropland_mask.py`).
 
 ## D18. Wall-to-wall composites from STAC for the maps
 !!! warning "Superseded by [D20](#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them) (24 Nov 2026)"
@@ -289,15 +294,15 @@ stating the original plan, the current approach and the rationale. Smaller metho
   model's score depended on how often it confused surveyed fields with that weak class.
 - **Now:** the experiments compare models only on what has ground truth: the pixels of the surveyed parcels, all of
   them cropland, in **two classes, irrigated and rainfed** (headline: macro-F1 of the two). No cropland mask is used
-  in labels, samples or experiments. Where cropland is, and how non-cropland is handled on the maps, is decided in
-  the mapping phase: candidate masks (the union of products of `make_cropland_mask.py`, Dynamic World alone
-  (`download_dynamic_world.py`), others) are compared on the omission of surveyed irrigated and rainfed parcels and on
-  commission, and the maps are assessed with an independent sample.
+  in labels, samples or experiments. Where cropland is, and how non-cropland is handled on the maps, belongs to
+  the mapping phase: the maps classify the pixels of the annual Dynamic World cropland
+  (`data_download/02a_dynamic_world.py`; the union of products of D17 is archived), whose omission of surveyed
+  irrigated and rainfed parcels and commission are checked, and the maps are assessed with an independent sample.
 - **Consequences:** all pixel-wise experiments (E01–E05) are run again in two classes, **Morocco first**, then Utah;
   the earlier 3-class results were removed. Pixel samples: `pixelwise_run/04_make_pixel_samples.py`
   (`04_pixel_samples/`).
 - **Where:** [Experiment plan](experiments/plan.md), [Pixel samples](phase1_data/pixel_samples.md),
-  [Cropland extent and mask](phase1_data/cropland_mask.md).
+  [Cropland extent](phase1_data/cropland_extent.md).
 
 ## D20. Download once on 10.24 km blocks from Earth Engine; training tiles cut from them
 - **Before:** two separate imagery routes: Earth Engine tiles of 128 px around the labelled parcels for training
@@ -306,18 +311,18 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Now:** every source is downloaded **once** per region and agricultural year from Google Earth Engine (service
   account), block by block on one grid of **10.24 km blocks** (1024 × 1024 px, the 128 px tile grid grouped 8 × 8),
   one script and one folder per source (`data_download/`). The blocks cover the whole mapping area, without a mask.
-  Dynamic World is downloaded first for every block as one binary image (1 where "crops" is the most frequent class
-  of the year); Sentinel-2, Sentinel-1 (later ERA5) are downloaded only for blocks with cropland (≥ 164 cropland
+  Dynamic World is downloaded first as one binary cropland image of the whole region per agricultural year (1 where
+  "crops" is the most frequent class in at least 2 of its 12 months; blocks and tiles are windows of it); Sentinel-2, Sentinel-1 (later ERA5) are downloaded only for blocks with cropland (≥ 164 cropland
   pixels, 1% of a 128 px tile) or with training tiles, and the maps classify each block on its own (cropland pixels
-  only) before the block maps are merged. The union of four cropland products (D17) is kept for later and not
-  used. The 128 px training tiles are **cut out of the blocks** (`data_training_prep/04_cut_tiles.py`); the maps
+  only) before the block maps are merged. The union of four cropland products (D17) is archived and not
+  used; the annual Dynamic World cropland is the only cropland layer. The 128 px training tiles are **cut out of the blocks** (`data_training_prep/04_cut_tiles.py`); the maps
   read 128 px windows (tile models) or pixel series (pixel models) from the blocks in memory, so only the training
   area is stored twice (about 1% of the blocks).
 - **Why:** one dataset for training, testing and mapping (no domain shift between training and map composites);
   every planned source is in Earth Engine under one account; the compositing is that of the existing training tiles.
 - **Checked:** tiles cut from a downloaded Morocco block are identical (values, band names, position) to the existing
   training tiles, so the experiments stay valid and the training tiles need no new download. One block costs about
-  159 MB and 164 s (Sentinel-2), 82 MB and 92 s (Sentinel-1), about 6 s and 3–25 KB (Dynamic World); Morocco has 4,199 blocks
+  159 MB and 164 s (Sentinel-2), 82 MB and 92 s (Sentinel-1), 64 s for two blocks (Dynamic World, region-wide file); Morocco has 4,199 blocks
   over its mapping area, of which Sentinel-2 and Sentinel-1 are fetched for those with cropland.
 - **Where:** [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download),
   [`data_training_prep/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_training_prep). The STAC route

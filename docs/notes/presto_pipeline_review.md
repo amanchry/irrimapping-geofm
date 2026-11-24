@@ -137,9 +137,9 @@ with the upstream code and with `PrestoEncoder`.
 3. **Resume and skip-if-exists per tile** (`main.py:361-387`, `main.py:582-585`), already partly present in
    `s2_download/`; a check that the same logic exists for the inference step of Phase 5.
 4. **Esri LULC as one more mask candidate**, aligned to the image grid with nearest-neighbour resampling
-   (`main.py:184-271`, `utils/utils.py`). Esri LULC is already one of the four products of the union mask
-   ([D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)); a single-product Esri
-   mask can be added to the comparison of candidate masks at no extra cost.
+   (`main.py:184-271`, `utils/utils.py`). Esri LULC was one of the four products of the union mask
+   ([D17](../decisions.md#d17-cropland-mask-from-four-products-and-a-not-cropland-class)), which is now archived;
+   the maps use the annual Dynamic World cropland only, so this point no longer applies.
 
 ## 6. Risks and mismatches
 

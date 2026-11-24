@@ -16,8 +16,8 @@ composites.
 
 **The experiments were redesigned on 20 November 2026** ([D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)):
 two classes (irrigated, rainfed) on the surveyed parcels only, no cropland mask and no weak "not cropland" class;
-where cropland is becomes a question of the mapping phase (candidate masks: the union of four products, Dynamic
-World). All earlier 3-class results were removed. E01–E05 are ready and tested and run again, **Morocco first**
+the maps classify the pixels of the annual Dynamic World cropland (the union mask of four products is
+archived). All earlier 3-class results were removed. E01–E05 are ready and tested and run again, **Morocco first**
 (473,675 pixels of 8,775 parcels), then Utah. All imagery is now downloaded once per region and year on one grid
 of 10.24 km blocks from Earth Engine; the training tiles are cut from these blocks and the maps will be predicted
 from them, which replaces the STAC download ([D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)).
@@ -27,7 +27,9 @@ On 24 November 2026 the code was reorganised into `data_download/` (all download
 downloaded block are identical to the existing training tiles, so these were not downloaded again. The block plan
 covers every 10.24 km block of the mapping area (Morocco: 4,199 per year; 169 with training tiles in 2023/24, 65 in
 2024/25); Dynamic World is downloaded for all of them as a binary cropland image, and
-Sentinel-2 and Sentinel-1 follow only for blocks with cropland or with training tiles.
+Sentinel-2 and Sentinel-1 follow only for blocks with cropland or with training tiles. The annual Dynamic World
+cropland is the only cropland layer; the union cropland mask of four products is archived
+([Cropland extent](phase1_data/cropland_extent.md)).
 
 ## Timeline
 
@@ -61,7 +63,7 @@ gantt
 | Phase | Work package | Planned | Status | Output |
 | --- | --- | --- | --- | --- |
 | 1 | Data acquisition, ML-ready dataset (Morocco, Utah) | Sep – Nov 2026 | ✅ done | [Phase 1](phase1_data/overview.md) |
-| 1 | Cropland mask and pixel samples | Nov 2026 | ✅ done | [Cropland mask](phase1_data/cropland_mask.md), [Pixel samples](phase1_data/pixel_samples.md) |
+| 1 | Cropland extent and pixel samples | Nov 2026 | ✅ done | [Cropland extent](phase1_data/cropland_extent.md), [Pixel samples](phase1_data/pixel_samples.md) |
 | 2 | Parcel-wise RQ1 benchmark | Sep – Nov 2026 | ✅ done, archived | [Archive](archive/index.md) |
 | 2 | Pixel-wise RQ1 experiments E01–E04 (2 classes) | Nov – Dec 2026 | ⏳ ready; Morocco first, then Utah | [RQ1 · Experiment plan](phase2_models/experiment_plan.md) |
 | 2 | Fine-tuning (RQ2): E05 frozen / LoRA / full fine-tuning / from scratch | Nov – Dec 2026 | ⏳ ready; Morocco first, then Utah | [E05](experiments/E05_prithvi_strategies.md), [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
@@ -77,12 +79,12 @@ gantt
 | Area | What | Where |
 | --- | --- | --- |
 | Labels | Morocco: 8,781 surveyed parcels (7,585 irrigated, 1,196 rainfed), 2023/24 and 2024/25. Utah: 6,013 WRLU 2024 fields (5,000 irrigated, 1,013 rainfed); 2021 for the temporal test | [Morocco](phase1_data/morocco.md), [Utah](phase1_data/utah.md) |
-| Cropland mask (mapping phase) | union of four products per year; Dynamic World cropland as the alternative, which selects the blocks and tiles of the download and the maps | [Cropland mask](phase1_data/cropland_mask.md), [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase) |
+| Cropland extent (mapping phase) | annual Dynamic World cropland per agricultural year (crops the most frequent class in at least 2 of the 12 months), which selects the downloaded blocks and the pixels of the maps; the earlier union of four products is archived | [Cropland extent](phase1_data/cropland_extent.md), [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase) |
 | Pixel samples | inner pixels of the parcels (≤ 100 per parcel) and not-cropland pixels; Utah 654,382 labelled pixels in 2,405 tiles | [Pixel samples](phase1_data/pixel_samples.md) |
 | Validation design | 5 spatial folds of 20 km blocks; PASTIS rotation (3 train / 1 validation / 1 test); every model scored on the same out-of-fold pixels | [Experiment plan](experiments/plan.md) |
 | Experiments E01–E04 | random forest, gradient boosting, TempCNN, U-TAE and six frozen GeoFMs + L-TAE + UPerNet; 2-class code ready and tested | [Experiments](experiments/index.md), [comparison](experiments/comparison.md) |
 | E05 | Prithvi frozen / LoRA / full fine-tuning / from scratch, 10–100% of the parcels; code ready and tested | [E05](experiments/E05_prithvi_strategies.md) |
-| Wall-to-wall download | one grid of 10.24 km blocks per region and year (Earth Engine): Dynamic World for every block of the mapping area, Sentinel-2 and Sentinel-1 for the blocks with cropland (≥ 164 Dynamic World cropland pixels) or with training tiles; tested on one Morocco block (2023/24: Sentinel-2 159 MB in 164 s, Sentinel-1 82 MB in 92 s, binary Dynamic World cropland in about 6 s); training tiles cut from the blocks are identical to the existing ones. Replaces the STAC download (Utah 2023/24 had reached 17,278 of 18,472 tiles) | [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download), [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them) |
+| Wall-to-wall download | one grid of 10.24 km blocks per region and year (Earth Engine): Dynamic World cropland for the whole mapping area (one file per year), Sentinel-2 and Sentinel-1 for the blocks with cropland (≥ 164 Dynamic World cropland pixels) or with training tiles; tested on one Morocco block (2023/24: Sentinel-2 159 MB in 164 s, Sentinel-1 82 MB in 92 s, binary Dynamic World cropland of two blocks in 64 s); training tiles cut from the blocks are identical to the existing ones. Replaces the STAC download (Utah 2023/24 had reached 17,278 of 18,472 tiles) | [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download), [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them) |
 | Parcel-wise benchmark | frozen GeoFM embeddings + classifiers, E01–E05 of that set-up; kept as the archive | [Archive](archive/index.md) |
 | Literature | GeoFM fine-tuning strategies, reference pages | [Reference papers](references/index.md), [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 
@@ -95,7 +97,7 @@ _None yet in the two-class design_ (the earlier 3-class results were removed; [R
 1. **Morocco:** E01, E02, E03, then E04 (six encoders) and E05 (16 jobs) on the cluster; comparison and paired tests.
 2. **Utah:** rebuild the 2-class pixel samples on the cluster, then the same experiments.
 3. **Block download:** Dynamic World for all planned blocks, then Sentinel-2 and Sentinel-1 for the cropland and training blocks, of Morocco (2023/24, 2024/25) and Utah (2023/24, 2020/21) on the cluster.
-4. **Mapping phase:** compare candidate cropland masks (union of products, Dynamic World) on the surveyed parcels.
+4. **Mapping phase:** check the annual Dynamic World cropland on the surveyed parcels (omission) and against the reference maps (commission).
 
 ## Open points and risks
 

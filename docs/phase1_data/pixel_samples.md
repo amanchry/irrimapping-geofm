@@ -25,8 +25,8 @@ at most 100 per parcel, so the 6 larger parcels are cut to 100; (4) every sample
 
 All surveyed parcels are cropland, so the experiments compare models on the irrigated / rainfed decision alone ([D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)). No
 cropland mask is used to select pixels. Pixels outside the surveyed parcels are not used: their class is unknown.
-Where cropland lies, and how land that is not cropland is handled, is decided in the mapping phase
-([Cropland extent and mask](cropland_mask.md), [Phase 5](../phase5_maps/index.md)).
+Where cropland lies (the annual Dynamic World cropland), and how land that is not cropland is handled, belong to the
+mapping phase ([Cropland extent](cropland_extent.md), [Phase 5](../phase5_maps/index.md)).
 
 ## Sampling rules
 
