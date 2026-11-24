@@ -3,7 +3,7 @@ tile_common.py  —  shared code of the tile experiments E04 (frozen GeoFMs + de
                    E05 (Prithvi: frozen / fully fine-tuned / from scratch, with fewer labels)
 =============================================================================================================
 
-The tile models see whole 128 x 128 px tiles (12 months) of the parcel tile store (03_build_tiles.py) and predict a
+The tile models see whole 128 x 128 px tiles (12 months) of the parcel tile store (data_training_prep/03_plan_tiles.py ... 05_stack_tiles.py) and predict a
 class for every pixel. They are trained and scored on exactly the labelled pixels of 04_make_pixel_samples.py, like the pixel models:
 the loss is computed only at the sampled pixels of the training folds (all other pixels are ignored), and the
 out-of-fold prediction of a pixel is read from the prediction of its tile. A tile can hold pixels of two folds
@@ -56,7 +56,7 @@ AMP = DEVICE == "cuda"
 
 # ---------------------------------------------------------------- data
 def tile_root(region):
-    return ROOT / "outputs" / region / "dataset" / "03_tiles_128px" / "agyear"
+    return ROOT / "outputs" / region / "data_training_prep" / "03_tiles_128px" / "agyear"
 
 
 class TileTable:

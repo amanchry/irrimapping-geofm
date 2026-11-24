@@ -60,8 +60,8 @@ import torch
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 MODEL_NAME = "clay"
-WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
-REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (parcelwise_run/regions.py)
+WINDOW = "agyear"                                          # must match data_training_prep/ tile store / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (data_download/regions.py)
 VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 CHECKPOINT = ROOT / "checkpoints" / "clay" / "clay-v1.5.ckpt"
 METADATA = ROOT / "checkpoints" / "clay" / "metadata.yaml"
@@ -79,7 +79,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 8                                         # Clay v1.5 uses 8 x 8-pixel patches
-VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
+VIEWS_DIR = ROOT / "outputs" / REGION / "data_training_prep" / "03_tiles_128px" / WINDOW / VIEWS_NAME
 if CHIP_SOURCE == "tiles":
     CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or

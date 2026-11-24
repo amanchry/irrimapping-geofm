@@ -38,6 +38,65 @@ composites of 10 m Sentinel-2, and a label-share curve. LoRA is added because, f
 segmentation tasks, it matched full fine-tuning with 1.8% of the encoder's weights trained and generalised better to
 held-out regions ([Marti-Escofet et al. 2025](../phase2_models/fine_tuning.md#2--marti-escofet-et-al-2025--peft-for-geofms)).
 
+## How E05 works, step by step
+
+E05 trains the same Prithvi network in four ways, and each strategy treats the encoder differently (locked, locked
+with adapters, fully trained from the pretrained weights, or fully trained from random weights). Each strategy
+therefore has its own figure, from the labelled pixels to the paired tests it enters (schematic: the pictures
+illustrate the steps and show no results, so the figures hold for any region and year;
+`tools/a9_experiment_explainers.py`). Grey parts are locked, orange parts are trained. The results of each region
+are under [Results](#results).
+
+=== "Frozen"
+
+    ![Frozen strategy in E05](figures/e05_frozen_explainer.png)
+
+    The pretrained encoder stays locked, as in E04; only the L-TAE and the head learn (2.5 M weights). The reference
+    the other strategies are measured against.
+
+=== "LoRA"
+
+    ![LoRA strategy in E05](figures/e05_lora_explainer.png)
+
+    The pretrained encoder stays locked, but thin low-rank adapters (rank 16) next to its attention and MLP weights
+    are trained with the head (8.0 M weights); gradients pass through the whole encoder.
+
+=== "Full fine-tuning"
+
+    ![Full fine-tuning strategy in E05](figures/e05_finetune_explainer.png)
+
+    Every weight is trained, starting from the pretrained ones, with the encoder at a ten times smaller learning rate
+    than the head (306 M weights).
+
+=== "From scratch"
+
+    ![From-scratch strategy in E05](figures/e05_scratch_explainer.png)
+
+    The same network starts from random weights and learns everything from the labelled pixels at the head's
+    learning rate (306 M weights): what the network achieves without pretraining.
+
+The twelve steps, the same for every strategy except step 6:
+
+1. **Labelled pixels and tiles.** As in E03 and E04: whole 128 px tiles, scored at the same labelled pixels as
+   every experiment.
+2. **The strategy.** One of four ways to train the same network; the figure highlights it among the four.
+3. **Label shares.** Each strategy is run with 10, 25, 50 and 100% of the training parcels (one job each); parcels
+   are dropped per class in a fixed nested order, and the validation and test folds stay complete.
+4. **Rotation over the folds.** The same five rounds as every experiment.
+5. **Input and tokens.** As E04 Prithvi: six bands, three passes of four months with dates and location, 16 px
+   patches.
+6. **The encoder.** Locked (frozen), locked with trained adapters (LoRA), fully trained from the pretrained weights
+   at a tenfold smaller learning rate (full fine-tuning), or fully trained from random weights (from scratch).
+7. **Head.** The L-TAE, feature pyramid and UPerNet head of E04, trained in every strategy.
+8. **Training.** Early stopping on the validation pixels (patience 15, at most 60 epochs), one epoch of warm-up,
+   gradient clipping, three seeds per round.
+9. **What is kept and its cost.** Trained weights, learning rates, the parts saved at the best epoch, and whether
+   the backward pass runs through the encoder; GPU time per run in `summary.csv`.
+10. **Learning curves.** Training loss, validation loss and validation macro-F1 per epoch.
+11. **Score per share.** Each run scored on all out-of-fold pixels with its 95% interval, against its label share.
+12. **Paired tests.** At each share, the pairs the strategy enters (e.g. fine-tuned − frozen, LoRA − frozen,
+    fine-tuned − scratch), on the same pixels and bootstrap draws, Holm-corrected over the 24 comparisons.
+
 ## Model
 
 The same network in every run (`GeoFMSegmenter` in `tile_common.py`, as in E04):
@@ -105,14 +164,11 @@ flowchart LR
     for the year-transfer test (RQ3).
 
 ??? info "LoRA (low-rank adaptation)"
-    LoRA (Hu et al. 2021) keeps every pretrained weight fixed and adds, next to each adapted linear layer W, a
-    trainable update B·A of rank 16 (A: 16 × input size, B: output size × 16; output W x + (α/r) B A x with α = 32).
-    B starts at zero, so training starts exactly from the pretrained network, as in full fine-tuning; but the change
-    of each layer is limited to 16 directions. The adapted layers and the rank follow Marti-Escofet et al. (2025),
-    who used rank 16 on the attention and feed-forward layers of Prithvi-EO-2.0-300M (about 5.5 M weights, 1.8% of
-    the encoder; Prithvi's query, key and value share one `qkv` layer, which is adapted as a whole). Memory stays
-    close to the frozen run: no gradients or optimiser states for the 304 M encoder weights. Diagram:
-    [RQ2 · Fine-tuning](../phase2_models/fine_tuning.md#lora-in-detail).
+    How LoRA works (a trainable low-rank update B·A next to each frozen weight matrix, B starting at zero) is
+    explained with a diagram on [RQ2 · Fine-tuning](../phase2_models/fine_tuning.md#lora-in-detail). In E05: rank 16,
+    α = 32, on the `qkv` attention layer and the two MLP layers (`fc1`, `fc2`) of all 24 Prithvi blocks, following
+    Marti-Escofet et al. (2025); about 5.5 M trainable weights, 1.8% of the encoder. Memory stays close to the frozen
+    run: no gradients or optimiser states for the 304 M encoder weights.
 
 ??? info "From scratch"
     The same 300 M network with random weights, trained like the fine-tuned one (encoder and head at 10⁻⁴). The
@@ -205,8 +261,8 @@ within itself; `05_compare_experiments.py` compares E01–E04 only.
 
 Script: [`experiments/E05_prithvi_strategies/run.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E05_prithvi_strategies/run.py)
 (settings at the top; strategy and share from `EXPERIMENT_STRATEGY` and `EXPERIMENT_FRACTION`). One GPU job per
-strategy and share; needs the Morocco tile store `outputs/morocco/dataset/03_tiles_128px/agyear/tiles/`, the pixel
-samples `outputs/morocco/dataset/04_pixel_samples/` and the Prithvi weights in `checkpoints/prithvi/`.
+strategy and share; needs the Morocco tile store `outputs/morocco/data_training_prep/03_tiles_128px/agyear/tiles/`, the pixel
+samples `outputs/morocco/data_training_prep/04_pixel_samples/` and the Prithvi weights in `checkpoints/prithvi/`.
 
 Quick test first, one per strategy (60 tiles, 2 epochs, 1 seed; too short to learn the rainfed class, it reads the
 epoch time and GPU memory):

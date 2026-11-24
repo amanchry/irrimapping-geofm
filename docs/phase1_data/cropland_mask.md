@@ -2,25 +2,27 @@
 
 The annual irrigated / rainfed maps are **continuous (wall-to-wall)**: every 10 m pixel of a region's cropland gets a
 class, not only the surveyed parcels. This page describes the area those maps cover, the cropland mask, and the
-reference layers drawn for comparison. The code is in `cropland_extent/`; all outputs are in
-`outputs/<region>/cropland_extent/`.
+reference layers drawn for comparison. The code is in `data_download/` (formerly `cropland_extent/`); the mask and
+the reference layers are written to `outputs/<region>/data_download/reference/`.
 
 !!! note "Mapping phase only"
     The cropland mask belongs to the **mapping phase** ([Phase 5](../phase5_maps/index.md)). The labels, the pixel
     samples and the experiments E01–E05 do not use it: they classify the labelled pixels of the surveyed parcels,
-    which are all cropland, as irrigated or rainfed ([pixel samples](pixel_samples.md)). Only the wall-to-wall
-    mapping tiles (`s2_download/`, `pixelwise_run/06_build_cropland_tiles.py`) read the mask. Which mask the maps
+    which are all cropland, as irrigated or rainfed ([pixel samples](pixel_samples.md)). The download of the
+    wall-to-wall imagery is restricted to the blocks with Dynamic World cropland (`02a_dynamic_world.py`), not to the
+    union mask described here
+    (§5; [D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Which mask the maps
     use, and how land that is not cropland is handled, is decided later, for example by comparing the union of
     products described here with Dynamic World alone ([D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)).
 
-| Script | What it does | Output (in `outputs/<region>/cropland_extent/`) |
+| Script | What it does | Output (in `outputs/<region>/data_download/reference/`) |
 | --- | --- | --- |
-| `make_cropland_mask.py` | cropland mask per region and agricultural year from 4 cropland products (Earth Engine) | `cropland_mask/<season>/` |
-| `download_esa_worldcover.py` | ESA WorldCover 2021, 10 m GeoTIFF + PNG map | `esa_worldcover/` |
-| `download_lgrip30.py` | LGRIP30 irrigated / rainfed cropland, 30 m GeoTIFF + PNG map | `lgrip30/` |
-| `download_dynamic_world.py` | annual Dynamic World 10 m layer per agricultural year (Earth Engine): most frequent class, mean crop probability, number of images; GeoTIFF on the project grid + PNG map | `dynamic_world/` |
+| `00_union_cropland_mask.py` (formerly `cropland_extent/make_cropland_mask.py`) | cropland mask per region and agricultural year from 4 cropland products (Earth Engine); kept for later as a candidate for the mapping phase, not used by the download | `cropland_mask/<season>/` |
+| `04a_ref_esa_worldcover.py` (formerly `download_esa_worldcover.py`) | ESA WorldCover 2021, 10 m GeoTIFF + PNG map | `esa_worldcover/` |
+| `04b_ref_lgrip30.py` (formerly `download_lgrip30.py`) | LGRIP30 irrigated / rainfed cropland, 30 m GeoTIFF + PNG map | `lgrip30/` |
+| `04c_ref_dynamic_world_annual.py` (formerly `download_dynamic_world.py`) | annual Dynamic World 10 m layer per calendar year (Earth Engine, one GeoTIFF per region with `geemap`): one band, the most frequent class of all 9 (cropland = crops); optional crop frequency; land-cover and cropland PNG maps | `dynamic_world/` |
 
-All four use the same area: the region's **mapping area** in `pixelwise_run/regions.py`, i.e. Morocco without
+All four use the same area: the region's **mapping area** in `data_download/regions.py`, i.e. Morocco without
 Western Sahara (FAO GAUL 2015, 414,905 km²) and the state of Utah (FAO GAUL 2024, 219,809 km²).
 
 ## 1. Why a mask from several products
@@ -58,7 +60,7 @@ The year of a product is the calendar year in which the agricultural year ends, 
   on the Esri and GCEP30 layers.
 - **Not used in the union** (kept in the script as options with fixed bit numbers): Dynamic World (too slow per block
   and Earth Engine memory errors; an annual Dynamic World layer is downloaded separately by
-  `download_dynamic_world.py`, §7), ESA WorldCereal 2021 temporary crops, LGRIP30 (same extent as GCEP30 in the test),
+  `04c_ref_dynamic_world_annual.py`, §7), ESA WorldCereal 2021 temporary crops, LGRIP30 (same extent as GCEP30 in the test),
   GLC_FCS30D, and the USDA Cropland Data Layer for Utah.
 - **Always removed:** WorldCover 2021 built-up (50), snow and ice (70) and permanent water (80); these pixels are
   never mapped.
@@ -67,13 +69,14 @@ The year of a product is the calendar year in which the agricultural year ends, 
 
 1. **Blocks on the tile grid.** Earth Engine returns at most 48 MB per request, and Morocco at 10 m has about
    10 billion pixels. The mapping area is cut into blocks of 1024 × 1024 px (10.24 km) on the same grid as the
-   tiles of `03_build_tiles.py` (x = ix × 1280 m), so every block holds whole 128 px tiles. Morocco has 4,199 blocks,
+   tiles of `data_training_prep/03_plan_tiles.py` (x = ix × 1280 m), so every block holds whole 128 px tiles. Morocco has 4,199 blocks,
    Utah 2,213; 8 blocks are downloaded in parallel at about 0.5 s per block; finished blocks are skipped on a re-run.
 2. **One request per block** returns one bit per product and the exclusion flag; votes and the mask are computed
    locally.
 3. **One raster per agricultural year.** `cropland_mask.vrt` joins all blocks into one seamless layer.
-4. **Tile table.** `tiles_cropland.parquet` lists every 128 px tile with its number of cropland pixels: the input
-   of the wall-to-wall tiles (`s2_download/`; earlier route `pixelwise_run/06_build_cropland_tiles.py`).
+4. **Tile table.** `tiles_cropland.parquet` lists every 128 px tile with its number of cropland pixels. It was the
+   input of the earlier wall-to-wall tile routes (STAC and Earth Engine, both retired); the block download now
+   uses Dynamic World cropland instead (§5).
 
 **Bands of the mask** (uint16, NODATA 65535 outside the mapping area):
 
@@ -118,30 +121,61 @@ mask in the mapping phase and the map accuracy assessment address it.
 
 ## 5. Extent of the wall-to-wall tiles
 
-Mapping the whole cropland means imagery for every tile that contains cropland: 132,616 tiles in Morocco (about
-370 GB of monthly Sentinel-2 composites per year) and 24,861 in Utah (about 69 GB), against 2,183 and 2,720 tiles
-around the labelled parcels. Morocco's cropland forms one continuous belt from Tangier to Agadir (a quarter of the
-country), and scattered fields pull in whole 1.64 km² tiles.
+Mapping the whole cropland means imagery for every tile that contains cropland. With the union mask this is
+132,616 tiles in Morocco (about 370 GB of monthly Sentinel-2 composites per year) and 24,861 in Utah (about 69 GB),
+against 2,183 and 2,720 tiles around the labelled parcels (2023/24). Morocco's cropland forms one continuous belt
+from Tangier to Agadir (a quarter of the country), and scattered fields pull in whole 1.64 km² tiles.
 
-**STAC download.** The wall-to-wall tiles are downloaded with `s2_download/` from the public Earth Search STAC
-catalogue (collection `sentinel-2-c1-l2a`, cloud mask from the scene classification layer SCL, monthly median
-composites; details in `s2_download/README.md`). It keeps the tiles with **at least 1% cropland**: 112,536 tiles in
-Morocco and 18,472 in Utah for 2023/24 (Morocco 2024/25: 113,319). The tiles follow the grid and `tile_id` of the
-mask and serve training, experiments and maps of the STAC-based approach.
+**Block download from Earth Engine.** All imagery is downloaded once per region and agricultural year on one grid
+of 10.24 km blocks (1024 × 1024 px at 10 m: the 128 px tile grid grouped 8 × 8), with an Earth Engine service
+account ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). `01_plan_blocks.py` plans **every** block that touches the region's
+mapping area, without a cropland mask, and counts the training tiles in each block (a training tile outside the
+mapping area is reported; none is in Morocco). Blocks with training tiles are always downloaded by `02b` and `02c`,
+even where Dynamic World finds no cropland, so every training tile can be cut out. In Morocco this gives 4,199 blocks (one grid, the same every year) over the 414,906 km² mapping
+area; 169 of them hold training tiles in 2023/24 and 65 in 2024/25.
 
-| Region | Year | Tiles (≥ 1% cropland) | Status |
-| --- | --- | --- | --- |
-| Utah | 2023/24 | 18,472 | 🔄 17,278 downloaded; the rest to be rerun after a bug fix |
-| Morocco | 2023/24 | 112,536 | on hold |
+The cropland layer that selects the further downloads is **Dynamic World**. `02a_dynamic_world.py` downloads it for
+every planned block as one binary image, `CROPLAND` (1 where the most frequent Dynamic World class over the
+calendar year in which the agricultural year ends, 2023/24 → 2024, is "crops", 0 elsewhere, 255 without an image;
+uint8). For each year it also draws two maps in `outputs/<region>/data_download/dynamic_world/`: the cropland share
+of every 320 m cell of the downloaded blocks (`cropland_map_<season>.png`) and the block extents with the blocks
+that hold cropland highlighted (`cropland_blocks_<season>.png`). The full Dynamic World land cover with all nine
+classes is drawn by `04c_ref_dynamic_world_annual.py`. `02b_s2.py` (Sentinel-2 monthly composites, Cloud Score+) and
+`02c_s1.py` (Sentinel-1, ascending and descending) download only the blocks with cropland (≥ 164 Dynamic World cropland pixels, 1% of a 128 px tile) or with
+training tiles; later sources (ERA5) follow the same rule. Each download writes one file per block to
+`outputs/<region>/data_download/<source>/<season>/<bx>_<by>.tif`; `03_build_vrt.py` joins the blocks of each source and
+year into one VRT mosaic. The union mask of this page is kept for later as a candidate for the mapping phase and is
+not used by the download.
 
-The earlier Earth Engine route for the same tiles (`pixelwise_run/06_build_cropland_tiles.py`) is still in the
-repository. The experiments E01–E05 use the Earth Engine tiles around the labelled parcels (`03_build_tiles.py`).
+Measured on one Morocco block (2023/24):
+
+| Source | Size per block | Download time per block |
+| --- | --- | --- |
+| Sentinel-2 | 159 MB | 164 s |
+| Sentinel-1 | 82 MB | 92 s |
+| Dynamic World (binary cropland) | 3–25 KB (3 test blocks) | about 6 s |
+
+The training tiles are cut from the planned blocks (`data_training_prep/04_cut_tiles.py`). For the maps, each block is
+classified on its own, on its cropland pixels only (tile models read 128 px windows from the block, pixel models read
+each pixel's series), and the block maps are merged at the end, so no further tile files are written. The block grid is planned once per region (the same blocks every year) in `outputs/<region>/data_download/grid/blocks.parquet`
+and `.geojson`, with a map of the block extents (`blocks.png`).
+
+!!! note "Retired: STAC and Earth Engine tile routes"
+    The wall-to-wall Sentinel-2 tiles were at first downloaded from the public Earth Search STAC catalogue
+    (`s2_download/`, collection `sentinel-2-c1-l2a`, SCL cloud mask; [D18](../decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps)),
+    for every tile with at least 1% cropland in the union mask: 112,536 tiles in Morocco and 18,472 in Utah for
+    2023/24 (Morocco 2024/25: 113,319). On 20 November 2026, 17,278 of the 18,472 Utah tiles were downloaded;
+    Morocco was on hold. An earlier Earth Engine route per tile (`pixelwise_run/06_build_cropland_tiles.py`) existed
+    as well. Both routes are retired and their code was removed from the pipeline; the maps use the
+    `data_download/` blocks ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)).
+
+The figure below shows the tile extent of the retired STAC download (2023/24).
 
 ![Wall-to-wall tile extent, 2023/24](figures/cropland_tiles_extent_2023-24.png)
 
 ## 6. Check against the labelled parcels
 
-The label scripts (`pixelwise_run/01_prepare_labels_*.py`) no longer read the mask, and the pixel samples contain
+The label scripts (`data_training_prep/01_prepare_labels_*.py`) no longer read the mask, and the pixel samples contain
 the surveyed parcels only, whether or not they lie inside the mask. The check of a candidate mask against the
 surveyed parcels is part of the mask choice in the mapping phase: the **omission** of surveyed irrigated and of
 surveyed rainfed parcels (cropland the mask misses) and the **commission** (land in the mask that is not cropland),
@@ -150,11 +184,16 @@ for the union of products, for Dynamic World alone and for stricter variants ([P
 ## 7. Reference layers
 
 ESA WorldCover and LGRIP30 are drawn as reference maps for the documentation and for comparing the final maps;
-the mask reads its products directly in Earth Engine. `download_dynamic_world.py` builds an annual Dynamic World
-layer per agricultural year (Brown et al. 2022): the most frequent class of the year (`label`), the mean
-probability of the class "crops" in percent (`crops`) and the number of Dynamic World images (`n_obs`), on the 10 m
-grid of the tiles and the mask. It is a candidate for the mask of the maps (by class, or by a threshold on the crop
-probability); no model or dataset script uses it. Colours: WorldCover's official palette; LGRIP30 water
+the mask reads its products directly in Earth Engine. `04c_ref_dynamic_world_annual.py` builds an annual Dynamic World
+layer per calendar year (Brown et al. 2022; Morocco 2024 and 2025, Utah 2021 and 2024, the years in which the
+agricultural years of the labels end), downloaded for the whole region as one GeoTIFF with
+`geemap.download_ee_image` (geedim splits it into tiles), on the 10 m grid of the blocks. By default it holds one
+band, the most frequent of the nine classes (`label`); cropland is the class "crops", the same rule as `02a`. One band
+keeps Morocco at about 11 GB before compression (the rectangle around the country). The share of images labelled
+crops (`crop_freq`) can be added to apply a frequency threshold instead (`CROP_THRESHOLD`, 50%). It draws a land-cover
+map with all classes and a cropland map. It is a candidate for the mask of the maps; no model or dataset
+script uses it. (The Dynamic World cropland that selects the downloads, §5, is
+computed per block by `02a_dynamic_world.py`.) Colours: WorldCover's official palette; LGRIP30 water
 `#0050cb`, non-cropland `#d58855`, irrigated `#c2d30c`, rainfed `#379a4b`. The PNG maps are reduced to 2,500 px
 for display (mode resampling) from the original 10 m and 30 m GeoTIFFs.
 

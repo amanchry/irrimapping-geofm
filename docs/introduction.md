@@ -103,7 +103,7 @@ Six openly available GeoFMs are evaluated: **Prithvi-EO-2.0** (NASA, IBM), **Cla
 added later. Together they represent the principal GeoFM families: masked-autoencoder Vision Transformers, a
 multimodal generative model, an agriculture-specific spatio-temporal model and pixel time-series models. Every model
 receives Sentinel-2 input only ([D14](decisions.md#d14-sentinel-2-only-for-every-input)). Architecture, pretraining, configuration and sources are given in
-[Foundation models](foundation_models.md).
+[Foundation models](foundation_models/index.md).
 
 ## Approach
 

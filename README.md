@@ -17,8 +17,10 @@ Irrigated agriculture covers about a fifth of the world's cropland but produces 
 
 ```bash
 conda env create -f environment.yml && conda activate condaml
-python cropland_extent/make_cropland_mask.py           # step 0: cropland mask
-python pixelwise_run/01_prepare_labels_Morocco.py      # steps 01-06 in pixelwise_run/ (numbered in run order)
+python data_training_prep/01_prepare_labels_Morocco.py      # labels, folds, tile plan: data_training_prep/ 01-03
+python data_download/01_plan_blocks.py                 # 10.24 km blocks over the region; then 02a-02c (Earth Engine)
+python data_training_prep/04_cut_tiles.py                   # training tiles cut from the blocks
+python pixelwise_run/04_make_pixel_samples.py          # then pixelwise_run/ 04-05 and the experiments
 python experiments/E01_s2_pixel_baseline/run.py        # experiments E01-E04
 python pixelwise_run/05_compare_experiments.py         # comparison of all finished runs
 mkdocs serve --livereload -a 127.0.0.1:8001           # preview the documentation

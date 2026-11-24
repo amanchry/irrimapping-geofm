@@ -18,7 +18,7 @@ labelled pixels of the surveyed parcels (two classes: irrigated, rainfed) from w
 3. [Source data](#3-source-data)
 4. [Script 01 — labels](#4-script-01--prepare_labels)
 5. [Script 02 — spatial folds](#5-script-02--make_spatial_folds)
-6. [Script 03 — tile store](#6-script-03--build_tiles)
+6. [Scripts 03–05 — tile store](#6-script-03--build_tiles)
 7. [Script 04 — pixel samples (archived: model views)](#7-script-04--pixel-samples)
 8. [Output layout and file formats](#8-output-layout-and-file-formats)
 9. [How to use the dataset](#9-how-to-use-the-dataset)
@@ -40,7 +40,7 @@ flowchart TD
     FS --> S01["<b>01_prepare_labels_Morocco.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
     S01 -->|"parcels_labelled.geojson<br/>8,781 parcels"| S02["<b>02_make_spatial_folds.py</b><br/>20 km blocks → 5 balanced folds"]
     S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| SPLIT[["Split by agricultural year<br/>(ag_season from survey date)"]]
-    SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>03_build_tiles.py</b><br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
+    SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>data_training_prep/03–04</b><br/>tile plan; tiles cut from the<br/>data_download/ blocks (S2 · S1)<br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
     SPLIT -->|"2024/25 · 1,894 parcels<br/>imagery Sep 2024 – Aug 2025"| S03
     GEE --> S03
     S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_pixel_samples.py</b><br/>labelled parcel pixels: irrigated · rainfed<br/>12 months, fold, position"]
@@ -53,11 +53,13 @@ flowchart TD
 | --- | --- | --- | 
 | 1 | `01_prepare_labels_Morocco.py` | 8,781 labelled cropland parcels (7,585 irrigated, 1,196 rainfed) |
 | 2 | `02_make_spatial_folds.py` | a fold (0–4) per parcel, from 91 spatial blocks of 20 km |
-| 3 | `03_build_tiles.py` | the tile store: monthly images + label rasters + QA |
+| 3 | `data_training_prep/03_plan_tiles.py`; `data_download/01_plan_blocks.py`, `02a_dynamic_world.py`, `02b_s2.py`, `02c_s1.py`; `data_training_prep/04_cut_tiles.py` | the tile store: label rasters, then monthly Sentinel-2 and Sentinel-1 images cut from the downloaded 10.24 km blocks, + QA |
 | 4 | `04_make_pixel_samples.py` | labelled pixels of the surveyed parcels (irrigated, rainfed) per agricultural year: 367,882 (2023/24) and 105,793 (2024/25) |
 | 4 (archived) | `parcelwise_run/04_make_views.py` | parcel-wise model views A–C |
 
-Steps 1–2 complete within minutes. Step 3 requires several hours and resumes from the last completed tile when restarted. Step 4 runs locally.
+Steps 1–2 complete within minutes. In step 3 the tile plan and the cut-out run locally; the block download from
+Earth Engine is the slow part and resumes from the last completed block when restarted
+([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Step 4 runs locally.
 
 ---
 
@@ -65,8 +67,8 @@ Steps 1–2 complete within minutes. Step 3 requires several hours and resumes f
 
 | Principle | How it is achieved |
 | --- | --- |
-| **One set of pixels for every model** | All imagery is downloaded once into one tile store. Every model input is cut from it locally, so differences between models cannot come from different compositing, masks or download windows. |
-| **No duplicated downloads** | Fixed, non-overlapping 1.28 km tiles in one projection. Neighbouring parcels share tiles instead of each getting its own overlapping chip. |
+| **One set of pixels for every model** | All imagery is downloaded once, on one grid of 10.24 km blocks, and the tile store is cut from it. Every model input is cut from it locally, so differences between models cannot come from different compositing, masks or download windows. |
+| **No duplicated downloads** | Fixed, non-overlapping 1.28 km tiles in one projection, grouped 8 × 8 into the download blocks. Neighbouring parcels share tiles instead of each getting its own overlapping chip, and the maps read the same blocks. |
 | **Imagery matched to the label date** | Each parcel gets the 12 months of the agricultural year (1 Sep – 31 Aug) in which it was surveyed. The same place in another year is a different tile. |
 | **Honest validation** | Folds are made of whole 20 km blocks, so a test parcel never has its next-door neighbour in training (section 5). |
 | **Uncertain pixels kept, not dropped** | Label 0 = ignore (unlabelled or overlapping parcels), plus a separate edge flag for mixed boundary pixels. Users decide how to treat them. |
@@ -119,7 +121,7 @@ the 8,781 labelled parcels (e.g. 1,216 rainfed raw vs 1,196 after cleaning; the 
 
 | Data | Used for |
 | --- | --- |
-| Sentinel-2 L2A harmonised + Cloud Score+ | monthly imagery of every model (script 03, cloud mask `cs_cdf` ≥ 0.60) |
+| Sentinel-2 L2A harmonised + Cloud Score+ | monthly imagery of every model (`data_download/02b_s2.py`, cloud mask `cs_cdf` ≥ 0.60) |
 | Sentinel-1 GRD | monthly VV/VH in the tile store, ascending and descending kept apart; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
 | FAO GAUL 2015 (level 0) | country outline on the maps (`data/admin_boundaries/`) |
 
@@ -182,7 +184,7 @@ Median parcel size: 0.83 ha (10th–90th percentile: 0.30–3.5 ha). Rainfed par
   <figcaption><b>Figure 1.5.</b> Labelled parcels by survey month (December 2023 – January 2025). The survey date determines the agricultural year, and thus the imagery, assigned to each parcel.</figcaption>
 </figure>
 
-**Outputs** (`outputs/morocco/dataset/01_labels/`):
+**Outputs** (`outputs/morocco/data_training_prep/01_labels/`):
 - `parcels_labelled.geojson`
 - `summary.csv`
 - `parcels_map.png`
@@ -291,7 +293,7 @@ After 5 rounds every parcel has been tested once, by a model that never saw its 
 
 For quick experiments, the column `split` gives one fixed split: fold 0 = test, fold 1 = validation, folds 2–4 = train. `random_fold` gives a stratified random split, so the optimism of random validation can be measured.
 
-**Outputs** (`outputs/morocco/dataset/02_folds/`):
+**Outputs** (`outputs/morocco/data_training_prep/02_folds/`):
 - `parcels_folds.geojson`: parcels + `block_id`, `fold`, `random_fold`, `split`
 - `fold_counts.csv`
 - `block_size_comparison.csv`
@@ -302,15 +304,20 @@ For quick experiments, the column `split` gives one fixed split: fold 0 = test, 
 
 ---
 
-## 6. Script 03 — `build_tiles`
+## 6. Scripts 03–05 — tile store { #6-script-03--build_tiles }
 
-**Purpose:** build the single image store that every model reads from.
+**Purpose:** build the single image store that every model reads from. `data_training_prep/03_plan_tiles.py` plans the
+tiles and writes the label rasters; the images are downloaded per 10.24 km block by `data_download/` (8 × 8 tiles
+per block) and `data_training_prep/04_cut_tiles.py` cuts the planned tiles out of the blocks
+([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). The training tiles of 2023/24 and 2024/25 were first downloaded tile by tile from
+Earth Engine (former `03_build_tiles.py`); tiles cut from a downloaded block were checked to be identical to them
+(values, band names, position), so they were kept and not downloaded again.
 
 ### 6.1 Tile grid and which tiles are built
 
 - One projection for the whole area, UTM 29N (EPSG:32629), with 10 m pixels. The few parcels in zone 30N are resampled.
 - A fixed grid of **128 × 128-pixel tiles (1.28 km × 1.28 km)**. Tile IDs are `<season>_<ix>_<iy>`, e.g. `2023-24_412_3561`.
-- Only the tiles the parcels need are built:
+- Only the tiles the parcels need get tile files:
   - **home** tile: holds the parcel centroid;
   - **outline** tiles: touched by the parcel polygon;
   - **context** tiles: reached by the largest model chip around the centroid. That is 64 px plus up to 8 px of alignment shift, i.e. 40 px (400 m) in every direction.
@@ -335,8 +342,8 @@ flowchart TD
     A["Survey date of each parcel"] --> B["<b>ag_season</b> = agricultural year (1 Sep – 31 Aug)<br/>Sep–Dec of Y → Y/Y+1 · Jan–Aug of Y → Y−1/Y"]
     B --> P1["<b>2023/24</b> · 6,887 parcels<br/>tile plan: tile_id = 2023-24_ix_iy"]
     B --> P2["<b>2024/25</b> · 1,894 parcels<br/>tile plan: tile_id = 2024-25_ix_iy"]
-    P1 --> X1["Label rasters: only 2023/24 parcels<br/>Earth Engine image Sep 2023 – Aug 2024<br/>(2023/24 tiles + 2 km)"]
-    P2 --> X2["Label rasters: only 2024/25 parcels<br/>Earth Engine image Sep 2024 – Aug 2025<br/>(2024/25 tiles + 2 km)"]
+    P1 --> X1["Label rasters: only 2023/24 parcels<br/>images Sep 2023 – Aug 2024<br/>cut from the 2023/24 blocks"]
+    P2 --> X2["Label rasters: only 2024/25 parcels<br/>images Sep 2024 – Aug 2025<br/>cut from the 2024/25 blocks"]
     X1 --> T1["2,183 tiles (2023/24)"]
     X2 --> T2["804 tiles (2024/25)"]
     T1 --> S["One folder tiles/, one grid (same ix, iy),<br/>season in every tile name"]
@@ -352,7 +359,7 @@ How each part of the pipeline handles the season:
 | Tile plan | a tile is the triple (season, ix, iy). The same 1.28 km square can exist once for each year, with the same grid position. |
 | Tile name | the season comes first: `2023-24_374_2793`, `2024-25_374_2793` |
 | Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
-| Imagery | one 12-month Earth Engine image per year, built over that year's tiles only. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
+| Imagery | one 12-month Earth Engine image per year, downloaded over that year's planned blocks (`data_download/`), from which the year's tiles are cut. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
 | QA, `tiles.parquet` | one row per (season, tile), with an `ag_season` column |
 | Pixel samples (`04_make_pixel_samples.py`) | one sample set per season (`04_pixel_samples/<season>/`); each parcel's pixels come from the tiles of its own season. (The archived `04_make_views.py` likewise cut every parcel from the tiles of its own season.) |
 | Folds (`02`) | blocks are defined by location only, so a place surveyed in both years falls in the **same** block and fold. No information leaks between years from training to test. |
@@ -384,7 +391,31 @@ gantt
 | Consistency with existing products | LGRIP30, WorldCereal and GMIA-NEXT define irrigation for one growing season (Teluguntla et al., 2023; Van Tricht et al., 2023; Kebede et al., 2026) |
 | National convention | the Moroccan agricultural campaign, including the accounting of seasonal rainfall, starts on 1 September |
 
-### 6.3 Monthly composites (per tile, per month)
+**Check against two crop calendars.** The window was compared with the FAO AQUASTAT irrigated crop calendar of
+Morocco (FAO, 2023; national, reference year 2011) and the GGCMI Phase 3 crop calendar (Jägermeyr et al., 2021;
+0.5° grid, separate for irrigated and rainfed crops; median over the 164 cells inside Morocco). GMIA-NEXT derives its
+irrigation season per agroecological zone from the same two sources (Kebede et al., 2026).
+
+| Crops | FAO AQUASTAT (irrigated, Morocco) | GGCMI Phase 3 | Inside Sep–Aug? |
+| --- | --- | --- | --- |
+| Wheat, barley | October – April (wheat), October – March (barley) | sown mid-November (day 320–325), mature in May, irrigated and rainfed alike (source: Dimou et al., 2018) | yes, sowing to harvest |
+| Temporary fodder | October – March | – | yes |
+| Maize | April – August | irrigated: February – July (sources: MIRCA2000, SAGE) | yes |
+| Rice, sugar beet, pulses, other temporary crops | April – August | gap-filled values only | yes |
+| Vegetables | May – September | gap-filled values only | yes, except the last month |
+| Olive, citrus, fruit trees, sugarcane | all year | – | permanent crops, any window |
+
+Both calendars agree with the Sep–Aug window: the winter cereals are sown and harvested inside it, and the summer
+irrigated crops (April–August) fall in its second half. September lies between the two seasons, so the boundary cuts
+no main crop cycle; only summer vegetables can reach into September (FAO). FAO states that irrigated temporary crops
+are "mostly cultivated and irrigated from April to August, except wheat, barley and temporary fodder". For most crops
+other than the cereals, GGCMI has no Moroccan source in these cells (data-source layer empty), so FAO is the better
+reference for them.
+
+### 6.3 Monthly composites (per block, per month)
+
+The composites are made in Earth Engine for each 10.24 km block (`data_download/02b_s2.py`, `02c_s1.py`) and cut
+into tiles without resampling; the compositing is the same as in the earlier per-tile download.
 
 ```mermaid
 flowchart TD
@@ -413,7 +444,7 @@ flowchart TD
 - **Months:** `m01` = September … `m12` = August of the parcel's agricultural year. Band names in the GeoTIFF look like `B4_m03` (red, November).
 - **Why linear power for Sentinel-1:** backscatter in dB is a logarithm. Averaging in dB gives the geometric mean and biases the composite downwards. Averaging is therefore done in linear power, and the result converted back to dB.
 - **Why the orbits are kept apart:** ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored; the archived view script picked one. The current models use Sentinel-2 only (D14).
-- Each tile's `_scenes.json` lists the Sentinel-1/2 scene IDs used in each month, so every pixel can be traced to its source.
+- Each tile's `_scenes.json` lists the Sentinel-1/2 scene IDs used in each month for the tile's block, so every pixel can be traced to its source.
 
 ### 6.4 Label rasters (local, no Earth Engine)
 
@@ -443,14 +474,28 @@ Only parcels of the tile's own agricultural year are burnt in.
 
 ### 6.5 Steps
 
+`data_training_prep/03_plan_tiles.py` (local, no download):
+
 1. Read the parcels with folds and project them to UTM 29N.
 2. Parcel table: index, centroid, bounds, area, perimeter, pixel counts (all and inner), home tile, tiles needed.
 3. Tile plan (6.1).
-4. Label rasters for all planned tiles (6.3). Local and fast.
-5. Earth Engine: one 228-band monthly image per agricultural year. Each tile is downloaded with `computePixels`, 8 requests in parallel and up to 4 retries, and written as a compressed GeoTIFF with its scene IDs. Finished tiles are skipped on a restart.
-6. Tile index (`tiles.parquet`) with fold, role, labelled pixels and QA.
+4. Label rasters for all planned tiles (6.4). Local and fast.
+5. Tile index (`tiles.parquet`) with fold, role and labelled pixels.
 
-`DOWNLOAD = False` stops after step 4, so the plan and labels can be checked without Earth Engine. `N_TEST_TILES = 20` builds only 20 tiles per season, for a test run.
+`data_download/01_plan_blocks.py` then plans every block of the mapping area (4,199 per year in Morocco, no
+cropland mask) and marks the blocks that hold a planned tile (169 in 2023/24, 65 in 2024/25).
+`02a_dynamic_world.py` downloads Dynamic World for every block and flags the 128 px tiles with ≥ 1% cropland;
+`02b_s2.py` and `02c_s1.py` download the blocks with at least one such tile or with training tiles from Earth Engine with `computePixels` (in groups of months below the 48 MB
+request limit, blocks in parallel, finished blocks skipped on a restart).
+
+`data_training_prep/04_cut_tiles.py` (local):
+
+6. Cut every planned tile out of its block (block (bx, by) = (ix // 8, iy // 8)), stack Sentinel-2 and
+   Sentinel-1 into the 228-band `_img.tif` and the binary Dynamic World cropland image into `_dw.tif`, with the scene IDs of
+   the block. Existing tiles are kept (`OVERWRITE = False`).
+7. QA per tile (`tiles_qa.jsonl`) and refreshed tile index.
+
+`N_TEST_TILES = 20` in `03_plan_tiles.py` plans only 20 home tiles per season, for a test run.
 
 ### 6.6 Quality numbers per tile
 
@@ -463,25 +508,25 @@ Only parcels of the tile's own agricultural year are burnt in.
 | `role` | home, outline or context |
 | `mixed_folds` | the tile holds parcels from more than one fold (relevant for segmentation, section 11) |
 
-**Outputs** (`outputs/morocco/dataset/03_tiles_128px/agyear/`):
-- `tiles/<id>_img.tif`, `tiles/<id>_lab.tif`, `tiles/<id>_scenes.json`
+**Outputs** (`outputs/morocco/data_training_prep/03_tiles_128px/agyear/`):
+- `tiles/<id>_img.tif`, `tiles/<id>_lab.tif`, `tiles/<id>_dw.tif` (binary Dynamic World cropland), `tiles/<id>_scenes.json`
 - `parcels.csv`
 - `parcel_overlaps.csv`
 - `tiles.parquet`
 - `tiles_qa.jsonl`
 - `tiles_info.json`
 
-### 6.7 Visual check of tiles — `03b_tile_quicklooks.py`
+### 6.7 Visual check of tiles — `05_tile_quicklooks.py` { #67-visual-check-of-tiles--06_tile_quicklookspy }
 
-`03b_tile_quicklooks.py` draws one figure per tile for a visual check of the tile store: the 12 monthly
+`data_training_prep/05_tile_quicklooks.py` draws one figure per tile for a visual check of the tile store: the 12 monthly
 composites as true colour (B4/B3/B2), NDVI and Sentinel-1 VH, the three label rasters (label, parcel index,
 edge pixels) and the mean NDVI and VH per month of the irrigated and rainfed parcel pixels. By default it
 selects, per agricultural year, the three downloaded home tiles with the most pixels of both classes, the tile
 with the most irrigated pixels and the tile with the most rainfed pixels (Sentinel-2 missing data < 1 %);
 `TILE_IDS` selects tiles explicitly. The Sentinel-1 orbit with more observations in the tile is drawn
-(`ORBIT = "auto"`). The region is set with `REGION` at the top, as in scripts 02–04.
+(`ORBIT = "auto"`). The region is set with `REGION` at the top, as in the other scripts.
 
-**Output:** `outputs/<region>/dataset/03_tiles_128px/agyear/quicklooks/<tile_id>.png`
+**Output:** `outputs/<region>/data_training_prep/03_tiles_128px/agyear/quicklooks/<tile_id>.png`
 
 ---
 
@@ -500,7 +545,7 @@ rainfed); no cropland mask is used. Classes, sampling rules, output files and co
 | 2024/25 | 105,793 | 83,672 (1,396) | 22,121 (498) |
 | **Pooled** | **473,675** | **419,883 (7,579)** | **53,792 (1,196)** |
 
-**Output:** `outputs/morocco/dataset/04_pixel_samples/<season>/` (`pixels_X.npy`, `pixels.parquet`, `summary.csv`,
+**Output:** `outputs/morocco/data_training_prep/04_pixel_samples/<season>/` (`pixels_X.npy`, `pixels.parquet`, `summary.csv`,
 `samples_info.json`). The earlier three-class samples with not-cropland pixels are kept in `04c_pixel_samples/`
 and are no longer used.
 
@@ -612,7 +657,7 @@ characterise the parcel-wise dataset before any model is trained.
 ## 8. Output layout and file formats
 
 ```
-outputs/morocco/dataset/
+outputs/morocco/data_training_prep/
 ├── 01_labels/
 │   ├── parcels_labelled.geojson         EPSG:4326 polygons
 │   └── summary.csv, *.png
@@ -623,7 +668,8 @@ outputs/morocco/dataset/
     ├── tiles/
     │   ├── <tile_id>_img.tif            int16, 228 bands (12 months × 19), NODATA −32768, EPSG:32629, 10 m
     │   ├── <tile_id>_lab.tif            int32, 3 bands: label, parcel_idx, edge
-    │   └── <tile_id>_scenes.json        scene IDs per month (S2, S1 asc, S1 dsc)
+    │   ├── <tile_id>_dw.tif             uint8, 1 band: CROPLAND (1 cropland, 0 other, 255 no data; Dynamic World)
+    │   └── <tile_id>_scenes.json        scene IDs per month of the tile's block (S2, S1 asc, S1 dsc)
     ├── parcels.csv                      one row per parcel (parcel_idx = value in the label raster)
     ├── parcel_overlaps.csv              overlapping parcel pairs, their labels and overlap share
     ├── tiles.parquet                    GeoParquet tile index: geometry, season, role, fold(s), QA
@@ -635,7 +681,7 @@ outputs/morocco/dataset/
         ├── chips_p8/  chips_p16/        view C: part_*.npz, index.csv, chips_info.json
         ├── qa_purity.csv, qa_clear_obs.csv
         └── views_info.json
-04_pixel_samples/<season>/               (in outputs/morocco/dataset/) labelled pixels, one folder per year
+04_pixel_samples/<season>/               (in outputs/morocco/data_training_prep/) labelled pixels, one folder per year
     ├── pixels_X.npy                     int16 [pixels, 12 months, 19 bands]
     ├── pixels.parquet                   label, parcel, fold, block, zone, tile, position per pixel
     ├── summary.csv                      pixels and parcels per class and fold
@@ -656,13 +702,13 @@ outputs/morocco/dataset/
 | --- | --- | --- |
 | Pixel models: random forest, gradient boosting, TempCNN (E01, E02) | pixel samples (`04_pixel_samples/<season>/`), Sentinel-2 bands | `fold` (5 rounds: 3 train / 1 validation / 1 test) |
 | Tile models: frozen foundation models with L-TAE + UPerNet, U-TAE, fine-tuning (E03–E05) | full tiles: `_img.tif` (Sentinel-2 bands) + `_lab.tif`, loss only on the labelled pixels of the training folds | same folds; scored at the labelled pixels of the test fold |
-| Annual maps (Phase 5) | wall-to-wall Sentinel-2 tiles over the cropland mask (`s2_download/`) | – |
+| Annual maps (Phase 5) | the downloaded 10.24 km blocks (`data_download/`): 128 px windows for tile models, per-pixel series for pixel models ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)) | – |
 
 Minimal example: read the pixel samples.
 
 ```python
 import json, numpy as np, pandas as pd
-folder = "outputs/morocco/dataset/04_pixel_samples/2023-24"
+folder = "outputs/morocco/data_training_prep/04_pixel_samples/2023-24"
 X = np.load(f"{folder}/pixels_X.npy")                  # [pixels, 12, 19] int16
 meta = pd.read_parquet(f"{folder}/pixels.parquet")      # label, fold, parcel_id, tile_id, row, col, ...
 info = json.load(open(f"{folder}/samples_info.json"))
@@ -680,29 +726,40 @@ red_june = X[0, 9, info["month_bands"].index("B4")] / 10000
 
 ```bash
 conda activate condaml
-python pixelwise_run/01_prepare_labels_Morocco.py   # minutes
-python pixelwise_run/02_make_spatial_folds.py      # minutes
-python pixelwise_run/03_build_tiles.py             # Earth Engine; a few hours; resumable
-python pixelwise_run/04_make_pixel_samples.py      # local; SEASONS per region in the script
+python data_training_prep/01_prepare_labels_Morocco.py   # minutes
+python data_training_prep/02_make_spatial_folds.py       # minutes
+python data_training_prep/03_plan_tiles.py               # tile plan + label rasters (seconds)
+python data_download/01_plan_blocks.py              # every block of the mapping area (no mask); training tiles counted per block
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland image for every block (Earth Engine)
+python data_download/02b_s2.py                      # Sentinel-2 per cropland / training block (Earth Engine; resumable; cluster for a whole region)
+python data_download/02c_s1.py                      # Sentinel-1 per cropland / training block (Earth Engine)
+python data_download/03_build_vrt.py                # VRT mosaic per source and year
+python data_training_prep/04_cut_tiles.py                # training tiles cut from the blocks (local)
+python data_training_prep/05_tile_quicklooks.py          # visual check of selected tiles
+python pixelwise_run/04_make_pixel_samples.py       # local; SEASONS per region in the script
 # archived parcel-wise step: python parcelwise_run/04_make_views.py
 ```
 
-Scripts 02–04 serve both study regions: set `REGION = "morocco"` at the top of each (the default). The settings
-that differ between regions (projection, agricultural year, block size, map boundaries) are in
-`pixelwise_run/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
+Every script serves both study regions: set `REGION = "morocco"` at the top of each (the default). The settings
+that differ between regions (projection, agricultural year, block size of the folds, map boundaries) are in
+`data_download/regions.py`; the Utah dataset is built the same way ([Utah training data](utah.md)).
 
-Run 03 first with `N_TEST_TILES = 20`, then check the result with `pixelwise_run/03b_tile_quicklooks.py` before the full run (the archived parcel-wise checks used `parcelwise_run/05_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py`).
+Run 03 first with `N_TEST_TILES = 20` and the downloads with `N_TEST_BLOCKS` set to a few blocks, then check the
+result with `data_training_prep/05_tile_quicklooks.py` before the full run (the archived parcel-wise checks used
+`parcelwise_run/05_inspect_dataset.py` and `tools/a3_export_chips_geotiff.py`).
 
-To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/morocco/dataset/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
+To view the whole tile store as one layer, `tools/a4_build_vrt.py` writes virtual rasters (one per agricultural year: labels, true / false colour and Sentinel-1 per month) to `outputs/morocco/data_training_prep/03_tiles_128px/agyear/vrt/`. They only point to the tiles, so nothing is copied.
 
 The settings sit at the top of each script:
 
 | Script | Main settings |
 | --- | --- |
-| 01 | `SEASON_START_MONTH` (= 9, from `regions.py`), `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT`, `CHECK_WORLDCOVER` |
+| 01 | `SEASON_START_MONTH` (= 9, from `regions.py`), `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT` |
 | 02 | `REGION`, `N_FOLDS = 5`, `BLOCK_KM` (= 20, from `regions.py`), `CANDIDATE_KM`, `SEED = 42` |
-| 03 | `REGION`, `TILE_PX = 128`, `GSD_M = 10`, `CRS_EPSG` (= 32629, from `regions.py`), `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60`, `DOWNLOAD`, `SEASONS = None` (all years; or one year at a time), `DOWNLOAD_WORKERS = 8`, `N_TEST_TILES` |
-| 04 | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `MAX_PX_PER_PARCEL = 100`, `NONCROP_PX_PER_TILE = 100`, `NONCROP_BUFFER_PX = 2`, `SEED = 42` |
+| 03 (`data_training_prep/03_plan_tiles.py`) | `REGION`, `CRS_EPSG` (= 32629, from `regions.py`), `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `N_TEST_TILES`; tile size and pixel size (`TILE_PX = 128`, `GSD_M = 10`) in `data_download/download_common.py` |
+| 02a / 02b / 02c (`data_download/`) | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60` (02b), `DOWNLOAD_WORKERS = 4`, `N_TEST_BLOCKS` |
+| 04 (`data_training_prep/04_cut_tiles.py`) | `REGION`, `OVERWRITE = False` |
+| 04 (`pixelwise_run/04_make_pixel_samples.py`) | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `MAX_PX_PER_PARCEL = 100`, `SEED = 42` |
 | 04 (archived, `parcelwise_run/04_make_views.py`) | `REGION`, `SEASONS = None` (all years → `views/`; one year → `views_<year>/`), `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
 
 Earth Engine access uses a service-account key in `secrets/`, which is never committed.

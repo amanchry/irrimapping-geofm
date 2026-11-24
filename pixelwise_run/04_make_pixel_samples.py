@@ -5,7 +5,7 @@
 What it does
 ------------
 Pixel-wise models classify every 10 m pixel on its own, so they are trained and tested on pixels instead of
-parcels. This script draws the labelled pixels from the parcel tile store (03_build_tiles.py) and writes one
+parcels. This script draws the labelled pixels from the parcel tile store (data_training_prep/03_plan_tiles.py ... 05_stack_tiles.py) and writes one
 pixel table per agricultural year: the 12-month time series of every sampled pixel plus its label, parcel,
 fold and position. Every pixel-wise experiment starts from this table, so all models see the same pixels.
 
@@ -14,7 +14,7 @@ Classes (2 classes: the experiments compare models on the surveyed cropland parc
   1 irrigated      pixels of irrigated parcels (label raster of 03)
   2 rainfed        pixels of rainfed parcels
 Pixels outside the surveyed parcels are not used: their class is unknown. No cropland mask is used; where
-cropland is (the mask of cropland_extent/make_cropland_mask.py) is a question of the mapping phase.
+cropland is (Dynamic World per tile, data_download/02a_dynamic_world.py) is a question of the mapping phase.
 
 Sampling
 --------
@@ -23,12 +23,12 @@ pixels); parcels with no inner pixel fall back to all their pixels (edge_fallbac
 MAX_PX_PER_PARCEL pixels per parcel, drawn at random (SEED), so large parcels do not dominate and the pixels of
 one parcel stay a small, fixed group.
 
-Folds (the spatial folds of 02_make_spatial_folds.py)
+Folds (the spatial folds of data_training_prep/02_make_spatial_folds.py)
 -----------------------------------------------------
 Every pixel takes its parcel's fold and 20 km block (all pixels of a parcel are in the same fold, so no parcel is
 split between training and test).
 
-Outputs (outputs/<region>/dataset/04_pixel_samples/<season>/)
+Outputs (outputs/<region>/data_training_prep/04_pixel_samples/<season>/)
 -------------------------------------------------------------
 pixels_X.npy        int16 [N, 12 months, 19 bands]: the bands of the tile store (12 Sentinel-2 bands,
                     S2_NCLEAR, VV/VH and scene counts per Sentinel-1 orbit), NODATA = -32768, same scaling
@@ -50,6 +50,9 @@ import numpy as np
 import pandas as pd
 import rasterio
 
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data_download"))   # regions.py (data_download/)
 from regions import dataset_dir, settings
 
 # ================================ SETTINGS ================================
@@ -58,7 +61,7 @@ SEASONS = {"morocco": ["2023/24", "2024/25"],
            "utah": ["2020/21", "2023/24"]}[REGION]   # label years (each needs its tiles of 03)
 MAX_PX_PER_PARCEL = 100                    # random inner pixels per parcel (None = all)
 SEED = 42
-TILE_ROOT = dataset_dir(REGION) / "03_tiles_128px" / "agyear"          # parcel tile store (03_build_tiles.py)
+TILE_ROOT = dataset_dir(REGION) / "03_tiles_128px" / "agyear"          # parcel tile store (data_training_prep/03_plan_tiles.py ... 05_stack_tiles.py)
 OUT_ROOT = dataset_dir(REGION) / "04_pixel_samples"
 # ==========================================================================
 
@@ -122,7 +125,7 @@ def main():
         tiles = tiles[[(TILE_ROOT / "tiles" / f"{t}_lab.tif").exists() for t in tiles["tile_id"]]].reset_index(drop=True)
         print(f"\n== {REGION} {season}: {len(tiles):,} downloaded tiles")
         if tiles.empty:
-            print("  no tiles with label rasters: run 03_build_tiles.py for this season first")
+            print("  no tiles with label rasters: run data_training_prep/03_plan_tiles.py and 04_cut_tiles.py for this season first")
             continue
         out_dir = OUT_ROOT / tag
         out_dir.mkdir(parents=True, exist_ok=True)

@@ -32,7 +32,7 @@ Next steps
 
 | Date | Decision | Reason / reference |
 | --- | --- | --- |
-| 2026-11-19 | Six foundation models: Prithvi, Clay, TerraMind, AgriFM (image patches) + Presto, TESSERA (pixel time series), same decoder and training in E03 / E05 | The pixel-wise target needs a pretrained model that works at 10 m; [Foundation models](foundation_models.md) |
+| 2026-11-19 | Six foundation models: Prithvi, Clay, TerraMind, AgriFM (image patches) + Presto, TESSERA (pixel time series), same decoder and training in E03 / E05 | The pixel-wise target needs a pretrained model that works at 10 m; [Foundation models](foundation_models/index.md) |
 | 2026-11-19 | Experiments run on the existing Earth Engine tiles; wall-to-wall composites for the maps planned from STAC per 10.24 km block, after a parity check against the Earth Engine tiles | Earth Engine 48 MB request limit, about 40 h per year for Morocco's 132,616 tiles on one stream; [plan](experiments/plan.md#3-after-the-experiments) |
 | 2026-11-19 | Pixel-wise experiments E01–E05 on the same out-of-fold pixels; headline = macro-F1 of irrigated and rainfed on parcel pixels; 3-class macro-F1 also reported; no comparison with the archived parcel-wise results | [Experiment plan](experiments/plan.md) |
 | 2026-11-19 | Training pixels: inner pixels of the parcels, ≤ 100 per parcel; not-cropland pixels = 0 votes in the mask, ≤ 100 per tile, ≥ 2 px from any parcel | [Pixel samples](phase1_data/pixel_samples.md) |
@@ -88,6 +88,47 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-24 (data download on 10.24 km blocks; training data in its own folder)
+
+- Decision [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them):
+  every source is downloaded once per region and agricultural year from Earth Engine on one grid of 10.24 km blocks
+  over the whole mapping area; Dynamic World first, as a binary cropland image per block; Sentinel-2
+  and Sentinel-1 only for blocks with cropland or training tiles; the training tiles are cut out of the blocks; the
+  maps classify block by block and merge the block maps. Supersedes D18 (STAC).
+- New folder `data_download/`: `01_plan_blocks.py` (every block of the mapping area, training tiles counted per block, map
+  of the blocks), `02a_dynamic_world.py` (binary cropland image per block: 1 where "crops" is the most
+  frequent Dynamic World class of the year), `02b_s2.py`, `02c_s1.py` (blocks with cropland or training
+  tiles), `03_build_vrt.py`, reference maps `04a`–`04c` and `00_union_cropland_mask.py` (union of four products, kept
+  for later, not used), all from `cropland_extent/`; shared `regions.py` (the only copy) and `download_common.py`.
+  Morocco: 4,199 blocks over 414,906 km², Utah 2,213 over 219,809 km² (one grid per region, the same every year).
+- New folder `data_training_prep/`: labels (01), folds (02), tile plan and label rasters (`03_plan_tiles.py`), training
+  tiles cut from the blocks (`04_cut_tiles.py`), quick-looks (05). The duplicated scripts 01–03b and `regions.py` of
+  `pixelwise_run/` and `parcelwise_run/` were removed.
+- Checked: one Morocco block of every source downloaded (Sentinel-2 159 MB in 164 s, Sentinel-1 82 MB in 92 s,
+  binary Dynamic World cropland 3–25 KB in about 6 s); the training tiles cut from it are identical to the existing
+  ones; of three Dynamic World test blocks, the coastal one without cropland is skipped for Sentinel-2 and
+  Sentinel-1; the planning step
+  reproduces `parcels.csv` and the label rasters exactly; all scripts import.
+- Retired to `tmp_trash/retired/`: `s2_download/` (STAC; the Utah 2023/24 STAC blocks on the cluster are untouched),
+  `cropland_extent/` (scripts moved), `pixelwise_run/06_build_cropland_tiles.py` and an interim `data_prep/`.
+- Output folders named after the code folders: `outputs/<region>/data_download/` (blocks per source, `grid/`, and
+  `reference/` for the cropland layers of 00 and 04a–04c, formerly `outputs/<region>/cropland_extent/`) and
+  `outputs/<region>/data_training_prep/` (labels, folds, training tiles, pixel samples; formerly
+  `outputs/<region>/dataset/`). The previous dataset of both regions was moved to `tmp_trash/old_outputs/` to be
+  rebuilt with the new pipeline.
+
+### 2026-11-24 (Foundation models section; explainer figures)
+
+- The single Foundation models page became a section: an [overview](foundation_models/index.md) of the six models
+  as published, one page per model (original pretraining, architecture, input, tokens, encoder, output, with
+  diagrams and the source architecture figure where its licence allows: Prithvi, Clay, TESSERA CC BY 4.0; TerraMind,
+  AgriFM Apache-2.0; Presto linked only), and [Foundation models in this study](foundation_models/in_this_study.md)
+  for the adaptation (bands, tiles, months, heads, frozen and fine-tuned set-ups, weights). New figure
+  `tools/a10_geofm_pretraining_figure.py`; the tile figure (`tools/a8_geofm_tokens_figure.py`) now names the bands of
+  each model and the size of a token. All links to the old page were updated.
+- Start-to-end explainer figures for every experiment (`tools/a9_experiment_explainers.py`): one each for E01–E03,
+  one per encoder for E04 and one per training strategy for E05, shown on the experiment pages.
 
 ### 2026-11-22 (E03, E04, E05 results, Morocco)
 
@@ -161,7 +202,7 @@ Next steps
 
 - [RQ2 · Fine-tuning](phase2_models/fine_tuning.md): six ways to adapt a GeoFM (frozen, full, partial, PEFT, LP-FT,
   continued pretraining), figures (strategies, animation, LoRA), workflow, and six papers to read.
-- [Foundation models](foundation_models.md): configuration rewritten for the pixel-wise set-up (tiles, head, frozen
+- [Foundation models](foundation_models/index.md): configuration rewritten for the pixel-wise set-up (tiles, head, frozen
   / LoRA / fine-tuned per experiment); the parcel-wise chip set-up kept as an archived subsection.
 - [RQ1 · Experiment plan](phase2_models/experiment_plan.md) rewritten for the pixel-wise experiments E01–E04; the
   parcel-wise plan moved to the [archive](archive/parcel_wise_classification/experiment_plan.md).
@@ -240,7 +281,7 @@ Next steps
   Both are E03 / E05 encoders like the other four: every pixel of a tile is encoded (128-d), the 10 m map goes to the
   same UPerNet head; Sentinel-2 only (Presto: S1 / ERA5 / SRTM / Dynamic World tokens masked; TESSERA: empty
   Sentinel-1 branch). LoRA on TESSERA's feed-forward layers (its attention packs q, k, v). Checked on a small tile
-  subset on the Mac. Pages: [Foundation models](foundation_models.md), [E03](experiments/E04_frozen_geofm.md),
+  subset on the Mac. Pages: [Foundation models](foundation_models/index.md), [E03](experiments/E04_frozen_geofm.md),
   E05 (deferred).
 - **Experiment scripts E01–E05** in `experiments/` (one folder per experiment with `run.py`): shared code
   `pixel_common.py` (samples, features, PASTIS rotation, metrics, block bootstrap from per-block confusion matrices),
@@ -460,7 +501,7 @@ checked) and a docs check led to these fixes:
 
 ### 2026-11-12 (tile quick-looks; tile store check on the cluster; Utah 2023/24 tiles downloaded)
 
-- New script `ml_dataset_prep/03b_tile_quicklooks.py`: one figure per tile (monthly true colour, NDVI, Sentinel-1 VH, label rasters, mean NDVI and VH per class); documented in [Morocco training data §6.7](phase1_data/morocco.md#67-visual-check-of-tiles--03b_tile_quicklookspy).
+- New script `ml_dataset_prep/03b_tile_quicklooks.py`: one figure per tile (monthly true colour, NDVI, Sentinel-1 VH, label rasters, mean NDVI and VH per class); documented in [Morocco training data §6.7](phase1_data/morocco.md#67-visual-check-of-tiles--06_tile_quicklookspy).
 - Utah 2023/24 tiles downloaded on the cluster: 2,720 of 2,720 tiles (9.1 GB).
 - Check of every downloaded tile of both regions (band order, data type, grid, label consistency with `parcels.csv`, value ranges, missing-data consistency, parcel completeness): Morocco 2,987 tiles without errors; Utah only isolated off-parcel pixel flags (single-band Sentinel-2 gaps in one month, one permanent strong radar reflector). Parcels absent from the label rasters: Morocco 6 (covered by an overlapping parcel), Utah 2 (slivers below 0.13 ha whose pixels collide with a neighbouring parcel).
 - Utah 2023/24 Sentinel-1 is descending only (ascending data in 273 of 2,720 tiles, median 0 months), a consequence of the Sentinel-1A-only acquisition plan after the loss of Sentinel-1B; the Utah views have to use the descending orbit.
@@ -620,7 +661,7 @@ were not.
 
 ### 2026-11-06 (Foundation models page; academic register)
 
-- New page [Foundation models](foundation_models.md) after *Environment Setup*: selection criteria, overview table
+- New page [Foundation models](foundation_models/index.md) after *Environment Setup*: selection criteria, overview table
   (developer, architecture, pretraining, paper, weights), configuration in this study, notes per model, weights
   folders and references. It is now the only place with per-model tables.
 - Removed the duplicated model tables from the Introduction, Data sources, Environment setup, Evaluation protocol §3

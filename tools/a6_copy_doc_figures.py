@@ -14,13 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]               # project folder
 DOCS = ROOT / "docs"
 MAX_WIDTH = 1600                                         # px; wider figures are downscaled
 FIGURES = {                                              # source (in the project) -> target (in docs/)
-    "outputs/morocco/dataset/01_labels/parcels_map.png":                 "phase1_data/figures/parcels_map.png",
-    "outputs/morocco/dataset/01_labels/class_balance_and_size.png":      "phase1_data/figures/class_balance_and_size.png",
-    "outputs/morocco/dataset/01_labels/survey_timing.png":               "phase1_data/figures/survey_timing.png",
-    "outputs/morocco/dataset/02_folds/class_similarity_by_distance.png": "phase1_data/figures/class_similarity_by_distance.png",
-    "outputs/morocco/dataset/02_folds/spatial_folds.png":                "phase1_data/figures/spatial_folds.png",
-    "outputs/morocco/dataset/02_folds/spatial_folds_blocks.png":         "phase1_data/figures/spatial_folds_blocks.png",
-    "outputs/morocco/dataset/02_folds/train_test_distance.png":          "phase1_data/figures/train_test_distance.png",
+    "outputs/morocco/data_training_prep/01_labels/parcels_map.png":                 "phase1_data/figures/parcels_map.png",
+    "outputs/morocco/data_training_prep/01_labels/class_balance_and_size.png":      "phase1_data/figures/class_balance_and_size.png",
+    "outputs/morocco/data_training_prep/01_labels/survey_timing.png":               "phase1_data/figures/survey_timing.png",
+    "outputs/morocco/data_training_prep/02_folds/class_similarity_by_distance.png": "phase1_data/figures/class_similarity_by_distance.png",
+    "outputs/morocco/data_training_prep/02_folds/spatial_folds.png":                "phase1_data/figures/spatial_folds.png",
+    "outputs/morocco/data_training_prep/02_folds/spatial_folds_blocks.png":         "phase1_data/figures/spatial_folds_blocks.png",
+    "outputs/morocco/data_training_prep/02_folds/train_test_distance.png":          "phase1_data/figures/train_test_distance.png",
     "outputs/morocco/study/01_inspection/observations_per_month.png":    "phase1_data/figures/observations_per_month.png",
     "outputs/morocco/study/01_inspection/purity.png":                    "phase1_data/figures/purity.png",
     "outputs/morocco/study/01_inspection/seasonal_profiles.png":         "phase1_data/figures/seasonal_profiles.png",
@@ -29,13 +29,13 @@ FIGURES = {                                              # source (in the projec
     "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/cv_random_vs_spatial.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/cv_random_vs_spatial_baseline.png",
     "experiments/parcel_wise_classification/E01_frozen_pca_nested/results/s1s2-all_agyear_tiles-inner-asc/importance.png": "archive/parcel_wise_classification/E01_frozen_pca_nested/figures/importance_baseline.png",
     # cropland extent and pixel samples (pixel-wise classification)
-    "outputs/morocco/cropland_extent/cropland_mask/2023-24/cropland_mask_quicklook.png": "phase1_data/figures/cropland_mask_morocco_2023-24.png",
-    "outputs/utah/cropland_extent/cropland_mask/2023-24/cropland_mask_quicklook.png":    "phase1_data/figures/cropland_mask_utah_2023-24.png",
+    "outputs/morocco/data_download/reference/cropland_mask/2023-24/cropland_mask_quicklook.png": "phase1_data/figures/cropland_mask_morocco_2023-24.png",
+    "outputs/utah/data_download/reference/cropland_mask/2023-24/cropland_mask_quicklook.png":    "phase1_data/figures/cropland_mask_utah_2023-24.png",
     "outputs/cropland_tiles_extent_2023-24.png":                                         "phase1_data/figures/cropland_tiles_extent_2023-24.png",
-    "outputs/morocco/cropland_extent/esa_worldcover/ESA_WorldCover_10m_2021_Morocco.png": "phase1_data/figures/worldcover_2021_morocco.jpg",
-    "outputs/utah/cropland_extent/esa_worldcover/ESA_WorldCover_10m_2021_Utah.png":       "phase1_data/figures/worldcover_2021_utah.jpg",
-    "outputs/morocco/cropland_extent/lgrip30/LGRIP30_2015_Morocco.png":                   "phase1_data/figures/lgrip30_2015_morocco.png",
-    "outputs/utah/cropland_extent/lgrip30/LGRIP30_2015_Utah.png":                         "phase1_data/figures/lgrip30_2015_utah.png",
+    "outputs/morocco/data_download/reference/esa_worldcover/ESA_WorldCover_10m_2021_Morocco.png": "phase1_data/figures/worldcover_2021_morocco.jpg",
+    "outputs/utah/data_download/reference/esa_worldcover/ESA_WorldCover_10m_2021_Utah.png":       "phase1_data/figures/worldcover_2021_utah.jpg",
+    "outputs/morocco/data_download/reference/lgrip30/LGRIP30_2015_Morocco.png":                   "phase1_data/figures/lgrip30_2015_morocco.png",
+    "outputs/utah/data_download/reference/lgrip30/LGRIP30_2015_Utah.png":                         "phase1_data/figures/lgrip30_2015_utah.png",
 }
 # --------------------------------------------------------------------------
 

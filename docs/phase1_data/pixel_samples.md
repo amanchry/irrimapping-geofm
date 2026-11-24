@@ -3,7 +3,7 @@
 The continuous maps classify every 10 m pixel on its own, so the models are trained and tested on **pixels**, not
 on parcels ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)).
 `pixelwise_run/04_make_pixel_samples.py` turns the labelled parcels into labelled pixels. It creates no new
-labels: the label of a pixel is the survey label of its parcel, which `03_build_tiles.py` already wrote into the
+labels: the label of a pixel is the survey label of its parcel, which `data_training_prep/03_plan_tiles.py` already wrote into the
 label raster of each tile. The script picks pixels and writes **one row per pixel**: its 12-month time series, its
 label, parcel, fold and position. Every pixel-wise experiment starts from this table, so all models see the same
 pixels.
@@ -40,7 +40,7 @@ Where cropland lies, and how land that is not cropland is handled, is decided in
 
 ## Output
 
-`outputs/<region>/dataset/04_pixel_samples/<season>/`
+`outputs/<region>/data_training_prep/04_pixel_samples/<season>/`
 
 | File | Content |
 | --- | --- |

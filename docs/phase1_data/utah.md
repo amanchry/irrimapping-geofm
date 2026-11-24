@@ -2,8 +2,9 @@
 
 This page describes the **Utah dataset**, the second, independent study area
 ([D13](../decisions.md#d13-utah-as-a-second-independent-study-area)). It is built with the same pipeline as the
-[Morocco training data](morocco.md): only the label script (`01_prepare_labels_Utah.py`) is region-specific;
-scripts 02–04 are the same files, run with `REGION = "utah"`. As in Morocco, the experiments classify the labelled
+[Morocco training data](morocco.md): only the label script (`data_training_prep/01_prepare_labels_Utah.py`) is
+region-specific; the other scripts of `data_training_prep/`, `data_download/` and `pixelwise_run/` are the same files,
+run with `REGION = "utah"`. As in Morocco, the experiments classify the labelled
 10 m pixels of the crop fields as irrigated or rainfed
 ([D16](../decisions.md#d16-pixel-wise-classification-for-continuous-maps)); no cropland mask is used. The
 experiments run in Morocco first; Utah follows later with the same plan.
@@ -13,9 +14,10 @@ experiments run in Morocco first; Utah follows later with the same plan.
     (2023/24) and WRLU 2021 (2020/21). For 2023/24 the tile images (03) are complete;
     the [pixel samples](pixel_samples.md) (04) are to be rebuilt on the cluster with the two-class script
     (`04_pixel_samples/`), after which E01–E05 follow the Morocco runs. The earlier three-class samples are kept in
-    `04c_pixel_samples/` and are no longer used. The 2020/21 data are prepared for the temporal test (RQ3). The wall-to-wall
-    Sentinel-2 tiles of the STAC download (`s2_download/`) are described in
-    [Cropland extent and mask §5](cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
+    `04c_pixel_samples/` and are no longer used. The 2020/21 data are prepared for the temporal test (RQ3). The
+    wall-to-wall imagery is downloaded per 10.24 km block by `data_download/` (Earth Engine), which replaces the
+    retired STAC download ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them));
+    see [Cropland extent and mask §5](cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
 
 **Contents**
 
@@ -41,12 +43,12 @@ experiments run in Morocco first; Utah follows later with the same plan.
 | --- | --- | --- |
 | 1 | `01_prepare_labels_Utah.py` | 12,015 labelled crop fields in 550 sampled cells: WRLU 2024 (5,000 irrigated, 1,013 rainfed) and WRLU 2021 (4,987 irrigated, 1,015 rainfed); plus all 245,648 labelled crop fields of both years before sampling |
 | 2 | `02_make_spatial_folds.py` (`REGION = "utah"`) | a fold (0–4) per field, from 183 spatial blocks of 20 km |
-| 3 | `03_build_tiles.py` (`REGION = "utah"`) | tile plan: 5,436 tiles (2,720 for 2023/24, 2,716 for 2020/21); label rasters written |
+| 3 | `data_training_prep/03_plan_tiles.py`, `data_download/01_plan_blocks.py` … `02c_s1.py`, `data_training_prep/04_cut_tiles.py` (`REGION = "utah"`) | tile plan: 5,436 tiles (2,720 for 2023/24, 2,716 for 2020/21); label rasters written; images cut from the downloaded blocks |
 | 4 | `04_make_pixel_samples.py` (`REGION = "utah"`) | labelled pixels of the crop fields (irrigated, rainfed) per year (`04_pixel_samples/<season>/`): 2023/24 to be rebuilt with the two-class script |
 
-All outputs are in `outputs/utah/dataset/` (`01_labels/`, `02_folds/`, `03_tiles_128px/agyear/`,
+All outputs are in `outputs/utah/data_training_prep/` (`01_labels/`, `02_folds/`, `03_tiles_128px/agyear/`,
 `04_pixel_samples/`), with the same
-file names and columns as `outputs/morocco/dataset/`.
+file names and columns as `outputs/morocco/data_training_prep/`.
 
 ---
 
@@ -90,8 +92,7 @@ Washington, Utah, the IrrMap states):
 | --- | --- | --- |
 | Water-Related Land Use (WRLU), Utah Division of Water Resources | labels | one polygon layer per year, 2017–2025; all agricultural fields of Utah and of the parts of its river basins in Idaho, Wyoming, Colorado, Nevada and Arizona; crop (`Descriptio`, `CropGroup`), irrigation method (`IRR_Method`), basin, county, state. In `data/Utah_field_data/` |
 | FAO GAUL 2024 (level 1) | maps | state outlines (`data/admin_boundaries/`) |
-| Sentinel-2 L2A, Cloud Score+, Sentinel-1 GRD | imagery | as for Morocco (Google Earth Engine); the models use Sentinel-2 only (D14) |
-| Sentinel-2 L2A (Earth Search STAC, `sentinel-2-c1-l2a`) | wall-to-wall imagery | `s2_download/`, every tile with ≥ 1% cropland |
+| Sentinel-2 L2A, Cloud Score+, Sentinel-1 GRD, Dynamic World | imagery | as for Morocco: Google Earth Engine, per 10.24 km block (`data_download/`), for the training tiles and the wall-to-wall maps ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)); the models use Sentinel-2 only (D14) |
 
 ---
 
@@ -99,13 +100,32 @@ Washington, Utah, the IrrMap states):
 
 **Agricultural year.** WRLU year *Y* describes the crops of the growing season *Y*. The dataset uses the US water
 year, 1 October (*Y*−1) to 30 September (*Y*), written as for Morocco: WRLU 2024 → `2023/24`, WRLU 2021 → `2020/21`.
-It covers winter wheat from its autumn sowing to the July harvest, the whole irrigation season (mid-April to
-mid-October) and June–September, when irrigated and dry crops differ most. A calendar year would start in snow and
-cut off the autumn sowing. As in Morocco, every field gets the 12 monthly composites of its own year.
+It covers winter wheat from emergence to the July harvest, the whole summer irrigation season and June–September,
+when irrigated and dry crops differ most. A calendar year would start in snow and cut off the autumn crops. As in
+Morocco, every field gets the 12 monthly composites of its own year.
+
+**Check against two crop calendars.** The window was compared with the GGCMI Phase 3 crop calendar (Jägermeyr et al.,
+2021; 0.5° grid; median over the 92 cells inside Utah) and the FAO AQUASTAT irrigated crop calendar (FAO, 2023), which
+gives one calendar for the US Southwest (Arizona, California, Hawaii, Nevada, New Mexico and Utah).
+
+| Crops | GGCMI Phase 3 (Utah cells) | FAO AQUASTAT (US Southwest) | Inside Oct–Sep? |
+| --- | --- | --- | --- |
+| Winter wheat | irrigated sown about 1 September (day 244), rainfed 19–29 September (day 262–272); harvest July (sources: MIRCA2000, SAGE) | November – May | growth and harvest yes; the September sowing falls in m12 of the previous year |
+| Spring wheat, barley | sown April, harvest July – August | barley November – April | yes |
+| Maize | sown about 10 May (day 130), mature about mid-October (155 days; source: SAGE) | April – August | yes, except the last days before harvest |
+| Vegetables, potatoes, sugar beet, sunflower | gap-filled values only | April – August | yes |
+| Temporary fodder | not in GGCMI | November – March | yes |
+
+GGCMI places Utah's winter-wheat sowing in September, before 1 October, so the window starts with the wheat already
+sown or emerging rather than at sowing; bare, freshly sown fields in September are not part of a field's year. Maize
+can be harvested in the first half of October, the first month of the next year. No 12-month window avoids both
+cuts; October – September keeps the whole summer irrigation season, including September. The FAO calendar mixes
+Utah with the low deserts of Arizona and California (winter cereals and fodder from November to April) and so
+describes Utah poorly. Alfalfa and other hay are in neither dataset.
 
 **How much changes between years.** All labelled crop fields of each year (the whole of WRLU, not only the sample)
 were compared with WRLU 2024. A field counts as the same field when its outline overlaps a 2024 outline with an
-intersection over union above 0.8 (`outputs/utah/dataset/01_labels/year_change_vs_2024.csv`):
+intersection over union above 0.8 (`outputs/utah/data_training_prep/01_labels/year_change_vs_2024.csv`):
 
 | WRLU year | Labelled crop fields | Same outline as in 2024 | Crop changed | Irrigation method changed | Class changed (irrigated ↔ rainfed) |
 | --- | --- | --- | --- | --- | --- |
@@ -274,7 +294,7 @@ and Wyoming (irrigated + rainfed). 1,171 of the 2,028 rainfed fields (58%) are i
 | all cells with rainfed + matching irrigated-only | ~4,800 + 1,500 | ~60,000 | ~10× |
 | all fields (`SAMPLE = False`) | ~12,400 | ~122,000 | ~20× |
 
-**Outputs** (`outputs/utah/dataset/01_labels/`): `parcels_labelled.geojson` (the sample), `source_counts.csv`,
+**Outputs** (`outputs/utah/data_training_prep/01_labels/`): `parcels_labelled.geojson` (the sample), `source_counts.csv`,
 `summary.csv`, `summary_by_zone.csv`, `sampled_cells.csv`, `year_change_vs_2024.csv`; before sampling:
 `all_crop_fields.gpkg`, `all_fields_summary.csv`, `all_fields_by_zone.csv`, `all_fields_*.png`; figures.
 
@@ -322,7 +342,8 @@ collects more, smaller blocks than the others (30–33). Morocco shows the same 
 
 ## 9. Script 03 — tile store
 
-The same script as for Morocco (`REGION = "utah"`). Grid, bands, cloud mask and file formats are unchanged
+The same scripts as for Morocco (`data_training_prep/03_plan_tiles.py`, the `data_download/` blocks,
+`data_training_prep/04_cut_tiles.py`; `REGION = "utah"`). Grid, bands, cloud mask and file formats are unchanged
 ([Morocco, section 6](morocco.md#6-script-03--build_tiles)). Two settings come from `regions.py`: the projection
 (UTM 12N, EPSG:32612) and the first month (October, so `m01` = October).
 
@@ -393,11 +414,17 @@ years. Per round of the 5-fold rotation:
 
 ```bash
 conda activate condaml
-python pixelwise_run/01_prepare_labels_Utah.py     # ~1 min; YEARS = [2024, 2021]
-# in 02, 03 and 04 set REGION = "utah" at the top, then:
-python pixelwise_run/02_make_spatial_folds.py      # seconds
-python pixelwise_run/03_build_tiles.py             # SEASONS = ["2023/24"]; first N_TEST_TILES = 20; Earth Engine, resumable
-python pixelwise_run/04_make_pixel_samples.py      # SEASONS per region in the script -> 04_pixel_samples/<season>/
+python data_training_prep/01_prepare_labels_Utah.py      # ~1 min; YEARS = [2024, 2021]
+# in every further script set REGION = "utah" at the top, then:
+python data_training_prep/02_make_spatial_folds.py       # seconds
+python data_training_prep/03_plan_tiles.py               # tile plan + label rasters
+python data_download/01_plan_blocks.py              # every block of the mapping area (no mask); training tiles counted per block
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland image for every block
+python data_download/02b_s2.py                      # cropland / training blocks; SEASONS per region in the script; first N_TEST_BLOCKS = 1; resumable
+python data_download/02c_s1.py
+python data_download/03_build_vrt.py
+python data_training_prep/04_cut_tiles.py                # training tiles cut from the blocks
+python pixelwise_run/04_make_pixel_samples.py       # SEASONS per region in the script -> 04_pixel_samples/<season>/
 ```
 
 Run everything in the `condaml` environment: another GDAL / GEOS version once gave one field more.
@@ -406,7 +433,7 @@ Run everything in the `condaml` environment: another GDAL / GEOS version once ga
 | --- | --- | --- |
 | 01 labels, 02 folds | **all years in `YEARS`** at once (local, ~1 min) | sampled cells, parcel numbers and folds are fixed once, the same for every year |
 | 03 plan + label rasters | all years (local, seconds) | the parcel numbers in the label rasters never change |
-| 03 Earth Engine download | **only the years in `SEASONS`** | 2024 first (`["2023/24"]`), 2021 later (`["2020/21"]`); finished tiles are skipped |
+| block download (`data_download/02a`–`02c`), cut-out (`data_training_prep/04`) | **only the years in `SEASONS`** of the download scripts | the training year 2023/24 and the test year 2020/21 can be run one at a time; finished blocks and existing tiles are skipped |
 | 04 pixel samples | **only the years in `SEASONS`** (each needs its tiles) | each year in its own folder: `04_pixel_samples/2023-24/`, `04_pixel_samples/2020-21/` |
 
 !!! note "Archived: parcel-wise set-up"
@@ -416,7 +443,7 @@ Run everything in the `condaml` environment: another GDAL / GEOS version once ga
 Running 01 with one year only and adding the other year later would redraw the cells and rebalance the folds, and
 the two years would no longer be paired.
 
-Region settings (`pixelwise_run/regions.py`): `crs_epsg = 32612`, `start_month = 10`, `block_km = 20`, map
+Region settings (`data_download/regions.py`): `crs_epsg = 32612`, `start_month = 10`, `block_km = 20`, map
 boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`, `EXCLUDE_CROPS`,
 `IRRIGATED_METHODS`, `RAINFED_METHODS`, `STATES`, `EXPORT_ALL_FIELDS`, `SAMPLE`, `CELL_M`, `N_RAINFED_CELLS`,
 `N_IRRIGATED_CELLS`, `MAX_CELLS_PER_BLOCK`, `SEED`.

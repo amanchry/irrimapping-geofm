@@ -31,8 +31,8 @@ TID = "2023-24_398_2810"                     # example tile (Morocco 2023/24, Do
 MONTH = 6                                    # month shown as true colour (index in the agricultural year: 6 = March)
 # ==========================================================================
 
-T = R / "outputs/morocco/dataset/03_tiles_128px/agyear"
-S = R / "outputs/morocco/dataset/04_pixel_samples/2023-24"
+T = R / "outputs/morocco/data_training_prep/03_tiles_128px/agyear"
+S = R / "outputs/morocco/data_training_prep/04_pixel_samples/2023-24"
 info = json.loads((T / "tiles_info.json").read_text())
 MB = info["month_bands"]
 with rasterio.open(T / "tiles" / f"{TID}_img.tif") as src:

@@ -6,9 +6,7 @@ settings at the top of each script.
 
 | Step | Script | What it does |
 | --- | --- | --- |
-| 01 | `01_prepare_labels_Morocco.py`, `01_prepare_labels_Utah.py` | labelled parcels |
-| 02 | `02_make_spatial_folds.py` | 20 km blocks, 5 spatial folds |
-| 03 | `03_build_tiles.py` (+ optional `03b_tile_quicklooks.py`) | 128 px tile store (Earth Engine) |
+| 01–03 | `../data_training_prep/` (shared) | labels, spatial folds, training tiles cut from the blocks of `../data_download/` (formerly copies in this folder; the cropland-mask check of 01 is no longer run) |
 | 04 | `04_make_views.py` | parcel features and patch-aligned chips per parcel |
 | 05 | `05_inspect_dataset.py` | checks of the dataset (inventory, observations, purity, profiles) |
 | 06 | `06a_embed_clay.py`, `06b_embed_prithvi.py`, `06c_embed_terramind.py`, `06d_embed_agrifm.py` | frozen foundation-model embeddings per parcel |

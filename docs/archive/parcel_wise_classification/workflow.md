@@ -77,7 +77,7 @@ performance are attributable to the representation rather than to the input data
 - *Foundation-model embedding:* a 64 × 64 px window (640 m) around the parcel is passed through the frozen encoder.
   The resulting patch embeddings are averaged with weights equal to the fraction of each patch inside the parcel.
   Clay, Prithvi-EO-2.0 and TerraMind are applied month by month; AgriFM processes the full year in one pass
-  ([Foundation models](../../foundation_models.md)).
+  ([Foundation models](../../foundation_models/index.md)).
 
 **5. Temporal aggregation.** A foundation model yields up to 12 × 1,024 values per parcel. Two aggregation schemes
 are evaluated:

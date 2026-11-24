@@ -58,7 +58,7 @@ flowchart TD
     CMP --> ANS(["Does a foundation model beat<br/>the Sentinel-2 baseline?"])
 ```
 
-Per-model bands, patches and temporal handling: [Foundation models](../../foundation_models.md#configuration-in-this-study).
+Per-model bands, patches and temporal handling: [Foundation models](../../foundation_models/in_this_study.md#configuration-in-this-study).
 
 Classifier grids: [evaluation protocol §4](evaluation_protocol.md#4-classifiers). Optional sensitivity runs:
 Sentinel-1 added to the baseline and to TerraMind (Morocco), embeddings averaged over the months instead of PCA.
@@ -96,7 +96,7 @@ The foundation models are used **frozen**, as fixed feature extractors, followin
 
 The five inputs (Sentinel-2 baseline and four frozen GeoFMs, all Sentinel-2 only), their bands, patch sizes and
 temporal handling, and the optional Sentinel-1 ablation are specified in
-[Foundation models · Configuration](../../foundation_models.md#configuration-in-this-study).
+[Foundation models · Configuration](../../foundation_models/in_this_study.md#configuration-in-this-study).
 
 ---
 
@@ -171,7 +171,7 @@ script stops unless every encoder weight is loaded from `AgriFM.pth`; embeddings
 from an untrained encoder ([D12](../../decisions.md#d12-agrifm-with-its-pretrained-4-px-patch-embedding)).
 
 Model-specific bands, normalisation, auxiliary inputs (date, location, wavelengths) and known limitations are
-described in [Foundation models · Model notes](../../foundation_models.md#model-notes). AgriFM is normalised with the
+described in [Foundation models · Settings used in this study](../../foundation_models/in_this_study.md#settings-used-in-this-study-details). AgriFM is normalised with the
 statistics of the region's own chips ([D15](../../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)).
 
 **Region.** Each script has `REGION` and `VIEWS_NAME` at the top; the environment variables `EMBED_REGION` and

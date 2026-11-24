@@ -3,7 +3,15 @@
 * [Research plan](research_plan.md)
 * [Environment Setup](setup.md)
 * [Data sources](data_source/index.md)
-* [Foundation models](foundation_models.md)
+* Foundation models
+    * [Overview](foundation_models/index.md)
+    * [Prithvi-EO-2.0](foundation_models/prithvi.md)
+    * [Clay v1.5](foundation_models/clay.md)
+    * [TerraMind](foundation_models/terramind.md)
+    * [AgriFM](foundation_models/agrifm.md)
+    * [Presto](foundation_models/presto.md)
+    * [TESSERA](foundation_models/tessera.md)
+    * [In this study](foundation_models/in_this_study.md)
 * Phase 1 · Data preparation
     * [Overview](phase1_data/overview.md)
     * [Morocco training data](phase1_data/morocco.md)

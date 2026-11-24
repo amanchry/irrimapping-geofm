@@ -4,7 +4,7 @@ a4_build_vrt.py  —  combine all tiles of the tile store into virtual rasters (
 
 What it does
 ------------
-The tile store of pixelwise_run/03_build_tiles.py holds thousands of small 128 x 128-pixel GeoTIFFs. This
+The tile store of data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py) holds thousands of small 128 x 128-pixel GeoTIFFs. This
 script writes GDAL virtual rasters (.vrt) that show them as ONE seamless raster per agricultural year,
 so the whole study area can be opened in QGIS (or read with rasterio) as a single layer. A VRT is a
 small XML file that only points to the tiles: nothing is copied, and the tiles stay the only data.
@@ -26,12 +26,12 @@ Viewing in QGIS
 Drag a .vrt into QGIS. True colour: Min/Max 0-2500 (cumulative count cut works too); false colour:
 0-4500; Sentinel-1: VV about -2500 to 0, VH about -3000 to -500 (dB x 100). Labels: band 1 with
 "Paletted/Unique values" (0 = ignore, 1 = irrigated, 2 = rainfed); set 0 as transparent if wished.
-Overlay outputs/morocco/dataset/02_folds/parcels_folds.geojson to check alignment.
+Overlay outputs/morocco/data_training_prep/02_folds/parcels_folds.geojson to check alignment.
 
 Testing in Python
 -----------------
     import rasterio
-    with rasterio.open("outputs/morocco/dataset/03_tiles_128px/agyear/vrt/2023-24_labels.vrt") as src:
+    with rasterio.open("outputs/morocco/data_training_prep/03_tiles_128px/agyear/vrt/2023-24_labels.vrt") as src:
         lab = src.read(1, window=rasterio.windows.from_bounds(x0, y0, x1, y1, src.transform))
 
 Notes
@@ -41,7 +41,7 @@ Notes
 * Paths inside the VRTs are relative, so the project folder can be moved.
 * Re-run after more tiles have been downloaded.
 
-Run (from the project folder, after pixelwise_run/03_build_tiles.py)
+Run (from the project folder, after data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py))
 --------------------------------------------------------------
     python tools/a4_build_vrt.py
 """
@@ -54,8 +54,8 @@ from xml.sax.saxutils import escape
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-WINDOW = "agyear"                                                   # as in pixelwise_run/03_build_tiles.py
-TILE_ROOT = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW
+WINDOW = "agyear"                                                   # as in data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py)
+TILE_ROOT = ROOT / "outputs" / "morocco" / "data_training_prep" / "03_tiles_128px" / WINDOW
 TILE_DIR = TILE_ROOT / "tiles"
 OUT_DIR = TILE_ROOT / "vrt"
 
@@ -133,7 +133,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     seasons = find_tiles()
     if not seasons:
-        raise SystemExit(f"No *_img.tif tiles found in {TILE_DIR}: run pixelwise_run/03_build_tiles.py first")
+        raise SystemExit(f"No *_img.tif tiles found in {TILE_DIR}: run data_training_prep/03_plan_tiles.py and 04_cut_tiles.py first")
     months = [k for k in range(N_MONTHS) if MONTHS is None or MONTH_NAMES[k] in MONTHS]
     for season, tiles in seasons.items():
         print(f"\n{season}: {len(tiles):,} downloaded tiles")

@@ -4,7 +4,7 @@
 
 What it does
 ------------
-First step of the irrigated-area study. Reads the dataset built by parcelwise_run/03_build_tiles.py and
+First step of the irrigated-area study. Reads the dataset built by data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py) and
 parcelwise_run/04_make_views.py and checks that it is complete and sensible, so that problems in the data
 are found before they show up as strange model results. Nothing is changed in the dataset.
 
@@ -44,9 +44,9 @@ from matplotlib.colors import LinearSegmentedColormap
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                         # project folder
-REGION = "morocco"             # "morocco" | "utah": dataset of parcelwise_run/ (outputs/<REGION>/dataset/)
+REGION = "morocco"             # "morocco" | "utah": dataset of parcelwise_run/ (outputs/<REGION>/data_training_prep/)
 WINDOW = "agyear"
-TILE_ROOT = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW       # parcelwise_run/03_build_tiles.py
+TILE_ROOT = ROOT / "outputs" / REGION / "data_training_prep" / "03_tiles_128px" / WINDOW       # data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py)
 VIEWS_NAME = "views"           # views folder of parcelwise_run/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
 VIEWS = TILE_ROOT / VIEWS_NAME                                      # parcelwise_run/04_make_views.py
 LEGACY_FEATURES = ROOT / "outputs" / "morocco" / "legacy" / "03_s1s2_features" / f"s1s2_features_{WINDOW}_30d.csv"

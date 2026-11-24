@@ -54,7 +54,7 @@ def env_setting(name, default):
 
 # ---------------------------------------------------------------- samples
 def samples_dir(region, season):
-    return ROOT / "outputs" / region / "dataset" / "04_pixel_samples" / season.replace("/", "-")
+    return ROOT / "outputs" / region / "data_training_prep" / "04_pixel_samples" / season.replace("/", "-")
 
 
 def load_samples(region, seasons=None, quick=False, seed=42):

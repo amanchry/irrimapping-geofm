@@ -11,6 +11,42 @@ is the reference for every later experiment: the paired tests compare each run w
 **Why.** Random forests on per-pixel time series are the standard in operational irrigation mapping (Ketchum et al.
 2020; Xie et al. 2021). Any more complex model has to beat this reference on the same pixels.
 
+## How E01 works, step by step
+
+![E01 from the labelled pixels to the scores](figures/e01_explainer.png)
+
+*E01 from start to end (schematic: the pictures illustrate the steps and show no results, so the figure holds for
+any region and year; `tools/a9_experiment_explainers.py`). Steps 4–6 repeat in each of the five rounds. The results of each
+region are under [Results](#results).*
+
+1. **Labelled pixels.** The input is the table of [pixel samples](../phase1_data/pixel_samples.md) of the region:
+   the inner pixels (at most 100 per parcel) of the surveyed parcels, with the years of the region pooled. Each pixel
+   carries the survey label of its parcel and the fold of its 20 km block, so the pixels of one parcel always stay in
+   the same fold.
+2. **Features.** Each pixel becomes one row of 168 numbers: for each of the 12 months of the agricultural year
+   (the start month is set per region), its 12 Sentinel-2 bands plus NDVI and NDWI. The model sees these 168 values
+   as separate columns; it does not know that they form a time series.
+3. **Cloudy months.** A month without a clear observation is filled by linear interpolation between the
+   neighbouring clear months (first or last month: the nearest clear month; a band never observed: the median of the
+   training pixels). How often this is needed depends on the region and year.
+4. **Rotation over the folds.** Five rounds: in round *k*, fold *k* is the test fold, fold *k*+1 the validation fold
+   and the other three train the model. After five rounds every pixel has been tested once, by a model that never saw
+   its block.
+5. **Choosing the settings.** In each round, every setting of the grid (4 for the random forest, 4 for gradient
+   boosting) is trained on the three training folds and scored on the validation fold; the best one is kept. The
+   test fold is never used for this choice.
+6. **Predicting the test fold.** The chosen model predicts the test fold. The five test folds together give one
+   out-of-fold prediction for every pixel (`oof_predictions.parquet`), the same pixels for every experiment.
+7. **Scores.** The out-of-fold predictions of all pixels are compared with the survey labels: precision, recall and
+   F1 of each class, macro-F1 (the mean of the two F1, the headline score, so that the rare rainfed class counts as
+   much as irrigated), overall accuracy, and the same per year and zone.
+8. **Uncertainty.** The 20 km blocks of the region are drawn with replacement 1,000 times and macro-F1 is recomputed
+   for each draw; the 2.5% and 97.5% values give the 95% confidence interval. Blocks are resampled rather than
+   pixels because neighbouring pixels are not independent. Every experiment uses the same draws, so models are
+   compared pair by pair on the same pixels.
+9. **Importance.** For the random forest, all values of one month (or of one band over all months) are shuffled
+   between test pixels; the drop in macro-F1 shows how much the model relies on them.
+
 ## Set-up
 
 | Item | Choice |

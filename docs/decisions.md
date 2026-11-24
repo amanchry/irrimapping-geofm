@@ -164,7 +164,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Consequence:** AgriFM has the coarsest grid of the four models (320 m against 80–160 m), which matters for small
   parcels; the patch-share weighting is unchanged. Earlier AgriFM results are void and are re-run.
 - **Where:** [`parcelwise_run/06d_embed_agrifm.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/parcelwise_run/06d_embed_agrifm.py),
-  [Foundation models · inputs](foundation_models.md).
+  [Foundation models · inputs](foundation_models/index.md).
 
 ## D13. Utah as a second independent study area
 - **Proposal (§3.2, RQ3, RQ4):** RQ4 applies the Morocco-trained model zero-shot to a transfer region (Tunisia,
@@ -188,7 +188,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
     - Tunisia has 10 rainfed reference points, too few for a rainfed F1 (D10).
 - **Consequence:** RQ4 changes from "spatial transferability of the Morocco model" to "do the results hold in a
   second region"; RQ3 is answered in Utah. To be agreed with the supervisors.
-- **Where:** [Utah training data](phase1_data/utah.md), `pixelwise_run/01_prepare_labels_Utah.py`.
+- **Where:** [Utah training data](phase1_data/utah.md), `data_prep/01_prepare_labels_Utah.py`.
 
 ## D14. Sentinel-2 only for every input
 - **Proposal:** Sentinel-1 and Sentinel-2 time series.
@@ -209,7 +209,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   in Morocco (both orbits available) adds Sentinel-1 to TerraMind (`terramind-s1s2`) and to the baseline
   (`S1S2_VARIABLES = "all"`, PSE-TAE `morocco_s2s1`). E01 (done before this decision) used Sentinel-1 in the baseline
   and in TerraMind and is kept as it is.
-- **Where:** [Foundation models · Configuration](foundation_models.md#configuration-in-this-study),
+- **Where:** [Foundation models · Configuration](foundation_models/in_this_study.md#configuration-in-this-study),
   [Models pipeline](archive/parcel_wise_classification/models_pipeline.md).
 
 ## D15. AgriFM normalised with the statistics of the region's chips
@@ -229,7 +229,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
   closest equivalent.
 - **Sensitivity:** the config statistics are kept as a second embedding (`NORM = "config"`, `agrifm-cfgnorm_*.npz`;
   the Morocco file made on 6 Nov 2026 is this version).
-- **Where:** [Foundation models · AgriFM](foundation_models.md#agrifm), `parcelwise_run/06d_embed_agrifm.py`.
+- **Where:** [Foundation models · AgriFM](foundation_models/in_this_study.md#agrifm), `parcelwise_run/06d_embed_agrifm.py`.
 
 ## D16. Pixel-wise classification for continuous maps
 - **Before:** the RQ1 experiments (E01–E05) classified **parcels**: the embeddings or Sentinel-2 features of a parcel
@@ -266,6 +266,10 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Where:** [Cropland extent and mask](phase1_data/cropland_mask.md), `cropland_extent/make_cropland_mask.py`.
 
 ## D18. Wall-to-wall composites from STAC for the maps
+!!! warning "Superseded by [D20](#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them) (24 Nov 2026)"
+    The STAC route (`s2_download/`) was retired; the maps and the training tiles now come from one Earth Engine
+    download on 10.24 km blocks.
+
 - **Proposal:** annual stacks via STAC and xarray.
 - **Before:** one Google Earth Engine tile store (D4), built around the surveyed parcels; too slow for every cropland
   tile of Morocco (48 MB request limit, about 40 h per year on one stream).
@@ -294,3 +298,28 @@ stating the original plan, the current approach and the rationale. Smaller metho
   (`04_pixel_samples/`).
 - **Where:** [Experiment plan](experiments/plan.md), [Pixel samples](phase1_data/pixel_samples.md),
   [Cropland extent and mask](phase1_data/cropland_mask.md).
+
+## D20. Download once on 10.24 km blocks from Earth Engine; training tiles cut from them
+- **Before:** two separate imagery routes: Earth Engine tiles of 128 px around the labelled parcels for training
+  (D4), and Sentinel-2 composites from a STAC catalogue for the maps (D18), with a different cloud mask and
+  compositing, so a model trained on one would have been applied to the other.
+- **Now:** every source is downloaded **once** per region and agricultural year from Google Earth Engine (service
+  account), block by block on one grid of **10.24 km blocks** (1024 × 1024 px, the 128 px tile grid grouped 8 × 8),
+  one script and one folder per source (`data_download/`). The blocks cover the whole mapping area, without a mask.
+  Dynamic World is downloaded first for every block as one binary image (1 where "crops" is the most frequent class
+  of the year); Sentinel-2, Sentinel-1 (later ERA5) are downloaded only for blocks with cropland (≥ 164 cropland
+  pixels, 1% of a 128 px tile) or with training tiles, and the maps classify each block on its own (cropland pixels
+  only) before the block maps are merged. The union of four cropland products (D17) is kept for later and not
+  used. The 128 px training tiles are **cut out of the blocks** (`data_training_prep/04_cut_tiles.py`); the maps
+  read 128 px windows (tile models) or pixel series (pixel models) from the blocks in memory, so only the training
+  area is stored twice (about 1% of the blocks).
+- **Why:** one dataset for training, testing and mapping (no domain shift between training and map composites);
+  every planned source is in Earth Engine under one account; the compositing is that of the existing training tiles.
+- **Checked:** tiles cut from a downloaded Morocco block are identical (values, band names, position) to the existing
+  training tiles, so the experiments stay valid and the training tiles need no new download. One block costs about
+  159 MB and 164 s (Sentinel-2), 82 MB and 92 s (Sentinel-1), about 6 s and 3–25 KB (Dynamic World); Morocco has 4,199 blocks
+  over its mapping area, of which Sentinel-2 and Sentinel-1 are fetched for those with cropland.
+- **Where:** [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download),
+  [`data_training_prep/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_training_prep). The STAC route
+  (`s2_download/`) and the folder `cropland_extent/` (its scripts moved to `data_download/`) were retired.
+

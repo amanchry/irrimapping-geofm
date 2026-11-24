@@ -20,7 +20,7 @@ FRACTION_DRAW, parcelwise_run/experiment_utils.py); validation and test folds st
 
 Steps
 -----
-1. Read the input features and the spatial folds (02_make_spatial_folds.py); keep parcels in both.
+1. Read the input features and the spatial folds (data_training_prep/02_make_spatial_folds.py); keep parcels in both.
    s1s2:       fill fully cloudy periods by linear interpolation in time, per parcel and variable
                (uses only that parcel's values: no leakage). S1S2_VARIABLES = "s2" / "s1" keeps
                only optical / radar variables (ablation).
@@ -101,12 +101,12 @@ from experiment_utils import (describe_draw, draw_table, draw_training_blocks, e
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
 EXPERIMENT = None                     # e.g. "E02_frozen_pca": settings from experiments/parcel_wise_classification/<name>/config.yaml,
                                       # results to experiments/parcel_wise_classification/<name>/results/ | None = the settings below
-REGION = "morocco"                    # "morocco" | "utah" (parcelwise_run/regions.py)
+REGION = "morocco"                    # "morocco" | "utah" (data_download/regions.py)
 VIEWS_NAME = None                     # views folder of 04_make_views.py; None = the region's default
                                       # (Morocco "views", Utah "views_2023-24")
 INPUT = "agrifm"                        # "s1s2" | "clay" | "prithvi" | "terramind" | "agrifm"
                                       # ("terramind-s1s2" = TerraMind with Sentinel-1, ablation)
-WINDOW = "agyear"                     # time window of the dataset (parcelwise_run/03_build_tiles.py)
+WINDOW = "agyear"                     # time window of the dataset (data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py))
 
 # S1/S2 baseline only
 INTERVAL_DAYS = 30                    # legacy Earth Engine table only (S1S2_SOURCE = 'gee'): 30 or 15
@@ -162,7 +162,7 @@ if S1S2_SOURCE == "tiles":
         S1_ORBIT = "none"                                         # no radar variables: the orbit plays no role
     elif S1_ORBIT == "chips" and INPUT == "s1s2":                 # orbit chosen by parcelwise_run/04_make_views.py for the chips
         if not (VIEWS_DIR / "views_info.json").exists():
-            raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run 03_build_tiles.py and 04_make_views.py "
+            raise SystemExit(f"{VIEWS_DIR / 'views_info.json'} not found: run data_training_prep/03-04 and 04_make_views.py "
                              f"first, or set S1S2_SOURCE = 'gee'")
         S1_ORBIT = json.loads((VIEWS_DIR / "views_info.json").read_text())["s1_orbit_for_chips_and_pixelsets"]
     S1S2_TAG = f"tiles-{TILE_FEATURES}" + ("" if S1_ORBIT == "none" else f"-{S1_ORBIT.lower()}")

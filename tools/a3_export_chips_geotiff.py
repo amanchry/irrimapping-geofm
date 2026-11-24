@@ -45,9 +45,9 @@ from rasterio.transform import Affine
 
 # ================================ SETTINGS ================================
 ROOT = Path(__file__).resolve().parents[1]                 # project folder
-WINDOW = "agyear"                                          # as in parcelwise_run/03_build_tiles.py
-CHIP_DIR = ROOT / "outputs" / "morocco" / "dataset" / "03_tiles_128px" / WINDOW / "views" / "chips_p16"   # chips of parcelwise_run/04_make_views.py
-PARCELS_FILE = ROOT / "outputs" / "morocco" / "dataset" / "01_labels" / "parcels_labelled.geojson"
+WINDOW = "agyear"                                          # as in data_training_prep/ (03_plan_tiles.py, 04_cut_tiles.py)
+CHIP_DIR = ROOT / "outputs" / "morocco" / "data_training_prep" / "03_tiles_128px" / WINDOW / "views" / "chips_p16"   # chips of parcelwise_run/04_make_views.py
+PARCELS_FILE = ROOT / "outputs" / "morocco" / "data_training_prep" / "01_labels" / "parcels_labelled.geojson"
 OUT_DIR = ROOT / "outputs" / "morocco" / "study" / "01_inspection" / "chips_geotiff"
 
 PARCEL_IDS = None             # e.g. ["1234", "5678"] for specific parcels; None = random selection

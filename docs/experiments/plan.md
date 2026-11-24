@@ -70,7 +70,7 @@ labelled pixels of each tile (irrigated and rainfed; all other pixels ignored). 
 decoder and temporal head are trained. Same normalisations and band choices as in the archived embedding scripts (loaders in `pixelwise_run/encoders.py`)
 (D12, D15). The two pixel time-series models, Presto (Tseng et al. 2023) and TESSERA v2 (Feng et al. 2025, 2026),
 encode the 12-month series of every pixel of the tile into a 128-d vector; the 10 m feature map goes to the same
-UPerNet head ([Foundation models](../foundation_models.md)).
+UPerNet head ([Foundation models](../foundation_models/index.md)).
 
 **E05 · Prithvi: frozen, LoRA, fine-tuned or from scratch.** The E04 network with Prithvi, trained four ways:
 encoder frozen (E04), low-rank adapters (LoRA, rank 16, on the attention and MLP layers) trained on the frozen
@@ -85,12 +85,15 @@ paired tests per share ([E05](E05_prithvi_strategies.md)).
 2. **Maps (Phase 5):** the best model on wall-to-wall Sentinel-2 composites; the cropland extent is decided here
    (candidate masks such as the union of products or Dynamic World, compared on the omission of surveyed irrigated
    and rainfed parcels and on commission; [D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase));
-   irrigated and rainfed area per region and year. Two independent approaches: the experiments above use the
-   Earth Engine tiles; the STAC approach ([`s2_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/s2_download))
-   downloads monthly composites (Earth Search, scene-classification cloud mask) for every cropland tile of the mask
-   per 10.24 km block, and its models are trained, evaluated and mapped on those STAC tiles only
-   ([D18](../decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps); status 20 Nov 2026: Utah 2023/24
-   17,278 of 18,472 tiles, the rest after a fix; Morocco on hold).
+   irrigated and rainfed area per region and year. The maps are predicted from the 10.24 km blocks of
+   [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download) (Earth Engine, the same
+   compositing as the training tiles, which are cut from the same blocks): each block is classified on its own, on
+   its cropland pixels only (tile models read 128 px windows from the block, pixel models read each pixel's series),
+   and the block maps are merged at the end ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Dynamic World is downloaded for
+   every block of the mapping area and flags the 128 px tiles with ≥ 1% cropland; Sentinel-2 and Sentinel-1 cover
+   every block with such a tile and every block holding training tiles. An earlier, separate
+   STAC approach (Earth Search, scene-classification cloud mask; [D18](../decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps))
+   was retired before its download was complete (20 Nov 2026: Utah 2023/24 17,278 of 18,472 tiles; Morocco on hold).
 3. **Map accuracy:** a stratified random sample over the map (including not-cropland), area-adjusted accuracy and
    area estimates (Olofsson et al. 2014); comparison with LGRIP30 and national statistics.
 

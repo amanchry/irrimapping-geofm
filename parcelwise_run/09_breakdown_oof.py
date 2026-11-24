@@ -76,7 +76,7 @@ env_override(globals())
 VIEWS_NAME = views_name(REGION, VIEWS_NAME)
 RUNS_DIR = results_root(EXPERIMENT, quick_from_env()) / REGION
 OUT_DIR = RUNS_DIR / "breakdown"
-TILE_ROOT = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW
+TILE_ROOT = ROOT / "outputs" / REGION / "data_training_prep" / "03_tiles_128px" / WINDOW
 ZONE_NAMES = {"el haouz": "El Haouz"}                      # spelling in the survey -> name used here
 LE_RUN = re.compile(r"_f\d{3}_d\d+$")                     # label-efficiency runs are not broken down
 

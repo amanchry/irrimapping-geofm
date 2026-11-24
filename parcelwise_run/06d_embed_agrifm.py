@@ -82,8 +82,8 @@ NORM = "data"                                              # "data" = this regio
 NORM_STATS_FILE = None                                     # None = <OUT_DIR>/agrifm_norm_stats_<TAG>.json (computed if missing)
 NORM_STATS_PARTS = 20                                      # chip files sampled (evenly spaced) for the statistics
 MODEL_NAME = "agrifm" if NORM == "data" else "agrifm-cfgnorm"   # output file name
-WINDOW = "agyear"                                          # must match 03_build_tiles.py / 04_make_views.py
-REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (parcelwise_run/regions.py)
+WINDOW = "agyear"                                          # must match data_training_prep/ tile store / 04_make_views.py
+REGION = os.environ.get("EMBED_REGION", "morocco")           # "morocco" | "utah" (data_download/regions.py)
 VIEWS_NAME = os.environ.get("EMBED_VIEWS", "views")          # views folder of 04_make_views.py: "views" (Morocco) | "views_2023-24" (Utah)
 AGRIFM_REPO = ROOT / "external" / "AgriFM"                 # git clone of github.com/flyakon/AgriFM
 WEIGHTS = ROOT / "checkpoints" / "agrifm" / "AgriFM.pth"
@@ -100,7 +100,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # (same pixels as the parcel-feature baseline); "legacy" = the older, separately downloaded chip store (no longer kept).
 CHIP_SOURCE = "tiles"
 CHIP_PATCH_PX = 16                                         # chips aligned to 16 px (also aligned to the 32-px AgriFM grid)
-VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME
+VIEWS_DIR = ROOT / "outputs" / REGION / "data_training_prep" / "03_tiles_128px" / WINDOW / VIEWS_NAME
 if CHIP_SOURCE == "tiles":
     CHIP_DIR = VIEWS_DIR / f"chips_p{CHIP_PATCH_PX}"
     TAG = f"{WINDOW}_tiles{VIEWS_NAME[len('views'):]}"       # output name: <model>_agyear_tiles.npz (views) or

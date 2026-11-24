@@ -2,7 +2,8 @@
 
 Every paper cited in the [research proposal](../assets/research_proposal.pdf) or used while building the method,
 grouped by topic. Papers marked **📄** have a summary page (what they did, key results, what this research takes
-from them).
+from them). The six models compared have a model page in [Foundation models](../foundation_models/index.md)
+(architecture and pretraining as published).
 
 **Add a paper:** one row in the matching table (authors, year, title with link, venue, why it matters here). For an
 important one, add a summary page in `docs/references/` from [`_template.md`](_template.md) and link it in the
@@ -16,14 +17,14 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 
 | | Paper | Venue | Why it matters here | Summary |
 | --- | --- | --- | --- | --- |
-| ★ | Szwarcman, D., et al. (2024). [Prithvi-EO-2.0: a versatile multi-temporal foundation model for Earth observation applications](https://arxiv.org/abs/2412.02732) | arXiv | model compared (time and location encoding) | |
-| ★ | Clay Foundation (2024). [Clay Foundation Model v1.5](https://huggingface.co/made-with-clay/Clay) | model release | model compared (sensor-flexible MAE) | |
-| ★ | Jakubik, J., et al. (2025). [TerraMind: large-scale generative multimodality for Earth observation](https://arxiv.org/abs/2504.11171) | ICCV 2025 | model compared (only one pretrained with SAR) | |
-| ★ | Li, W., et al. (2025). [AgriFM: a multi-source temporal remote sensing foundation model for agriculture mapping](https://arxiv.org/abs/2505.21357) | arXiv | model compared (agriculture-specific) | |
+| ★ | Szwarcman, D., et al. (2024). [Prithvi-EO-2.0: a versatile multi-temporal foundation model for Earth observation applications](https://arxiv.org/abs/2412.02732) | arXiv | model compared (time and location encoding) | [model page](../foundation_models/prithvi.md) |
+| ★ | Clay Foundation (2024). [Clay Foundation Model v1.5](https://huggingface.co/made-with-clay/Clay) | model release | model compared (sensor-flexible MAE) | [model page](../foundation_models/clay.md) |
+| ★ | Jakubik, J., et al. (2025). [TerraMind: large-scale generative multimodality for Earth observation](https://arxiv.org/abs/2504.11171) | ICCV 2025 | model compared (pretrained with nine modalities, incl. Sentinel-1) | [model page](../foundation_models/terramind.md) |
+| ★ | Li, W., et al. (2025). [AgriFM: a multi-source temporal remote sensing foundation model for agriculture mapping](https://arxiv.org/abs/2505.21357) | arXiv | model compared (agriculture-specific) | [model page](../foundation_models/agrifm.md) |
 | ★ | Brown, C. F., Kazmierski, M. R., Pasquarella, V. J., et al. (2025). [AlphaEarth Foundations: an embedding field model for accurate and efficient global mapping from sparse label data](https://arxiv.org/abs/2507.22291) | arXiv | 10 m annual embeddings; weights not released, so not in the comparison | |
-| ✓ | Tseng, G., Cartuyvels, R., Zvonkov, I., Purohit, M., Rolnick, D., & Kerner, H. (2023). [Lightweight, pre-trained transformers for remote sensing timeseries (Presto)](https://arxiv.org/abs/2304.14065) | arXiv | frozen embeddings + RF / LogReg heads | |
+| ✓ | Tseng, G., Cartuyvels, R., Zvonkov, I., Purohit, M., Rolnick, D., & Kerner, H. (2023). [Lightweight, pre-trained transformers for remote sensing timeseries (Presto)](https://arxiv.org/abs/2304.14065) | arXiv | pixel time-series model compared (E04); frozen embeddings + RF / LogReg heads | [model page](../foundation_models/presto.md) |
 | ✓ | Tseng, G., et al. (2025). [Galileo: learning global and local features in pretrained remote sensing models](https://arxiv.org/abs/2502.09356) | arXiv | kNN / linear probing of GeoFMs | |
-| ★ | Feng, Z., Atzberger, C., Jaffer, S., et al. (2025). [TESSERA: temporal embeddings of surface spectra for Earth representation and analysis](https://arxiv.org/abs/2506.20380) | arXiv | pixel time-series model compared (E04); fine-tuning gave no gain over frozen embeddings | [📄](tessera.md) |
+| ★ | Feng, Z., Atzberger, C., Jaffer, S., et al. (2025). [TESSERA: temporal embeddings of surface spectra for Earth representation and analysis](https://arxiv.org/abs/2506.20380) | arXiv | pixel time-series model compared (E04); fine-tuning gave no gain over frozen embeddings | [📄](tessera.md) · [model page](../foundation_models/tessera.md) |
 | ○ | Cong, Y., et al. (2022). [SatMAE: pre-training transformers for temporal and multi-spectral satellite imagery](https://arxiv.org/abs/2207.08051) | NeurIPS 2022 | background (GeoFM landscape) | |
 | ○ | Reed, C. J., et al. (2023). [Scale-MAE: a scale-aware masked autoencoder for multiscale geospatial representation learning](https://arxiv.org/abs/2212.14532) | ICCV 2023 | background (GeoFM landscape) | |
 
@@ -55,6 +56,8 @@ important one, add a summary page in `docs/references/` from [`_template.md`](_t
 | ✓ | Gao, Q., Zribi, M., Escorihuela, M. J., Baghdadi, N., & Quintana Seguí, P. (2018). [Irrigation mapping using Sentinel-1 time series at field scale](https://doi.org/10.3390/rs10091495) | Remote Sensing 10(9) | Sentinel-1 irrigation mapping; RBF SVM | |
 | ✓ | Elwan, E., Le Page, M., Jarlan, L., et al. (2022). [Irrigation mapping on two contrasted climatic contexts using Sentinel-1 and Sentinel-2 data](https://doi.org/10.3390/w14050804) | Water 14(5) | Sentinel-1/2 irrigation mapping incl. Morocco; SVM | |
 | ★ | Kebede, E. A., et al. (2026). [GMIA-NEXT: next-generation global map of irrigated areas](https://doi.org/10.21203/rs.3.rs-10085674/v1) | Research Square (preprint); maps and points on Zenodo | independent comparison points for the maps (Phase 5); comparison map | [📄](kebede-2026-gmia-next.md) |
+| ✓ | Jägermeyr, J., Müller, C., Minoli, S., Ray, D., & Siebert, S. (2021). [GGCMI Phase 3 crop calendar](https://doi.org/10.5281/zenodo.5062513) | Zenodo (dataset, CC BY 4.0) | planting and maturity dates per crop, irrigated and rainfed, 0.5°; check of the agricultural year of both regions; one of the two calendars behind the GMIA-NEXT irrigation season | – |
+| ✓ | FAO (2023). [AQUASTAT – irrigated crop calendars](https://www.fao.org/aquastat/en/databases/crop-calendar) | FAO database | monthly calendar of irrigated crops per country; check of the agricultural year of both regions; the other calendar behind GMIA-NEXT | – |
 | ✓ | Van Tricht, K., et al. (2023). [WorldCereal: a dynamic open-source system for global-scale, seasonal, and reproducible crop and irrigation mapping](https://doi.org/10.5194/essd-15-5491-2023) | ESSD 15 | operational crop and irrigation mapping | |
 | ✓ | Bazzi, H., et al. (2019). [Mapping irrigated areas using Sentinel-1 time series in Catalonia, Spain](https://doi.org/10.3390/rs11151836) | Remote Sensing 11(15) | 1D-CNN > RF for irrigated mapping | |
 | ✓ | Guemouria, Y., Hammani, A., & Bouignane, A. (2023). [Opportunities and challenges of irrigation in Morocco, Spain, and India](https://doi.org/10.1002/wwp2.12148) | World Water Policy 9(4) | Moroccan irrigation context | |

@@ -12,6 +12,79 @@ pixel models (E01, E02) and a spatio-temporal network trained from scratch (E03)
 **What changes from E03.** The image encoder: a pretrained, frozen foundation model instead of a convolutional
 encoder trained from scratch. Tiles, labelled pixels, loss, training and metrics are the same.
 
+## How E04 works, step by step
+
+E04 is run once per encoder, and the encoders do not all go through the same steps: the image models (Prithvi, Clay,
+TerraMind) need an L-TAE to merge the months and a feature pyramid to build four map sizes; AgriFM merges the months
+itself and returns its own four maps; Presto and TESSERA encode each 10 m pixel separately, so their map is only
+pooled to four sizes. Each encoder therefore has its own figure, from the labelled pixels to the comparison, with
+the settings of this study (bands, patches, months per pass, output sizes). Grey parts are frozen, orange parts are
+trained (schematic: the pictures illustrate the steps and show no results, so the figures hold for any region and
+year; `tools/a9_experiment_explainers.py`). How each model works in general:
+[Foundation models](../foundation_models/index.md). The results of each region are under
+[Results](#results).
+
+=== "Prithvi-EO-2.0"
+
+    ![Prithvi-EO-2.0 in E04](figures/e04_prithvi_explainer.png)
+
+    Six bands, 16 px patches, four months per pass with their dates and the tile's location; the L-TAE merges the 12 monthly outputs of each 160 m patch; decisions on a 40 m grid.
+
+=== "Clay v1.5"
+
+    ![Clay v1.5 in E04](figures/e04_clay_explainer.png)
+
+    Ten bands, each read through a filter built from its wavelength; 8 px patches, one month per pass with week and location; the finest grid of the image models (64 × 64, 20 m).
+
+=== "TerraMind"
+
+    ![TerraMind in E04](figures/e04_terramind_explainer.png)
+
+    All twelve bands as the S2L2A modality, 16 px patches, one month per pass without any date; the L-TAE alone orders the months.
+
+=== "AgriFM"
+
+    ![AgriFM in E04](figures/e04_agrifm_explainer.png)
+
+    All twelve months in one pass as 3-D blocks of 4 months × 4 × 4 px; the Swin stages shrink space and time together and return four maps, which go straight to the decoder (no L-TAE, no extra pyramid).
+
+=== "Presto"
+
+    ![Presto in E04](figures/e04_presto_explainer.png)
+
+    Encodes each of the 16,384 pixels of a tile separately from its 12-month series (band groups × months); the 10 m map of 128-value vectors is pooled to four sizes, so the decision is made per 10 m pixel.
+
+=== "TESSERA v2"
+
+    ![TESSERA v2 in E04](figures/e04_tessera_explainer.png)
+
+    Encodes each pixel from its clear months only, each dated by day of year, and pools them with attention; like Presto, a 10 m feature map and decisions per 10 m pixel.
+
+The twelve steps:
+
+1. **Labelled pixels and tiles.** As in E03: the model sees whole 128 px tiles and is scored at the same labelled
+   pixels as every experiment.
+2. **Rotation over the folds.** The same five rounds as every experiment.
+3. **What the encoder reads.** The bands, normalisation and grouping of months of the encoder's own pretraining.
+4. **Tokens.** Patches of 8 or 16 px (one month at a time), 3-D blocks of 4 months × 4 × 4 px (AgriFM), or single
+   pixels (Presto, TESSERA).
+5. **Frozen encoder.** The pretrained network, unchanged, with the extra inputs it was trained with (dates,
+   location, wavelengths, or none).
+6. **Encoder output.** One vector per patch and month (image models), four maps with time merged (AgriFM), or one
+   128-value vector per 10 m pixel (Presto, TESSERA).
+7. **Combining the months.** An L-TAE learns which months matter for the image models; the other three encoders have
+   already merged the months.
+8. **Four map sizes.** A learnt feature pyramid (image models), AgriFM's own four maps, or average pooling of the
+   10 m map (Presto, TESSERA).
+9. **Decoder.** A UPerNet head fuses the four sizes into class scores on a 20–40 m grid (image models, AgriFM),
+   upsampled to 10 m, or directly per 10 m pixel (Presto, TESSERA).
+10. **Training.** Only the L-TAE and the decoder learn (1.7–3.2 M weights), at the labelled pixels of the training
+    folds; early stopping (patience 8) and three seeds per round.
+11. **Prediction and scores.** The test tiles are read at their labelled pixels; scores and 95% intervals as in E01.
+12. **Two comparisons.** Each encoder against the E01 random forest (does it beat the pixel baseline?) and against
+    E03 U-TAE (does pretraining add more than spatial context?), paired and Holm-corrected; the RQ1 answers are on
+    the [comparison page](comparison.md).
+
 ## Model
 
 The encoders see whole 128 × 128 px tiles; the model predicts every pixel and is scored at the labelled pixels of the [pixel samples](../phase1_data/pixel_samples.md).
@@ -24,28 +97,20 @@ flowchart TD
     D --> E[Class per 10 m pixel]
 ```
 
-| Encoder | Bands | Months per pass | Patch | Feature size |
-| --- | --- | --- | --- | --- |
-| Prithvi-EO-2.0-300M-TL | B2 B3 B4 B8A B11 B12 | 4, with date and location | 16 px | 1024 |
-| Clay v1.5 | 10 bands (no B1, B9) | 1, with week and location | 8 px | 1024 |
-| TerraMind 1.0 base | 12 bands (S2L2A) | 1 | 16 px | 768 |
-| AgriFM | 10 bands | all 12 (time merged inside the model) | 4 px, pyramid to 32 px | multi-scale |
-| Presto | 10 bands + NDVI | all 12 (per pixel, inside the model) | 1 pixel | 128 per pixel |
-| TESSERA v2 Medium | 10 bands | the clear months, dated by day of year (per pixel) | 1 pixel | 128 per pixel |
-
-All six encoders are loaded by [`pixelwise_run/encoders.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/encoders.py) with the band order,
-normalisation and weights of their pretraining (the four image models exactly as in the archived embedding scripts);
-AgriFM is normalised with the region's band statistics, Presto and TESSERA with their own input scaling. The two pixel models encode every pixel of the tile, so their output is already a
-10 m feature map
-([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)). Details of the models:
-[Foundation models](../foundation_models.md).
+The six encoders are loaded by [`pixelwise_run/encoders.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/encoders.py)
+with the bands, band order, normalisation and weights of their own pretraining; AgriFM is normalised with the
+region's band statistics ([D15](../decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)).
+What each encoder receives here (bands, tokens, months per pass, output on a tile) is on
+[Foundation models in this study](../foundation_models/in_this_study.md); how each model works as published is on
+its own page ([overview](../foundation_models/index.md)). This page covers only what E04 adds: the head, the training
+and the scoring.
 
 | Part | Choice |
 | --- | --- |
 | **Temporal head** | L-TAE (16 heads, d<sub>k</sub> 8, d<sub>model</sub> 256, output 256) over the 12 months at every patch position; months without a clear pixel in the patch are masked. AgriFM, Presto, TESSERA: none (the encoder handles time) |
 | **Decoder** | 4-scale feature pyramid from the single-scale ViT features (×4, ×2, ×1, ×½, as for plain ViTs in PANGAEA; Marsocci et al. 2024) and a UPerNet head (Xiao et al. 2018; pool sizes 1, 2, 4), upsampled to 10 m. AgriFM: its own 4-level pyramid goes straight into the UPerNet head. Presto, TESSERA: the 10 m map average-pooled to 4 scales (×1, ×½, ×¼, ×⅛) |
-| **Output** | 2 class scores (irrigated, rainfed) on a 32 × 32 grid, upsampled to every 10 m pixel |
-| **Trained** | temporal head and decoder only (about 2.4–3.2 M weights); the encoder stays frozen in evaluation mode |
+| **Output** | 2 class scores (irrigated, rainfed) on a 32 × 32 grid (40 m; Clay 64 × 64, 20 m; Presto and TESSERA 128 × 128, 10 m), upsampled to every 10 m pixel |
+| **Trained** | temporal head and decoder only (1.7–3.2 M weights, depending on the encoder); the encoder stays frozen in evaluation mode |
 
 ??? info "What \"frozen encoder\" means"
     A foundation model has been pretrained once, without labels, on millions of images. Its **encoder** turns an
@@ -53,23 +118,6 @@ AgriFM is normalised with the region's band statistics, Presto and TESSERA with 
     fixed feature extractor, in evaluation mode (no dropout, no updates). Only the small head after it (L-TAE,
     feature pyramid, UPerNet) learns from our labels. E04 therefore measures what the pretrained features already
     contain for irrigated / rainfed. Training the encoder as well is RQ2 ([E05](E05_prithvi_strategies.md)).
-
-??? info "The six encoders in one paragraph each"
-    - **Prithvi-EO-2.0-300M** (NASA, IBM): a vision transformer (24 blocks) pretrained by masked-autoencoding on
-      Landsat-Sentinel-2 (HLS) time series; reads 4 months per pass with their dates and the location, one vector
-      per 16 × 16 px patch.
-    - **Clay v1.5**: a vision transformer that encodes each band with its wavelength, so one model reads many
-      sensors; one month per pass, 8 × 8 px patches.
-    - **TerraMind 1.0 base** (IBM, ESA): a multimodal model pretrained to generate any of nine modalities from the
-      others; here Sentinel-2 only, one month per pass, 16 × 16 px patches.
-    - **AgriFM**: a video-Swin transformer pretrained for agricultural mapping; reads all 12 months at once and
-      returns its own four-level feature pyramid.
-    - **Presto** (NASA Harvest): a small transformer over the time series of **one pixel** (0.4 M weights); every
-      pixel of the tile is encoded on its own into a 128-value vector.
-    - **TESSERA v2**: a per-pixel model trained so that its 128-value embedding does not depend on which cloud-free
-      dates were available ([summary](../references/tessera.md)).
-
-    Bands, normalisation and weights of each model: [Foundation models](../foundation_models.md).
 
 ??? info "How the feature pyramid works"
     A plain vision transformer returns a single map (for Prithvi 8 × 8 per tile), but UPerNet needs four
@@ -133,7 +181,7 @@ AgriFM is normalised with the region's band statistics, Presto and TESSERA with 
 
 Script: [`experiments/E04_frozen_geofm/run.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E04_frozen_geofm/run.py)
 (models and training: [`pixelwise_run/tile_common.py`](https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/tile_common.py)).
-One GPU job per encoder and region; needs the tile store `outputs/<region>/dataset/03_tiles_128px/agyear/tiles/`
+One GPU job per encoder and region; needs the tile store `outputs/<region>/data_training_prep/03_tiles_128px/agyear/tiles/`
 (on the cluster) and the model weights in `checkpoints/`.
 
 ```bash

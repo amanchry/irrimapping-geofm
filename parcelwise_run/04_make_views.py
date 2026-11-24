@@ -4,7 +4,7 @@
 
 What it does
 ------------
-Reads the tile store of 03_build_tiles.py and writes every input the models need. Because all
+Reads the tile store of data_training_prep/ (03-04) and writes every input the models need. Because all
 views come from the same downloaded pixels, differences between models cannot come from
 different imagery, compositing or masks.
 
@@ -14,7 +14,7 @@ A. Parcel feature tables (random forest / gradient boosting baseline, simple bas
    Per parcel and month: MEDIAN over the parcel's pixels of the 12 Sentinel-2 bands, NDVI, NDWI,
    EVI, Sentinel-1 VV/VH (ascending and descending, dB), and the clear-observation counts.
      parcel_features_all.csv     all parcel pixels
-     parcel_features_inner.csv   without edge pixels (INNER_BUFFER_M of 03_build_tiles.py); parcels with no
+     parcel_features_inner.csv   without edge pixels (INNER_BUFFER_M of data_training_prep/03_plan_tiles.py); parcels with no
                                  inner pixel fall back to all pixels (column used_inner = False)
 B. Pixel sets (PSE-TAE / LTAE-type models, Garnot et al. 2020)
      pixelsets.npz   pixels [N_pixels, months, bands] int16, offsets [parcels + 1], edge [N_pixels],
@@ -27,7 +27,7 @@ C. Patch-aligned chips for the foundation models, one folder per patch size (CHI
    that is a multiple of the patch size split small parcels over 4 mostly-neighbour patches).
    index.csv adds `purity` (share of the pooled patches inside the parcel, the weighting used by
    the parcelwise_run/02 embedding scripts), `purity_centred` (same for the old centred chip), n_px, area_ha, fold, zone.
-D. Full tiles (segmentation models such as U-TAE): use outputs/<REGION>/dataset/03_tiles_128px/<WINDOW>/tiles/ directly;
+D. Full tiles (segmentation models such as U-TAE): use outputs/<REGION>/data_training_prep/03_tiles_128px/<WINDOW>/tiles/ directly;
    the label band has 0 = ignore for unlabelled pixels.
 
 Sentinel-1 orbit for B and C: S1_ORBIT = "auto" picks, over the whole study area, the orbit
@@ -41,12 +41,12 @@ pooled) into views/. SEASONS = ["2023/24"] uses only that year and writes to vie
 its own folder and a later year never overwrites an earlier one. Only parcels whose tiles are all downloaded
 are used.
 
-Output (outputs/<REGION>/dataset/03_tiles_128px/<WINDOW>/views/ or views_<year>/)
+Output (outputs/<REGION>/data_training_prep/03_tiles_128px/<WINDOW>/views/ or views_<year>/)
 --------------------------------------------------
 parcel_features_all.csv, parcel_features_inner.csv, pixelsets.npz, chips_p8/, chips_p16/,
 qa_purity.csv, qa_clear_obs.csv, views_info.json
 
-Run (from the project folder, after 03_build_tiles.py)
+Run (from the project folder, after data_training_prep/ (03-04))
 ------------------------------------------------------
     python parcelwise_run/04_make_views.py
 """
@@ -59,19 +59,21 @@ import numpy as np
 import pandas as pd
 import rasterio
 
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data_download"))   # regions.py (data_download/)
 from regions import dataset_dir
 
 # ================================ SETTINGS ================================
 REGION = "morocco"             # "morocco" | "utah" (regions.py)
 WINDOW = "agyear"
-TILE_ROOT = dataset_dir(REGION) / "03_tiles_128px" / WINDOW                  # from 03_build_tiles.py
+TILE_ROOT = dataset_dir(REGION) / "03_tiles_128px" / WINDOW                  # from data_training_prep/ (03-04)
 SEASONS = None                 # agricultural years to use, e.g. ["2023/24"]; None = all (folder views/)
 OUT_DIR = TILE_ROOT / ("views" if not SEASONS else "views_" + "_".join(s.replace("/", "-") for s in SEASONS))
 
 MAKE_FEATURES = True           # view A
 MAKE_PIXELSETS = True          # view B
 CHIP_PATCH_SIZES = [8, 16]     # view C: 8 = Clay v1.5; 16 = Prithvi-EO-2.0, TerraMind (check AgriFM)
-CHIP_PX = 64                   # chip size (must be <= CHIP_PX of 03_build_tiles.py)
+CHIP_PX = 64                   # chip size (must be <= CHIP_PX of data_training_prep/03_plan_tiles.py)
 S1_ORBIT = "auto"              # "auto" | "ASC" | "DSC" for views B and C
 BATCH_PARCELS = 64             # parcels per chip part file
 CACHE_TILES = 48               # tiles kept in memory while cutting views
@@ -298,7 +300,7 @@ def main():
                 "chip_px": CHIP_PX, "gsd_m": GSD, "patch_px": ps, "start_month": INFO["start_month"],
                 "n_months": N_MONTHS, "window": WINDOW, "crs_epsg": INFO["crs_epsg"],
                 "alignment": f"chip shifted by {ps // 2} px: parcel centroid at the centre of a {ps}-px patch",
-                "source": "03_build_tiles.py tile store"}
+                "source": "data_training_prep/ tile store"}
         # The parcelwise_run/02 embedding scripts read Sentinel-1 as "VV" / "VH": name the chosen orbit's bands that way.
         info["bands"] = S2_BANDS + ["VV", "VH", "S2_NCLEAR"]
         info["s1_bands"], info["s1_orbit"] = ["VV", "VH"], orbit

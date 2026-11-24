@@ -36,7 +36,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "parcelwise_run"))
-from regions import settings as region_settings  # noqa: E402  (parcelwise_run/regions.py)
+sys.path.insert(0, str(ROOT / "data_download"))
+from regions import settings as region_settings  # noqa: E402  (data_download/regions.py)
 
 DEFAULT_VIEWS = {"morocco": "views", "utah": "views_2023-24"}      # views folder of each study area
 MIN_RAINFED = 20                                                     # rainfed training parcels a draw must keep
@@ -57,7 +58,7 @@ def views_suffix(views):
 def region_paths(region, window, views):
     """Files of a region used by the training scripts."""
     region_settings(region)                                          # stops on an unknown region
-    dataset = ROOT / "outputs" / region / "dataset"
+    dataset = ROOT / "outputs" / region / "data_training_prep"
     views_dir = dataset / "03_tiles_128px" / window / views
     return {
         "split_file": dataset / "02_folds" / "parcels_folds.geojson",

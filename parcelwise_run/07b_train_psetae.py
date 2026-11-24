@@ -34,9 +34,9 @@ fold is never used for any decision. Every parcel is predicted once, by a model 
 
 Inputs
 ------
-outputs/<REGION>/dataset/03_tiles_128px/agyear/<VIEWS_NAME>/pixelsets.npz    all pixels of every parcel (parcelwise_run/04_make_views.py, view B)
-outputs/<REGION>/dataset/03_tiles_128px/agyear/<VIEWS_NAME>/views_info.json  Sentinel-1 orbit of the views (Morocco ASC, Utah DSC; same orbit here)
-outputs/<REGION>/dataset/02_folds/parcels_folds.geojson                       fold and block of every parcel
+outputs/<REGION>/data_training_prep/03_tiles_128px/agyear/<VIEWS_NAME>/pixelsets.npz    all pixels of every parcel (parcelwise_run/04_make_views.py, view B)
+outputs/<REGION>/data_training_prep/03_tiles_128px/agyear/<VIEWS_NAME>/views_info.json  Sentinel-1 orbit of the views (Morocco ASC, Utah DSC; same orbit here)
+outputs/<REGION>/data_training_prep/02_folds/parcels_folds.geojson                       fold and block of every parcel
 
 Steps
 -----
@@ -91,7 +91,7 @@ ROOT = Path(__file__).resolve().parents[1]                         # project fol
 EXPERIMENT = None              # e.g. "E05_psetae_scratch": settings from experiments/parcel_wise_classification/<name>/ | None = below
 CONFIG = None                  # e.g. "utah_s2s1.yaml": one run's settings from experiments/parcel_wise_classification/<EXPERIMENT>/configs/
                                # | None = section "psetae" of experiments/parcel_wise_classification/<EXPERIMENT>/config.yaml
-REGION = "morocco"             # "morocco" | "utah": dataset of parcelwise_run/ (outputs/<REGION>/dataset/)
+REGION = "morocco"             # "morocco" | "utah": dataset of parcelwise_run/ (outputs/<REGION>/data_training_prep/)
 WINDOW = "agyear"
 VIEWS_NAME = "views"           # views folder of parcelwise_run/04_make_views.py: "views" (all years) or e.g. "views_2023-24"
 
@@ -137,9 +137,9 @@ if EXPERIMENT:
 env_override(globals())        # fraction, draw, number of seeds (and region) from run_experiment.py / Slurm
 
 # Paths follow from the settings, so they are built after the config file has been read.
-VIEWS_DIR = ROOT / "outputs" / REGION / "dataset" / "03_tiles_128px" / WINDOW / VIEWS_NAME   # 04_make_views.py
+VIEWS_DIR = ROOT / "outputs" / REGION / "data_training_prep" / "03_tiles_128px" / WINDOW / VIEWS_NAME   # 04_make_views.py
 PIXELSET_FILE = VIEWS_DIR / "pixelsets.npz"
-SPLIT_FILE = ROOT / "outputs" / REGION / "dataset" / "02_folds" / "parcels_folds.geojson"   # 02_make_spatial_folds.py
+SPLIT_FILE = ROOT / "outputs" / REGION / "data_training_prep" / "02_folds" / "parcels_folds.geojson"   # data_training_prep/02_make_spatial_folds.py
 RUN_NAME = f"psetae_{REGION}_{VIEWS_NAME}_{BANDS}" + fraction_tag(TRAIN_FRACTION, FRACTION_DRAW)
 OUT_DIR = results_dir(EXPERIMENT, REGION, RUN_NAME, ROOT / "outputs" / REGION / "study" / "03_models",
                       QUICK_TEST)                                  # quick runs: results_quick/

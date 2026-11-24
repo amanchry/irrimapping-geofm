@@ -53,7 +53,7 @@ flowchart TD
 | [RQ2 · Fine-tuning](fine_tuning.md) | the ways to adapt a GeoFM, what E05 tests, papers to read |
 | [Evaluation protocol](evaluation.md) | task, spatial folds, fairness rules, metrics, confidence intervals, how a result is read |
 | [Experiment plan (all experiments)](../experiments/plan.md) | shared settings of E01–E05 |
-| [Foundation models](../foundation_models.md) | the six GeoFMs and how each is applied |
+| [Foundation models](../foundation_models/index.md) | the six GeoFMs and how each is applied |
 
 The earlier parcel-wise Phase 2 (frozen embeddings pooled over parcels, PCA or L-TAE and classifiers) is in the
 [archive](../archive/parcel_wise_classification/workflow.md).

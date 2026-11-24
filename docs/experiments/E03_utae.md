@@ -13,6 +13,30 @@ pretrained encoders add beyond spatial context.
 **What changes from E02.** The model sees the whole 128 px tile (spatial context) instead of one pixel. The
 labelled pixels, folds and metrics are the same.
 
+## How E03 works, step by step
+
+![E03 from start to end](figures/e03_explainer.png)
+
+*E03 from start to end (schematic: the pictures illustrate the steps and show no results, so the figure holds for any region and year; `tools/a9_experiment_explainers.py`). Steps 3–7 repeat in each of the five rounds. The results of each region are under [Results](#results).*
+
+1. **Labelled pixels and tiles.** The same labelled pixels, folds and blocks as E01 and E02, but the model receives
+   the whole 128 × 128 px tile (1.28 km) around them.
+2. **Image time series.** One sample is one tile: 12 Sentinel-2 bands for each of the 12 months, standardised per
+   band with the training pixels of the round; months without any clear pixel are masked.
+3. **Rotation over the folds.** The same five rounds as every experiment.
+4. **U-TAE.** A convolutional encoder (shared by all months) shrinks each image in four steps; at the smallest size
+   a temporal attention (L-TAE) decides, per pixel, how much each month matters, and these weights combine the months
+   at every size; a decoder brings the result back to 10 m. 1.15 M weights, all trained from random values.
+5. **Loss only where labels exist.** The network predicts every pixel of the tile, but the loss counts only the
+   labelled pixels of the training folds; pixels of validation or test parcels in the same tile are ignored.
+6. **Training.** AdamW, random flips and rotations; early stopping on the validation pixels (patience 10); three
+   seeds per round, probabilities averaged.
+7. **Predicting the test tiles.** The model maps every test tile; the prediction is read at the labelled pixels of
+   the test fold, so U-TAE is scored on the same pixels as the pixel models.
+8. **Score and uncertainty.** As in E01.
+9. **Comparison.** Paired difference to the E01 random forest; U-TAE is itself the reference for E04, which keeps
+   the tiles and the head and changes only the encoder.
+
 ## Model
 
 U-TAE (Garnot & Landrieu 2021), the PASTIS semantic-segmentation baseline: a convolutional encoder shared by all

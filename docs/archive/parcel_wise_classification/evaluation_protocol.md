@@ -62,7 +62,7 @@ Five inputs are compared, all Sentinel-2 only ([D14](../../decisions.md#d14-sent
 Sentinel-2 parcel-feature baseline (12 Sentinel-2 bands, NDVI, NDWI, EVI over 12 months; 180 features) and the embeddings of four frozen foundation models (Clay v1.5,
 Prithvi-EO-2.0, TerraMind, AgriFM). A parcel's embedding is the mean of the patch embeddings that cover it, weighted
 by the share of each patch inside the parcel; chips are 64 × 64 px and shifted so that the parcel centroid lies at a
-patch centre. Bands, patch size and temporal handling per model: [Foundation models · Configuration](../../foundation_models.md#configuration-in-this-study).
+patch centre. Bands, patch size and temporal handling per model: [Foundation models · Configuration](../../foundation_models/in_this_study.md#configuration-in-this-study).
 
 ## 4. Classifiers
 

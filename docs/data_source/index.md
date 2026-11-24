@@ -19,43 +19,45 @@ Catalogue of every dataset used in this research or planned for later phases: pr
 
 | Collection | Provider | Bands / variables | Resolution | Use here | Earth Engine ID | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Sentinel-2 Level-2A** (surface reflectance, harmonised) | ESA Copernicus | B1–B12 (12 bands) | 10–60 m, resampled to 10 m; 5-day revisit | monthly composites: input of every model | `COPERNICUS/S2_SR_HARMONIZED` | ✅ |
+| **Sentinel-2 Level-2A** (surface reflectance, harmonised) | ESA Copernicus | B1–B12 (12 bands) | 10–60 m, resampled to 10 m; 5-day revisit | monthly composites per 10.24 km block (`data_download/02b_s2.py`): input of every model and of the maps | `COPERNICUS/S2_SR_HARMONIZED` | ✅ |
 | **Cloud Score+** for Sentinel-2 | Google (Pasquarella et al., 2023) | `cs_cdf` (clear-sky probability) | 10 m | cloud mask of the Sentinel-2 composites | `GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED` | ✅ |
-| **Sentinel-1 GRD** | ESA Copernicus | VV, VH backscatter, ascending and descending | 10 m; 6–12-day revisit | monthly composites in the tile store; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) | `COPERNICUS/S1_GRD` | 🟦 |
+| **Sentinel-1 GRD** | ESA Copernicus | VV, VH backscatter, ascending and descending | 10 m; 6–12-day revisit | monthly composites per block (`data_download/02c_s1.py`) and in the training tiles; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) | `COPERNICUS/S1_GRD` | 🟦 |
 
-Access: open (Copernicus data policy); Earth Engine account or service account needed. Compositing, cloud
-threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-script-03--build_tiles).
+Access: open (Copernicus data policy); Earth Engine service account needed. Every source is downloaded once per
+region and agricultural year on one grid of 10.24 km blocks (`data_download/`); the training tiles are cut from
+these blocks and the maps are predicted from them ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Compositing, cloud
+threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-script-03--build_tiles); extent of the
+download: [Cropland extent and mask §5](../phase1_data/cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
 
-## Satellite imagery (STAC)
-
-| Collection | Provider | Bands / variables | Resolution | Use here | STAC catalogue | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| **Sentinel-2 Level-2A, Collection 1** | ESA Copernicus, hosted by Element 84 on AWS | 12 bands and the scene classification layer (SCL) for the cloud mask | 10–60 m, resampled to 10 m | wall-to-wall monthly composites of every tile with ≥ 1% cropland (`s2_download/`) | [Earth Search](https://earth-search.aws.element84.com/v1), collection `sentinel-2-c1-l2a` | ✅ |
-
-Access: open, no account needed. Compositing and status: `s2_download/README.md` and
-[Cropland extent and mask §5](../phase1_data/cropland_mask.md#5-extent-of-the-wall-to-wall-tiles).
+!!! note "Retired: Sentinel-2 from STAC"
+    Wall-to-wall Sentinel-2 composites were at first downloaded from the Earth Search STAC catalogue (Element 84,
+    collection `sentinel-2-c1-l2a`, SCL cloud mask; [D18](../decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps)).
+    This route was retired: the maps now use the Earth Engine blocks of `data_download/`
+    ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)).
 
 ## Auxiliary and reference maps
 
-The cropland products serve the mapping phase only: the experiments classify the surveyed parcels as irrigated or
-rainfed and use no cropland mask ([Cropland extent and mask](../phase1_data/cropland_mask.md)).
+The cropland products serve the download and the mapping phase only: the experiments classify the surveyed parcels
+as irrigated or rainfed and use no cropland mask ([Cropland extent and mask](../phase1_data/cropland_mask.md)).
 
 | Dataset | Provider | Content | Resolution | Use here | Access | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | **FAO GAUL** (2015 level 0 Morocco; 2024 level 1 Utah) | FAO | country and state boundaries | vector | outlines on the maps | open · [FAO GAUL](https://data.apps.fao.org/catalog/dataset/global-administrative-unit-layers-gaul) | ✅ |
-| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md); reference map (`cropland_extent/download_esa_worldcover.py`) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
-| **LGRIP30** | Teluguntla et al. (2023), USGS / NASA LP DAAC | irrigated and rainfed cropland | 30 m, nominal 2015 | reference map (`cropland_extent/download_lgrip30.py`); comparison of the final maps | open · [LP DAAC](https://doi.org/10.5067/COMMUNITY/LGRIP/LGRIP30.001) | 🟦 |
+| **ESA WorldCover 2021 v200** | Zanaga et al. (2022), ESA | 11 land-cover classes (cropland = 40) | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md); reference map (`data_download/04a_ref_esa_worldcover.py`) | CC-BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.7254221) | ✅ |
+| **LGRIP30** | Teluguntla et al. (2023), USGS / NASA LP DAAC | irrigated and rainfed cropland | 30 m, nominal 2015 | reference map (`data_download/04b_ref_lgrip30.py`); comparison of the final maps | open · [LP DAAC](https://doi.org/10.5067/COMMUNITY/LGRIP/LGRIP30.001) | 🟦 |
 | **GMIE** | Wu et al. (2023) | global maximum irrigation extent | 30 m | comparison of the final maps | open, citation required · [paper](https://doi.org/10.1016/j.gloenvcha.2023.102652) | 📝 |
 | **WorldCereal** cropland / irrigation | Van Tricht et al. (2023) | cropland and irrigation products | 10 m | comparison; cropland mask for mapping | open · [ESSD paper](https://doi.org/10.5194/essd-15-5491-2023) | 📝 |
 | **GLAD global cropland** | Potapov et al. (2022) | cropland extent and change (2003–2019) | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [paper](https://doi.org/10.1038/s43016-021-00429-z) · [GLAD](https://glad.umd.edu/dataset/croplands) | ✅ |
 | **Esri / Impact Observatory LULC** | Karra et al. (2021) | annual land use / land cover (crops = class 5), 2017–2025 | 10 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [GEE community catalogue](https://gee-community-catalog.org/projects/S2TSLULC/) | ✅ |
 | **GCEP30** (GFSAD) | Thenkabail et al. (2021), USGS | global cropland extent, nominal 2015 | 30 m | one of the 4 products of the [cropland mask](../phase1_data/cropland_mask.md) | open · [USGS PP 1868](https://doi.org/10.3133/pp1868) · [GEE community catalogue](https://gee-community-catalog.org/projects/gcep30/) | ✅ |
-| **Dynamic World V1** | Brown et al. (2022) | 9 land-cover classes with per-class probabilities, per Sentinel-2 image | 10 m | annual layer per agricultural year (most frequent class, mean crop probability, image count; `cropland_extent/download_dynamic_world.py`); candidate cropland mask for the maps, compared with the union of 4 products | open · [GEE catalogue](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) | 📝 |
+| **Dynamic World V1** | Brown et al. (2022) | 9 land-cover classes with per-class probabilities, per Sentinel-2 image | 10 m | cropland layer that selects the downloads and the map pixels: for every 10.24 km block of the mapping area, a binary cropland image (most frequent class of the year = crops) (`data_download/02a_dynamic_world.py`); annual layer per calendar year (most frequent class, mean crop probability, image count; `04c_ref_dynamic_world_annual.py`); candidate cropland mask for the maps, compared with the union of 4 products | open · [GEE catalogue](https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) | ✅ |
 | **FAO WaPOR** | FAO | evapotranspiration, water productivity | 20–250 m | interpretation of irrigation patterns; optional extra variables | open (registration) · [WaPOR](https://www.fao.org/in-action/remote-sensing-for-water-productivity/en) | 📝 |
 | **FAO AQUASTAT** | FAO | national irrigated-area statistics | country | check of the annual map series (RQ3) | open · [AQUASTAT](https://www.fao.org/aquastat/en/) | 📝 |
+| **FAO AQUASTAT irrigated crop calendars** | FAO (2023) | months of growth per irrigated crop and country (about 60 crops, 165 countries; one Excel file) | country (USA in four regions) | check of the agricultural year ([Morocco](../phase1_data/morocco.md), [Utah](../phase1_data/utah.md)) | open · [AQUASTAT crop calendars](https://www.fao.org/aquastat/en/databases/crop-calendar) | ✅ |
+| **GGCMI Phase 3 crop calendar** | Jägermeyr et al. (2021) | planting day, maturity day and season length of 18 crops, irrigated and rainfed, with the source used per cell | 0.5° | check of the agricultural year ([Morocco](../phase1_data/morocco.md), [Utah](../phase1_data/utah.md)) | open, CC BY 4.0 · [Zenodo](https://doi.org/10.5281/zenodo.5062513) | ✅ |
 
 ## Pretrained models
 
 Six foundation models with open weights: Prithvi-EO-2.0-300M-TL, Clay v1.5, TerraMind-1.0-base, AgriFM, Presto
 and TESSERA v2 (Medium). Developers, papers and download
-locations are listed in [Foundation models](../foundation_models.md).
+locations are listed in [Foundation models](../foundation_models/index.md).

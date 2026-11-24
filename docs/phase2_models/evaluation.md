@@ -60,7 +60,7 @@ only ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)).
 | [E01](../experiments/E01_s2_pixel_baseline.md) | pixel time series, 12 months × 12 bands (+ NDVI, NDWI) | random forest, histogram gradient boosting |
 | [E02](../experiments/E02_temporal_nn.md) | same pixel time series | TempCNN (the pixel L-TAE is on hold) |
 | [E03](../experiments/E03_utae.md) | 128 × 128 px tiles | U-TAE from scratch |
-| [E04](../experiments/E04_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models (Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA) + L-TAE + feature pyramid + UPerNet ([Foundation models](../foundation_models.md)) |
+| [E04](../experiments/E04_frozen_geofm.md) | 128 × 128 px tiles | six frozen foundation models (Prithvi, Clay, TerraMind, AgriFM, Presto, TESSERA) + L-TAE + feature pyramid + UPerNet ([Foundation models](../foundation_models/index.md)) |
 | [E05](../experiments/E05_prithvi_strategies.md) | 128 × 128 px tiles, 10, 25, 50 or 100% of the training parcels | Prithvi frozen, LoRA, fully fine-tuned, from scratch (four strategies) |
 
 Neural models: class-weighted cross-entropy (weights from the training pixels), early stopping on the validation

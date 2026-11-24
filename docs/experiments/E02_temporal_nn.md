@@ -17,6 +17,32 @@ read as a sequence instead of 168 separate features.
 | Input format | 168 features (months concatenated) | sequence of 12 months × 14 channels |
 | Missing months | interpolated | interpolated |
 
+## How E02 works, step by step
+
+![E02 from start to end](figures/e02_explainer.png)
+
+*E02 from start to end (schematic: the pictures illustrate the steps and show no results, so the figure holds for any region and year; `tools/a9_experiment_explainers.py`). Steps 4–7 repeat in each of the five rounds. The results of each region are under [Results](#results).*
+
+1. **Labelled pixels.** The same pixel samples, folds and blocks as [E01](E01_s2_pixel_baseline.md).
+2. **A sequence, not a table.** Each pixel keeps its 12 months × 14 values (12 Sentinel-2 bands, NDVI, NDWI) as a
+   sequence of 12 time steps in their order, instead of 168 unordered columns.
+3. **Fill and standardise.** Cloudy months are filled as in E01; each channel is then standardised with the
+   training pixels of the round, so that reflectances and indices have a similar range.
+4. **Rotation over the folds.** The same five rounds as every experiment: test fold *k*, validation fold *k*+1,
+   three training folds.
+5. **TempCNN.** Three 1-D convolutions slide along the months and detect temporal patterns (a filter sees five
+   neighbouring months); a dense layer and the output give the two class scores. All 0.24 M weights are learnt from
+   the labelled pixels.
+6. **Training.** Class-weighted cross-entropy with AdamW; after each epoch the validation fold is scored, the best
+   epoch is kept, and training stops after 10 epochs without improvement. Three seeds per round; their
+   probabilities are averaged.
+7. **Out-of-fold prediction.** Each round predicts its test fold; together they give one prediction per pixel, on
+   the same pixels as E01.
+8. **Score and uncertainty.** Macro-F1 and the per-class scores, per year and zone, with the 95% block-bootstrap
+   interval, exactly as in E01.
+9. **Comparison with E01.** The paired difference to the E01 random forest on the same pixels and bootstrap draws,
+   Holm-corrected over all runs of E01–E04 ([comparison](comparison.md)).
+
 ## Set-up
 
 | Item | Choice |

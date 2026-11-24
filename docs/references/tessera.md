@@ -12,25 +12,11 @@ available; the embeddings are released for the whole globe.
 
 ## What they did
 
-- **Pixel time series instead of image patches.** For each pixel the model reads the valid (cloud-free) observations
-  of one year, without compositing, so the phenology is kept. Each observation carries its day of year.
-    - Sentinel-2: 10 bands (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12);
-    - Sentinel-1: VV and VH backscatter.
-- **Architecture** (45.7 M parameters in the encoder):
-    - one branch per sensor: linear projection of each observation + learnt day-of-year encoding, 4 transformer
-      blocks, then pooling over time into a 128-d vector;
-    - the Sentinel-1 and Sentinel-2 vectors are concatenated and fused by a 2-layer MLP into the final **128-d
-      embedding**, stored as **int8** (quantisation-aware training, about 4× less storage);
-    - 40 observations per sensor are drawn from the year (with replacement if fewer are valid).
-- **Self-supervised training (Barlow Twins):** two "views" of the same pixel are two independent random draws of 40
-  valid dates. The loss makes their embeddings agree (invariance) while keeping the embedding dimensions
-  uncorrelated (redundancy reduction). So the embedding should describe the pixel's land surface, not the particular
-  dates that happened to be cloud-free. Two regularisers:
-    - **global shuffling:** pixels from all tiles are mixed before batching, so a batch does not hold neighbouring,
-      near-identical pixels;
-    - **mix-up:** mixed views of two pixels must give the matching mix of their embeddings.
-- **Pretraining data:** about 800 million pixels from 3,012 MGRS tiles worldwide, 2017–2024; one epoch, batch
-  32,768, 16 AMD MI300X GPUs.
+- **Model.** A per-pixel model that reads the valid (cloud-free) Sentinel-1 and Sentinel-2 observations of one year
+  without compositing, each with its day of year, and returns one 128-d embedding per 10 m pixel. It is trained
+  self-supervised (Barlow Twins: two random subsets of 40 dates of the same pixel must give the same embedding),
+  with global shuffling and mix-up as regularisers, on about 800 M pixels from 3,012 MGRS tiles (2017–2024).
+  Architecture, inputs, pretraining and the v2 teacher and students: [TESSERA model page](../foundation_models/tessera.md).
 - **Product:** global annual 10 m embeddings, with open weights, code and the `geotessera` Python library to download
   them ("embeddings as data").
 - **Evaluation:** six benchmarks with Sentinel-1/2 time series (tree species, PASTIS-R parcels, Austrian crop
@@ -62,7 +48,7 @@ available; the embeddings are released for the whole globe.
 
 - **An encoder of [E04](../experiments/E04_frozen_geofm.md):** TESSERA is one of the two pixel time-series models
   (with Presto). Its 128-d embedding of every pixel of a tile goes to the same UPerNet head as the image models
-  ([Foundation models](../foundation_models.md#tessera-v2)).
+  ([Foundation models](../foundation_models/tessera.md)).
 - **Evidence for the frozen-encoder question (RQ2, [E05](../experiments/E05_prithvi_strategies.md)):** for a pixel
   time-series model the authors found no benefit from fine-tuning, while pretraining itself was worth 33.5 F1 points.
   This is the opposite of the Prithvi result of
