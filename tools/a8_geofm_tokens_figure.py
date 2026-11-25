@@ -2,7 +2,8 @@
 a8_geofm_tokens_figure.py  —  how each foundation model cuts one 128 px tile and its 12 months into tokens
 =========================================================================================================
 
-One row per model: (left) the 128 x 128 px tile with the unit the encoder sees (patch grid or single pixel),
+One row per model: (left) the 128 x 128 px tile with the unit the encoder sees (patch grid; Presto and TESSERA: one
+encoder run per pixel, whose tokens are band groups x months (Presto) or clear months (TESSERA) of that pixel),
 (right) the 12 months and how they are grouped per encoder pass. Values are those of pixelwise_run/encoders.py
 and tile_common.GeoFMSegmenter. Writes docs/figures/geofm_tokens.png (Foundation models page).
 
@@ -40,12 +41,12 @@ MODELS = [
      "1 pass of all 12 months; time is reduced inside\nthe network (no L-TAE needed)"),
     ("Presto", 1, [list(range(12))], "#ff7f0e",
      "10 bands + NDVI (B2 B3 B4 B5 B6 B7 B8 B8A\nB11 B12 + NDVI)",
-     "1 pixel at a time: 16,384 pixels per tile\n6 band groups × 12 months = 72 tokens\n128 values per pixel",
-     "1 pass of the pixel's 12 months (tokens per\nband group and month)"),
+     "1 encoder run per pixel: 16,384 runs per tile\neach run: 6 band groups × 12 months = 72 tokens\n(+ 1 location token) → 128 values per pixel",
+     "each run: the pixel's 12 months, one token per\nband group and month"),
     ("TESSERA v2", 1, [list(range(12))], "#8c564b",
      "10 bands (B4 B2 B3 B8 B8A B5 B6 B7 B11 B12)",
-     "1 pixel at a time: 16,384 pixels per tile\n128 values per pixel",
-     "1 pass of the pixel's clear months, each dated\nby day of year (cloudy months left out)"),
+     "1 encoder run per pixel: 16,384 runs per tile\neach run: one token per clear month (10 bands +\nday of year), padded to 8 or 16 → 128 values per pixel",
+     "each run: the pixel's clear months, one token\nper month (cloudy months left out)"),
 ]
 MONTHS = ["S", "O", "N", "D", "J", "F", "M", "A", "M", "J", "J", "A"]   # Morocco agricultural year
 # ==========================================================================
@@ -68,7 +69,7 @@ def tile(ax, patch, color):
             ax.plot([k, k], [0, 128], color="0.85", lw=0.3)
             ax.plot([0, 128], [k, k], color="0.85", lw=0.3)
         ax.add_patch(Rectangle((0, 127), 1.6, 1.6, fc=color))
-        ax.annotate("one token =\none pixel (10 m)", (1, 127), (140, 112), fontsize=7.5, color=color, va="center",
+        ax.annotate("one run =\none pixel (10 m)", (1, 127), (140, 124), fontsize=7.5, color=color, va="center",
                     arrowprops=dict(arrowstyle="->", color=color, lw=0.8), annotation_clip=False)
         ax.text(64, -9, "128 × 128 pixels = 128 px", ha="center", va="top", fontsize=7.5, color="0.3")
     ax.set_xlim(-2, 130)
@@ -104,7 +105,8 @@ for r, (name, patch, groups, color, t_bands, t_tile, t_month) in enumerate(MODEL
     months(a, groups, color)
     a.text(6, 0.3, t_month, fontsize=8, ha="center", va="top")
 fig.suptitle("What each foundation model sees of one 128 × 128 px tile (1.28 km) and its 12 monthly composites\n"
-             "(tile: grid = how the tile is cut, one cell = one token, the shaded cell is labelled; months: one box = one encoder pass)",
+             "(tile: grid = how the tile is cut, one cell = one token, the shaded cell is labelled; Presto and TESSERA: one encoder run per\n"
+             "pixel, tokens made from that pixel's bands and months; months: one box = one encoder pass or run)",
              fontsize=11, y=0.995)
 OUT.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(OUT, dpi=130, bbox_inches="tight")

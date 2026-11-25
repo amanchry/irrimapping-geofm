@@ -42,7 +42,9 @@ explains the strategies):
 
 *What each encoder receives in this study: the bands, how one 128 × 128 px tile (1.28 km) of 12 monthly composites
 is cut into tokens (one cell = one token, the labelled cell shaded), and how the 12 months are grouped per encoder pass
-(one box = one pass). Drawn by `tools/a8_geofm_tokens_figure.py`.*
+(one box = one pass). Presto and TESSERA run once per pixel (16,384 runs per tile); their tokens are made from that
+pixel's series: 6 band groups × 12 months = 72 tokens plus a location token (Presto), or one token per clear month,
+padded to 8 or 16 (TESSERA). Drawn by `tools/a8_geofm_tokens_figure.py`.*
 
 | | Prithvi-EO-2.0 | Clay v1.5 | TerraMind | AgriFM | Presto | TESSERA v2 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -91,6 +93,48 @@ at native resolution.
 
 Original design: [Prithvi-EO-2.0](prithvi.md).
 
+#### From one tile to a class per 10 m pixel (Prithvi-EO-2.0)
+
+![Prithvi-EO-2.0 in this study, step by step](figures/prithvi_pipeline_steps.png)
+
+*One 128 × 128 px tile through Prithvi-EO-2.0 and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 6 bands, standardised with Prithvi's statistics; pixels without a clear observation set to 0 and masked | 12 × 6 × 128 × 128 | – |
+| 1 · Encoder | 3 passes of 4 months; each month cut into 8 × 8 patches of 16 × 16 px; a patch (16 × 16 px × 6 bands = 1,536 numbers) is projected to a token of 1,024 values, date and location embeddings are added, and 24 transformer layers let every token attend to the 256 tokens of its pass | 12 × 1,024 × 8 × 8 | no (304 M weights) |
+| 2 · L-TAE | at each of the 64 patch positions the 12 monthly vectors are reduced to 256 values and weighted by 16 attention heads (months without a clear pixel in the patch masked) | 256 × 8 × 8 | yes (0.36 M) |
+| 3 · Feature pyramid | four map sizes from the 8 × 8 map: × 4 and × 2 by transposed convolutions, × 1 by a 1 × 1 convolution, × ½ by max-pooling | 128 × 32², 16², 8², 4² | yes (0.39 M) |
+| 4 · UPerNet | pyramid pooling on the 4 × 4 map, top-down sums from coarse to fine, fusion of the four sizes at 32 × 32, 1 × 1 convolution to the two classes | 2 × 32 × 32 (40 m cells) | yes (1.72 M) |
+| 5 · Upsampling | bilinear interpolation × 4; the loss is the class-weighted cross-entropy at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**Width of a token.** The 1,024 values per token are the width of the encoder (ViT-Large), a property of the model,
+not of the input: every patch, whatever its content, becomes 1,024 values, and only the values differ. The input
+sets the number of tokens (8 × 8 per month for a 128 px tile with 16 px patches), not their length.
+
+**One vector per 160 m patch, not per pixel.** The encoder describes the 256 pixels of a 16 × 16 px patch with one
+vector per month; no per-pixel embedding exists inside Prithvi. The 10 m classes are produced by the head: the
+pyramid and UPerNet decide on 40 m cells using the neighbouring patches and the coarser context, and the final
+bilinear interpolation spreads those decisions to 10 m. Field edges inside a patch are therefore resolved only as far
+as the head can infer them from the patch and its neighbours.
+
+**Why a pyramid.** A plain vision transformer keeps one resolution throughout (8 × 8 here), whereas segmentation
+heads combine fine maps, which locate boundaries, with coarse maps, which carry context. The simple feature pyramid
+of ViTDet (Li et al., 2022), used for plain ViTs in PANGAEA (Marsocci et al., 2024), derives four sizes from the last
+layer alone. The upsampled maps are learnt from the 8 × 8 map and add no new spatial information.
+
+**How UPerNet merges the sizes** (Xiao et al., 2018). (1) *Pyramid pooling*: the 4 × 4 map is averaged to 1 × 1,
+2 × 2 and 4 × 4 cells, brought back to 4 × 4 and concatenated, which gives every cell the context of the whole tile;
+pool sizes 1, 2, 4 replace the usual 1, 2, 3, 6 because the coarsest map has only 4 × 4 cells. (2) *Top-down path*:
+each coarser map is upsampled and added to the next finer one (4 → 8 → 16 → 32), so that the fine maps also carry
+context. (3) *Fusion*: the four maps are upsampled to 32 × 32, concatenated and mixed by a 3 × 3 convolution; a 1 × 1
+convolution then gives two class scores per 40 m cell.
+
+**L-TAE** (Garnot & Landrieu, 2020). Each head has one learned query that scores the 12 months of a patch; the
+softmax of the scores weights the months, and the weighted sums of the 16 heads form the 256-value output. The
+weights are learned from the labels, so months that separate irrigated from rainfed fields (for example the dry
+summer, when only irrigated fields stay green) can receive more weight.
+
 ### Clay v1.5
 
 Clay encodes each band together with its central wavelength, which allows a single model to process imagery from
@@ -102,6 +146,26 @@ a 128 px tile yields a 16 × 16 token grid (8 × 8 for the 64 px chips of the ar
 
 Original design: [Clay v1.5](clay.md).
 
+#### From one tile to a class per 10 m pixel (Clay v1.5)
+
+![Clay v1.5 in this study, step by step](figures/clay_pipeline_steps.png)
+
+*One 128 × 128 px tile through Clay v1.5 and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 10 bands, standardised with Clay's statistics; pixels without a clear observation set to 0 and masked | 12 × 10 × 128 × 128 | – |
+| 1 · Encoder | 12 passes of one month; each month cut into 16 × 16 patches of 8 × 8 px; a patch (8 × 8 px × 10 bands = 640 numbers) is projected to 1,024 values with weights generated from the bands' wavelengths; week, location and pixel size are added; 24 transformer layers over the 256 tokens of the month | 12 × 1,024 × 16 × 16 | no (311 M) |
+| 2 · L-TAE | at each of the 256 patch positions the 12 monthly vectors are reduced to 256 values and weighted by 16 heads | 256 × 16 × 16 | yes (0.36 M) |
+| 3 · Feature pyramid | × 4, × 2, × 1, × ½ of the 16 × 16 map | 128 × 64², 32², 16², 8² | yes (0.39 M) |
+| 4 · UPerNet | pyramid pooling on the 8 × 8 map, top-down sums, fusion at 64 × 64, two class scores | 2 × 64 × 64 (20 m cells) | yes (1.72 M) |
+| 5 · Upsampling | bilinear × 2; loss at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**What differs from Prithvi.** Clay's 8 px patches give a 16 × 16 token grid (80 m), so the head decides on 20 m
+cells, the finest of the three image ViTs. The patch projection is not a fixed matrix: its weights are generated
+from each band's central wavelength, which lets one model read different sensors. Each month is a separate pass, so
+attention never links months inside the encoder; the L-TAE alone combines them. The feature pyramid, UPerNet and L-TAE steps are explained in detail under [Prithvi-EO-2.0](#from-one-tile-to-a-class-per-10-m-pixel-prithvi-eo-20).
+
 ### TerraMind-1.0-base
 
 TerraMind is trained to generate any of nine modalities from any other and therefore learns a joint representation
@@ -112,6 +176,26 @@ modalities (`merge_method = "mean"`). One date is processed per pass; 16 px patc
 128 px tile (4 × 4 on a 64 px chip).
 
 Original design: [TerraMind-1.0-base](terramind.md).
+
+#### From one tile to a class per 10 m pixel (TerraMind)
+
+![TerraMind in this study, step by step](figures/terramind_pipeline_steps.png)
+
+*One 128 × 128 px tile through TerraMind-1.0-base and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 12 bands (S2L2A), standardised with TerraMind's statistics; pixels without a clear observation set to 0 and masked | 12 × 12 × 128 × 128 | – |
+| 1 · Encoder | 12 passes of one month, no date or location; each month cut into 8 × 8 patches of 16 × 16 px; a patch (16 × 16 px × 12 bands = 3,072 numbers) is projected to 768 values; 12 transformer layers over the 64 tokens of the month | 12 × 768 × 8 × 8 | no (87 M) |
+| 2 · L-TAE | at each of the 64 patch positions the 12 monthly vectors are reduced to 256 values and weighted by 16 heads | 256 × 8 × 8 | yes (0.30 M) |
+| 3 · Feature pyramid | × 4, × 2, × 1, × ½ of the 8 × 8 map | 128 × 32², 16², 8², 4² | yes (0.39 M) |
+| 4 · UPerNet | pyramid pooling on the 4 × 4 map, top-down sums, fusion at 32 × 32, two class scores | 2 × 32 × 32 (40 m cells) | yes (1.72 M) |
+| 5 · Upsampling | bilinear × 4; loss at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**What differs from Prithvi.** The same 16 px patches and 8 × 8 grid, but a smaller encoder (ViT-Base: 12 layers,
+768 values per token) and no date or location input: the encoder does not know which month it encodes, so the
+month order enters only through the L-TAE's positional encoding. Only one of TerraMind's nine modalities is given
+(Sentinel-2 L2A). The feature pyramid, UPerNet and L-TAE steps are explained in detail under [Prithvi-EO-2.0](#from-one-tile-to-a-class-per-10-m-pixel-prithvi-eo-20).
 
 ### AgriFM
 
@@ -134,6 +218,27 @@ statistics are kept as a sensitivity run (`NORM = "config"`, file `agrifm-cfgnor
 
 Original design: [AgriFM](agrifm.md).
 
+#### From one tile to a class per 10 m pixel (AgriFM)
+
+![AgriFM in this study, step by step](figures/agrifm_pipeline_steps.png)
+
+*One 128 × 128 px tile through AgriFM and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 10 bands, standardised with the region's band statistics (D15); pixels without a clear observation set to 0 | 12 × 10 × 128 × 128 | – |
+| 1 · 3-D patches | the 12-month stack is cut into blocks of 4 months × 4 × 4 px (640 numbers), each projected to 128 values | 128 × 3 × 32 × 32 (3,072 tokens) | no |
+| 2 · Swin stages | windowed attention (8 time steps × 7 × 7 tokens); after each stage 2 × 2 × 2 tokens are merged, halving space and time; the patch embedding and the outputs of stages 1–3, with remaining time steps stacked as channels, form four maps | 384 × 32², 512 × 16², 512 × 8², 1,024 × 4² | no (88 M in all) |
+| 3 · UPerNet | pyramid pooling on the 4 × 4 map, top-down sums, fusion at 32 × 32, two class scores | 2 × 32 × 32 (40 m cells) | yes (3.23 M) |
+| 4 · Upsampling | bilinear × 4; loss at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**What differs from the image ViTs.** AgriFM reads the whole year in one pass, as a 12-frame video, and reduces time
+inside the network, so it needs neither an L-TAE nor an added pyramid: its hierarchical Swin stages already produce
+four map sizes, which go straight to UPerNet (whose larger input widths explain its 3.23 M weights). The finest map
+(32 × 32, 40 m) is the patch embedding itself, before any attention, so the finest level carries little context;
+the coarser maps come from 2, 4 and 22 Swin blocks. The fourth stage (2 blocks at 4 × 4) runs but its output is not
+used. The UPerNet steps are explained under [Prithvi-EO-2.0](#from-one-tile-to-a-class-per-10-m-pixel-prithvi-eo-20).
+
 ### Presto
 
 Presto tokenises a pixel's time series by channel group and month (Sentinel-1, three Sentinel-2 groups, NIR, SWIR,
@@ -145,6 +250,27 @@ filled by linear interpolation in time. The embedding is the normalised mean of 
 
 Original design: [Presto](presto.md).
 
+#### From one tile to a class per 10 m pixel (Presto)
+
+![Presto in this study, step by step](figures/presto_pipeline_steps.png)
+
+*One 128 × 128 px tile through Presto and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 10 bands / 10,000 plus NDVI; cloudy months filled by linear interpolation | 12 × 11 × 128 × 128 | – |
+| 1 · Encoder, once per pixel | each pixel's series is cut into 6 band groups × 12 months = 72 tokens plus a location token; 2 transformer layers (width 128); the mean of the tokens is the pixel's embedding; 16,384 runs per tile | 128 × 128 × 128 | no (0.4 M) |
+| 2 · Pyramid | average pooling of the 10 m map by 1, 2, 4 and 8 (no weights) | 128 × 128², 64², 32², 16² | – |
+| 3 · UPerNet | pyramid pooling on the 16 × 16 map, top-down sums, fusion at 128 × 128, two class scores | 2 × 128 × 128 (10 m) | yes (1.72 M) |
+| 4 · Output | no upsampling: the scores are already per 10 m pixel; loss at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**What differs from the image models.** Presto never sees a neighbouring pixel: one run encodes one pixel, and its
+tokens are that pixel's band groups and months, not image patches. The encoder therefore delivers a true 10 m map,
+and the pyramid is plain average pooling, which gives each pixel the context of its 20, 40 and 80 m neighbourhood;
+spatial patterns enter only through the UPerNet head. 16,384 runs per tile is cheap because the encoder is small
+(0.4 M weights). The UPerNet steps are explained under
+[Prithvi-EO-2.0](#from-one-tile-to-a-class-per-10-m-pixel-prithvi-eo-20).
+
 ### TESSERA v2
 
 TESSERA encodes the Sentinel-2 and Sentinel-1 observations of a pixel as unordered sets dated by their day of year
@@ -155,6 +281,26 @@ used, padded or subsampled to the observation-count bin of the reference code (8
 Sentinel-1 branch receives one empty observation, as the reference code does without Sentinel-1.
 
 Original design: [TESSERA v2](tessera.md).
+
+#### From one tile to a class per 10 m pixel (TESSERA v2)
+
+![TESSERA v2 in this study, step by step](figures/tessera_pipeline_steps.png)
+
+*One 128 × 128 px tile through TESSERA v2 and the trained head, with the shape of the data after every step (one tile; grey = frozen encoder, orange = trained head). Schematic: the maps are illustrations, the sizes are those of the model (`pixelwise_run/encoders.py`, `pixelwise_run/tile_common.py`). Drawn by `tools/a11_geofm_pipeline_figures.py`.*
+
+| Step | What happens | Output for one tile | Trained in E04 |
+| --- | --- | --- | --- |
+| 0 · Input | 12 monthly composites, 10 bands in TESSERA's order, standardised with its statistics; only clear months kept, each dated the 15th | 12 × 10 × 128 × 128 | – |
+| 1 · Encoder, once per pixel | one token per clear month (10 bands + day of year), padded to 8 or 16 by repeating months; 4 transformer layers (width 256) and attention pooling; joined with the empty Sentinel-1 branch and reduced to 128 values; 16,384 runs per tile | 128 × 128 × 128 | no (21 M) |
+| 2 · Pyramid | average pooling of the 10 m map by 1, 2, 4 and 8 (no weights) | 128 × 128², 64², 32², 16² | – |
+| 3 · UPerNet | pyramid pooling on the 16 × 16 map, top-down sums, fusion at 128 × 128, two class scores | 2 × 128 × 128 (10 m) | yes (1.72 M) |
+| 4 · Output | no upsampling; loss at the labelled pixels only | 2 × 128 × 128 (10 m) | – |
+
+**What differs from Presto.** Both encode one pixel per run, but TESSERA's tokens are whole observations (all bands
+of one clear month) rather than band groups, cloudy months are left out instead of interpolated, and each token
+carries its day of year, so an irregular set of dates is handled directly. Padding repeats some clear months (for 10
+clear months, six are repeated to reach 16 tokens, following the reference inference code). The UPerNet steps are
+explained under [Prithvi-EO-2.0](#from-one-tile-to-a-class-per-10-m-pixel-prithvi-eo-20).
 
 
 ## Earlier parcel-wise benchmark (archived)
@@ -195,3 +341,14 @@ the first use (`pixelwise_run/encoders.py`).
 
 Installation of the required packages is described in [Environment setup](../setup.md).
 
+
+## References
+
+- Garnot, V. S. F. & Landrieu, L. (2020). Lightweight temporal self-attention for classifying satellite images time
+  series (L-TAE). *AALTD*.
+- Li, Y., Mao, H., Girshick, R. & He, K. (2022). Exploring plain vision transformer backbones for object detection
+  (ViTDet). *ECCV*. arXiv:2203.16527.
+- Marsocci, V. et al. (2024). PANGAEA: a global and inclusive benchmark for geospatial foundation models.
+  arXiv:2412.04204.
+- Xiao, T., Liu, Y., Zhou, B., Jiang, Y. & Sun, J. (2018). Unified perceptual parsing for scene understanding.
+  *ECCV*.

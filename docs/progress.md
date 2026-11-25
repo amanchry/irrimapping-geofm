@@ -88,6 +88,15 @@ Next steps
 
 ## Change log (newest first)
 
+### 2026-11-25 (step-by-step figures of the foundation models)
+
+- [Foundation models in this study](foundation_models/in_this_study.md#settings-used-in-this-study-details): one
+  step-by-step figure and table per foundation model (Prithvi-EO-2.0, Clay, TerraMind, AgriFM, Presto, TESSERA),
+  from the input tile through the encoder, the temporal and spatial head to the class per 10 m pixel, with the tensor
+  shape and trained weights of each step (`tools/a11_geofm_pipeline_figures.py`; sizes checked by running the modules).
+- Token figure: Presto and TESSERA are labelled as one encoder run per pixel, with their tokens (72 band-group ×
+  month tokens plus location; one token per clear month, padded to 8 or 16).
+
 ### 2026-11-25 (Dynamic World cropland block by block)
 
 - `02a_dynamic_world.py` downloads the cropland block by block instead of one region-wide file per year: one
