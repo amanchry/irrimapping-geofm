@@ -1,0 +1,3985 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evaluating geospatial foundation models for irrigated cropland mapping">
+      
+      
+        <meta name="author" content="Aman Chaudhary">
+      
+      
+        <link rel="canonical" href="https://amanchry.github.io/irrimapping-geofm/experiments/E04_frozen_geofm/">
+      
+      
+        <link rel="prev" href="../E03_utae/">
+      
+      
+        <link rel="next" href="../E05_prithvi_strategies/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>E04 · Frozen GeoFMs + decoder - Irrigated Cropland Mapping with GeoFMs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#e04--frozen-foundation-models--decoder-rq1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-header__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Irrigated Cropland Mapping with GeoFMs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              E04 · Frozen GeoFMs + decoder
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Irrigated Cropland Mapping with GeoFMs" class="md-nav__button md-logo" aria-label="Irrigated Cropland Mapping with GeoFMs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    Irrigated Cropland Mapping with GeoFMs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/amanchry/irrimapping-geofm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    amanchry/irrimapping-geofm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../foundation_models/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundation models
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Foundation models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/prithvi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prithvi-EO-2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/clay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clay v1.5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/terramind/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TerraMind
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/agrifm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AgriFM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/presto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/tessera/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TESSERA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../foundation_models/in_this_study/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    In this study
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7">
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 1 · Data preparation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 1 · Data preparation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase1_data/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase1_data/morocco/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Morocco training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase1_data/utah/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utah training data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase1_data/cropland_extent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cropland extent (Dynamic World)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase1_data/pixel_samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pixel samples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8">
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 2 · Model evaluation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Phase 2 · Model evaluation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/experiment_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ1 · Experiment plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/fine_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RQ2 · Fine-tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase2_models/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase3_transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 3 · Temporal and spatial transferability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase4_fusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 4 · Multi-model fusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phase5_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 5 · Annual maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked="">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_12" id="__nav_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiment plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../E01_s2_pixel_baseline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · Sentinel-2 pixel baseline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../E02_temporal_nn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · Temporal neural network (TempCNN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../E03_utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · U-TAE from scratch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E04 · Frozen GeoFMs + decoder
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E04 · Frozen GeoFMs + decoder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#how-e04-works-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How E04 works, step by step
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paired-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paired tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scores-per-year-zone-and-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scores per year, zone and fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../E05_prithvi_strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E05 · Prithvi: frozen, LoRA, fine-tuned, from scratch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison of the experiments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../weekly/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Progress
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../progress_report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../weekly/2026-W47/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Week 2026-W47
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../weekly/2026-W45-46/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W45–46
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../weekly/2026-W43-44/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weeks 2026-W43–44
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Archive
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16" id="__nav_16_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Archive
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/cropland_union_mask/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Union cropland mask
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3">
+        
+          
+          <label class="md-nav__link" for="__nav_16_3" id="__nav_16_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parcel-wise classification (E01–E05)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_16_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Parcel-wise classification (E01–E05)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/experiment_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiment plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/models_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/evaluation_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6" id="__nav_16_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_16_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experiments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/E01_frozen_pca_nested/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6_2" id="__nav_16_3_6_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_16_3_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E01 · PCA + classifiers · nested CV
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/E01_frozen_pca_nested/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6_3">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/E02_frozen_pca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6_3" id="__nav_16_3_6_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_16_3_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E02 · PCA + LogReg / RF / SVM
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/E02_frozen_pca/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6_4">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/E03_frozen_pca_mlp/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E04 · PCA + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6_4" id="__nav_16_3_6_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_16_3_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E04 · PCA + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/E03_frozen_pca_mlp/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6_5">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/E04_frozen_ltae/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E03 · L-TAE + MLP head
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6_5" id="__nav_16_3_6_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_16_3_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E03 · L-TAE + MLP head
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/E04_frozen_ltae/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3_6_6">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../archive/parcel_wise_classification/E05_psetae_scratch/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E05 · PSE-TAE from scratch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_16_3_6_6" id="__nav_16_3_6_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_16_3_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16_3_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    E05 · PSE-TAE from scratch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archive/parcel_wise_classification/E05_psetae_scratch/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../references/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_17" id="__nav_17_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/yang-2026-alphaearth-irrigated/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaEarth for irrigated mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/ouassanouan-2026-morocco-survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moroccan field survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/kebede-2026-gmia-next/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GMIA-NEXT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/pangaea/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PANGAEA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/tomotaki-dawoud-2025-prithvi-finetuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prithvi fine-tuning: Tomotaki-Dawoud et al.
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/tessera/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TESSERA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/pastis-utae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PASTIS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/ltae/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L-TAE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/irrmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IrrMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/tong-wang-2025/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crop transfer: Tong &amp; Wang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/heads-and-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heads and mapping (review)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#how-e04-works-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How E04 works, step by step
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paired-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paired tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scores-per-year-zone-and-fold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scores per year, zone and fold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="e04--frozen-foundation-models--decoder-rq1">E04 · Frozen foundation models + decoder (RQ1)<a class="headerlink" href="#e04--frozen-foundation-models--decoder-rq1" title="Permanent link">¶</a></h1>
+<div class="admonition success">
+<p class="admonition-title">Status: Morocco done, all six encoders (21 November 2026); Utah later</p>
+<p>Same labelled pixels and tiles as <a href="../E03_utae/">E03</a> (Morocco 2023/24 and 2024/25 pooled, 473,675 pixels in
+2,015 tiles; two classes); six encoders, one GPU job each, 3 seeds per round. Best: <strong>TerraMind macro-F1 0.927</strong>
+[0.880, 0.964], then Clay 0.923, AgriFM 0.921, Prithvi 0.917. These four beat U-TAE trained from scratch
+(significant); none is significantly better than the E01 random forest. <a href="#results">Results</a></p>
+</div>
+<p><strong>Question (RQ1).</strong> Do frozen geospatial foundation models with a light decoder classify the pixels better than the
+pixel models (E01, E02) and a spatio-temporal network trained from scratch (E03)? (Answered on the <a href="../comparison/">comparison page</a>.)</p>
+<p><strong>What changes from E03.</strong> The image encoder: a pretrained, frozen foundation model instead of a convolutional
+encoder trained from scratch. Tiles, labelled pixels, loss, training and metrics are the same.</p>
+<h2 id="how-e04-works-step-by-step">How E04 works, step by step<a class="headerlink" href="#how-e04-works-step-by-step" title="Permanent link">¶</a></h2>
+<p>E04 is run once per encoder, and the encoders do not all go through the same steps: the image models (Prithvi, Clay,
+TerraMind) need an L-TAE to merge the months and a feature pyramid to build four map sizes; AgriFM merges the months
+itself and returns its own four maps; Presto and TESSERA encode each 10 m pixel separately, so their map is only
+pooled to four sizes. Each encoder therefore has its own figure, from the labelled pixels to the comparison, with
+the settings of this study (bands, patches, months per pass, output sizes). Grey parts are frozen, orange parts are
+trained (schematic: the pictures illustrate the steps and show no results, so the figures hold for any region and
+year; <code>tools/a9_experiment_explainers.py</code>). How each model works in general:
+<a href="../../foundation_models/">Foundation models</a>. The results of each region are under
+<a href="#results">Results</a>.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:6"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><input id="__tabbed_1_5" name="__tabbed_1" type="radio"><input id="__tabbed_1_6" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Prithvi-EO-2.0</label><label for="__tabbed_1_2">Clay v1.5</label><label for="__tabbed_1_3">TerraMind</label><label for="__tabbed_1_4">AgriFM</label><label for="__tabbed_1_5">Presto</label><label for="__tabbed_1_6">TESSERA v2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_prithvi_explainer.png" data-desc-position="bottom"><img alt="Prithvi-EO-2.0 in E04" src="../figures/e04_prithvi_explainer.png"></a></p>
+<p>Six bands, 16 px patches, four months per pass with their dates and the tile's location; the L-TAE merges the 12 monthly outputs of each 160 m patch; decisions on a 40 m grid.</p>
+</div>
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_clay_explainer.png" data-desc-position="bottom"><img alt="Clay v1.5 in E04" src="../figures/e04_clay_explainer.png"></a></p>
+<p>Ten bands, each read through a filter built from its wavelength; 8 px patches, one month per pass with week and location; the finest grid of the image models (64 × 64, 20 m).</p>
+</div>
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_terramind_explainer.png" data-desc-position="bottom"><img alt="TerraMind in E04" src="../figures/e04_terramind_explainer.png"></a></p>
+<p>All twelve bands as the S2L2A modality, 16 px patches, one month per pass without any date; the L-TAE alone orders the months.</p>
+</div>
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_agrifm_explainer.png" data-desc-position="bottom"><img alt="AgriFM in E04" src="../figures/e04_agrifm_explainer.png"></a></p>
+<p>All twelve months in one pass as 3-D blocks of 4 months × 4 × 4 px; the Swin stages shrink space and time together and return four maps, which go straight to the decoder (no L-TAE, no extra pyramid).</p>
+</div>
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_presto_explainer.png" data-desc-position="bottom"><img alt="Presto in E04" src="../figures/e04_presto_explainer.png"></a></p>
+<p>Encodes each of the 16,384 pixels of a tile separately from its 12-month series (band groups × months); the 10 m map of 128-value vectors is pooled to four sizes, so the decision is made per 10 m pixel.</p>
+</div>
+<div class="tabbed-block">
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/e04_tessera_explainer.png" data-desc-position="bottom"><img alt="TESSERA v2 in E04" src="../figures/e04_tessera_explainer.png"></a></p>
+<p>Encodes each pixel from its clear months only, each dated by day of year, and pools them with attention; like Presto, a 10 m feature map and decisions per 10 m pixel.</p>
+</div>
+</div>
+</div>
+<p>The twelve steps:</p>
+<ol>
+<li><strong>Labelled pixels and tiles.</strong> As in E03: the model sees whole 128 px tiles and is scored at the same labelled
+   pixels as every experiment.</li>
+<li><strong>Rotation over the folds.</strong> The same five rounds as every experiment.</li>
+<li><strong>What the encoder reads.</strong> The bands, normalisation and grouping of months of the encoder's own pretraining.</li>
+<li><strong>Tokens.</strong> Patches of 8 or 16 px (one month at a time), 3-D blocks of 4 months × 4 × 4 px (AgriFM), or single
+   pixels (Presto, TESSERA).</li>
+<li><strong>Frozen encoder.</strong> The pretrained network, unchanged, with the extra inputs it was trained with (dates,
+   location, wavelengths, or none).</li>
+<li><strong>Encoder output.</strong> One vector per patch and month (image models), four maps with time merged (AgriFM), or one
+   128-value vector per 10 m pixel (Presto, TESSERA).</li>
+<li><strong>Combining the months.</strong> An L-TAE learns which months matter for the image models; the other three encoders have
+   already merged the months.</li>
+<li><strong>Four map sizes.</strong> A learnt feature pyramid (image models), AgriFM's own four maps, or average pooling of the
+   10 m map (Presto, TESSERA).</li>
+<li><strong>Decoder.</strong> A UPerNet head fuses the four sizes into class scores on a 20–40 m grid (image models, AgriFM),
+   upsampled to 10 m, or directly per 10 m pixel (Presto, TESSERA).</li>
+<li><strong>Training.</strong> Only the L-TAE and the decoder learn (1.7–3.2 M weights), at the labelled pixels of the training
+    folds; early stopping (patience 8) and three seeds per round.</li>
+<li><strong>Prediction and scores.</strong> The test tiles are read at their labelled pixels; scores and 95% intervals as in E01.</li>
+<li><strong>Two comparisons.</strong> Each encoder against the E01 random forest (does it beat the pixel baseline?) and against
+    E03 U-TAE (does pretraining add more than spatial context?), paired and Holm-corrected; the RQ1 answers are on
+    the <a href="../comparison/">comparison page</a>.</li>
+</ol>
+<h2 id="model">Model<a class="headerlink" href="#model" title="Permanent link">¶</a></h2>
+<p>The encoders see whole 128 × 128 px tiles; the model predicts every pixel and is scored at the labelled pixels of the <a href="../../phase1_data/pixel_samples/">pixel samples</a>.</p>
+<div class="mermaid-diagram">flowchart TD
+    A[128 px tile, 12 months] --&gt; B[Frozen encoder, per month]
+    B --&gt; C[L-TAE over months, per patch]
+    C --&gt; D[Feature pyramid + UPerNet]
+    D --&gt; E[Class per 10 m pixel]</div>
+<p>The six encoders are loaded by <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/encoders.py"><code>pixelwise_run/encoders.py</code></a>
+with the bands, band order, normalisation and weights of their own pretraining; AgriFM is normalised with the
+region's band statistics (<a href="../../decisions/#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips">D15</a>).
+What each encoder receives here (bands, tokens, months per pass, output on a tile) is on
+<a href="../../foundation_models/in_this_study/">Foundation models in this study</a>; how each model works as published is on
+its own page (<a href="../../foundation_models/">overview</a>). This page covers only what E04 adds: the head, the training
+and the scoring.</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporal head</strong></td>
+<td>L-TAE (16 heads, d<sub>k</sub> 8, d<sub>model</sub> 256, output 256) over the 12 months at every patch position; months without a clear pixel in the patch are masked. AgriFM, Presto, TESSERA: none (the encoder handles time)</td>
+</tr>
+<tr>
+<td><strong>Decoder</strong></td>
+<td>4-scale feature pyramid from the single-scale ViT features (×4, ×2, ×1, ×½, as for plain ViTs in PANGAEA; Marsocci et al. 2024) and a UPerNet head (Xiao et al. 2018; pool sizes 1, 2, 4), upsampled to 10 m. AgriFM: its own 4-level pyramid goes straight into the UPerNet head. Presto, TESSERA: the 10 m map average-pooled to 4 scales (×1, ×½, ×¼, ×⅛)</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td>2 class scores (irrigated, rainfed) on a 32 × 32 grid (40 m; Clay 64 × 64, 20 m; Presto and TESSERA 128 × 128, 10 m), upsampled to every 10 m pixel</td>
+</tr>
+<tr>
+<td><strong>Trained</strong></td>
+<td>temporal head and decoder only (1.7–3.2 M weights, depending on the encoder); the encoder stays frozen in evaluation mode</td>
+</tr>
+</tbody>
+</table>
+<details class="info">
+<summary>What \"frozen encoder\" means</summary>
+<p>A foundation model has been pretrained once, without labels, on millions of images. Its <strong>encoder</strong> turns an
+image into features. <strong>Frozen</strong> means its weights are not changed at all during our training: it is used as a
+fixed feature extractor, in evaluation mode (no dropout, no updates). Only the small head after it (L-TAE,
+feature pyramid, UPerNet) learns from our labels. E04 therefore measures what the pretrained features already
+contain for irrigated / rainfed. Training the encoder as well is RQ2 (<a href="../E05_prithvi_strategies/">E05</a>).</p>
+</details>
+<details class="info">
+<summary>How the feature pyramid works</summary>
+<p>A plain vision transformer returns a single map (for Prithvi 8 × 8 per tile), but UPerNet needs four
+resolutions. The pyramid rescales that one map to four sizes: ×4 (32 × 32) with two learnt 2 × 2 transposed
+convolutions, ×2 (16 × 16) with one, ×1 (8 × 8) with a 1 × 1 convolution, ×½ (4 × 4) with max pooling. The
+scales and operations follow the <code>Feature2Pyramid</code> neck of PANGAEA and MMSegmentation; building all four from
+the last encoder layer only follows ViTDet (Li et al. 2022). The upsampled maps are learnt, not new detail:
+the true resolution stays the 16 px patch. AgriFM gives its own pyramid; for Presto and TESSERA the 10 m
+feature map is average-pooled to four sizes.</p>
+</details>
+<details class="info">
+<summary>How L-TAE combines the months</summary>
+<p>For the encoders that read one month (or four months) per pass, the twelve monthly feature vectors of each
+patch are combined by an L-TAE (Garnot &amp; Landrieu 2020): 16 heads each give the months weights that sum to 1
+(months without a clear pixel in the patch get weight 0) and average them; the result is one 256-value vector
+per patch. Details: <a href="../E03_utae/">E03 · How L-TAE works</a>.</p>
+</details>
+<details class="info">
+<summary>How UPerNet works (the decoder)</summary>
+<p>The encoder describes the tile in coarse blocks: for Prithvi one vector per 16 × 16 px patch, an 8 × 8 grid for a
+128 px tile. UPerNet (Xiao et al. 2018) turns these coarse features into a class for <strong>every pixel</strong>. It does so
+by looking at the tile at several sizes at once: coarse maps carry the context (what kind of landscape is this?),
+finer maps carry the position (where does the field end?).</p>
+<div class="mermaid-diagram">flowchart LR
+    A["encoder features&lt;br/&gt;8 × 8 per tile"] --&gt; B["pyramid: 4 sizes&lt;br/&gt;32², 16², 8², 4²"]
+    B --&gt; C["1 · context:&lt;br/&gt;average the coarsest map&lt;br/&gt;over the whole tile, its halves&lt;br/&gt;and quarters"]
+    C --&gt; D["2 · coarse to fine:&lt;br/&gt;upsample, add the next&lt;br/&gt;finer map, smooth"]
+    D --&gt; E["3 · combine the 4 sizes,&lt;br/&gt;classify"]
+    E --&gt; F["class per pixel&lt;br/&gt;(32 × 32, then 128 × 128)"]</div>
+<ol>
+<li><strong>Pyramid.</strong> A plain vision transformer gives only one map size, so the 8 × 8 map is rescaled to four sizes
+   (32 × 32, 16 × 16, 8 × 8, 4 × 4).</li>
+<li><strong>Context.</strong> On the coarsest map, the features are averaged over the whole tile, over 2 × 2 and over 4 × 4
+   regions, and added back to every position, so each position also "knows" its surroundings (an irrigation
+   scheme or a dry plain).</li>
+<li><strong>From coarse to fine.</strong> Starting from the coarsest map, each step doubles the size and adds the next finer
+   map, so the context flows down into the detailed maps.</li>
+<li><strong>Combine and classify.</strong> The four maps are brought to 32 × 32 (40 m), joined, and a final layer gives two
+   scores per position (irrigated, rainfed); they are then upsampled to 128 × 128, i.e. to every
+   10 m pixel.</li>
+</ol>
+<p><strong>What it can and cannot do.</strong> UPerNet adds spatial context, which helps where a single pixel is ambiguous. It
+cannot add detail the encoder does not have: all four sizes come from the same 16 px patches, so field edges
+stay soft. UPerNet is the standard decoder of the PANGAEA benchmark (Marsocci et al. 2024) and is the same for
+every encoder, so it does not favour any of them.</p>
+</details>
+<h2 id="training">Training<a class="headerlink" href="#training" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Labels</strong></td>
+<td>the labelled pixels of the round's training folds only; every other pixel of the tile is ignored in the loss. A tile with pixels of two folds contributes only its training-fold labels</td>
+</tr>
+<tr>
+<td><strong>Loss</strong></td>
+<td>class-weighted cross-entropy (weights from the training pixels)</td>
+</tr>
+<tr>
+<td><strong>Optimiser</strong></td>
+<td>AdamW, learning rate 10⁻⁴, weight decay 10⁻⁴, batch 8 tiles, mixed precision (bfloat16)</td>
+</tr>
+<tr>
+<td><strong>Augmentation</strong></td>
+<td>random flips and 90° rotations</td>
+</tr>
+<tr>
+<td><strong>Early stopping</strong></td>
+<td>macro-F1 of the validation pixels, patience 8, at most 50 epochs</td>
+</tr>
+<tr>
+<td><strong>Seeds</strong></td>
+<td>3 per round, mean probability</td>
+</tr>
+<tr>
+<td><strong>Scoring</strong></td>
+<td>the test tiles are predicted and read at their labelled pixels: the same out-of-fold pixels as every other experiment</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-to-run">How to run<a class="headerlink" href="#how-to-run" title="Permanent link">¶</a></h2>
+<p>Script: <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/experiments/E04_frozen_geofm/run.py"><code>experiments/E04_frozen_geofm/run.py</code></a>
+(models and training: <a href="https://github.com/amanchry/irrimapping-geofm/blob/main/pixelwise_run/tile_common.py"><code>pixelwise_run/tile_common.py</code></a>).
+One GPU job per encoder and region; needs the tile store <code>outputs/&lt;region&gt;/data_training_prep/03_tiles_128px/agyear/tiles/</code>
+(on the cluster) and the model weights in <code>checkpoints/</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">for</span><span class="w"> </span>enc<span class="w"> </span><span class="k">in</span><span class="w"> </span>prithvi<span class="w"> </span>clay<span class="w"> </span>terramind<span class="w"> </span>agrifm<span class="w"> </span>presto<span class="w"> </span>tessera<span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>sbatch<span class="w"> </span>--export<span class="o">=</span>ALL,SCRIPT<span class="o">=</span>experiments/E04_frozen_geofm/run.py,EXPERIMENT_REGION<span class="o">=</span>morocco,EXPERIMENT_ENCODER<span class="o">=</span><span class="nv">$enc</span><span class="w"> </span>jobs/step_gpu.sbatch<span class="p">;</span><span class="w"> </span><span class="k">done</span>
+</code></pre></div>
+<p>Run one encoder with <code>EXPERIMENT_QUICK_TEST=1</code> first (60 tiles, 2 epochs; too short to learn the rainfed class, it
+only checks the code) and read the epoch time in the log to check the job time limit.</p>
+<h2 id="outputs">Outputs<a class="headerlink" href="#outputs" title="Permanent link">¶</a></h2>
+<p><code>experiments/E04_frozen_geofm/results/&lt;region&gt;/&lt;encoder&gt;/</code>: the E01 files plus <code>training_history.csv</code>.</p>
+<h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">¶</a></h2>
+<p>Morocco, 2023/24 and 2024/25 pooled: the same 473,675 out-of-fold pixels as E01–E03. All runs side by side:
+<a href="../comparison/">comparison page</a>.</p>
+<h3 id="scores">Scores<a class="headerlink" href="#scores" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Encoder</th>
+<th>Macro-F1 [95% CI]</th>
+<th>Rainfed F1 [95% CI]</th>
+<th>Rainfed precision</th>
+<th>Rainfed recall</th>
+<th>Trained weights</th>
+<th>GPU hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TerraMind</strong></td>
+<td><strong>0.927</strong> [0.880, 0.964]</td>
+<td><strong>0.872</strong> [0.783, 0.937]</td>
+<td>0.850</td>
+<td>0.894</td>
+<td>2.41 M</td>
+<td>1.8</td>
+</tr>
+<tr>
+<td>Clay</td>
+<td>0.923 [0.874, 0.960]</td>
+<td>0.864 [0.769, 0.930]</td>
+<td>0.836</td>
+<td>0.894</td>
+<td>2.48 M</td>
+<td>3.3</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>0.921 [0.868, 0.956]</td>
+<td>0.861 [0.758, 0.922]</td>
+<td>0.840</td>
+<td>0.882</td>
+<td>3.23 M</td>
+<td>1.9</td>
+</tr>
+<tr>
+<td>Prithvi</td>
+<td>0.917 [0.865, 0.957]</td>
+<td>0.853 [0.749, 0.924]</td>
+<td>0.838</td>
+<td>0.867</td>
+<td>2.48 M</td>
+<td>5.1</td>
+</tr>
+<tr>
+<td>TESSERA</td>
+<td>0.912 [0.853, 0.958]</td>
+<td>0.844 [0.733, 0.928]</td>
+<td>0.849</td>
+<td>0.838</td>
+<td>1.72 M</td>
+<td>24.7</td>
+</tr>
+<tr>
+<td>Presto</td>
+<td>0.903 [0.848, 0.942]</td>
+<td>0.828 [0.720, 0.899]</td>
+<td>0.806</td>
+<td>0.852</td>
+<td>1.72 M</td>
+<td>14.1</td>
+</tr>
+<tr>
+<td><em>E03 U-TAE (from scratch)</em></td>
+<td><em>0.900</em> [0.845, 0.941]</td>
+<td><em>0.823</em> [0.716, 0.896]</td>
+<td>0.808</td>
+<td>0.839</td>
+<td>1.15 M</td>
+<td>3.6</td>
+</tr>
+<tr>
+<td><em>E01 random forest</em></td>
+<td><em>0.894</em> [0.834, 0.940]</td>
+<td><em>0.810</em> [0.697, 0.894]</td>
+<td>0.850</td>
+<td>0.774</td>
+<td>–</td>
+<td>CPU</td>
+</tr>
+</tbody>
+</table>
+<p>Trained weights = temporal head and decoder (the encoder is frozen). GPU hours = sum of the epoch times of the 15
+models; Presto and TESSERA encode every pixel's time series separately, which makes them the slowest.</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/scores_e03_e04.png" data-desc-position="bottom"><img alt="Scores of E01–E04" src="../figures/scores_e03_e04.png"></a></p>
+<h3 id="paired-tests">Paired tests<a class="headerlink" href="#paired-tests" title="Permanent link">¶</a></h3>
+<p>Paired differences on the same pixels and block-bootstrap draws; Holm correction over the nine runs of E01–E04
+against each reference. A difference counts when its 95% CI excludes 0 and p<sub>Holm</sub> &lt; 0.05.</p>
+<table>
+<thead>
+<tr>
+<th>Encoder</th>
+<th>vs E03 U-TAE: Δ macro-F1 [95% CI]</th>
+<th>p<sub>Holm</sub></th>
+<th>vs E01 random forest: Δ macro-F1 [95% CI]</th>
+<th>p<sub>Holm</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TerraMind</td>
+<td><strong>+0.027</strong> [+0.013, +0.052]</td>
+<td>&lt; 0.01</td>
+<td>+0.034 [+0.004, +0.076]</td>
+<td>0.29</td>
+</tr>
+<tr>
+<td>Clay</td>
+<td><strong>+0.023</strong> [+0.010, +0.042]</td>
+<td>0.01</td>
+<td>+0.029 [−0.002, +0.071]</td>
+<td>0.45</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td><strong>+0.021</strong> [+0.009, +0.036]</td>
+<td>&lt; 0.01</td>
+<td>+0.028 [−0.001, +0.064]</td>
+<td>0.45</td>
+</tr>
+<tr>
+<td>Prithvi</td>
+<td><strong>+0.017</strong> [+0.004, +0.036]</td>
+<td>0.04</td>
+<td>+0.023 [−0.007, +0.061]</td>
+<td>0.76</td>
+</tr>
+<tr>
+<td>TESSERA</td>
+<td>+0.012 [−0.020, +0.043]</td>
+<td>1.0</td>
+<td>+0.018 [+0.000, +0.039]</td>
+<td>0.37</td>
+</tr>
+<tr>
+<td>Presto</td>
+<td>+0.003 [−0.008, +0.011]</td>
+<td>1.0</td>
+<td>+0.009 [−0.022, +0.044]</td>
+<td>1.0</td>
+</tr>
+</tbody>
+</table>
+<p>For rainfed F1 the pattern is the same: TerraMind (+0.048), Clay (+0.040), AgriFM (+0.037) and Prithvi (+0.029) are
+significantly better than U-TAE; against the random forest no difference counts (TerraMind +0.061 [+0.008,
++0.141], p<sub>Holm</sub> = 0.25).</p>
+<ul>
+<li><strong>Against U-TAE (the effect of the pretrained encoder):</strong> the four image encoders (TerraMind, Clay, AgriFM,
+  Prithvi) improve on the same network trained from scratch, by 0.017–0.027 macro-F1. The intervals are narrow
+  because the two models see the same tiles and make similar errors, so the paired differences vary little between
+  blocks.</li>
+<li><strong>Against the random forest:</strong> the differences are larger (+0.023 to +0.034) but vary much more between blocks
+  (large gains in fold 0, small or negative in fold 1), so the intervals are wide. TerraMind's interval excludes 0,
+  but not after the Holm correction for nine comparisons.</li>
+</ul>
+<h3 id="scores-per-year-zone-and-fold">Scores per year, zone and fold<a class="headerlink" href="#scores-per-year-zone-and-fold" title="Permanent link">¶</a></h3>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/groups_e03_e04.png" data-desc-position="bottom"><img alt="Rainfed recall and F1 per season and zone" src="../figures/groups_e03_e04.png"></a></p>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Rainfed recall 2023/24</th>
+<th>Rainfed recall 2024/25</th>
+<th>Rainfed recall Souss</th>
+<th>Rainfed F1 Souss</th>
+<th>Fold 0</th>
+<th>Fold 1</th>
+<th>Fold 2</th>
+<th>Fold 3</th>
+<th>Fold 4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E01 random forest</td>
+<td>0.857</td>
+<td>0.655</td>
+<td>0.322</td>
+<td>0.485</td>
+<td>0.762</td>
+<td>0.911</td>
+<td>0.921</td>
+<td>0.942</td>
+<td>0.928</td>
+</tr>
+<tr>
+<td>E03 U-TAE</td>
+<td>0.911</td>
+<td>0.736</td>
+<td>0.641</td>
+<td>0.774</td>
+<td>0.855</td>
+<td>0.865</td>
+<td>0.935</td>
+<td>0.957</td>
+<td>0.893</td>
+</tr>
+<tr>
+<td>TerraMind</td>
+<td>0.926</td>
+<td>0.849</td>
+<td>0.839</td>
+<td>0.903</td>
+<td>0.878</td>
+<td>0.899</td>
+<td>0.951</td>
+<td>0.971</td>
+<td>0.944</td>
+</tr>
+<tr>
+<td>Clay</td>
+<td>0.928</td>
+<td>0.845</td>
+<td>0.814</td>
+<td>0.889</td>
+<td>0.878</td>
+<td>0.892</td>
+<td>0.955</td>
+<td>0.971</td>
+<td>0.923</td>
+</tr>
+<tr>
+<td>AgriFM</td>
+<td>0.939</td>
+<td>0.801</td>
+<td>0.669</td>
+<td>0.794</td>
+<td>0.868</td>
+<td>0.900</td>
+<td>0.958</td>
+<td>0.965</td>
+<td>0.921</td>
+</tr>
+<tr>
+<td>Prithvi</td>
+<td>0.914</td>
+<td>0.800</td>
+<td>0.772</td>
+<td>0.862</td>
+<td>0.862</td>
+<td>0.886</td>
+<td>0.950</td>
+<td>0.953</td>
+<td>0.935</td>
+</tr>
+<tr>
+<td>TESSERA</td>
+<td>0.905</td>
+<td>0.743</td>
+<td>0.455</td>
+<td>0.619</td>
+<td>0.766</td>
+<td>0.908</td>
+<td>0.961</td>
+<td>0.967</td>
+<td>0.943</td>
+</tr>
+<tr>
+<td>Presto</td>
+<td>0.923</td>
+<td>0.750</td>
+<td>0.638</td>
+<td>0.772</td>
+<td>0.860</td>
+<td>0.867</td>
+<td>0.946</td>
+<td>0.958</td>
+<td>0.891</td>
+</tr>
+</tbody>
+</table>
+<p>Macro-F1 per test fold in the last five columns.</p>
+<ul>
+<li><strong>The gain is in the hard cases.</strong> TerraMind and Clay find about 85% of the rainfed pixels of 2024/25 (random
+  forest 66%) and over 80% of those of Souss (random forest 32%). In 2023/24 and Doukkala all models are close.</li>
+<li><strong>Fold 0</strong> (Souss 2024/25) rises from 0.762 (random forest) to 0.86–0.88 with the image encoders. TESSERA stays at the level of the pixel models there (0.766). TESSERA and Presto both encode one pixel's time
+  series, but Presto reaches 0.860 in fold 0, so the per-pixel design alone does not explain TESSERA's weakness.</li>
+<li><strong>Fold 1</strong> is the one fold where every tile model is below the random forest (0.865–0.908 vs 0.911).</li>
+<li><strong>Irrigation-only zones</strong> (Gharb, Tadla, el Haouz): irrigated F1 ≥ 0.988 for every encoder.</li>
+<li><strong>Statte</strong> (312 rainfed pixels in 4 parcels) is too small to judge: TerraMind finds 12 of the 312 rainfed pixels
+  there, U-TAE 146.</li>
+</ul>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../figures/confusion_e04.png" data-desc-position="bottom"><img alt="Confusion matrices of the six encoders" src="../figures/confusion_e04.png"></a></p>
+<h3 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>RQ1, Morocco.</strong> Frozen foundation-model features with a light decoder (1.7–3.2 M trained weights) give the best
+  scores so far: TerraMind 0.927, Clay 0.923, AgriFM 0.921, Prithvi 0.917. They are significantly better than the
+  same pipeline trained from scratch (U-TAE), so the pretrained features carry information that 1,196 rainfed
+  parcels are not enough to learn. They are <strong>not</strong> significantly better than a random forest on the pixel time
+  series, because the gain is concentrated in a few blocks (Souss, 2024/25) and the block bootstrap is wide.</li>
+<li><strong>The four image encoders are close to each other</strong> (0.917–0.927, overlapping intervals); the ranking among them
+  is not established. The two encoders that see one pixel's time series (Presto, TESSERA) are weaker and 3–14 times
+  slower here.</li>
+<li><strong>What the encoders add is mostly rainfed recall in the difficult places:</strong> in the wetter year and in the zone
+  with few rainfed parcels, where the pixel models confuse rainfed with irrigated.</li>
+<li><strong>Caveat:</strong> rainfed parcels lie in three of six zones, mostly Doukkala. The scores measure the separation of
+  irrigated and rainfed where both occur; Utah (rainfed spread more widely) is the test of whether the result holds.</li>
+</ul>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">¶</a></h2>
+<ul>
+<li>Garnot, V. S. F. &amp; Landrieu, L. (2020). Lightweight temporal self-attention for classifying satellite images time
+  series (L-TAE). <em>AALTD</em>.</li>
+<li>Li, Y., Mao, H., Girshick, R. &amp; He, K. (2022). Exploring plain vision transformer backbones for object detection
+  (ViTDet). <em>ECCV</em>. arXiv:2203.16527.</li>
+<li>Marsocci, V. et al. (2024). PANGAEA: a global and inclusive benchmark for geospatial foundation models.
+  arXiv:2412.04204.</li>
+<li>Xiao, T., Liu, Y., Zhou, B., Jiang, Y. &amp; Sun, J. (2018). Unified perceptual parsing for scene understanding.
+  <em>ECCV</em>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="../E03_utae/" class="md-footer__link md-footer__link--prev" aria-label="Previous: E03 · U-TAE from scratch">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                E03 · U-TAE from scratch
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../E05_prithvi_strategies/" class="md-footer__link md-footer__link--next" aria-label="Next: E05 · Prithvi: frozen, LoRA, fine-tuned, from scratch">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                E05 · Prithvi: frozen, LoRA, fine-tuned, from scratch
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Aman Chaudhary
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+      
+        <script src="../../assets/javascripts/mermaid.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
