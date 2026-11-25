@@ -86,9 +86,10 @@ def make_image(ee, ag_season, bounds, area):
     months = month_starts(REGION, ag_season)
     dw = (ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1").filterBounds(rect)
           .filterDate(month_bounds(months[0])[0], month_bounds(months[-1])[1]).select("label"))
+    empty = ee.ImageCollection([ee.Image.constant(0).rename("label").toUint8().updateMask(0)])
     crop_months = ee.Image.constant(0)
-    for m in months:                                                # month without an image counts as not crops
-        mode = dw.filterDate(*month_bounds(m)).reduce(ee.Reducer.mode())
+    for m in months:                                                # month without an image counts as not crops:
+        mode = dw.filterDate(*month_bounds(m)).merge(empty).reduce(ee.Reducer.mode())   # masked dummy keeps 1 band
         crop_months = crop_months.add(mode.eq(CROPS).unmask(0))
     has_image = dw.count().gt(0)                                    # any Dynamic World image in the year
     cropland = crop_months.gte(MIN_CROP_MONTHS).updateMask(has_image)
