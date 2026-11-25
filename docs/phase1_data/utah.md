@@ -15,7 +15,8 @@ experiments run in Morocco first; Utah follows later with the same plan.
     the [pixel samples](pixel_samples.md) (04) are to be rebuilt on the cluster with the two-class script
     (`04_pixel_samples/`), after which E01–E05 follow the Morocco runs. The earlier three-class samples are kept in
     `04c_pixel_samples/` and are no longer used. The 2020/21 data are prepared for the temporal test (RQ3). The
-    wall-to-wall imagery is downloaded per 10.24 km block by `data_download/` (Earth Engine), which replaces the
+    wall-to-wall imagery is downloaded per 10.24 km block by `data_download/` (Dynamic World from Earth Engine,
+    Sentinel-1/2 from open STAC catalogues, [D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)), which replaces the
     retired STAC download ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them));
     see [Cropland extent §2](cropland_extent.md#2-blocks-and-downloads).
 
@@ -92,7 +93,7 @@ Washington, Utah, the IrrMap states):
 | --- | --- | --- |
 | Water-Related Land Use (WRLU), Utah Division of Water Resources | labels | one polygon layer per year, 2017–2025; all agricultural fields of Utah and of the parts of its river basins in Idaho, Wyoming, Colorado, Nevada and Arizona; crop (`Descriptio`, `CropGroup`), irrigation method (`IRR_Method`), basin, county, state. In `data/Utah_field_data/` |
 | FAO GAUL 2024 (level 1) | maps | state outlines (`data/admin_boundaries/`) |
-| Sentinel-2 L2A, Cloud Score+, Sentinel-1 GRD, Dynamic World | imagery | as for Morocco: Google Earth Engine, per 10.24 km block (`data_download/`), for the training tiles and the wall-to-wall maps ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)); the models use Sentinel-2 only (D14) |
+| Sentinel-2 L2A (SCL cloud mask), Sentinel-1 RTC, Dynamic World | imagery | as for Morocco: Sentinel-2 from Earth Search and Sentinel-1 from Planetary Computer (open STAC catalogues), Dynamic World from Google Earth Engine, per 10.24 km block (`data_download/`), for the training tiles and the wall-to-wall maps ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)); the models use Sentinel-2 only (D14) |
 
 ---
 
@@ -419,7 +420,7 @@ python data_training_prep/01_prepare_labels_Utah.py      # ~1 min; YEARS = [2024
 python data_training_prep/02_make_spatial_folds.py       # seconds
 python data_training_prep/03_plan_tiles.py               # tile plan + label rasters
 python data_download/01_plan_blocks.py              # every block of the mapping area (no mask, no labels needed)
-python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of the whole region
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of every block (resumable)
 python data_download/02b_s2.py                      # cropland / training blocks; SEASONS per region in the script; first N_TEST_BLOCKS = 1; resumable
 python data_download/02c_s1.py
 python data_download/03_build_vrt.py
@@ -464,7 +465,7 @@ boundaries. Utah settings in `01_prepare_labels_Utah.py`: `YEARS`, `CROP_GROUPS`
   Moroccan rainfed cereals. `EXCLUDE_CROPS = ["Alfalfa"]` gives a sensitivity run.
 - **Class and place:** 58% of the rainfed fields lie in the Bear River basin (northern Utah and south-east Idaho),
   so results are also reported per basin, as per zone in Morocco.
-- **Snow:** December–February composites in northern Utah often show snow (Cloud Score+ does not mask snow); both
+- **Snow:** December–February composites in northern Utah often show snow (the SCL cloud mask keeps the snow class 11); both
   classes are affected alike.
 - **Sentinel-1:** 2021 has both Sentinel-1 satellites, 2024 only Sentinel-1A, so about twice as many Sentinel-1
   scenes per month in the test year.

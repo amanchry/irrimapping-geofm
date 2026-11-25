@@ -19,10 +19,19 @@ computation through `sbatch` (preferred) or `srun`.
 
 ---
 
-> **Path change (12 Nov 2026, local copy only):** outputs are now per region: `outputs/morocco/{dataset, study,
-> analysis}` and `outputs/utah/dataset`. The server copy below still has the old layout (`outputs/dataset`,
-> `outputs/study`, `outputs/analysis`); move it the same way before the next code sync, or the scripts will not
-> find their inputs.
+> **Code sync and fresh outputs (24 Nov 2026):** the server repo was pulled to `f1c047e` (`data_download/`,
+> `data_training_prep/`). All earlier outputs (`outputs/morocco`, `outputs/utah`, 98 GB) were moved unchanged to
+> `archive/outputs_2026-11-24_before_rerun/`, and the untracked E03–E05 result folders were kept as a copy in
+> `archive/results_2026-11-24_before_pull/` (restored into `experiments/`). All data are downloaded again with the
+> updated scripts into `outputs/<region>/data_download/` and `outputs/<region>/data_training_prep/`. `geemap` 0.37.2
+> and `geedim` 1.9.1 (< 2; needed by `02a` and `04c`) were installed into `condaml` with pip.
+>
+> **Dynamic World restart (25 Nov 2026):** the two half-written region-wide files of the failed `02a` jobs (`outputs/{morocco,utah}/data_download/dynamic_world/cropland_2023-24.tif`, Earth Engine quota exhausted) were deleted; `02a` now downloads one file per block (resumable) into `dynamic_world/<season>/`. The Earth Engine key `secrets/amanchaudhary.web-service-account.json` (project `amanchaudhary`) was copied to the server (mode 600).
+>
+> **Data download jobs:** `jobs/data_download.sbatch` (CPU, 4 cores, 16 GB, UT proxy) runs `data_download/` steps
+> in order for one region through `jobs/run_data_download.py`, which sets `REGION` without editing the tracked script:
+> `sbatch --job-name=dl_utah --export=ALL,REGION=utah,STEPS="01_plan_blocks 02a_dynamic_world" jobs/data_download.sbatch`.
+> Logs in `jobs/logs/<job name>-<id>.log`. The older job scripts in `jobs/` call retired scripts.
 
 ## 1. Connecting from off campus
 

@@ -25,6 +25,7 @@ stating the original plan, the current approach and the rationale. Smaller metho
 | [D18](#d18-wall-to-wall-composites-from-stac-for-the-maps) | Imagery for the maps | annual stacks via STAC / xarray | monthly Sentinel-2 composites of every cropland tile from a STAC catalogue (Earth Search), per 10.24 km block | 19 Nov 2026 |
 | [D19](#d19-two-class-experiments-cropland-extent-in-the-mapping-phase) | Classes of the experiments | irrigated / rainfed | two classes (irrigated, rainfed) on the surveyed parcel pixels; no cropland mask and no not-cropland class in the experiments; Morocco first, then Utah | 20 Nov 2026 |
 | [D17](#d17-cropland-mask-from-four-products-and-a-not-cropland-class) | Mapped area | cropland mask from one product, not specified union of 4 cropland products per agricultural year and a not-cropland class. Superseded: the not-cropland class left the experiments (D19), the union mask is archived; the maps use the annual Dynamic World cropland (D20) | 19 Nov 2026 |
+| [D21](#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world) | Source of Sentinel-1/2 | Earth Engine (Cloud Score+, S1_GRD sigma0) | open STAC catalogues: Earth Search Sentinel-2 (SCL cloud mask), Planetary Computer Sentinel-1 RTC (gamma0); Earth Engine only for Dynamic World | 24 Nov 2026 |
 
 ---
 
@@ -311,8 +312,8 @@ stating the original plan, the current approach and the rationale. Smaller metho
 - **Now:** every source is downloaded **once** per region and agricultural year from Google Earth Engine (service
   account), block by block on one grid of **10.24 km blocks** (1024 × 1024 px, the 128 px tile grid grouped 8 × 8),
   one script and one folder per source (`data_download/`). The blocks cover the whole mapping area, without a mask.
-  Dynamic World is downloaded first as one binary cropland image of the whole region per agricultural year (1 where
-  "crops" is the most frequent class in at least 2 of its 12 months; blocks and tiles are windows of it); Sentinel-2, Sentinel-1 (later ERA5) are downloaded only for blocks with cropland (≥ 164 cropland
+  Dynamic World is downloaded first, as binary cropland for every block and agricultural year (1 where "crops" is
+  the most frequent class in at least 2 of its 12 months; one request per block, resumable; a VRT mosaic per year); Sentinel-2, Sentinel-1 (later ERA5) are downloaded only for blocks with cropland (≥ 164 cropland
   pixels, 1% of a 128 px tile) or with training tiles, and the maps classify each block on its own (cropland pixels
   only) before the block maps are merged. The union of four cropland products (D17) is archived and not
   used; the annual Dynamic World cropland is the only cropland layer. The 128 px training tiles are **cut out of the blocks** (`data_training_prep/04_cut_tiles.py`); the maps
@@ -322,9 +323,37 @@ stating the original plan, the current approach and the rationale. Smaller metho
   every planned source is in Earth Engine under one account; the compositing is that of the existing training tiles.
 - **Checked:** tiles cut from a downloaded Morocco block are identical (values, band names, position) to the existing
   training tiles, so the experiments stay valid and the training tiles need no new download. One block costs about
-  159 MB and 164 s (Sentinel-2), 82 MB and 92 s (Sentinel-1), 64 s for two blocks (Dynamic World, region-wide file); Morocco has 4,199 blocks
+  159 MB and 164 s (Sentinel-2), 82 MB and 92 s (Sentinel-1), 13 s (Dynamic World cropland); Morocco has 4,199 blocks
   over its mapping area, of which Sentinel-2 and Sentinel-1 are fetched for those with cropland.
 - **Where:** [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download),
   [`data_training_prep/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_training_prep). The STAC route
   (`s2_download/`) and the folder `cropland_extent/` (its scripts moved to `data_download/`) were retired.
+
+!!! note "Changed by D21 (24 Nov 2026)"
+    Sentinel-2 and Sentinel-1 now come from open STAC catalogues instead of Earth Engine; the block grid, the file
+    layout and the band layout are unchanged ([D21](#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)).
+
+## D21. Sentinel-2 and Sentinel-1 from open STAC catalogues; Earth Engine only for Dynamic World
+- **Before:** Sentinel-2 (`COPERNICUS/S2_SR_HARMONIZED`, Cloud Score+) and Sentinel-1 (`COPERNICUS/S1_GRD`) were
+  composited per block in Earth Engine (D20).
+- **Now:** `data_download/02b_s2.py` reads Sentinel-2 L2A from Earth Search (Element 84, `sentinel-2-c1-l2a`, ESA
+  Collection 1): offset of Collection 1 removed (reflectance × 10,000), cloud mask from the scene classification
+  (SCL classes 0–3 and 8–10 removed), monthly median, clear-observation count. `02c_s1.py` reads Sentinel-1 from
+  Microsoft Planetary Computer (`sentinel-1-rtc`: GRD radiometrically terrain corrected, gamma0): IW scenes with VV
+  and VH, monthly mean in linear power per orbit direction, stored as dB × 100. Both read only the window of each
+  block from cloud-optimised GeoTIFFs (`stac_common.py`); the grid, file layout, band names, scaling and NODATA are
+  unchanged. Earth Engine is used only for Dynamic World (`02a`, `04c`).
+- **Why:** the Earth Engine project exceeded its noncommercial quota (restricted mode: 429 errors, two failed cluster
+  downloads on 24 Nov 2026), and Sentinel-1/2 were the largest share of its use; open catalogues need no account
+  or quota, and the data are downloaded again for both regions anyway, so every tile and map comes from one source.
+- **Checked:** on Morocco tile 2023-24_384_2795 (2023/24, 12 months) Sentinel-2 agrees with the Earth Engine
+  composite (correlation 0.98–1.00 per band and month, median difference 0 in most months; about 10% fewer clear
+  observations: SCL is stricter than Cloud Score+); a tile cut from a STAC block is identical to the same tile
+  computed on its own. Sentinel-1 RTC is gamma0, about 1.3 dB (VV) and 3 dB (VH) above Earth Engine's sigma0, and
+  Planetary Computer lacks about 10% of the acquisitions (10 of about 95 for this tile, absent from both its GRD and
+  RTC collections). Sentinel-1 is read only by models trained on these data (the foundation models use
+  Sentinel-2, D14), so the offset does not matter as long as all data come from one source. One Sentinel-2 block
+  took 958 s from STAC on a laptop (164 s in Earth Engine).
+- **Where:** [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download)
+  (`02b_s2.py`, `02c_s1.py`, `stac_common.py`), [Data sources](data_source/index.md).
 

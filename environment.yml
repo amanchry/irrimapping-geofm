@@ -21,9 +21,12 @@ dependencies:
   - pyogrio
   - pyarrow                 # GeoParquet tile index (04_build_tiles.py)
   - gdal                    # osgeo Python bindings + gdalbuildvrt (cropland_extent/, cropland mask VRTs)
-  - earthengine-api
-  - planetary-computer      # ESA WorldCover download (cropland_extent/download_esa_worldcover.py)
-  - pystac-client           # STAC search for the same download
+  - earthengine-api          # Dynamic World only (data_download/02a, 04c)
+  - geemap=0.37             # region-wide download of an Earth Engine image (02a, 04c)
+  - geedim<2                # used by geemap 0.37 (the 1.x API)
+  - planetary-computer      # signed URLs: Sentinel-1 RTC (data_download/02c_s1.py), ESA WorldCover (04a)
+  - pystac-client           # STAC search (data_download/stac_common.py, 04a)
+  - stackstac               # read STAC scenes onto the block grid (data_download/stac_common.py)
   # data + machine learning
   - numpy
   - pandas

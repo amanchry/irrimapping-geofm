@@ -1,6 +1,6 @@
 """
-download_common.py  —  block grid, file layout, Earth Engine login and the per-block download loop (not run alone)
-================================================================================================================
+download_common.py  —  block grid, file layout, Earth Engine login and the per-block processing loop (not run alone)
+==================================================================================================================
 
 Every data source is downloaded ONCE per region and agricultural year on one grid of 10.24 km blocks
 (1024 x 1024 px at 10 m), in the region's projection (regions.py). The grid is the 128 px tile grid of the training
@@ -11,15 +11,15 @@ tile and every map window is an exact cut-out of a block.
         grid/blocks.parquet, .geojson               the block grid over the whole mapping area, the same for every
                                                     year (01_plan_blocks.py); the training tiles per block are counted
                                                     when the blocks are loaded (load_blocks)
-        dynamic_world/cropland_<season>.tif         binary cropland of the whole region, 10 m, on the block grid
-                                                    (02a_dynamic_world.py; one download per year with geemap)
+        dynamic_world/<season>/<bx>_<by>.tif        binary Dynamic World cropland of every block (02a_dynamic_world.py)
+        dynamic_world/<season>/mosaic.vrt           VRT mosaic of these blocks (whole region)
         <source>/<season>/<bx>_<by>.tif             one file per block, 12 months x bands of the source
         <source>/<season>/<bx>_<by>_scenes.json     scene IDs per month (provenance), where available
 
-A new source (e.g. ERA5) is one more script 02x_<source>.py: it builds one Earth Engine image per agricultural
-year and calls download_blocks(); nothing else changes. Earth Engine is reached with the service-account key in
-secrets/ (KEY_FILE; never commit it). Earth Engine limits one computePixels request to 48 MB, so a block is fetched
-in groups of months that stay below MAX_REQUEST_MB.
+A new source (e.g. ERA5) is one more script 02x_<source>.py: it defines compute(ag_season, bx, by) -> one block and
+calls process_blocks(), which selects the blocks, skips finished ones, runs blocks in parallel and writes the files.
+Sentinel-2 and Sentinel-1 come from open STAC catalogues (stac_common.py); Earth Engine (service-account key in
+secrets/, KEY_FILE; never commit it) is used only for Dynamic World (02a, 04c).
 """
 import json
 import time
@@ -30,14 +30,12 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-import rasterio.windows
 from rasterio.transform import Affine
 
 from regions import dataset_dir, settings
 
 ROOT = Path(__file__).resolve().parents[1]                          # project folder
-# KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"     # Earth Engine key (never commit)
-KEY_FILE = ROOT / "secrets" / "geonexa-service-account.json"     # Earth Engine key (never commit)
+KEY_FILE = ROOT / "secrets" / "amanchaudhary.web-service-account.json"   # Earth Engine key (never commit)
 
 GSD_M = 10                     # pixel size (m)
 TILE_PX = 128                  # model / training tile (1.28 km)
@@ -46,7 +44,6 @@ BLOCK_PX = TILE_PX * TILES_PER_BLOCK                # 1024 px = 10.24 km
 TILE_M, BLOCK_M = TILE_PX * GSD_M, BLOCK_PX * GSD_M
 N_MONTHS = 12
 NODATA = -32768                # int16 no-data of the image files
-MAX_REQUEST_MB = 40            # stay below Earth Engine's 48 MB per computePixels request
 MIN_CROP_PIXELS = 164          # a block "has cropland" from this many cropland pixels (1% of a 128 px tile, 1.6 ha)
 S2_BANDS = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12"]
 
@@ -79,34 +76,36 @@ def training_plan_file(region):
     return dataset_dir(region) / "03_tiles_128px" / "agyear" / "tiles.parquet"
 
 
-DW_NODATA = 255                # no-data of the Dynamic World cropland file (uint8)
+DW_NODATA = 255                # no-data of the Dynamic World cropland blocks (uint8)
+DW_SOURCE = "dynamic_world"    # folder of the Dynamic World cropland blocks (02a_dynamic_world.py)
 
 
-def dw_cropland_file(region, ag_season):
-    """Region-wide binary Dynamic World cropland of one agricultural year (02a_dynamic_world.py)."""
-    return download_dir(region) / "dynamic_world" / f"cropland_{season_tag(ag_season)}.tif"
+def dw_block_file(region, ag_season, bx, by):
+    """Binary Dynamic World cropland of one block and agricultural year (02a_dynamic_world.py)."""
+    return block_file(region, DW_SOURCE, ag_season, bx, by)
 
 
-def read_dw_window(src, x0, y1, size_px):
-    """size_px x size_px pixels of the open cropland file with top-left corner (x0, y1); 255 outside the file."""
-    col = int(round((x0 - src.transform.c) / GSD_M))
-    row = int(round((src.transform.f - y1) / GSD_M))
-    win = rasterio.windows.Window(col, row, size_px, size_px)
-    return src.read(1, window=win, boundless=True, fill_value=DW_NODATA)
+def dw_mosaic_file(region, ag_season):
+    """VRT mosaic over all Dynamic World cropland blocks of one agricultural year (written by 02a at the end)."""
+    return download_dir(region) / DW_SOURCE / season_tag(ag_season) / "mosaic.vrt"
 
 
 def block_crop_pixels(region, ag_season, blocks):
-    """Cropland pixels per block (list, same order as blocks); None for all if 02a has not run yet."""
-    path = dw_cropland_file(region, ag_season)
-    if not path.exists():
-        return [None] * len(blocks)
-    with rasterio.open(path) as src:
-        return [int((read_dw_window(src, bx * BLOCK_M, (by + 1) * BLOCK_M, BLOCK_PX) == 1).sum())
-                for bx, by in zip(blocks["bx"], blocks["by"])]
+    """Cropland pixels per block (list, same order as blocks); None for a block whose Dynamic World file
+    (02a_dynamic_world.py) is not there yet."""
+    out = []
+    for bx, by in zip(blocks["bx"], blocks["by"]):
+        path = dw_block_file(region, ag_season, bx, by)
+        if not path.exists():
+            out.append(None)
+            continue
+        with rasterio.open(path) as src:
+            out.append(int((src.read(1) == 1).sum()))
+    return out
 
 
 def crop_pixels(region, ag_season, bx, by):
-    """Cropland pixels of one block in the Dynamic World cropland file (02a); None if it is not there."""
+    """Cropland pixels of one block (Dynamic World, 02a); None if its block file is not there."""
     return block_crop_pixels(region, ag_season, pd.DataFrame({"bx": [bx], "by": [by]}))[0]
 
 
@@ -188,114 +187,80 @@ def init_gee():
     return ee
 
 
-def season_region(ee, blocks, crs_epsg):
-    """Earth Engine rectangle around the blocks of one season (+ 2 km), used to filter the collections."""
-    bounds = gpd.GeoSeries(blocks.geometry, crs=crs_epsg).to_crs(4326).total_bounds
-    return ee.Geometry.Rectangle(list(bounds)).buffer(2000)
+def select_blocks(region, source, ag_season, require_cropland=False, only_blocks=None, n_test_blocks=None):
+    """The blocks of one year that a source needs and does not have yet (None if 02a must run first).
+    require_cropland: only blocks with >= MIN_CROP_PIXELS cropland pixels in the Dynamic World cropland file
+    (02a_dynamic_world.py), plus every block with training tiles."""
+    blocks = load_blocks(region, ag_season)
+    if require_cropland:
+        n = block_crop_pixels(region, ag_season, blocks)
+        n_missing = sum(v is None for v in n)
+        if n_missing == len(n):
+            print(f"{source} {ag_season}: no Dynamic World cropland yet: run 02a_dynamic_world.py first")
+            return None
+        if n_missing:
+            print(f"  WARNING {source} {ag_season}: {n_missing:,} blocks have no Dynamic World cropland yet and are "
+                  f"skipped (unless they hold training tiles): run 02a_dynamic_world.py, then this script again")
+        has_crop = np.array([v is not None and v >= MIN_CROP_PIXELS for v in n])
+        keep = has_crop | blocks["has_training_tiles"].to_numpy()
+        print(f"{source} {ag_season}: {int(keep.sum()):,} of {len(blocks):,} blocks hold cropland or training tiles")
+        blocks = blocks[keep]
+    if only_blocks:
+        blocks = blocks[[(bx, by) in set(only_blocks) for bx, by in zip(blocks["bx"], blocks["by"])]]
+    elif n_test_blocks:
+        blocks = blocks.sort_values("has_training_tiles", ascending=False).head(n_test_blocks)
+    blocks = blocks.sort_values("has_training_tiles", ascending=False, kind="stable")   # training blocks first
+    todo = blocks[[not block_file(region, source, ag_season, bx, by).exists()
+                   for bx, by in zip(blocks["bx"], blocks["by"])]]
+    print(f"{source} {ag_season}: {len(blocks) - len(todo)} blocks done, {len(todo)} to go")
+    return todo
 
 
-def block_geometry(ee, bx, by, crs_epsg):
-    x0, y1 = bx * BLOCK_M, (by + 1) * BLOCK_M
-    return ee.Geometry.Rectangle([float(x0), float(y1 - BLOCK_M), float(x0 + BLOCK_M), float(y1)],
-                                 f"EPSG:{crs_epsg}", False)
+def process_blocks(region, source, compute, names, seasons, dtype=np.int16, nodata=NODATA, workers=2,
+                   n_test_blocks=None, only_blocks=None, require_cropland=False, size_px=BLOCK_PX, stop_after=20):
+    """Compute and write one data source for every selected block that does not have it yet (resumable).
 
-
-def request_groups(names, size_px, bytes_per_value=2):
-    """Split the band names into groups whose request stays below MAX_REQUEST_MB. Earth Engine counts more than
-    the data type per pixel (an int16 band of 1024 x 1024 px counted as 3.1 MB, not 2.1 MB), so 2 bytes are added
-    per value as a margin."""
-    per_band = size_px * size_px * (bytes_per_value + 2)
-    n = max(1, int(MAX_REQUEST_MB * 1e6 // per_band))
-    return [names[i:i + n] for i in range(0, len(names), n)]
-
-
-def compute_block(ee, image, bx, by, crs_epsg, names, dtype, size_px=BLOCK_PX, retries=4):
-    """All bands `names` of one block, fetched in groups below the request limit -> [len(names), size, size]."""
-    gsd = BLOCK_M / size_px
-    grid = {"dimensions": {"width": size_px, "height": size_px},
-            "affineTransform": {"scaleX": gsd, "shearX": 0, "translateX": float(bx * BLOCK_M),
-                                "shearY": 0, "scaleY": -gsd, "translateY": float((by + 1) * BLOCK_M)},
-            "crsCode": f"EPSG:{crs_epsg}"}
-    parts = []
-    for group in request_groups(names, size_px, np.dtype(dtype).itemsize):
-        for attempt in range(1, retries + 1):
-            try:
-                arr = ee.data.computePixels({"expression": image.select(group), "fileFormat": "NUMPY_NDARRAY",
-                                             "grid": grid})
-                parts.append(np.stack([arr[n] for n in group]).astype(dtype))
-                break
-            except Exception as err:                                # network / quota / EE error
-                if attempt == retries:
-                    print(f"  block {block_name(bx, by)}: failed ({str(err)[:120]})")
-                    return None
-                time.sleep(10 * attempt)
-    return np.concatenate(parts)
-
-
-def download_blocks(region, source, make_image, names, seasons, dtype=np.int16, nodata=NODATA, workers=4,
-                    n_test_blocks=None, scenes=None, size_px=BLOCK_PX, only_blocks=None, require_cropland=False):
-    """Download one data source for every planned block that does not have it yet (resumable).
-
-    source      folder name (s2, s1, dynamic_world, ...)
-    make_image  f(ee, ag_season, ee_region) -> ee.Image with the bands `names` for one agricultural year
-    scenes      optional f(ee, ag_season, ee_region, block_geometry) -> ee object of scene IDs (provenance)
-    size_px     pixels per block side (1024 at 10 m; fewer for coarse sources such as weather data)
-    only_blocks optional list of (bx, by) to download (tests)
-    require_cropland  only blocks with >= MIN_CROP_PIXELS cropland pixels in the Dynamic World cropland file
-                (02a_dynamic_world.py), plus every block with training tiles (S2, S1, ERA5, ...)
+    compute     f(ag_season, bx, by) -> (array [len(names), size_px, size_px] or None, provenance dict or None);
+                None = block failed (logged, not written: a rerun tries it again)
+    source      folder name (s2, s1, ...); names = band descriptions; size_px = pixels per block side
+    stop_after  stop after this many failed blocks in a row (e.g. quota used up or no connection): the blocks
+                written so far are kept, and a rerun continues with the missing ones
     """
     crs = settings(region)["crs_epsg"]
-    ee = init_gee()
     for ag_season in seasons:
-        blocks = load_blocks(region, ag_season)
-        if require_cropland:
-            n = block_crop_pixels(region, ag_season, blocks)
-            has_crop = np.array([v is not None and v >= MIN_CROP_PIXELS for v in n])
-            keep = has_crop | blocks["has_training_tiles"].to_numpy()
-            if n[0] is None:
-                print(f"{source} {ag_season}: no Dynamic World cropland yet ({dw_cropland_file(region, ag_season)}): "
-                      f"run 02a_dynamic_world.py first")
-                continue
-            print(f"{source} {ag_season}: {int(keep.sum()):,} of {len(blocks):,} blocks hold cropland or training tiles")
-            blocks = blocks[keep]
-        if only_blocks:
-            blocks = blocks[[(bx, by) in set(only_blocks) for bx, by in zip(blocks["bx"], blocks["by"])]]
-        elif n_test_blocks:
-            blocks = blocks.sort_values("has_training_tiles", ascending=False).head(n_test_blocks)
-        todo = blocks[[not block_file(region, source, ag_season, bx, by).exists()
-                       for bx, by in zip(blocks["bx"], blocks["by"])]]
-        print(f"{source} {ag_season}: {len(blocks) - len(todo)} blocks done, {len(todo)} to go")
-        if todo.empty:
+        todo = select_blocks(region, source, ag_season, require_cropland, only_blocks, n_test_blocks)
+        if todo is None or todo.empty:
             continue
-        ee_region = season_region(ee, load_blocks(region, ag_season), crs)
-        image = make_image(ee, ag_season, ee_region)
-        rows, t_start, failed = list(todo.itertuples()), time.time(), 0
+        rows, t_start, failed, in_row = list(todo.itertuples()), time.time(), 0, 0
 
         def one(b):
-            cube = compute_block(ee, image, b.bx, b.by, crs, names, dtype, size_px)
-            ids = None
-            if cube is not None and scenes is not None:
-                try:
-                    ids = scenes(ee, ag_season, ee_region, block_geometry(ee, b.bx, b.by, crs)).getInfo()
-                except Exception:                                   # provenance only; the block is kept
-                    ids = None
-            return cube, ids
+            try:
+                return compute(ag_season, b.bx, b.by)
+            except Exception as err:                                # one block must not stop the others
+                print(f"  block {block_name(b.bx, b.by)}: failed ({type(err).__name__}: {str(err)[:200]})")
+                return None, None
 
         for start in range(0, len(rows), workers * 2):
             batch = rows[start:start + workers * 2]
             with ThreadPoolExecutor(workers) as pool:
                 results = list(pool.map(one, batch))
-            for b, (cube, ids) in zip(batch, results):
+            for b, (cube, info) in zip(batch, results):
                 if cube is None:
                     failed += 1
+                    in_row += 1
                     continue
+                in_row = 0
+                assert cube.shape == (len(names), size_px, size_px), cube.shape
                 path = block_file(region, source, ag_season, b.bx, b.by)
-                write_block(path, cube, b.bx, b.by, names, crs, nodata=nodata, size_px=size_px)
-                if ids is not None:
-                    path.with_name(f"{block_name(b.bx, b.by)}_scenes.json").write_text(json.dumps(ids))
+                write_block(path, cube.astype(dtype), b.bx, b.by, names, crs, nodata=nodata, size_px=size_px)
+                if info is not None:
+                    path.with_name(f"{block_name(b.bx, b.by)}_scenes.json").write_text(json.dumps(info))
             done = min(start + len(batch), len(rows))
             rate = (time.time() - t_start) / done
             print(f"  {source} {ag_season}: {done}/{len(rows)} blocks ({rate:.0f} s/block, "
-                  f"~{rate * (len(rows) - done) / 3600:.1f} h left)")
+                  f"~{rate * (len(rows) - done) / 3600:.1f} h left)", flush=True)
+            if stop_after and in_row >= stop_after:
+                raise SystemExit(f"{source} {ag_season}: {in_row} blocks failed in a row; stopped. The finished "
+                                 f"blocks are kept: run again later to continue with the missing ones")
         if failed:
-            print(f"  {failed} block(s) failed: run again to fetch them")
+            print(f"  {source} {ag_season}: {failed} block(s) failed: run again to fetch them")

@@ -15,15 +15,19 @@ Catalogue of every dataset used in this research or planned for later phases: pr
 | Verified irrigated agricultural lands, 2002–2017 | USGS | irrigated fields only, 14 US states | 2002 – 2017 | not usable (no rainfed class) | open · [ScienceBase](https://www.sciencebase.gov/catalog/item/5ece996d82ce30fd9808527b) | – |
 | CRDSS irrigated parcels, Division 5 (Colorado, USA) | Colorado Division of Water Resources | irrigated parcels only | 2000 – 2023 | not usable (no rainfed class) | open · [CDSS GIS](https://cdss.colorado.gov/gis-data/gis-data-by-category) | – |
 
-## Satellite imagery (Google Earth Engine)
+## Satellite imagery
 
-| Collection | Provider | Bands / variables | Resolution | Use here | Earth Engine ID | Status |
+Since 24 Nov 2026 Sentinel-2 and Sentinel-1 are read from open STAC catalogues; Google Earth Engine is used only
+for Dynamic World ([D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)).
+
+| Collection | Provider | Bands / variables | Resolution | Use here | Catalogue / collection ID | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Sentinel-2 Level-2A** (surface reflectance, harmonised) | ESA Copernicus | B1–B12 (12 bands) | 10–60 m, resampled to 10 m; 5-day revisit | monthly composites per 10.24 km block (`data_download/02b_s2.py`): input of every model and of the maps | `COPERNICUS/S2_SR_HARMONIZED` | ✅ |
-| **Cloud Score+** for Sentinel-2 | Google (Pasquarella et al., 2023) | `cs_cdf` (clear-sky probability) | 10 m | cloud mask of the Sentinel-2 composites | `GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED` | ✅ |
-| **Sentinel-1 GRD** | ESA Copernicus | VV, VH backscatter, ascending and descending | 10 m; 6–12-day revisit | monthly composites per block (`data_download/02c_s1.py`) and in the training tiles; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) | `COPERNICUS/S1_GRD` | 🟦 |
+| **Sentinel-2 Level-2A** (surface reflectance, ESA Collection 1) | ESA Copernicus; Earth Search STAC (Element 84, AWS), no account | B1–B12 (12 bands) and the scene classification (SCL) | 10–60 m, read onto the 10 m block grid (nearest neighbour); 5-day revisit | monthly composites per 10.24 km block (`data_download/02b_s2.py`): scenes with `eo:cloud_cover` < 60, offset of Collection 1 removed (reflectance × 10,000), cloud mask from SCL (classes 0–3 and 8–10 removed); input of every model and of the maps | `sentinel-2-c1-l2a` (Earth Search) | ✅ |
+| **Cloud Score+** for Sentinel-2 | Google (Pasquarella et al., 2023) | `cs_cdf` (clear-sky probability) | 10 m | no longer used: cloud mask of the Earth Engine Sentinel-2 composites until 24 Nov 2026, replaced by the scene classification (SCL) of the STAC download ([D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)) | `GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED` (Earth Engine) | – |
+| **Sentinel-1 RTC** (GRD, radiometrically terrain corrected) | ESA Copernicus; Microsoft Planetary Computer (terrain correction by Catalyst), signed anonymous URLs | VV, VH backscatter as linear gamma0, ascending and descending | 10 m; 6–12-day revisit | monthly composites per block (`data_download/02c_s1.py`: IW scenes with VV and VH, mean in linear power, stored as dB × 100) and in the training tiles; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) | `sentinel-1-rtc` (Planetary Computer) | 🟦 |
 
-Access: open (Copernicus data policy); Earth Engine service account needed. Every source is downloaded once per
+Access: open (Copernicus data policy); Earth Search needs no account and Planetary Computer gives signed anonymous
+URLs; an Earth Engine service account is needed only for Dynamic World. Every source is downloaded once per
 region and agricultural year on one grid of 10.24 km blocks (`data_download/`); the training tiles are cut from
 these blocks and the maps are predicted from them ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Compositing, cloud
 threshold and tiles: [Morocco training data, §6](../phase1_data/morocco.md#6-script-03--build_tiles); extent of the
@@ -32,8 +36,9 @@ download: [Cropland extent §2](../phase1_data/cropland_extent.md#2-blocks-and-d
 !!! note "Retired: Sentinel-2 from STAC"
     Wall-to-wall Sentinel-2 composites were at first downloaded from the Earth Search STAC catalogue (Element 84,
     collection `sentinel-2-c1-l2a`, SCL cloud mask; [D18](../decisions.md#d18-wall-to-wall-composites-from-stac-for-the-maps)).
-    This route was retired: the maps now use the Earth Engine blocks of `data_download/`
-    ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)).
+    This per-tile route (`s2_download/`) was retired in favour of the blocks of `data_download/`
+    ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)),
+    which read Sentinel-2 from the same Earth Search collection since 24 Nov 2026 ([D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)).
 
 ## Auxiliary and reference maps
 

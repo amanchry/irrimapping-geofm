@@ -87,8 +87,8 @@ paired tests per share ([E05](E05_prithvi_strategies.md)).
    of products is archived), checked on the omission of surveyed irrigated and rainfed parcels and on commission
    ([D19](../decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase));
    irrigated and rainfed area per region and year. The maps are predicted from the 10.24 km blocks of
-   [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download) (Earth Engine, the same
-   compositing as the training tiles, which are cut from the same blocks): each block is classified on its own, on
+   [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download) (Sentinel-1/2 from open STAC
+   catalogues, [D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world); the training tiles are cut from the same blocks): each block is classified on its own, on
    its cropland pixels only (tile models read 128 px windows from the block, pixel models read each pixel's series),
    and the block maps are merged at the end ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Dynamic World is downloaded for
    every block of the mapping area and flags the 128 px tiles with ≥ 1% cropland; Sentinel-2 and Sentinel-1 cover

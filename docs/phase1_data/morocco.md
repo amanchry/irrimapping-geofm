@@ -34,7 +34,7 @@ labelled pixels of the surveyed parcels (two classes: irrigated, rainfed) from w
 flowchart TD
     subgraph IN["Inputs"]
         FS["Field survey<br/>~10,000 parcels<br/>Dec 2023 – Jan 2025"]
-        GEE["Google Earth Engine<br/>Sentinel-2 L2A · Cloud Score+<br/>Sentinel-1 GRD"]
+        STAC["Open STAC catalogues<br/>Sentinel-2 L2A · SCL (Earth Search)<br/>Sentinel-1 RTC (Planetary Computer)"]
     end
 
     FS --> S01["<b>01_prepare_labels_Morocco.py</b><br/>clean geometry · label · cropland only<br/>agricultural year"]
@@ -42,7 +42,7 @@ flowchart TD
     S02 -->|"parcels_folds.geojson<br/>+ block_id, fold"| SPLIT[["Split by agricultural year<br/>(ag_season from survey date)"]]
     SPLIT -->|"2023/24 · 6,887 parcels<br/>imagery Sep 2023 – Aug 2024"| S03["<b>data_training_prep/03–04</b><br/>tile plan; tiles cut from the<br/>data_download/ blocks (S2 · S1)<br/>run per agricultural year:<br/>128 × 128 px tiles · 12 months × 19 bands<br/>label / parcel-ID / edge rasters"]
     SPLIT -->|"2024/25 · 1,894 parcels<br/>imagery Sep 2024 – Aug 2025"| S03
-    GEE --> S03
+    STAC --> S03
     S03 -->|"tiles/ · parcels.csv · tiles.parquet"| S04["<b>04_make_pixel_samples.py</b><br/>labelled parcel pixels: irrigated · rainfed<br/>12 months, fold, position"]
     S04 --> PX["Pixel models<br/>(E01, E02)"]
     S03 --> VD["Full tiles<br/>(tile models E03–E05)"]
@@ -57,8 +57,8 @@ flowchart TD
 | 4 | `04_make_pixel_samples.py` | labelled pixels of the surveyed parcels (irrigated, rainfed) per agricultural year: 367,882 (2023/24) and 105,793 (2024/25) |
 | 4 (archived) | `parcelwise_run/04_make_views.py` | parcel-wise model views A–C |
 
-Steps 1–2 complete within minutes. In step 3 the tile plan and the cut-out run locally; the block download from
-Earth Engine is the slow part and resumes from the last completed block when restarted
+Steps 1–2 complete within minutes. In step 3 the tile plan and the cut-out run locally; the block download is
+the slow part and resumes from the last completed block when restarted
 ([D20](../decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)). Step 4 runs locally.
 
 ---
@@ -121,8 +121,8 @@ the 8,781 labelled parcels (e.g. 1,216 rainfed raw vs 1,196 after cleaning; the 
 
 | Data | Used for |
 | --- | --- |
-| Sentinel-2 L2A harmonised + Cloud Score+ | monthly imagery of every model (`data_download/02b_s2.py`, cloud mask `cs_cdf` ≥ 0.60) |
-| Sentinel-1 GRD | monthly VV/VH in the tile store, ascending and descending kept apart; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
+| Sentinel-2 L2A, ESA Collection 1 (Earth Search STAC) | monthly imagery of every model (`data_download/02b_s2.py`, cloud mask from the scene classification SCL) |
+| Sentinel-1 RTC, gamma0 (Planetary Computer STAC) | monthly VV/VH in the tile store, ascending and descending kept apart; not used by the models for now ([D14](../decisions.md#d14-sentinel-2-only-for-every-input)) |
 | FAO GAUL 2015 (level 0) | country outline on the maps (`data/admin_boundaries/`) |
 
 ---
@@ -359,7 +359,7 @@ How each part of the pipeline handles the season:
 | Tile plan | a tile is the triple (season, ix, iy). The same 1.28 km square can exist once for each year, with the same grid position. |
 | Tile name | the season comes first: `2023-24_374_2793`, `2024-25_374_2793` |
 | Label rasters | only parcels of the tile's own year are burnt in, so a 2024/25 parcel never appears as a label in a 2023/24 tile |
-| Imagery | one 12-month Earth Engine image per year, downloaded over that year's planned blocks (`data_download/`), from which the year's tiles are cut. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
+| Imagery | one 12-month image per year, downloaded per block over that year's planned blocks (`data_download/`), from which the year's tiles are cut. The month bands are named identically (`m01` … `m12`), so both years have the same 228-band layout and models can mix them. |
 | QA, `tiles.parquet` | one row per (season, tile), with an `ag_season` column |
 | Pixel samples (`04_make_pixel_samples.py`) | one sample set per season (`04_pixel_samples/<season>/`); each parcel's pixels come from the tiles of its own season. (The archived `04_make_views.py` likewise cut every parcel from the tiles of its own season.) |
 | Folds (`02`) | blocks are defined by location only, so a place surveyed in both years falls in the **same** block and fold. No information leaks between years from training to test. |
@@ -414,22 +414,26 @@ reference for them.
 
 ### 6.3 Monthly composites (per block, per month)
 
-The composites are made in Earth Engine for each 10.24 km block (`data_download/02b_s2.py`, `02c_s1.py`) and cut
-into tiles without resampling; the compositing is the same as in the earlier per-tile download.
+The composites are made for each 10.24 km block from open STAC catalogues (`data_download/02b_s2.py`, `02c_s1.py`;
+[D21](../decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)) and cut into tiles without resampling. Both scripts read only the
+block's window of each scene's cloud-optimised GeoTIFFs onto the block grid (region's projection, 10 m, nearest
+neighbour; `stac_common.py`). Until 24 Nov 2026 the composites were made in Earth Engine (Sentinel-2 with the
+Cloud Score+ mask, Sentinel-1 GRD as sigma0); band names, order, int16 scaling and NODATA are unchanged.
 
 ```mermaid
 flowchart TD
-    subgraph S2["Sentinel-2 L2A"]
+    subgraph S2["Sentinel-2 L2A (Earth Search, Collection 1)"]
         direction TB
-        A1["Scenes with cloud cover < 60 %"] --> A2["Cloud Score+ mask:<br/>keep pixels with cs_cdf ≥ 0.60"]
-        A2 --> A3["Median of clear pixels<br/>12 bands, reflectance × 10,000"]
+        A1["Scenes with eo:cloud_cover < 60 %"] --> A2["Offset of Collection 1 removed:<br/>reflectance × 10,000"]
+        A2 --> A5["SCL mask: remove classes 0–3, 8–10<br/>and pixels with B4 = 0"]
+        A5 --> A3["Median of clear pixels<br/>12 bands"]
         A3 --> A4["+ S2_NCLEAR: number of<br/>clear observations"]
     end
-    subgraph S1["Sentinel-1 GRD (IW, VV + VH)"]
+    subgraph S1["Sentinel-1 RTC (Planetary Computer; IW, VV + VH)"]
         direction TB
-        B1["Split by orbit:<br/>ascending / descending"] --> B2["dB → linear power;<br/>monthly mean"]
-        B2 --> B3["→ dB × 100<br/>VV, VH per orbit"]
-        B3 --> B4["+ S1_N: number of scenes"]
+        B1["Split by orbit:<br/>ascending / descending"] --> B2["linear gamma0;<br/>monthly mean of valid values"]
+        B2 --> B3["→ 10 log10, dB × 100<br/>VV, VH per orbit"]
+        B3 --> B4["+ S1_N: scenes with<br/>a valid VV value"]
     end
     A4 --> M["One month = 19 bands"]
     B4 --> M
@@ -442,8 +446,10 @@ flowchart TD
   - VV_ASC, VH_ASC, S1_N_ASC
   - VV_DSC, VH_DSC, S1_N_DSC
 - **Months:** `m01` = September … `m12` = August of the parcel's agricultural year. Band names in the GeoTIFF look like `B4_m03` (red, November).
-- **Why linear power for Sentinel-1:** backscatter in dB is a logarithm. Averaging in dB gives the geometric mean and biases the composite downwards. Averaging is therefore done in linear power, and the result converted back to dB.
+- **Sentinel-2 harmonisation and cloud mask:** Collection 1 stores reflectance × 10,000 + 1000 (asset metadata: scale 0.0001, offset −0.1); the offset is read from each scene's metadata and removed (values below 0 set to 0), so the values are reflectance × 10,000 as before. The scene classification (SCL) removes classes 0 (no data), 1 (saturated or defective), 2 (dark area), 3 (cloud shadow), 8 and 9 (cloud, medium and high probability) and 10 (thin cirrus); snow (class 11) is kept.
+- **Why linear power for Sentinel-1:** backscatter in dB is a logarithm. Averaging in dB gives the geometric mean and biases the composite downwards. The RTC values are linear gamma0; only valid values (> 0) are averaged, and the mean is converted to dB.
 - **Why the orbits are kept apart:** ascending and descending passes look at a field from different incidence angles, so their backscatter is not interchangeable. Both are stored; the archived view script picked one. The current models use Sentinel-2 only (D14).
+- **Check against the Earth Engine composites** (tile 2023-24_384_2795, 2023/24, 12 months): Sentinel-2 correlation 0.98–1.00 per band and month, median difference 0 in most months, about 10% fewer clear observations (SCL is stricter than Cloud Score+); a tile cut from a STAC block is identical to the same tile computed on its own. Sentinel-1 RTC (gamma0) lies about 1.3 dB (VV) and 3 dB (VH) above Earth Engine's sigma0, and Planetary Computer lacks about 10% of the acquisitions (10 of about 95 for this tile, absent from both its GRD and RTC collections). Sentinel-1 values of the two sources must therefore not be mixed; only models trained on these data read Sentinel-1 (the foundation models use Sentinel-2, D14).
 - Each tile's `_scenes.json` lists the Sentinel-1/2 scene IDs used in each month for the tile's block, so every pixel can be traced to its source.
 
 ### 6.4 Label rasters (local, no Earth Engine)
@@ -484,9 +490,11 @@ Only parcels of the tile's own agricultural year are burnt in.
 
 `data_download/01_plan_blocks.py` then plans every block of the mapping area (4,199 per year in Morocco, no
 cropland mask) and marks the blocks that hold a planned tile (169 in 2023/24, 65 in 2024/25).
-`02a_dynamic_world.py` downloads the binary Dynamic World cropland of the whole region, one 10 m GeoTIFF per year;
-`02b_s2.py` and `02c_s1.py` download the blocks with at least 164 cropland pixels (1% of a 128 px tile) or with training tiles from Earth Engine with `computePixels` (in groups of months below the 48 MB
-request limit, blocks in parallel, finished blocks skipped on a restart).
+`02a_dynamic_world.py` downloads the binary Dynamic World cropland of every block, one 10 m GeoTIFF per block and
+year (resumable; a VRT mosaic of the region at the end);
+`02b_s2.py` and `02c_s1.py` download the blocks with at least 164 cropland pixels (1% of a 128 px tile) or with training tiles from the open STAC catalogues (only the block's window of each
+scene, blocks in parallel, finished blocks skipped on a restart; a block with more than 2% unreadable scenes is not
+written and is fetched by a rerun).
 
 `data_training_prep/04_cut_tiles.py` (local):
 
@@ -730,9 +738,9 @@ python data_training_prep/01_prepare_labels_Morocco.py   # minutes
 python data_training_prep/02_make_spatial_folds.py       # minutes
 python data_training_prep/03_plan_tiles.py               # tile plan + label rasters (seconds)
 python data_download/01_plan_blocks.py              # every block of the mapping area (no mask, no labels needed)
-python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of the whole region (Earth Engine)
-python data_download/02b_s2.py                      # Sentinel-2 per cropland / training block (Earth Engine; resumable; cluster for a whole region)
-python data_download/02c_s1.py                      # Sentinel-1 per cropland / training block (Earth Engine)
+python data_download/02a_dynamic_world.py           # binary Dynamic World cropland of every block (Earth Engine; resumable)
+python data_download/02b_s2.py                      # Sentinel-2 per cropland / training block (Earth Search STAC; resumable; cluster for a whole region)
+python data_download/02c_s1.py                      # Sentinel-1 per cropland / training block (Planetary Computer STAC)
 python data_download/03_build_vrt.py                # VRT mosaic per source and year
 python data_training_prep/04_cut_tiles.py                # training tiles cut from the blocks (local)
 python data_training_prep/05_tile_quicklooks.py          # visual check of selected tiles
@@ -757,12 +765,14 @@ The settings sit at the top of each script:
 | 01 | `SEASON_START_MONTH` (= 9, from `regions.py`), `CROP_KEEP`, `IRRIGATED_TEXT`, `RAINFED_TEXT` |
 | 02 | `REGION`, `N_FOLDS = 5`, `BLOCK_KM` (= 20, from `regions.py`), `CANDIDATE_KM`, `SEED = 42` |
 | 03 (`data_training_prep/03_plan_tiles.py`) | `REGION`, `CRS_EPSG` (= 32629, from `regions.py`), `CHIP_PX = 64`, `MAX_SHIFT_PX = 8`, `INNER_BUFFER_M = 10`, `N_TEST_TILES`; tile size and pixel size (`TILE_PX = 128`, `GSD_M = 10`) in `data_download/download_common.py` |
-| 02a / 02b / 02c (`data_download/`) | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `CLOUD_COVER_PERCENTAGE = 60`, `CS_THRESHOLD = 0.60` (02b), `DOWNLOAD_WORKERS = 4`, `N_TEST_BLOCKS` |
+| 02a (`data_download/`) | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `MIN_CROP_MONTHS = 2`, `NUM_THREADS = 4`, `DOWNLOAD` |
+| 02b / 02c (`data_download/`) | `REGION`, `SEASONS`, `MAX_SCENE_CLOUD = 60` and `SCL_INVALID = [0, 1, 2, 3, 8, 9, 10]` (02b), `MAX_FAILED_FRAC = 0.02`, `WORKERS = 2`, `THREADS = 8`, `N_TEST_BLOCKS`, `ONLY_BLOCKS` |
 | 04 (`data_training_prep/04_cut_tiles.py`) | `REGION`, `OVERWRITE = False` |
 | 04 (`pixelwise_run/04_make_pixel_samples.py`) | `REGION`, `SEASONS` (Morocco: 2023/24 and 2024/25), `MAX_PX_PER_PARCEL = 100`, `SEED = 42` |
 | 04 (archived, `parcelwise_run/04_make_views.py`) | `REGION`, `SEASONS = None` (all years → `views/`; one year → `views_<year>/`), `CHIP_PATCH_SIZES = [8, 16]`, `CHIP_PX = 64`, `S1_ORBIT = "auto"`, `MAKE_FEATURES`, `MAKE_PIXELSETS` |
 
-Earth Engine access uses a service-account key in `secrets/`, which is never committed.
+Earth Engine access (Dynamic World only) uses a service-account key in `secrets/`, which is never committed; the
+STAC catalogues need no account.
 
 ---
 
@@ -786,5 +796,4 @@ Earth Engine access uses a service-account key in `secrets/`, which is never com
 - Ploton, P., et al. (2020). Spatial validation reveals poor predictive performance of large-scale ecological mapping models. *Nature Communications*, 11, 4540.
 - Roberts, D. R., et al. (2017). Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography*, 40, 913–929.
 - Sykas, D., Sdraka, M., Zografakis, D., & Papoutsis, I. (2022). A Sentinel-2 multiyear, multicountry benchmark dataset for crop classification and segmentation with deep learning (Sen4AgriNet). *IEEE JSTARS*, 15, 3323–3339.
-- Pasquarella, V. J., Brown, C. F., Czerwinski, W., & Rucklidge, W. J. (2023). Comprehensive quality assessment of optical satellite imagery using weakly supervised video learning (Cloud Score+). *CVPR Workshops*.
 

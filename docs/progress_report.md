@@ -19,7 +19,8 @@ two classes (irrigated, rainfed) on the surveyed parcels only, no cropland mask 
 the maps classify the pixels of the annual Dynamic World cropland (the union mask of four products is
 archived). All earlier 3-class results were removed. E01–E05 are ready and tested and run again, **Morocco first**
 (473,675 pixels of 8,775 parcels), then Utah. All imagery is now downloaded once per region and year on one grid
-of 10.24 km blocks from Earth Engine; the training tiles are cut from these blocks and the maps will be predicted
+of 10.24 km blocks (Dynamic World from Earth Engine, Sentinel-1/2 from open STAC catalogues since 24 Nov 2026,
+[D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)); the training tiles are cut from these blocks and the maps will be predicted
 from them, which replaces the STAC download ([D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)).
 
 On 24 November 2026 the code was reorganised into `data_download/` (all downloads, block grid,
@@ -40,7 +41,7 @@ gantt
     section 1 · Data
     Morocco dataset (labels, folds, tiles)      :done,   d1, 2026-09-01, 2026-10-31
     Utah dataset, cropland masks, pixel samples :done,   d2, 2026-11-06, 2026-11-19
-    Block download, Earth Engine (maps)         :active, d3, 2026-11-19, 2026-12-15
+    Block download (maps)         :active, d3, 2026-11-19, 2026-12-15
     section 2 · Model evaluation
     Parcel-wise RQ1 (archived)                  :done,   r1, 2026-10-01, 2026-11-18
     Experiments redesigned (2 classes)          :done,   r2, 2026-11-18, 2026-11-20
@@ -70,7 +71,7 @@ gantt
 | 4 | Multi-model fusion (optional, RQ5) | Dec 2026 – Jan 2027 | 📝 | [Phase 4](phase4_fusion/index.md) |
 | 2–4 | Comparative evaluation of the models | Feb 2027 | 📝 | |
 | 3 | Temporal and spatial transferability (RQ3, RQ4) | Feb – Mar 2027 | 📝 Utah 2020/21 labels prepared for the temporal test | [Phase 3](phase3_transfer/index.md) |
-| 5 | Annual irrigated maps | Mar 2027 | 🔄 block download from Earth Engine tested on one Morocco block; STAC route retired ([D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)) | [Phase 5](phase5_maps/index.md) |
+| 5 | Annual irrigated maps | Mar 2027 | 🔄 block download tested on one Morocco block ([D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them)); Sentinel-1/2 from open STAC catalogues since 24 Nov 2026 ([D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)) | [Phase 5](phase5_maps/index.md) |
 | 6 | Analysis, writing, revision | Apr – May 2027 | 📝 | |
 | 6 | Submission | Jun 2027 | 📝 | |
 
@@ -84,7 +85,7 @@ gantt
 | Validation design | 5 spatial folds of 20 km blocks; PASTIS rotation (3 train / 1 validation / 1 test); every model scored on the same out-of-fold pixels | [Experiment plan](experiments/plan.md) |
 | Experiments E01–E04 | random forest, gradient boosting, TempCNN, U-TAE and six frozen GeoFMs + L-TAE + UPerNet; 2-class code ready and tested | [Experiments](experiments/index.md), [comparison](experiments/comparison.md) |
 | E05 | Prithvi frozen / LoRA / full fine-tuning / from scratch, 10–100% of the parcels; code ready and tested | [E05](experiments/E05_prithvi_strategies.md) |
-| Wall-to-wall download | one grid of 10.24 km blocks per region and year (Earth Engine): Dynamic World cropland for the whole mapping area (one file per year), Sentinel-2 and Sentinel-1 for the blocks with cropland (≥ 164 Dynamic World cropland pixels) or with training tiles; tested on one Morocco block (2023/24: Sentinel-2 159 MB in 164 s, Sentinel-1 82 MB in 92 s, binary Dynamic World cropland of two blocks in 64 s); training tiles cut from the blocks are identical to the existing ones. Replaces the STAC download (Utah 2023/24 had reached 17,278 of 18,472 tiles) | [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download), [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them) |
+| Wall-to-wall download | one grid of 10.24 km blocks per region and year: Dynamic World cropland for the whole mapping area from Earth Engine (one file per year), Sentinel-2 (Earth Search) and Sentinel-1 (Planetary Computer RTC) from open STAC catalogues for the blocks with cropland (≥ 164 Dynamic World cropland pixels) or with training tiles; Sentinel-2 checked on one Morocco tile against the earlier Earth Engine composite (correlation 0.98–1.00 per band and month, about 10% fewer clear observations), Sentinel-1 RTC (gamma0) about 1.3 dB (VV) and 3 dB (VH) above Earth Engine's sigma0; one Sentinel-2 block took 958 s on a laptop; tiles cut from a block are identical to the same tiles computed on their own. Replaces the STAC download (Utah 2023/24 had reached 17,278 of 18,472 tiles) | [`data_download/`](https://github.com/amanchry/irrimapping-geofm/tree/main/data_download), [D20](decisions.md#d20-download-once-on-1024-km-blocks-from-earth-engine-training-tiles-cut-from-them), [D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world) |
 | Parcel-wise benchmark | frozen GeoFM embeddings + classifiers, E01–E05 of that set-up; kept as the archive | [Archive](archive/index.md) |
 | Literature | GeoFM fine-tuning strategies, reference pages | [Reference papers](references/index.md), [RQ2 · Fine-tuning](phase2_models/fine_tuning.md) |
 

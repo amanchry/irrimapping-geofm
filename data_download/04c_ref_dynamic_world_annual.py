@@ -74,7 +74,7 @@ YEARS = {"morocco": [2024, 2025],                          # calendar years (1 J
 BANDS = ["label"]                                          # ["label"] (11 GB raw for Morocco) or ["label", "crop_freq"]
 CROP_THRESHOLD = 0.50                                      # with crop_freq: cropland = share labelled crops >= this
 AOI_NAME = REGION.capitalize()                             # used in the output file names
-KEY_FILE = ROOT / "secrets" / "waterinfor-service-account.json"     # Earth Engine key (never commit)
+KEY_FILE = ROOT / "secrets" / "amanchaudhary.web-service-account.json"   # Earth Engine key (never commit)
 OUT_DIR = cropland_dir(REGION) / "dynamic_world"           # outputs/<region>/data_download/reference/dynamic_world/
 GSD_M = 10                                                 # output pixel (m)
 NUM_THREADS = 4                                            # tiles downloaded in parallel (geedim)

@@ -15,8 +15,8 @@ Per tile and month (12 months, month-major: all bands of m01, then m02, ...)
   VV_ASC VH_ASC S1_N_ASC                   Sentinel-1 ascending (dB x 100, scenes)    from download/s1/
   VV_DSC VH_DSC S1_N_DSC                   Sentinel-1 descending                      from download/s1/
 = 19 bands x 12 months = 228 bands, int16, NODATA -32768: the layout of the tiles downloaded before, so all
-pixelwise_run/ scripts and experiments read them unchanged. Dynamic World (data_download/dynamic_world/cropland_<season>.tif) is written as
-a separate file where downloaded.
+pixelwise_run/ scripts and experiments read them unchanged. The Dynamic World cropland of the block
+(data_download/dynamic_world/<season>/<bx>_<by>.tif) is cut as a separate file where downloaded.
 
 Tiles that already exist are kept (OVERWRITE = False): the earlier training tiles stay as they are.
 
@@ -42,7 +42,7 @@ import rasterio
 from rasterio.windows import Window
 
 from tile_store import N_MONTHS, NODATA, S2_BANDS, TILE_PX, load_plan, out_dir, tile_dir, tile_file, write_tif
-from download_common import DW_NODATA, TILE_M, block_file, block_name, block_of_tile, dw_cropland_file, read_dw_window  # noqa: E402  (data_download/, via tile_store)
+from download_common import DW_NODATA, block_file, block_name, block_of_tile, dw_block_file  # noqa: E402  (data_download/, via tile_store)
 from regions import settings  # noqa: E402
 
 # ================================ SETTINGS ================================
@@ -79,13 +79,20 @@ def tile_qa(cube, lab):
 
 
 def scenes(ag_season, bx, by):
-    """Scene IDs per month of the tile's block (download/s2/, download/s1/ provenance files)."""
+    """Scene IDs used per month in the tile's block (provenance files of data_download/02b_s2.py and 02c_s1.py:
+    {"months": {"m01": {"used": [...]}}} for Sentinel-2, {"months": {"m01": {"asc": {"used": [...]}, "dsc": ...}}}
+    for Sentinel-1)."""
     out = {}
     for source in ("s2", "s1"):
         p = block_file(REGION, source, ag_season, bx, by).with_name(f"{block_name(bx, by)}_scenes.json")
-        out[source] = json.loads(p.read_text()) if p.exists() else {}
-    return {f"m{k:02d}": {"s2": out["s2"].get(f"m{k:02d}", []), "s1_asc": out["s1"].get(f"m{k:02d}", {}).get("asc", []),
-                          "s1_dsc": out["s1"].get(f"m{k:02d}", {}).get("dsc", [])} for k in range(1, N_MONTHS + 1)}
+        out[source] = json.loads(p.read_text()).get("months", {}) if p.exists() else {}
+    res = {}
+    for k in range(1, N_MONTHS + 1):
+        m = f"m{k:02d}"
+        s1 = out["s1"].get(m, {})
+        res[m] = {"s2": out["s2"].get(m, {}).get("used", []), "s1_asc": s1.get("asc", {}).get("used", []),
+                  "s1_dsc": s1.get("dsc", {}).get("used", [])}
+    return res
 
 
 def refresh_index():
@@ -109,7 +116,10 @@ def main():
     info = json.loads(info_file.read_text()) if info_file.exists() else {}
     info.update({"month_bands": MONTH_BANDS, "s2_bands": S2_BANDS, "count_bands": COUNT_BANDS,
                  "s2_scale": "surface reflectance x 10000",
-                 "s1": "Sentinel-1 GRD IW, mean in linear power per orbit direction, stored as dB x 100",
+                 "s2": "Sentinel-2 L2A, Earth Search sentinel-2-c1-l2a (STAC), offset removed, SCL cloud mask, "
+                       "monthly median",
+                 "s1": "Sentinel-1 RTC gamma0 (Planetary Computer sentinel-1-rtc, STAC), IW, mean in linear power "
+                       "per orbit direction, stored as dB x 100",
                  "s1_scale": 100, "nodata": NODATA, "band_order": "month-major: <band>_m01 ... <band>_m12",
                  "source": "cut from the 10.24 km blocks of data_download/ (02a Dynamic World, 02b Sentinel-2, "
                            "02c Sentinel-1)"})
@@ -136,12 +146,11 @@ def main():
                 with open(qa_file, "a") as fh:
                     fh.write(json.dumps({"tile_id": t.tile_id, **qa}) + "\n")
                 done += 1
-        dw_file = dw_cropland_file(REGION, t.ag_season)
+        dw_block = dw_block_file(REGION, t.ag_season, bx, by)       # binary cropland block of 02a (uint8)
         dw_tile = tile_file(REGION, t.tile_id, "dw")
-        if dw_file.exists() and (not dw_tile.exists() or OVERWRITE):
-            with rasterio.open(dw_file) as src:                     # region-wide binary cropland of 02a (uint8)
-                arr = read_dw_window(src, int(t.ix) * TILE_M, (int(t.iy) + 1) * TILE_M, TILE_PX)
-            write_tif(dw_tile, arr[None], int(t.ix), int(t.iy), ["CROPLAND"], CRS_EPSG, nodata=DW_NODATA)
+        if dw_block.exists() and (not dw_tile.exists() or OVERWRITE):
+            write_tif(dw_tile, cut(dw_block, row, col), int(t.ix), int(t.iy), ["CROPLAND"], CRS_EPSG,
+                      nodata=DW_NODATA)
             dw += 1
     print(f"Cut {done:,} image tiles and {dw:,} Dynamic World tiles; {missing:,} tiles wait for their block "
           f"(run data_download/02a, 02b and 02c)")

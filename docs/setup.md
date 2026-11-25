@@ -24,9 +24,12 @@ A GPU (CUDA or Apple Silicon) is recommended for the tile models (experiments E0
 
 ### 2. Earth Engine
 
-Every download of `data_download/` uses Earth Engine with a service account: the block downloads
-(`02a_dynamic_world.py`, `02b_s2.py`, `02c_s1.py`) and the annual Dynamic World reference layer (`04c_ref_dynamic_world_annual.py`). Put the service-account key in `secrets/` (path
-set in `data_download/download_common.py` and at the top of the scripts that log in themselves). ESA WorldCover
+Earth Engine is used only for Dynamic World, with a service account: the binary cropland of every block
+(`02a_dynamic_world.py`) and the annual Dynamic World reference layer (`04c_ref_dynamic_world_annual.py`). Put the
+service-account key in `secrets/` (path set in `data_download/download_common.py` and at the top of the scripts
+that log in themselves). Sentinel-2 (`02b_s2.py`, Earth Search of Element 84 on AWS) and Sentinel-1 (`02c_s1.py`,
+Microsoft Planetary Computer, signed anonymous URLs) are read from open STAC catalogues and need no account
+([D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)). ESA WorldCover
 (`04a_ref_esa_worldcover.py`) is read from the Planetary Computer STAC catalogue and LGRIP30
 (`04b_ref_lgrip30.py`) from NASA Earthdata, which needs a token in `secrets/earthdata_token.txt` or in the
 environment variable `EARTHDATA_TOKEN`.
@@ -73,11 +76,11 @@ python data_training_prep/01_prepare_labels_Morocco.py      # labelled parcels (
 python data_training_prep/02_make_spatial_folds.py          # spatial folds
 python data_training_prep/03_plan_tiles.py                  # tile plan, label rasters, tile index
 
-# 2. Downloads on the 10.24 km block grid (data_download/; Earth Engine)
+# 2. Downloads on the 10.24 km block grid (data_download/; Dynamic World from Earth Engine, Sentinel-1/2 from STAC)
 python data_download/01_plan_blocks.py                 # every block of the mapping area (no mask, no labels needed)
-python data_download/02a_dynamic_world.py              # binary Dynamic World cropland of the whole region
-python data_download/02b_s2.py                         # Sentinel-2 monthly composites (Cloud Score+), cropland/training blocks only
-python data_download/02c_s1.py                         # Sentinel-1 monthly composites, ascending / descending, same blocks
+python data_download/02a_dynamic_world.py              # binary Dynamic World cropland of every block (resumable)
+python data_download/02b_s2.py                         # Sentinel-2 monthly composites (Earth Search, SCL cloud mask), cropland/training blocks only
+python data_download/02c_s1.py                         # Sentinel-1 RTC monthly composites (Planetary Computer), ascending / descending, same blocks
 python data_download/03_build_vrt.py                   # one VRT mosaic per source and year
 
 # 3. Training tiles (data_training_prep/; local)

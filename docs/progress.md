@@ -11,11 +11,11 @@ change log).
 
 | Step | Where | Status |
 | --- | --- | --- |
-| Cropland extent (mapping phase only) | `data_download/02a_dynamic_world.py` | Annual Dynamic World cropland (one binary 10 m GeoTIFF of the region per agricultural year), the only cropland layer; the union of 4 products is archived (24 Nov 2026); not used by the experiments ([Cropland extent](phase1_data/cropland_extent.md), [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
+| Cropland extent (mapping phase only) | `data_download/02a_dynamic_world.py` | Annual Dynamic World cropland (binary 10 m, one GeoTIFF per block and agricultural year, VRT mosaic; block-wise since 25 Nov 2026), the only cropland layer; the union of 4 products is archived (24 Nov 2026); not used by the experiments ([Cropland extent](phase1_data/cropland_extent.md), [D19](decisions.md#d19-two-class-experiments-cropland-extent-in-the-mapping-phase)) |
 | Pixel samples (2 classes) | `pixelwise_run/04_make_pixel_samples.py` | Morocco 2023/24 and 2024/25 done (473,675 pixels of 8,775 parcels, `04_pixel_samples/`); Utah to be rebuilt on the cluster ([page](phase1_data/pixel_samples.md)) |
 | Experiments E01–E04 (pixel-wise, 2 classes) | `experiments/` | Morocco done: RF 0.894, TempCNN 0.912, U-TAE 0.900, frozen GeoFMs 0.903–0.927 (TerraMind best; image encoders significantly above U-TAE, none above RF) ([comparison](experiments/comparison.md)) |
 | E05 · Prithvi frozen / LoRA / fully fine-tuned / from scratch (RQ2) | `experiments/E05_prithvi_strategies/` | Morocco done (16 runs): frozen, LoRA, fine-tuned tie at 0.90–0.92 at every share; from scratch 0.80–0.83 ([E05](experiments/E05_prithvi_strategies.md)) |
-| STAC Sentinel-2 download | `s2_download/` | Utah 2023/24: 17,278 of 18,472 tiles; 78 blocks to rerun after a bug fix (2026-11-20); Morocco on hold |
+| Block download (Sentinel-1/2) | `data_download/02b_s2.py`, `02c_s1.py` | Open STAC catalogues since 24 Nov 2026 ([D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world)); all data to be downloaded again for both regions; the earlier `s2_download/` route is retired |
 | Labels, spatial folds | `pixelwise_run/01`, `02` | Done: Morocco 8,781 parcels (7,585 irrigated, 1,196 rainfed); Utah 2024 6,013 fields (5,000 / 1,013) and 2021 for the temporal test; 5 folds of 20 km blocks |
 | Tile store, model views | `pixelwise_run/03`, `04` | Done: Morocco `views/`; Utah `views_2023-24/` (cluster) |
 | Embeddings (Sentinel-2 only) | `parcelwise_run/06a–06d` | Done for both regions and all four models ([D14](decisions.md#d14-sentinel-2-only-for-every-input), [D15](decisions.md#d15-agrifm-normalised-with-the-statistics-of-the-regions-chips)) |
@@ -24,7 +24,7 @@ change log).
 
 Next steps
 1. Utah: `04_make_pixel_samples.py` on the cluster, then E01–E05 as in Morocco.
-2. STAC approach: rerun the 78 missing Utah blocks, then Morocco 2023/24 and 2024/25 (`s2_download/`).
+2. Downloads for both regions on the cluster: Dynamic World cropland (`02a`), labels and tile plan (`data_training_prep/01–03`), Sentinel-2 and Sentinel-1 from STAC (`02b`, `02c`), then the training tiles (`04_cut_tiles.py`).
 
 ---
 
@@ -87,6 +87,65 @@ Next steps
 ---
 
 ## Change log (newest first)
+
+### 2026-11-25 (Dynamic World cropland block by block)
+
+- `02a_dynamic_world.py` downloads the cropland block by block instead of one region-wide file per year: one
+  `ee.data.computePixels` request per planned 10.24 km block (all blocks, no mask), written as
+  `dynamic_world/<season>/<bx>_<by>.tif`, and a VRT mosaic per year at the end. Finished blocks are kept, blocks with
+  training tiles come first, failed requests are retried, and the run stops after 20 failed blocks in a row, so a run
+  that stops (quota, network, job time limit) continues where it stopped. The region-wide files had failed half-way
+  on the cluster when the Earth Engine project hit its monthly noncommercial quota.
+- `download_common.py`: the cropland count per block reads the block files; a block without its Dynamic World file
+  is skipped by `02b`/`02c` (with a warning) unless it holds training tiles. `process_blocks` stops after
+  `stop_after` failed blocks in a row. `04_cut_tiles.py` cuts `_dw.tif` from the block.
+- Checked on Morocco 2023/24: block 48_349 has 96% cropland (94–96% in the earlier check of the rule); a block on the
+  border of the mapping area is 255 outside it; the mosaic window equals the block; 13 s per block.
+
+### 2026-11-24 (Sentinel-1/2 from open STAC catalogues)
+
+- Decision [D21](decisions.md#d21-sentinel-2-and-sentinel-1-from-open-stac-catalogues-earth-engine-only-for-dynamic-world):
+  Sentinel-2 and Sentinel-1 are no longer composited in Google Earth Engine but read from open STAC catalogues;
+  Earth Engine is used only for Dynamic World (`02a_dynamic_world.py`, `04c_ref_dynamic_world_annual.py`).
+- `data_download/02b_s2.py`: Earth Search (Element 84, AWS), collection `sentinel-2-c1-l2a` (ESA Collection 1), no
+  account; scenes with `eo:cloud_cover` < 60; 12 bands read onto the block grid (region's projection, 10 m, nearest
+  neighbour); the Collection 1 offset (reflectance × 10,000 + 1000; scale 0.0001, offset −0.1) read from each
+  scene's metadata and removed (values < 0 set to 0), so values are reflectance × 10,000 as before; cloud mask from
+  the scene classification (SCL classes 0, 1, 2, 3, 8, 9, 10 removed) and pixels with B4 = 0; monthly median of the
+  clear observations, `S2_NCLEAR` = clear observations. Cloud Score+ is no longer used.
+- `data_download/02c_s1.py`: Microsoft Planetary Computer, collection `sentinel-1-rtc` (GRD radiometrically terrain
+  corrected by Catalyst, linear gamma0, 10 m), signed anonymous URLs; IW scenes with VV and VH; per month and orbit
+  direction the mean in linear power of the valid values (> 0), stored as 10 log10 dB × 100; `S1_N` = scenes with
+  a valid VV value.
+- New shared `data_download/stac_common.py`: search with retries, reading only the block window of the
+  cloud-optimised GeoTIFFs with `stackstac`, retries and then scene-by-scene reading; with more than 2% unreadable
+  scenes a block is not written and a rerun fetches it. `download_common.process_blocks` replaces the Earth Engine
+  block loop.
+- Unchanged: block grid, file layout `outputs/<region>/data_download/{s2,s1}/<season>/<bx>_<by>.tif`, band names
+  and order, int16 scaling, NODATA −32768, block selection (≥ 164 Dynamic World cropland pixels or training tiles);
+  `data_training_prep/04_cut_tiles.py` reads the blocks unchanged.
+- Why: the Earth Engine project exceeded its noncommercial quota (restricted mode, 429 errors in the two cluster
+  downloads).
+- Checked on Morocco tile 2023-24_384_2795 (2023/24, 12 months) against the archived Earth Engine tile: Sentinel-2
+  correlation 0.98–1.00 per band and month, median difference 0 in most months, about 10% fewer clear observations
+  (SCL is stricter than Cloud Score+); a tile cut from a STAC block is identical to the same tile computed on its
+  own. One Sentinel-2 block took 958 s from STAC on a laptop (164 s in Earth Engine; Sentinel-1 was 92 s in Earth
+  Engine).
+- Sentinel-1 caveats: RTC (gamma0) lies about 1.3 dB (VV) and 3 dB (VH) above Earth Engine's sigma0, and Planetary
+  Computer lacks about 10% of the acquisitions (10 of about 95 for this tile; absent from both its GRD and RTC
+  collections). Only models trained on these data read Sentinel-1 (the foundation models use Sentinel-2, D14).
+
+### 2026-11-24 (cluster: code pulled, earlier outputs archived)
+
+- The UT HPC repo was pulled to `f1c047e` (data download on 10.24 km blocks, `data_training_prep/`, region-wide
+  Dynamic World cropland).
+- All earlier outputs on the cluster (`outputs/morocco`, `outputs/utah`, 98 GB) were moved unchanged to
+  `archive/outputs_2026-11-24_before_rerun/`; all data are downloaded again with the updated scripts. The untracked
+  E03–E05 result folders were set aside for the pull and restored (copy in `archive/results_2026-11-24_before_pull/`).
+- `geemap` 0.37.2 and `geedim` 1.9.1 installed into the cluster's `condaml` (needed by `02a` and `04c`).
+- New job script `jobs/data_download.sbatch` with the runner `jobs/run_data_download.py` (region set without editing
+  the tracked script; Earth Engine through the UT proxy). Submitted: Utah `01_plan_blocks` + `02a_dynamic_world`,
+  Morocco `01_plan_blocks`, then Morocco `02a_dynamic_world` after it (the local Morocco run was stopped).
 
 ### 2026-11-24 (data download on 10.24 km blocks; training data in its own folder)
 
